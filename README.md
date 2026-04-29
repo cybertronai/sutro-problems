@@ -17,5 +17,6 @@ To add a new problem, create a new directory and add a `README.md` at its root.
 
 ## Problems
 
-- [`boltzmann-shifter/`](boltzmann-shifter/) — the shift-direction inference task
-  from Hinton & Sejnowski's Boltzmann-machine chapter (PDP Vol 1, 1986).
+- [`wip-boltzmann-shifter/`](wip-boltzmann-shifter/) — the shift-direction
+  inference task from Hinton & Sejnowski's Boltzmann-machine chapter
+  (PDP Vol 1, 1986). _(work in progress)_
