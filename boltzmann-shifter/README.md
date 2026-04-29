@@ -4,6 +4,8 @@ The **shift-direction inference** task from Hinton & Sejnowski, *"Learning and
 Relearning in Boltzmann Machines"* (Chapter 7 of Rumelhart, McClelland & PDP
 Research Group, *Parallel Distributed Processing*, Vol 1, MIT Press, 1986).
 
+![shifter task animation](shifter.gif)
+
 ## Problem
 
 Given two rings of `N` binary units `V1` and `V2`, where `V2` is a copy of
@@ -27,6 +29,7 @@ position-pair detectors** between `V1` and `V2`.
 | `shifter_rbm.py` | Restricted Boltzmann Machine trained with CD-1 (Hinton 2002). Same fundamental learning rule (positive-phase minus negative-phase statistics), but with the efficient RBM sampling structure. **This is the working version.** |
 | `visualize_shifter.py` | Generates per-unit receptive-field panels, full weight heatmap, hidden-activation maps, and confusion matrix. |
 | `figure3.py` | Renders the trained network's hidden units in the Hinton-diagram style (white/black squares sized by `|w|`) — same layout convention as Figure 3 of the original chapter. |
+| `make_shifter_gif.py` | Generates `shifter.gif` (the animation at the top of this README). |
 | `viz/` | Output PNGs from the runs below. |
 
 ## Running
@@ -74,6 +77,61 @@ preferring "shift left" tends to have correlated weights at `V1[i]` and
    layout.
 4. **Hardware** — modern laptop, ~minutes; the original ran on a VAX with
    substantially longer training time.
+
+## Experiment: what does the network actually learn?
+
+**Setup**
+
+- N = 8 (so 8 + 8 = 16 input bits, 3 output bits, 64 hidden units)
+- 768 training cases (the full enumeration: 256 patterns × 3 shifts)
+- CD-1, lr=0.03, momentum=0.7, batch=32
+- 200 epochs, ~minutes on a laptop
+
+**Hidden-unit receptive fields**
+
+Each hidden unit's incoming weight vector is split into V1, V2, and Y
+sections and rendered as a small panel, sorted by which shift class the
+unit prefers (argmax over its three Y weights):
+
+![hidden unit receptive fields](viz/hidden_units.png)
+
+Panels labelled "L" group at the top, "N" in the middle, "R" at the bottom.
+Within an L panel, the V1 and V2 rows together show the position-pair the
+unit detects: a strong red cell at `V1[i]` paired with one at `V2[i-1 mod N]`
+is a "this V1 bit shifted left lands at this V2 bit" detector. Symmetric
+patterns appear for R units. N units tend to align V1[i] with V2[i].
+
+**Population code**
+
+Mean hidden activation per shift class and per-unit selectivity (firing
+above vs below the unit's own average):
+
+![mean activation + selectivity](viz/hidden_activations.png)
+
+Each row in the bottom panel highlights a different subset of units in red:
+the network has learned a distributed, balanced population code where
+distinct hidden subsets stand for each shift hypothesis.
+
+**Confusion matrix on the full test set**
+
+![confusion matrix](viz/confusion.png)
+
+86.5% overall. The "no shift" class is easiest (matched columns give a
+strong signal; 238/256 = 93%). Most errors are left/right confusions on
+patterns that are nearly rotation-symmetric (e.g. `10000001`, where shift-
+left and shift-right look almost identical).
+
+**Hinton-diagram style with 24 units (matching the original Figure 3 layout)**
+
+`figure3.py` retrains a smaller network with 24 hidden units and renders
+the weights as black/white squares sized by `|w|`:
+
+![figure 3 style](viz/figure3_reproduction.png)
+
+Several units pop out as crisp position-pair detectors with a single strong
+output preference — e.g. `V1[5]` ↔ `V2[4]` paired with a strong `L` vote.
+A few units carry small weights everywhere (the "do very little" units the
+original chapter mentions).
 
 ## Open questions / next experiments
 
