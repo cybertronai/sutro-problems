@@ -40,13 +40,15 @@ COLORS = {-1: "#a83232", 0: "#404040", 1: "#3a78a8"}
 
 def build_frame_plan(patterns: list[int], N: int,
                       hold_frames: int = 8,
-                      slide_frames: int = 12) -> list[dict]:
+                      slide_frames: int = 3,
+                      fadeout_frames: int = 2) -> list[dict]:
     """Build a flat list of frames. Each frame is a dict describing what to draw.
 
     For every (pattern, shift) pair we emit:
       - `hold_frames` static frames showing V1 only (V2 absent)
-      - `slide_frames` interpolating frames showing V2 sliding in
+      - `slide_frames` interpolating frames showing V2 fading in
       - `hold_frames` static frames showing the resulting V1 + shifted V2
+      - `fadeout_frames` interpolating frames fading V2 back out to 0
     """
     frames = []
     for p in patterns:
@@ -56,13 +58,17 @@ def build_frame_plan(patterns: list[int], N: int,
             # Phase A: V1 alone
             for _ in range(hold_frames):
                 frames.append({"v1": v1, "v2": None, "shift": s, "phase": "v1_only", "t": 0.0})
-            # Phase B: V2 sliding in (shows arrows + animated alpha)
+            # Phase B: V2 fading in (shows arrows + animated alpha)
             for k in range(1, slide_frames + 1):
                 t = k / slide_frames
                 frames.append({"v1": v1, "v2": v2, "shift": s, "phase": "slide", "t": t})
             # Phase C: hold final
             for _ in range(hold_frames):
                 frames.append({"v1": v1, "v2": v2, "shift": s, "phase": "hold", "t": 1.0})
+            # Phase D: fast fade-out before transitioning to next scene
+            for k in range(1, fadeout_frames + 1):
+                t = 1.0 - k / fadeout_frames
+                frames.append({"v1": v1, "v2": v2, "shift": s, "phase": "slide", "t": t})
     return frames
 
 
@@ -188,7 +194,9 @@ def make_gif(out_path: Path, N: int = 8, fps: int = 12) -> None:
         patterns = [int(rng.integers(1, 2**N - 1)) for _ in range(4)]
 
     frame_plan = build_frame_plan(patterns, N,
-                                   hold_frames=6, slide_frames=10)
+                                   hold_frames=6,
+                                   slide_frames=3,
+                                   fadeout_frames=2)
 
     fig, ax = plt.subplots(figsize=(7.5, 4.4), dpi=110)
     fig.patch.set_facecolor("white")
