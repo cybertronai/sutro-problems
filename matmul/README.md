@@ -2,7 +2,7 @@
 
 - DeepMind's AlphaTensor https://github.com/google-deepmind/alphatensor discover a better 4x4 matrix multiplication algorithm in terms of FLOPs. 
 - What is the best algorithm when we care about *energy* rather than *FLOPs*?
-- Use [simplified version]([cybertronai/simplified-dally-model](https://github.com/cybertronai/simplified-dally-model)) of Bill Dally' *Parallel Explicit Communication Model* to measure energy.
+- Use [simplified version](https://github.com/cybertronai/simplified-dally-model) of [Bill Dally's *Parallel Explicit Communication Model*](https://cacm.acm.org/opinion/on-the-model-of-computation-point/) to measure energy.
 
 
 ## API
