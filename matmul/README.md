@@ -8,25 +8,21 @@
 ## API
 
 ```python
-from matmul import (
-    score_1x1, score_4x4, score_16x16,
-    generate_baseline_4x4, generate_baseline_16x16,
-    generate_tiled_16x16,
-)
+import matmul
 
 # Verify your IR computes A @ B correctly and return its read-cost.
-cost = matmul.score_1x1("1,2;mul 3,1,2;3")    # 5  (1+2 + 2)
-cost = matmul.score_4x4(my_ir_text)
-cost = matmul.score_16x16(my_ir_text)
+cost = matmul.score_1x1("1,2;mul 3,1,2;3")    # 5
+
+ir = matmul.generate_baseline_4x4()      # naive triple loop, 4×4
+cost = matmul.score_4x4(ir)
+
+ir = matmul.generate_baseline_16x16()    # naive triple loop, 16×16
+cost = matmul.score_16x16(ir)
+
+ir = matmul.generate_tiled_16x16()       # 4×4 scratchpad-cached tiles
+cost = matmul.score_16x16(ir)
 ```
 
-### Baselines
-
-```python
-ir = generate_baseline_4x4()      # naive triple loop, 4×4
-ir = generate_baseline_16x16()    # naive triple loop, 16×16
-ir = generate_tiled_16x16()       # 4×4 scratchpad-cached tiles
-```
 
 ## 4×4 Record History
 
