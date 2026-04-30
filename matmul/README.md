@@ -34,4 +34,5 @@ cost = matmul.score_16x16(ir)
 | date       | method                              | IR                                              | cost    |
 |------------|-------------------------------------|-------------------------------------------------|--------:|
 | 2026-04-29 | `generate_baseline_16x16` (naive)   | [`ir/baseline_16x16.ir`](ir/baseline_16x16.ir)  | 340,704 |
-| 2026-04-29 | `generate_tiled_16x16` (4×4 tiles)  | [`ir/tiled_16x16.ir`](ir/tiled_16x16.ir)        | 133,783 |
+| 2026-04-29 | `generate_tiled_16x16` (4×4 tiles)  | [`ir/tiled_16x16.ir`](ir/tiled_16x16.ir)           | 133,783 |
+| 2026-04-30 | `generate_tiled_16x16_opt1` (tmp@1) | [`ir/tiled_16x16_opt1.ir`](ir/tiled_16x16_opt1.ir) | 110,743 |
