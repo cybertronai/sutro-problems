@@ -22,16 +22,6 @@ cost = matmul.score_4x4(my_ir_text)
 cost = matmul.score_16x16(my_ir_text)
 ```
 
-The scorer parses the IR, simulates it against deterministic test
-matrices `A[i,j] = i·n + j + 1`, `B[i,j] = j·n + i + 1`, verifies the
-exit values match `A @ B`, and returns the total read cost. It raises
-`ValueError` on a parse error, an uninitialized read, or a wrong
-output.
-
-The input convention is fixed: line 1 lists `2n²` addresses — the `n²`
-elements of A row-major, then the `n²` elements of B row-major. The
-exit line lists the `n²` addresses of C in row-major order.
-
 ### Baselines
 
 ```python
