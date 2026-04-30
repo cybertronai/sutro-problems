@@ -70,14 +70,6 @@ def test_tiled_16x16_cost_matches_record_history():
     assert matmul.score_16x16(matmul.generate_tiled_16x16()) == 133_783
 
 
-def test_outer_product_4x4_cost_matches_record_history():
-    assert matmul.score_4x4(matmul.generate_outer_product_4x4()) == 800
-
-
-def test_hierarchical_16x16_cost_matches_record_history():
-    assert matmul.score_16x16(matmul.generate_hierarchical_16x16()) == 80_217
-
-
 # ---------------------------------------------------------------------------
 # Newline / semicolon line separators are interchangeable
 # ---------------------------------------------------------------------------

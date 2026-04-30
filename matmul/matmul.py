@@ -227,129 +227,6 @@ def generate_baseline_16x16() -> str: return _baseline(16)
 
 
 # ---------------------------------------------------------------------------
-# 4×4 outer-product with size-1 sA scratch.
-# ---------------------------------------------------------------------------
-
-def generate_outer_product_4x4() -> str:
-    """4×4 outer product ``C = Σ_k A[:,k] ⊗ B[k,:]``.
-
-    During the inner ``j`` loop only ``A[i,k]`` is alive, so sA is a
-    single cell (addr 1) instead of caching the whole A column. That
-    frees three cheap addresses, which lets C/A/B all shift closer to
-    origin. Read-count-sorted address allocation:
-
-      addr 1     : sA  (read 64×: every mul)
-      addr 2     : tmp (read 48×: every accumulating add)
-      addrs 3..6 : sB  (4 cells, each read 16×)
-      addrs 7..22: C   (each read 4×: 3 adds + 1 output)
-      addrs 23..38: A bulk (each loaded once)
-      addrs 39..54: B bulk (each loaded once)
-    """
-    n = 4
-    SA = 1
-    TMP = 2
-    sB = lambda j: 3 + j
-    C  = lambda i, j: 7 + i * n + j
-    A_base = 23
-    B_base = A_base + n * n
-    A = lambda i, k: A_base + i * n + k
-    B = lambda k, j: B_base + k * n + j
-
-    inputs = ([A(i, k) for i in range(n) for k in range(n)] +
-              [B(k, j) for k in range(n) for j in range(n)])
-    outputs = [C(i, j) for i in range(n) for j in range(n)]
-
-    lines = [",".join(map(str, inputs))]
-    for k in range(n):
-        for j in range(n):
-            lines.append(f"copy {sB(j)},{B(k, j)}")
-        for i in range(n):
-            lines.append(f"copy {SA},{A(i, k)}")
-            for j in range(n):
-                if k == 0:
-                    lines.append(f"mul {C(i,j)},{SA},{sB(j)}")
-                else:
-                    lines.append(f"mul {TMP},{SA},{sB(j)}")
-                    lines.append(f"add {C(i,j)},{TMP}")
-    lines.append(",".join(map(str, outputs)))
-    return "\n".join(lines)
-
-
-# ---------------------------------------------------------------------------
-# 16×16 hierarchical block outer-product with asymmetric reload.
-# ---------------------------------------------------------------------------
-
-def generate_hierarchical_16x16() -> str:
-    """16×16 hierarchical block outer-product, loop order ``(ib, k, jb)``.
-
-    Outer loop iterates over 4-row i-blocks; the middle loop sweeps
-    ``k``; the inner loop iterates 4-column j-blocks. This keeps a
-    64-cell accumulator sC alive in cheap scratch for an entire
-    i-block's k-sweep, then copies it out to C bulk once per ib.
-
-    The asymmetry is the key trick: under this loop order each A cell
-    is loaded **1×** while each B cell is loaded **4×** (once per
-    i-block). Putting B at cheaper bulk addresses than A turns the
-    extra reloads into the cheaper of the two, so 4·SumB_cheap +
-    1·SumA_expensive ≪ 4·(SumA + SumB) from a symmetric scheme.
-
-    Layout (read-count-descending → ascending address):
-
-      addr 1            : tmp           (read 3,840×)
-      addrs 2..5        : sA            (1,024 reads each, 4 cells)
-      addrs 6..9        : sB            (1,024 reads each, 4 cells)
-      addrs 10..73      : sC accumulator (64 reads each, 64 cells)
-      addrs 74..329     : B bulk        (4 reads each — reloaded per ib)
-      addrs 330..585    : A bulk        (1 read each)
-      addrs 586..841    : C bulk        (1 read at exit)
-    """
-    n = 16
-    block = 4
-    nb = n // block
-
-    TMP = 1
-    sA = lambda ii: 2 + ii
-    sB = lambda jj: 6 + jj
-    sC = lambda jb, ii, jj: 10 + jb * 16 + ii * 4 + jj
-    B_base = 74
-    A_base = 330
-    C_base = 586
-    A = lambda i, k: A_base + i * n + k
-    B = lambda k, j: B_base + k * n + j
-    C = lambda i, j: C_base + i * n + j
-
-    inputs = ([A(i, k) for i in range(n) for k in range(n)] +
-              [B(k, j) for k in range(n) for j in range(n)])
-    outputs = [C(i, j) for i in range(n) for j in range(n)]
-
-    lines = [",".join(map(str, inputs))]
-    for ib in range(nb):
-        for k in range(n):
-            for ii in range(block):
-                lines.append(f"copy {sA(ii)},{A(ib * block + ii, k)}")
-            for jb in range(nb):
-                for jj in range(block):
-                    lines.append(f"copy {sB(jj)},{B(k, jb * block + jj)}")
-                for ii in range(block):
-                    for jj in range(block):
-                        if k == 0:
-                            lines.append(
-                                f"mul {sC(jb, ii, jj)},{sA(ii)},{sB(jj)}")
-                        else:
-                            lines.append(f"mul {TMP},{sA(ii)},{sB(jj)}")
-                            lines.append(
-                                f"add {sC(jb, ii, jj)},{TMP}")
-        for jb in range(nb):
-            for ii in range(block):
-                for jj in range(block):
-                    lines.append(
-                        f"copy {C(ib * block + ii, jb * block + jj)},"
-                        f"{sC(jb, ii, jj)}")
-    lines.append(",".join(map(str, outputs)))
-    return "\n".join(lines)
-
-
-# ---------------------------------------------------------------------------
 # Tiled 16×16 — scratchpad-cached 4×4 tiles
 # ---------------------------------------------------------------------------
 
@@ -427,7 +304,6 @@ __all__ = [
     "score_1x1", "score_4x4", "score_16x16",
     "generate_baseline_4x4", "generate_baseline_16x16",
     "generate_tiled_16x16",
-    "generate_outer_product_4x4", "generate_hierarchical_16x16",
 ]
 
 
@@ -441,11 +317,9 @@ if __name__ == "__main__":
     ir_dir = os.path.join(here, "ir")
     os.makedirs(ir_dir, exist_ok=True)
     artifacts = [
-        ("baseline_4x4.ir",        generate_baseline_4x4(),        score_4x4),
-        ("baseline_16x16.ir",      generate_baseline_16x16(),      score_16x16),
-        ("tiled_16x16.ir",         generate_tiled_16x16(),         score_16x16),
-        ("outer_product_4x4.ir",   generate_outer_product_4x4(),   score_4x4),
-        ("hierarchical_16x16.ir",  generate_hierarchical_16x16(),  score_16x16),
+        ("baseline_4x4.ir",   generate_baseline_4x4(),   score_4x4),
+        ("baseline_16x16.ir", generate_baseline_16x16(), score_16x16),
+        ("tiled_16x16.ir",    generate_tiled_16x16(),    score_16x16),
     ]
     for name, ir, scorer in artifacts:
         cost = scorer(ir)
