@@ -1,4 +1,4 @@
-# matmul
+# Matmul
 
 - DeepMind's AlphaTensor https://github.com/google-deepmind/alphatensor discover a better 4x4 matrix multiplication algorithm in terms of FLOPs. 
 - What is the best algorithm when we care about *energy* rather than *FLOPs*?
