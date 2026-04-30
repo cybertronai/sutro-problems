@@ -11,9 +11,7 @@ To add a new problem, create a new directory and add a `README.md` at its root.
 ## Problems
 
 - [`matmul/`](matmul/) — cheapest matrix multiplication under a
-  simplified Dally explicit-communication cost model (data movement
-  priced; arithmetic free). Records: 4×4 naive 1,316; 16×16 naive
-  340,704; 16×16 tiled 133,783.
+  simplified Dally explicit-communication cost model
   
 - [`wip-boltzmann-shifter/`](wip-boltzmann-shifter/) — the shift-direction
   inference task from Hinton & Sejnowski's Boltzmann-machine chapter
