@@ -1,4 +1,4 @@
-# sutro-problems
+# Sutro problems
 
 A collection of small, self-contained problems used as benchmarks for the Sutro Group's energy-efficient learning research.
 
