@@ -6,3 +6,5 @@
 **Cost:** 340,704
 **IR:** [`baseline_16x16.ir`](baseline_16x16.ir)
 **Method:** `generate_baseline_16x16` (naive)
+
+Baseline.

@@ -6,3 +6,5 @@
 **Cost:** 1,316
 **IR:** [`baseline_4x4.ir`](baseline_4x4.ir)
 **Method:** `generate_baseline_4x4` (naive)
+
+Baseline.
