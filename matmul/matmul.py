@@ -314,7 +314,7 @@ __all__ = [
 if __name__ == "__main__":
     import os
     here = os.path.dirname(os.path.abspath(__file__))
-    ir_dir = os.path.join(here, "ir")
+    ir_dir = os.path.join(here, "submissions")
     os.makedirs(ir_dir, exist_ok=True)
     artifacts = [
         ("baseline_4x4.ir",   generate_baseline_4x4(),   score_4x4),
