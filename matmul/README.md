@@ -37,4 +37,7 @@ cost = matmul.score_16x16(ir)
 | 2026-04-29 | 133,783 | [ir](submissions/tiled_16x16.ir), [report](submissions/tiled_16x16.md)        | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_tiled_16x16` (4×4 tiles)            |
 | 2026-04-30 | 110,743 | [ir](submissions/tiled_16x16_opt1.ir), report   | [@SethTS](https://github.com/SethTS)         | `generate_tiled_16x16_opt1` (tmp@1)           |
 | 2026-04-30 |  80,217 | [ir](submissions/hierarchical_16x16.ir), report | [@sjbaebae](https://github.com/sjbaebae)     | `generate_hierarchical_16x16` (asym. reload)  |
-| 2026-04-30 |  73,602 | [ir](submissions/sa_cache_16x16.ir), report     | [@adotzh](https://github.com/adotzh)         | sA-cache + sB scratchpad (rank2) ★ best      |
+| 2026-04-30 |  73,602 | [ir](submissions/sa_cache_16x16.ir), report     | [@adotzh](https://github.com/adotzh)         | sA-cache + sB scratchpad (rank2)              |
+| 2026-05-01 |  72,642 | [ir](submissions/redirect_16x16.ir), report     | [@sjbaebae](https://github.com/sjbaebae)     | + redirect last-mul to addr 1                 |
+| 2026-05-01 |  71,724 | [ir](submissions/sc_outputs_16x16.ir), report   | [@sjbaebae](https://github.com/sjbaebae)     | + last-super-block outputs in sC              |
+| 2026-05-01 |  70,053 | [ir](submissions/dead_input_outputs_packed_16x16.ir), [report](submissions/dead_input_outputs_packed_16x16.md) | [@sjbaebae](https://github.com/sjbaebae)     | + dead-input output reuse + B packing ★ best |
