@@ -22,8 +22,6 @@ ir = matmul.generate_tiled_16x16()       # 4×4 scratchpad-cached tiles
 cost = matmul.score_16x16(ir)
 ```
 
-Submissions go into subdirectories, files at top-level shouldn't be modified except for adding entries to tables below --
-
 ## 4×4 Record History
 
 | Date       | Cost  | Submission                                          | Contributors                                 | Description                              |
