@@ -22,12 +22,12 @@ Opt1 layout (this file):
 
 Usage:
     cd ~/dev/research/sutro/sutro-problems
-    python3 matmul/exp_layout_opt.py
+    python3 matmul/submissions/exp_layout_opt.py
 """
 
 import sys
 from pathlib import Path
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 from matmul import score_16x16, generate_tiled_16x16
 import math
 
@@ -124,6 +124,6 @@ if __name__ == "__main__":
           f"({(baseline_cost - opt1_cost) / baseline_cost * 100:.1f}%)")
 
     # Save opt1 IR
-    ir_path = Path(__file__).parent / "submissions" / "tiled_16x16_opt1.ir"
+    ir_path = Path(__file__).parent / "tiled_16x16_opt1.ir"
     ir_path.write_text(opt1_ir + "\n")
     print(f"\n  Saved: {ir_path}")
