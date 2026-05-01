@@ -26,17 +26,17 @@ Submissions go into subdirectories, files at top-level shouldn't be modified exc
 
 ## 4×4 Record History
 
-| #  | Cost  | Description                              | Date       | Submission                                                          | Contributors |
-| -  | -:    | -                                        | -          | -                                                                   | -            |
-| 1  | 1,316 | `generate_baseline_4x4` (naive)          | 2026-04-29 | [ir.txt](submissions/baseline_4x4.ir), report                       | [@yaroslavvb](https://github.com/yaroslavvb) |
-| 2  |   800 | `generate_outer_product_4x4` (size-1 sA) | 2026-04-30 | [ir.txt](submissions/outer_product_4x4.ir), report                  | [@sjbaebae](https://github.com/sjbaebae) |
+| #  | Cost  | Date       | Submission                                          | Contributors                                 | Description                              |
+| -  | -:    | -          | -                                                   | -                                            | -                                        |
+| 1  | 1,316 | 2026-04-29 | [ir](submissions/baseline_4x4.ir), report       | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_baseline_4x4` (naive)          |
+| 2  |   800 | 2026-04-30 | [ir](submissions/outer_product_4x4.ir), report  | [@sjbaebae](https://github.com/sjbaebae)     | `generate_outer_product_4x4` (size-1 sA) |
 
 ## 16×16 Record History
 
-| #  | Cost    | Description                                   | Date       | Submission                                                          | Contributors |
-| -  | -:      | -                                             | -          | -                                                                   | -            |
-| 1  | 340,704 | `generate_baseline_16x16` (naive)             | 2026-04-29 | [ir.txt](submissions/baseline_16x16.ir), report                     | [@yaroslavvb](https://github.com/yaroslavvb) |
-| 2  | 133,783 | `generate_tiled_16x16` (4×4 tiles)            | 2026-04-29 | [ir.txt](submissions/tiled_16x16.ir), report                        | [@yaroslavvb](https://github.com/yaroslavvb) |
-| 3  | 110,743 | `generate_tiled_16x16_opt1` (tmp@1)           | 2026-04-30 | [ir.txt](submissions/tiled_16x16_opt1.ir), report                   | [@SethTS](https://github.com/SethTS) |
-| 4  |  80,217 | `generate_hierarchical_16x16` (asym. reload)  | 2026-04-30 | [ir.txt](submissions/hierarchical_16x16.ir), report                 | [@sjbaebae](https://github.com/sjbaebae) |
-| 5  |  73,602 | sA-cache + sB scratchpad (rank2) ★ best      | 2026-04-30 | [ir.txt](submissions/sa_cache_16x16.ir), report                     | [@adotzh](https://github.com/adotzh) |
+| #  | Cost    | Date       | Submission                                          | Contributors                                 | Description                                   |
+| -  | -:      | -          | -                                                   | -                                            | -                                             |
+| 1  | 340,704 | 2026-04-29 | [ir](submissions/baseline_16x16.ir), report     | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_baseline_16x16` (naive)             |
+| 2  | 133,783 | 2026-04-29 | [ir](submissions/tiled_16x16.ir), report        | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_tiled_16x16` (4×4 tiles)            |
+| 3  | 110,743 | 2026-04-30 | [ir](submissions/tiled_16x16_opt1.ir), report   | [@SethTS](https://github.com/SethTS)         | `generate_tiled_16x16_opt1` (tmp@1)           |
+| 4  |  80,217 | 2026-04-30 | [ir](submissions/hierarchical_16x16.ir), report | [@sjbaebae](https://github.com/sjbaebae)     | `generate_hierarchical_16x16` (asym. reload)  |
+| 5  |  73,602 | 2026-04-30 | [ir](submissions/sa_cache_16x16.ir), report     | [@adotzh](https://github.com/adotzh)         | sA-cache + sB scratchpad (rank2) ★ best      |
