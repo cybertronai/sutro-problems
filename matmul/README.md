@@ -22,10 +22,7 @@ ir = matmul.generate_tiled_16x16()       # 4×4 scratchpad-cached tiles
 cost = matmul.score_16x16(ir)
 ```
 
-Submissions live under `ir/` as standalone scripts (one per IR file).
-Run e.g. `python matmul/ir/outer_product_4x4.py` to regenerate
-`ir/outer_product_4x4.ir` and verify its cost.
-
+Submissions go into subdirectories, files at top-level shouldn't be modified except for adding entries to tables below --
 
 ## 4×4 Record History
 
