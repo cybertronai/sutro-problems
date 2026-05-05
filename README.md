@@ -21,3 +21,8 @@ To add a new problem, create a new directory and add a `README.md` at its root.
   whose product equals the label, from random {-1,+1} samples. Frames the
   [Sparse Parity Challenge](https://github.com/cybertronai/sparse-parity-challenge)
   on the same Dally-style read-cost ruler as `matmul/`. _(work in progress)_
+
+- [`wip-wikitext/`](wip-wikitext/) — train a character-level language
+  model from scratch on WikiText-103, maximize greedy-argmax char
+  accuracy under a measured training-energy budget (NVML energy
+  counter on a pinned Lambda A100). _(work in progress)_
