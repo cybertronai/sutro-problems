@@ -5,7 +5,9 @@ Runs with ``python3 -m pytest test_wikitext.py`` or ``python3 test_wikitext.py``
 """
 from __future__ import annotations
 
-from wikitext import CharModel, EnergyMeter, evaluate
+import time
+
+from wikitext import BudgetExceededError, CharModel, EnergyMeter, evaluate
 from baseline_ngram import NGramModel
 
 
@@ -96,6 +98,70 @@ def test_energy_meter_fallback_when_no_nvml() -> None:
         sum(range(1000))
     assert m.energy_joules is None
     assert m.duration_s >= 0
+
+
+class _FakeNvml:
+    """Fake pynvml that synthesizes a monotonic mJ counter at a fixed power."""
+
+    def __init__(self, watts: float):
+        self._t0 = time.monotonic()
+        self._watts = watts
+
+    def nvmlDeviceGetTotalEnergyConsumption(self, handle):  # noqa: ARG002
+        elapsed_s = time.monotonic() - self._t0
+        return int(elapsed_s * self._watts * 1000.0)  # mJ
+
+
+def _patch_meter_with_fake_nvml(meter: EnergyMeter, watts: float) -> None:
+    meter._pynvml = _FakeNvml(watts)
+    meter._handle = object()
+    meter.available = True
+
+
+def test_energy_budget_killswitch_fires() -> None:
+    """Watchdog must raise BudgetExceededError once net energy > e_max."""
+    # 200 W, idle 0 W, budget 5 J → fires ~25 ms in (plus one poll).
+    meter = EnergyMeter(e_max_joules=5.0, poll_interval_s=0.02, idle_watts=0.0)
+    _patch_meter_with_fake_nvml(meter, watts=200.0)
+
+    raised = False
+    m = None
+    try:
+        with meter.measure() as m:
+            time.sleep(2.0)  # plenty of time for the watchdog to fire
+    except BudgetExceededError:
+        raised = True
+
+    assert raised, "watchdog should have raised BudgetExceededError"
+    assert m is not None
+    assert m.budget_exceeded
+    assert m.energy_joules is not None and m.energy_joules >= 5.0
+    # Should fire well before the 2 s sleep would naturally end.
+    assert m.duration_s < 1.0
+
+
+def test_energy_budget_within_limit_does_not_fire() -> None:
+    """A short, low-energy block under budget must complete cleanly."""
+    meter = EnergyMeter(e_max_joules=1000.0, poll_interval_s=0.02, idle_watts=0.0)
+    _patch_meter_with_fake_nvml(meter, watts=100.0)
+
+    with meter.measure() as m:
+        time.sleep(0.1)  # 100 W * 0.1 s = 10 J, well under 1000 J
+
+    assert not m.budget_exceeded
+    assert m.energy_joules is not None
+    assert m.energy_joules < 1000.0
+
+
+def test_energy_budget_no_op_without_nvml() -> None:
+    """e_max_joules on a host without NVML is a no-op; nothing crashes."""
+    meter = EnergyMeter(e_max_joules=1.0, poll_interval_s=0.02)
+    if meter.available:
+        return  # only meaningful when NVML is absent
+    with meter.measure() as m:
+        time.sleep(0.05)
+    assert not m.budget_exceeded
+    assert m.energy_joules is None
 
 
 # ---------------------------------------------------------------------------

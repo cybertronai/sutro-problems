@@ -95,14 +95,19 @@ ls ~/data/wikitext-103-raw/   # wiki.{train,valid,test}.raw
 Three configs ship in `baseline_transformer.py`. Pick one based on
 how much A100 time you want to burn for the first record:
 
-| config | params | recommended steps | est. wall-clock | est. cost @ $1.79/hr |
-|--------|--------|-------------------|-----------------|----------------------|
-| tiny   | ~0.6 M | 5,000             | ~5 min          | ~$0.15               |
-| small  | ~5 M   | 30,000            | ~45 min         | ~$1.35               |
-| gpt2   | ~22 M  | 100,000           | ~5 hr           | ~$9                  |
+| config | params | recommended steps | training wall-clock | training cost @ $1.79/hr |
+|--------|--------|-------------------|---------------------|--------------------------|
+| tiny   | ~0.6 M | 5,000             | ~5 min              | ~$0.15                   |
+| small  | ~5 M   | 30,000            | ~45 min             | ~$1.35                   |
+| gpt2   | ~22 M  | 100,000           | ~5 hr               | ~$9                      |
 
-(Wall-clock is rough — depends on CPU bottleneck on data shuffling
-etc. Re-time after the first run.)
+(Training wall-clock is rough — depends on CPU bottleneck on data
+shuffling etc. Re-time after the first run. **Note:** these numbers
+cover only the training phase. The full submission cycle via
+`submit.py` adds ~5–7 min of Lambda boot + image pull + NVML probe
++ data fetch + 60K-char eval — see `submit.py`'s `COST_ESTIMATES`
+for the instance-time figure that actually drives the wall-clock
+timeout.)
 
 Quick **tiny** smoke run (validates the full pipeline before any
 expensive run):
@@ -127,6 +132,26 @@ python3 run_eval.py \
   | tee training.log
 ```
 
+**Fixed-budget runs** — pass `--e-max-joules N` to arm the in-meter
+watchdog. It polls NVML every 250 ms; once running net energy crosses
+`N` joules the training is killed, the runner prints a
+`DISQUALIFIED:` block, and exits with code 2. Use this for any
+submission targeting the fixed-budget leaderboard — that way a
+config that runs too long self-disqualifies instead of silently
+producing an over-budget number:
+
+```bash
+python3 run_eval.py \
+  --data-dir ~/data/wikitext-103-raw \
+  --baseline transformer --config small --n-steps 30000 \
+  --e-max-joules 100000 \          # actual leaderboard E_max TBD
+  | tee training.log
+```
+
+(The actual `E_max` for the v0 leaderboard isn't pinned yet — see
+`README.md` open items. The flag works at any threshold; pick the
+one your submission targets.)
+
 The runner prints a final block like:
 
 ```
@@ -135,6 +160,18 @@ training energy (J): 4,832,109.4
 test char-accuracy : 0.6234
 test chars         : 60,000
 ```
+
+If `--e-max-joules` was set and the run went over, the block is
+replaced by:
+
+```
+DISQUALIFIED: training energy budget exceeded (e_max=100,000 J, used≈100,142 J)
+training duration  : 312.4s
+training energy (J): 100,142.0  (at kill)
+```
+
+(exit code 2; eval is skipped — the partially-trained model is not
+scored.)
 
 ## 4. Capture the result
 

@@ -1,30 +1,27 @@
-# Submitter harness template for the wikitext energy benchmark.
+# Submitter harness for the wikitext energy benchmark.
 #
-# Pinned base: PyTorch 2.5.1 + CUDA 12.4 + cudnn9 (runtime). This is the
-# default Lambda On-Demand A100 80GB driver/CUDA combination. Submitters
-# may swap in a different framework (JAX, raw CUDA, etc.) so long as
-# the resulting container still runs on the same Lambda SKU and exposes
-# the NVML energy counter.
+# Built and pushed by submit.py with the user's submission file copied
+# in as /workspace/submission.py. Cloud-init on the Lambda VM pulls
+# this image and runs entrypoint.sh, which writes /results/result.json
+# (success) or /results/FAIL (any failure). The orchestrator on the
+# developer's laptop SSHes in and blocks on those sentinels.
 #
-# Build:
-#   docker build -t wikitext-submission .
-# Run (training + eval):
-#   docker run --gpus all --rm \
-#     -v /path/to/wikitext-103:/data:ro \
-#     wikitext-submission
+# Pinned base: PyTorch 2.5.1 + CUDA 12.4 + cudnn9. Matches the Lambda
+# On-Demand A100 driver/CUDA combo.
 
 FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
 
-# nvidia-ml-py exposes nvmlDeviceGetTotalEnergyConsumption used by EnergyMeter.
-RUN pip install --no-cache-dir nvidia-ml-py==12.560.30
+# nvidia-ml-py exposes nvmlDeviceGetTotalEnergyConsumption used by
+# EnergyMeter; datasets is used by fetch_data.py to materialise the
+# WikiText-103 raw splits at first run.
+RUN pip install --no-cache-dir nvidia-ml-py==12.560.30 datasets==3.2.0
 
 WORKDIR /workspace
 
-# Copy the eval framework + baselines. A submitter replaces / extends
-# these with their own training code, but keeps wikitext.py untouched
-# (it defines the contract the runner trusts).
-COPY wikitext.py baseline_ngram.py baseline_transformer.py run_eval.py ./
+COPY wikitext.py baseline_ngram.py baseline_transformer.py \
+     run_eval.py verify_nvml.py fetch_data.py task.py \
+     entrypoint.sh submission.py ./
 
-# Default entrypoint: the n-gram reference baseline. Submitters override
-# CMD or ship a different run.sh.
-CMD ["python3", "run_eval.py", "--data-dir", "/data", "--baseline", "ngram", "--n", "5"]
+RUN chmod +x entrypoint.sh
+
+ENTRYPOINT ["./entrypoint.sh"]

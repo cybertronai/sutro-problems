@@ -24,12 +24,23 @@ note: training-only). Eval is *not* energy-accounted.
 """
 from __future__ import annotations
 
+import os
+import signal
+import threading
 import time
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable, Iterator
+
+
+class BudgetExceededError(RuntimeError):
+    """Raised inside ``EnergyMeter.measure()`` when running net energy
+    crosses the configured ``e_max_joules`` budget. The submission is
+    disqualified; partial duration / energy are still recorded on the
+    yielded ``Measurement``.
+    """
 
 
 # ---------------------------------------------------------------------------
@@ -152,11 +163,13 @@ def evaluate(
 class Measurement:
     energy_joules: float | None = None
     duration_s: float = 0.0
+    budget_exceeded: bool = False
 
     def __str__(self) -> str:
         e = (f"{self.energy_joules:,.1f} J"
              if self.energy_joules is not None else "energy: not measured")
-        return f"{e}   duration={self.duration_s:.1f}s"
+        dq = "  [BUDGET EXCEEDED]" if self.budget_exceeded else ""
+        return f"{e}   duration={self.duration_s:.1f}s{dq}"
 
 
 class EnergyMeter:
@@ -176,11 +189,27 @@ class EnergyMeter:
     On hosts without NVML (CPU-only laptops), ``available`` is ``False``
     and ``Measurement.energy_joules`` is ``None``. Submissions to the
     leaderboard must run on a host where ``available`` is ``True``.
+
+    If ``e_max_joules`` is set, a watchdog thread polls NVML every
+    ``poll_interval_s`` seconds during ``measure()``; when the running
+    net energy crosses the budget, ``BudgetExceededError`` is raised
+    into the main thread via SIGUSR1. The watchdog is a no-op on hosts
+    without NVML and on non-main-thread callers (signal install fails);
+    those callers hit the wall-clock hard floor instead.
     """
 
-    def __init__(self, *, gpu_index: int = 0, idle_watts: float = 50.0):
+    def __init__(
+        self,
+        *,
+        gpu_index: int = 0,
+        idle_watts: float = 50.0,
+        e_max_joules: float | None = None,
+        poll_interval_s: float = 0.25,
+    ):
         self.gpu_index = gpu_index
         self.idle_watts = idle_watts
+        self.e_max_joules = e_max_joules
+        self.poll_interval_s = poll_interval_s
         self.available = False
         self._handle = None
         self._pynvml = None
@@ -202,15 +231,89 @@ class EnergyMeter:
         if self.available and self._pynvml is not None:
             e0 = self._pynvml.nvmlDeviceGetTotalEnergyConsumption(self._handle)
         t0 = time.monotonic()
+
+        watchdog_stop = threading.Event()
+        watchdog_thread: threading.Thread | None = None
+        prev_handler = None
+        budget_armed = (
+            self.e_max_joules is not None
+            and self.available
+            and self._pynvml is not None
+            and e0 is not None
+        )
+
+        if budget_armed:
+            try:
+                prev_handler = signal.signal(
+                    signal.SIGUSR1, _make_budget_signal_handler(m, self.e_max_joules)
+                )
+            except (ValueError, OSError):
+                # Not on main thread, or signal not available — fall back
+                # to os._exit() inside the watchdog.
+                prev_handler = None
+
+            main_pid = os.getpid()
+            handler_installed = prev_handler is not None
+            e_max = float(self.e_max_joules)  # type: ignore[arg-type]
+            pynvml = self._pynvml
+            handle = self._handle
+            idle_w = self.idle_watts
+            poll = self.poll_interval_s
+
+            def _watchdog() -> None:
+                while not watchdog_stop.wait(poll):
+                    try:
+                        e_now = pynvml.nvmlDeviceGetTotalEnergyConsumption(handle)
+                    except Exception:
+                        return
+                    duration = time.monotonic() - t0
+                    e_run_j = (e_now - e0) / 1000.0
+                    e_net_j = max(0.0, e_run_j - duration * idle_w)
+                    if e_net_j > e_max:
+                        m.budget_exceeded = True
+                        m.energy_joules = e_net_j
+                        m.duration_s = duration
+                        if handler_installed:
+                            os.kill(main_pid, signal.SIGUSR1)
+                        else:
+                            # Best-effort hard kill when we can't raise
+                            # into the main thread cleanly.
+                            os._exit(124)
+                        return
+
+            watchdog_thread = threading.Thread(target=_watchdog, daemon=True)
+            watchdog_thread.start()
+
         try:
             yield m
         finally:
-            m.duration_s = time.monotonic() - t0
-            if self.available and self._pynvml is not None and e0 is not None:
-                e1 = self._pynvml.nvmlDeviceGetTotalEnergyConsumption(self._handle)
-                e_run_j = (e1 - e0) / 1000.0  # NVML returns millijoules
-                e_idle_j = m.duration_s * self.idle_watts
-                m.energy_joules = max(0.0, e_run_j - e_idle_j)
+            watchdog_stop.set()
+            if watchdog_thread is not None:
+                watchdog_thread.join(timeout=2.0)
+            if prev_handler is not None:
+                try:
+                    signal.signal(signal.SIGUSR1, prev_handler)
+                except (ValueError, OSError):
+                    pass
+            # If the watchdog already filled these in, leave them — the
+            # post-fire NVML read can race the kill and produce a smaller
+            # delta. Otherwise compute as usual.
+            if not m.budget_exceeded:
+                m.duration_s = time.monotonic() - t0
+                if self.available and self._pynvml is not None and e0 is not None:
+                    e1 = self._pynvml.nvmlDeviceGetTotalEnergyConsumption(self._handle)
+                    e_run_j = (e1 - e0) / 1000.0  # NVML returns millijoules
+                    e_idle_j = m.duration_s * self.idle_watts
+                    m.energy_joules = max(0.0, e_run_j - e_idle_j)
+
+
+def _make_budget_signal_handler(m: Measurement, e_max: float | None):
+    def _handler(signum, frame):  # noqa: ARG001
+        raise BudgetExceededError(
+            f"training energy budget exceeded "
+            f"(e_max={e_max:,.0f} J, used≈{m.energy_joules or 0:,.0f} J)"
+        )
+    return _handler
 
 
 # ---------------------------------------------------------------------------

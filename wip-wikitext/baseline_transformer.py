@@ -17,6 +17,16 @@ GPT-2 conventions adopted:
 * Linear warmup then cosine decay to ``0.1 × peak_lr``.
 * Dropout in residual paths and on embeddings.
 
+Position encoding is **RoPE** (rotary), not GPT-2's learned absolute
+``pos_emb``. RoPE encodes relative offsets via per-pair rotations of
+Q/K, so the streaming KV-cache trim is correct by construction: a new
+query at absolute position ``t`` attending to cached keys at positions
+``[t-keep, t-1]`` sees relative offsets ``[0, keep-1]`` regardless of
+how big ``t`` gets. Learned ``pos_emb`` does *not* survive trim
+(cached k/v keep their original baked-in position embeddings while the
+new query's offset re-anchors to the cache length, collapsing
+positional information after the first overflow).
+
 Three named configs (call ``CONFIGS[name]`` to expand):
 
 | name  | layers | d_model | heads | params  | indicative train cost |
@@ -66,6 +76,40 @@ CONFIGS: dict[str, Config] = {
 # Model
 # ---------------------------------------------------------------------------
 
+def _rope_cos_sin(
+    d_head: int, offset: int, T: int, *, device: torch.device,
+    base: float = 10000.0,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """RoPE rotary cos/sin for absolute positions ``[offset, offset+T)``.
+
+    Returned tensors are ``(T, d_head/2)`` in fp32; cast to the q/k dtype
+    at the multiply site.
+    """
+    inv_freq = 1.0 / (base ** (
+        torch.arange(0, d_head, 2, device=device, dtype=torch.float32) / d_head
+    ))
+    pos = torch.arange(offset, offset + T, device=device, dtype=torch.float32)
+    freqs = torch.outer(pos, inv_freq)  # (T, d_head/2)
+    return freqs.cos(), freqs.sin()
+
+
+def _apply_rope(
+    x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor,
+) -> torch.Tensor:
+    """Rotate ``x`` of shape ``(B, n_heads, T, d_head)`` by RoPE.
+
+    ``cos``/``sin`` are ``(T, d_head/2)``; the d_head is split into
+    ``(even, odd)`` pairs treated as the (real, imag) components of a
+    rotation by angle ``pos × inv_freq``.
+    """
+    x_e, x_o = x[..., 0::2], x[..., 1::2]
+    c = cos.unsqueeze(0).unsqueeze(0).to(x.dtype)
+    s = sin.unsqueeze(0).unsqueeze(0).to(x.dtype)
+    rot_e = x_e * c - x_o * s
+    rot_o = x_e * s + x_o * c
+    return torch.stack((rot_e, rot_o), dim=-1).flatten(-2)
+
+
 class CausalSelfAttention(nn.Module):
     def __init__(self, d_model: int, n_heads: int, dropout: float):
         super().__init__()
@@ -81,6 +125,8 @@ class CausalSelfAttention(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
+        cos: torch.Tensor,
+        sin: torch.Tensor,
         k_cache: torch.Tensor | None = None,
         v_cache: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
@@ -89,6 +135,8 @@ class CausalSelfAttention(nn.Module):
         q = q.view(B, T, self.n_heads, self.d_head).transpose(1, 2)
         k = k.view(B, T, self.n_heads, self.d_head).transpose(1, 2)
         v = v.view(B, T, self.n_heads, self.d_head).transpose(1, 2)
+        q = _apply_rope(q, cos, sin)
+        k = _apply_rope(k, cos, sin)
         if k_cache is not None and v_cache is not None:
             k = torch.cat([k_cache, k], dim=2)
             v = torch.cat([v_cache, v], dim=2)
@@ -117,10 +165,12 @@ class Block(nn.Module):
     def forward(
         self,
         x: torch.Tensor,
+        cos: torch.Tensor,
+        sin: torch.Tensor,
         k_cache: torch.Tensor | None = None,
         v_cache: torch.Tensor | None = None,
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-        h, k, v = self.attn(self.ln1(x), k_cache, v_cache)
+        h, k, v = self.attn(self.ln1(x), cos, sin, k_cache, v_cache)
         x = x + h
         x = x + self.mlp(self.ln2(x))
         return x, k, v
@@ -137,10 +187,12 @@ class CharTransformer(nn.Module):
         dropout: float = 0.1,
     ):
         super().__init__()
+        if d_model % n_heads != 0:
+            raise ValueError("d_model must be divisible by n_heads")
         self.vocab_size = vocab_size
         self.max_len = max_len
+        self.d_head = d_model // n_heads
         self.tok_emb = nn.Embedding(vocab_size, d_model)
-        self.pos_emb = nn.Embedding(max_len, d_model)
         self.emb_drop = nn.Dropout(dropout)
         self.blocks = nn.ModuleList(
             [Block(d_model, n_heads, 4 * d_model, dropout) for _ in range(n_layers)]
@@ -155,19 +207,16 @@ class CharTransformer(nn.Module):
         self,
         x: torch.Tensor,
         kv_caches: list[tuple[torch.Tensor, torch.Tensor]] | None = None,
+        *,
+        position: int = 0,
     ) -> tuple[torch.Tensor, list[tuple[torch.Tensor, torch.Tensor]]]:
         T = x.shape[1]
-        offset = 0 if kv_caches is None else kv_caches[0][0].shape[2]
-        if offset + T > self.max_len:
-            raise RuntimeError(
-                f"context overflow: offset={offset} + T={T} > max_len={self.max_len}"
-            )
-        pos = torch.arange(offset, offset + T, device=x.device)
-        h = self.emb_drop(self.tok_emb(x) + self.pos_emb(pos))
+        h = self.emb_drop(self.tok_emb(x))
+        cos, sin = _rope_cos_sin(self.d_head, position, T, device=x.device)
         new_caches: list[tuple[torch.Tensor, torch.Tensor]] = []
         for i, block in enumerate(self.blocks):
             kc, vc = (None, None) if kv_caches is None else kv_caches[i]
-            h, k, v = cast("Block", block)(h, kc, vc)
+            h, k, v = cast("Block", block)(h, cos, sin, kc, vc)
             new_caches.append((k, v))
         h = self.ln_f(h)
         return self.head(h), new_caches
@@ -319,7 +368,16 @@ def _validate(model: CharTransformer, ids: torch.Tensor, max_len: int,
 # ---------------------------------------------------------------------------
 
 class TransformerModel(CharModel):
-    """KV-cached streaming wrapper around a trained ``CharTransformer``."""
+    """KV-cached streaming wrapper around a trained ``CharTransformer``.
+
+    Holds a true absolute-position counter ``_pos`` that is passed into
+    every ``forward`` so RoPE rotates the new query at its real
+    position. Combined with the sliding-window trim in
+    ``_maybe_trim_cache``, this keeps the relative offset between any
+    surviving cached key and the current query within
+    ``[0, max_len-1]`` — i.e. inside the trained range — for
+    arbitrarily long streams.
+    """
 
     def __init__(self, model: CharTransformer, device: str | None = None):
         self.model = model
@@ -327,22 +385,24 @@ class TransformerModel(CharModel):
         self.model.eval()
         self._kv: list[tuple[torch.Tensor, torch.Tensor]] | None = None
         self._next_logits: torch.Tensor | None = None
+        self._pos: int = 0
 
     @torch.no_grad()
     def reset(self) -> None:
         self._kv = None
+        self._pos = 0
         # Seed with a single zero byte so the first predict() has a
         # valid distribution. The zero byte is conventionally treated
         # as a stream-start sentinel; submissions can override.
         x = torch.zeros(1, 1, dtype=torch.long, device=self.device)
-        logits, self._kv = self.model(x, None)
+        logits, self._kv = self.model(x, None, position=self._pos)
         self._next_logits = logits[0, -1]
+        self._pos = 1
 
     @torch.no_grad()
     def predict(self) -> dict[str, float]:
         if self._next_logits is None:
             raise RuntimeError("predict() called before reset()")
-        self._maybe_trim_cache()
         probs = F.softmax(self._next_logits.float(), dim=-1)
         out: dict[str, float] = {}
         for byte_id, p in enumerate(probs.tolist()):
@@ -360,8 +420,9 @@ class TransformerModel(CharModel):
         for byte in char.encode("utf-8"):
             self._maybe_trim_cache()
             x = torch.tensor([[byte]], dtype=torch.long, device=self.device)
-            logits, self._kv = self.model(x, self._kv)
+            logits, self._kv = self.model(x, self._kv, position=self._pos)
             self._next_logits = logits[0, -1]
+            self._pos += 1
 
     def _maybe_trim_cache(self) -> None:
         if self._kv is None:

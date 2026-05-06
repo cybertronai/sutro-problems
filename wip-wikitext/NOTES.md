@@ -149,6 +149,32 @@ Lambda bills per minute and does *not* auto-terminate idle instances.
 Always tear down via the API or web console as soon as a run
 completes, or you'll pay overnight rates for nothing.
 
+### `--e-max-joules` is a soft cap, not a hard one
+
+`EnergyMeter(e_max_joules=N)` arms a daemon thread that polls NVML
+every 250 ms and, when running net energy crosses `N`, sends SIGUSR1
+to the main thread; the handler raises `BudgetExceededError`. If
+signal install fails (caller is on a worker thread, etc.) the
+watchdog falls back to `os._exit(124)`.
+
+Two structural limits to know:
+
+- **Soft cap inside the submitter's process.** A submission that
+  doesn't wrap training in `EnergyMeter.measure()`, or that catches
+  `RuntimeError` broadly, bypasses it. Defending against that needs
+  an *external* hard-floor SIGKILL at the container/wrapper level —
+  not yet implemented (see Outstanding). For now we trust the
+  submission contract; the in-process killswitch defends against
+  honest-mistake over-budget runs, not adversarial ones.
+- **No-op on CPU hosts.** Without NVML the watchdog never spawns.
+  The flag is silently inert; `run_eval.py` prints a warning to make
+  this visible.
+
+The poll interval is a tradeoff: 250 ms means the energy reading at
+kill can overshoot `N` by up to ~100 J on an A100 at 400 W. Tighten
+via the `poll_interval_s` constructor arg if that overshoot matters
+for your leaderboard tolerance.
+
 ### Original `run_eval.py` had no checkpointing
 
 If eval crashed after training, the trained model was lost. Fixed
@@ -170,7 +196,9 @@ without retraining.
   three configs (`tiny` / `small` / `gpt2` ≈ 0.6M / 5M / 22M params),
   weight tying, bf16 autocast in training, KV-cached streaming.
 - `run_eval.py` — CLI runner; trains under `EnergyMeter`, optionally
-  saves a checkpoint, then evaluates.
+  saves a checkpoint, then evaluates. `--e-max-joules N` arms an
+  NVML-polling watchdog that kills training over budget and reports
+  the run as DISQUALIFIED (exit 2).
 - `test_wikitext.py` — 7 tests, all passing on CPU. Includes a
   structural test that `predict()` is always called before the
   matching `observe()`.
@@ -207,6 +235,11 @@ without retraining.
   `small` is in the table.
 - Optional: re-run on A100 80GB once Lambda capacity returns, to
   match the README's pinned platform exactly.
+- **External hard-floor SIGKILL** at ~1.5× E_max wall-clock (or a
+  fixed ceiling like 7.5 min) as a second-layer defense against
+  submissions that bypass the in-meter watchdog. Lives wherever the
+  official re-evaluator lives — likely a wrapper / sidecar around
+  the submission's Docker container, not in `wikitext.py`.
 
 ---
 
