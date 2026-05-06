@@ -5,10 +5,6 @@ Onboarding notes for someone picking this up cold. Pairs with
 [`RUNBOOK.md`](RUNBOOK.md) (Lambda provisioning steps); this file is
 the *why* and the gotchas, not the *what*.
 
-Status as of **2026-05-05**: v0 implementation landed; first baseline
-training run in flight on a Lambda A100 SXM4 40GB; record-history
-table not yet populated. See [Status](#status) below.
-
 ---
 
 ## Design philosophy
@@ -103,13 +99,13 @@ This is the single biggest constraint on provider choice and the
 reason RUNBOOK.md pins Lambda (with RunPod Secure as documented
 fallback).
 
-### A100 80GB SXM4 has frequently-zero capacity on Lambda
+### Pinned SKU is A100 40GB SXM4 (`gpu_1x_a100_sxm4`)
 
-The README pins A100 80GB. The 40GB SXM4 SKU is the same chip, same
-400W TDP, half the memory — energy numbers should be directly
-comparable. The current in-flight baseline is on 40GB. If/when 80GB
-returns and we want to re-anchor, the cost difference per run should
-be small.
+We pin the 40GB SXM4 because it has reliable capacity on Lambda; the
+80GB SXM4 SKU is frequently capacity-blocked. Same chip, same 400W
+TDP — only memory differs — so submissions that fit in 40GB produce
+energy numbers directly comparable to anything you'd measure on 80GB
+if capacity returned.
 
 **Important:** never substitute a *different-chip* GPU (e.g. H100) for
 A100 without explicit user approval. TDP, tensor-core efficiency, and
@@ -225,34 +221,23 @@ without retraining.
 - `verify_nvml.py` — verification script. Run on Lambda A100 SXM4
   40GB on 2026-05-05: idle 45 W, 30 s stress drew 11.6 kJ at 329 W
   avg, counter monotonic ✓.
-- `RUNBOOK.md` — Lambda provisioning + verification + train +
-  capture procedure with cost estimates (manual fallback to
-  `submit.py`).
-
-### In flight (as of 2026-05-05)
-
-- Re-run of `small`-config baseline (4.94M params, 30K steps) on
-  Lambda A100 SXM4 40GB with progress indicator and `--save-model`.
-  First run got the training number (186,868 J / 1032 s) but its eval
-  was killed without progress visibility. The re-run is at step
-  ~11,600 / 30,000 at last check.
+- `RUNBOOK.md` — manual Lambda procedure for NVML verification on
+  new SKUs and standalone baseline experimentation (not a submission
+  path; submissions go through `submit.py`).
 
 ### Outstanding
 
-- Populate first row of the record-history table in `README.md`
-  once the in-flight run finishes.
 - Speedups for streaming eval (pre-compute byte→char map, bf16
   inference, CUDA graphs).
 - Pick **leaderboard framing**: fixed-budget vs fixed-floor (or
   both).
-- Pick **target numbers**: budget level (e.g. 1 MJ? 100 kJ?) or
-  accuracy floor.
+- Pick **`ACC_MIN`** for the fixed-floor framing — needs an anchor
+  from a real Lambda A100 baseline record. (`E_MAX_JOULES` is pinned
+  at 100 kJ from the 329 W avg-net measurement.)
 - Designate **official evaluator** (who runs the re-evaluation pass).
 - Pick **reproduction tolerance** (energy ±X%, accuracy ±Y points).
 - Optional: run `gpt2` config (~22M params, ~$10 on A100) once
   `small` is in the table.
-- Optional: re-run on A100 80GB once Lambda capacity returns, to
-  match the README's pinned platform exactly.
 - **External hard-floor SIGKILL** at ~1.5× E_max wall-clock (or a
   fixed ceiling like 7.5 min) as a second-layer defense against
   submissions that bypass the in-meter watchdog. Lives wherever the
@@ -266,7 +251,7 @@ without retraining.
 | file                       | purpose                                                          |
 |----------------------------|------------------------------------------------------------------|
 | `README.md`                | Problem definition, design rationale, open items                 |
-| `RUNBOOK.md`               | Lambda provisioning + train + capture procedure                  |
+| `RUNBOOK.md`               | Manual Lambda procedure: NVML verification + baseline experiments |
 | `NOTES.md`                 | (this file) Why decisions, gotchas, status                       |
 | `wikitext.py`              | `CharModel` ABC, `evaluate()`, `EnergyMeter`, data loader        |
 | `baseline_ngram.py`        | Char n-gram baseline (no torch)                                  |
@@ -300,7 +285,7 @@ To submit a record:
 1. Write your submission as a Python file exposing
    `train(train_text, valid_text=None) -> CharModel`. See
    `example_submission.py` for the minimal shape.
-2. Run `python3 submit.py path/to/your_submission.py --config small`.
+2. Run `python3 submit.py path/to/your_submission.py`.
    `submit.py` builds the image, pushes to GHCR, runs on Lambda,
    pulls the result, terminates the instance, and appends the row
    to the Record History table for you.

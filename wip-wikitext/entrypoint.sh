@@ -42,16 +42,28 @@ EVAL_ARGS=(--max-test-chars "$TEST_CHARS")
 [ -n "$E_MAX" ] && EVAL_ARGS+=(--e-max-joules "$E_MAX")
 
 # Train + eval.
+#
+# run_eval.py exits 2 (with a written result.json.tmp) on the
+# energy-budget disqualification path, and >0 with no result.json.tmp on
+# any other failure. We treat the former as a *valid benchmark outcome*
+# and ship the result back to the orchestrator; only the latter is a
+# harness failure.
 echo "[entrypoint] running submission (task: TEST_CHARS=$TEST_CHARS E_MAX=${E_MAX:-unset}) ..."
 python3 run_eval.py \
     --data-dir /data \
     --submission submission.py \
     --results-json /results/result.json.tmp \
     "${EVAL_ARGS[@]}" \
-    > /results/run.log 2>&1 || {
-        cp /results/run.log /results/error.log
-        fail "run_eval.py failed; see run.log"
-    }
+    > /results/run.log 2>&1
+rc=$?
 
-sync && mv /results/result.json.tmp /results/result.json
+sync
+if [ -f /results/result.json.tmp ]; then
+    mv /results/result.json.tmp /results/result.json
+fi
+
+if [ $rc -ne 0 ] && [ ! -f /results/result.json ]; then
+    cp /results/run.log /results/error.log
+    fail "run_eval.py failed; see run.log"
+fi
 echo "[entrypoint] done."

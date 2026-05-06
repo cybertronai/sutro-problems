@@ -2,9 +2,8 @@
 
 > *Work in progress.* The v0 reference scorer, both baselines, and the
 > Docker harness exist (this folder). What's still pending is the first
-> Lambda A100 run that produces a real (energy, char-acc) record — see
-> [`RUNBOOK.md`](RUNBOOK.md) for the manual procedure, and the empty
-> Record History table at the bottom for the slot it lands in.
+> Lambda A100 record — submit one with [`submit.py`](submit.py); the
+> empty Record History table at the bottom is where it lands.
 
 ## Motivation
 
@@ -41,9 +40,9 @@ numbers, only the constraint differs:
 | **fixed-budget** | `E_max` joules  | maximize char-acc   |
 | **fixed-floor**  | `acc_min`       | minimize joules     |
 
-(v0 leaves the actual `E_max` / `acc_min` thresholds open until we
-have a real reference number from the Lambda A100 run — see Record
-History below.)
+`E_max` is pinned at **100 kJ** in [`task.py`](task.py) (≈5 min × 329 W
+avg net on the pinned A100 SXM4). `acc_min` is unset until a baseline
+record exists to anchor it; see Open items.
 
 ## API
 
@@ -83,8 +82,9 @@ xfmr_streamer = TransformerModel(xfmr)   # KV-cached streaming wrapper
 
 ## Energy measurement
 
-- **Hardware**: pinned **Lambda On-Demand A100 80GB**. Documented
-  fallback if capacity unavailable: RunPod Secure A100 80GB.
+- **Hardware**: pinned **Lambda On-Demand A100 40GB SXM4**
+  (`gpu_1x_a100_sxm4`). Documented fallback if capacity unavailable:
+  RunPod Secure A100 40GB SXM4.
 - **Counter**: `nvmlDeviceGetTotalEnergyConsumption` — monotonic
   millijoule counter exposed on Volta+. Read at run start, read at
   run end, subtract. No sampling-rate error, no power-draw integration.
@@ -137,7 +137,7 @@ against unintentional cheating from coding agents.
 | `verify_nvml.py`           | NVML energy-counter verification for a target host               |
 | `test_wikitext.py`         | tests for the evaluator + n-gram                                 |
 | `Dockerfile`               | submitter harness template (PyTorch 2.5.1 + CUDA 12.4)           |
-| `RUNBOOK.md`               | manual Lambda A100 procedure (fallback to `submit.py`)           |
+| `RUNBOOK.md`               | NVML verification + manual baseline experimentation on Lambda A100 |
 | `.env.example`             | env vars `submit.py` reads (`LAMBDA_API_KEY`, `GHCR_USER`)       |
 | `submissions/`             | result JSON + training log + NVML JSON evidence per submission   |
 
@@ -148,6 +148,8 @@ against unintentional cheating from coding agents.
 python3 test_wikitext.py
 
 # Quick smoke run on the full pipeline (works on CPU; energy=NOT MEASURED).
+# (Note: torch-based submissions also need `pip install torch` locally —
+# submit.py runs an import-only precheck before any Lambda spend.)
 python3 run_eval.py --data-dir /path/to/wikitext-103-raw --baseline ngram --n 5
 
 # Reference transformer run on a Lambda A100 (see RUNBOOK.md).
@@ -168,8 +170,15 @@ Then ship it:
 
 ```bash
 cp example_submission.py my_submission.py    # edit to use your model
-python3 submit.py my_submission.py --config small
+python3 submit.py my_submission.py
 ```
+
+`submit.py` takes no model-sizing flags — training cost/timeout is
+fixed (see `EST_INSTANCE_MIN` in `submit.py`). Per-config knobs (e.g.
+`baseline_transformer`'s `config="tiny"|"small"|"gpt2"`, `n_steps`,
+`peak_lr`, …) live inside your submission file's `train()` function.
+The `--config` flag *only* applies to manual `run_eval.py` runs (see
+[`RUNBOOK.md`](RUNBOOK.md) §3).
 
 `submit.py` builds a Docker image around your file, pushes it to GHCR,
 provisions a Lambda A100 (pinned `INSTANCE_TYPE` from `task.py`),
@@ -187,19 +196,15 @@ template):
 3. `gh auth token | docker login ghcr.io -u $GHCR_USER --password-stdin`.
 4. SSH key registered on the Lambda dashboard, private key in your
    local `ssh-agent`.
-5. (New SKU only) run [`verify_nvml.py`](verify_nvml.py) once — see
-   `RUNBOOK.md` §1 and the NVML gotcha in `NOTES.md`.
+5. (New SKU only) run [`verify_nvml.py`](verify_nvml.py) once on the
+   target host — see [`RUNBOOK.md`](RUNBOOK.md) §1 and the NVML gotcha
+   in `NOTES.md`.
 
 **Task constants** ([`task.py`](task.py)) define the leaderboard
 contract: `TEST_CHARS=60_000`, `INSTANCE_TYPE=gpu_1x_a100_sxm4`,
-`E_MAX_JOULES=100_000` (≈ 5 min × 329 W avg net on the pinned A100
-SXM4; see `NOTES.md:181`). Submitters cannot vary these —
+`E_MAX_JOULES=100_000`. Submitters cannot vary these —
 `entrypoint.sh` forwards them from `task.py` to `run_eval.py` inside
 the container.
-
-**Manual path**: [`RUNBOOK.md`](RUNBOOK.md) — provision the instance
-yourself and run `run_eval.py` directly. Useful for debugging, NVML
-verification on a new SKU, or keeping a GPU warm across iterations.
 
 Submitter pays for their training run on the pinned Lambda SKU. An
 official re-evaluator (TBD — see Open items) re-runs the pushed image
@@ -212,9 +217,7 @@ These block "promote out of WIP", not "ship the v0 scorer":
 - **Primary leaderboard**: pick fixed-budget or fixed-floor (or run
   both indefinitely). Currently both are reported; the
   primary-vs-secondary call waits on having actual records to point at.
-- **Target numbers**: `E_max=100 kJ` set from the 329 W avg-net
-  measurement; revisit after the first real Lambda A100 run. `acc_min`
-  still needs an anchor.
+- **`acc_min`**: needs an anchor from a real Lambda A100 baseline run.
 - **Official re-evaluator**: who runs the reproduction pass on
   submitted images.
 - **Reproduction tolerance**: ±X% on energy, ±Y points on accuracy.
@@ -222,8 +225,7 @@ These block "promote out of WIP", not "ship the v0 scorer":
 
 ## Record History
 
-*(no records yet — first row lands after the Lambda A100 run in
-[`RUNBOOK.md`](RUNBOOK.md))*
+*(no records yet — first row lands after `submit.py` runs)*
 
 | Date | Energy (J) | Char-acc | Config | Submission | Contributor |
 |------|-----------:|---------:|--------|------------|-------------|

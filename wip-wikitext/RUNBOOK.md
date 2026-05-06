@@ -1,20 +1,26 @@
 # Lambda A100 runbook
 
-Step-by-step for the two open items in `README.md`:
+Manual Lambda A100 procedure for two **non-submission** uses:
 
-1. Verify `nvmlDeviceGetTotalEnergyConsumption` is exposed on the Lambda
-   On-Demand A100 80GB SKU.
-2. Train a from-scratch transformer baseline and produce the first
-   record-history entry (energy, char-acc).
+1. Verify `nvmlDeviceGetTotalEnergyConsumption` is exposed on a new
+   GPU SKU (currently the Lambda On-Demand A100 40GB SXM4,
+   `gpu_1x_a100_sxm4`).
+2. Train a from-scratch transformer baseline by hand — for debugging,
+   timing experiments, or seeding a baseline number.
 
-This is a manual procedure for now. It assumes you have a Lambda
-account, an SSH key registered, and the Lambda CLI or the web console.
+**This is not the submission path.** Records go through
+[`submit.py`](submit.py), which orchestrates everything below
+automatically. Use this runbook only when you need to drive the host
+yourself.
+
+It assumes you have a Lambda account, an SSH key registered, and the
+Lambda web console.
 
 ---
 
 ## 0. Provision
 
-Web console → **Launch instance** → **A100 (80 GB) SXM** → 1× GPU →
+Web console → **Launch instance** → **A100 (40 GB) SXM** → 1× GPU →
 Ubuntu 22.04 image → your SSH key. Wait for it to boot, then:
 
 ```bash
@@ -24,7 +30,7 @@ ssh ubuntu@<instance-ip>
 Cost is billed per minute. Tear down with **Terminate instance** in
 the console as soon as the run finishes — Lambda does *not* auto-stop.
 
-## 1. NVML verification (5 minutes, ≈$0.15)
+## 1. NVML verification (5 minutes, ≈$0.17)
 
 ```bash
 # On the Lambda host
@@ -39,7 +45,7 @@ python3 verify_nvml.py
 Expected output:
 
 ```
-GPU: NVIDIA A100-SXM4-80GB
+GPU: NVIDIA A100-SXM4-40GB
 sampling idle power for 3s ...
   idle: 50-80 W
 running 30s stress workload ...
@@ -93,21 +99,17 @@ ls ~/data/wikitext-103-raw/   # wiki.{train,valid,test}.raw
 ## 3. Train a transformer baseline
 
 Three configs ship in `baseline_transformer.py`. Pick one based on
-how much A100 time you want to burn for the first record:
+how much A100 time you want to burn for the experiment:
 
-| config | params | recommended steps | training wall-clock | training cost @ $1.79/hr |
+| config | params | recommended steps | training wall-clock | training cost @ $1.99/hr |
 |--------|--------|-------------------|---------------------|--------------------------|
-| tiny   | ~0.6 M | 5,000             | ~5 min              | ~$0.15                   |
-| small  | ~5 M   | 30,000            | ~45 min             | ~$1.35                   |
-| gpt2   | ~22 M  | 100,000           | ~5 hr               | ~$9                      |
+| tiny   | ~0.6 M | 5,000             | ~5 min              | ~$0.17                   |
+| small  | ~5 M   | 30,000            | ~45 min             | ~$1.49                   |
+| gpt2   | ~22 M  | 100,000           | ~5 hr               | ~$10                     |
 
 (Training wall-clock is rough — depends on CPU bottleneck on data
-shuffling etc. Re-time after the first run. **Note:** these numbers
-cover only the training phase. The full submission cycle via
-`submit.py` adds ~5–7 min of Lambda boot + image pull + NVML probe
-+ data fetch + 60K-char eval — see `submit.py`'s `COST_ESTIMATES`
-for the instance-time figure that actually drives the wall-clock
-timeout.)
+shuffling etc. Re-time after the first run. These numbers cover
+training only; eval on the 60K-char slice adds ~2 min.)
 
 Quick **tiny** smoke run (validates the full pipeline before any
 expensive run):
@@ -121,7 +123,7 @@ python3 run_eval.py \
   --n-steps 5000
 ```
 
-Full **small** baseline (recommended first record):
+Full **small** baseline (representative training run):
 
 ```bash
 python3 run_eval.py \
@@ -135,22 +137,16 @@ python3 run_eval.py \
 **Fixed-budget runs** — pass `--e-max-joules N` to arm the in-meter
 watchdog. It polls NVML every 250 ms; once running net energy crosses
 `N` joules the training is killed, the runner prints a
-`DISQUALIFIED:` block, and exits with code 2. Use this for any
-submission targeting the fixed-budget leaderboard — that way a
-config that runs too long self-disqualifies instead of silently
-producing an over-budget number:
+`DISQUALIFIED:` block, and exits with code 2. The leaderboard value
+is `task.E_MAX_JOULES = 100_000`:
 
 ```bash
 python3 run_eval.py \
   --data-dir ~/data/wikitext-103-raw \
   --baseline transformer --config small --n-steps 30000 \
-  --e-max-joules 100000 \          # actual leaderboard E_max TBD
+  --e-max-joules 100000 \
   | tee training.log
 ```
-
-(The actual `E_max` for the v0 leaderboard isn't pinned yet — see
-`README.md` open items. The flag works at any threshold; pick the
-one your submission targets.)
 
 The runner prints a final block like:
 
@@ -173,21 +169,13 @@ training energy (J): 100,142.0  (at kill)
 (exit code 2; eval is skipped — the partially-trained model is not
 scored.)
 
-## 4. Capture the result
+## 4. Save artifacts and tear down
 
-Save four artefacts back to the repo:
-
-1. `submissions/<config>_<date>.log` — full `training.log` from
-   the run.
-2. The `verify_nvml.py` JSON output (one line) — proof the host
-   passed verification.
-3. A row appended to a "Record history" table in the README:
-
-   | Date       | Energy (J) | Char-acc | Config    | Submission        | Contributor |
-   |------------|-----------:|---------:|-----------|-------------------|-------------|
-   | YYYY-MM-DD |  4,832,109 |  0.6234  | small     | [log](submissions/small_YYYY-MM-DD.log) | @you |
-
-4. Tear down the Lambda instance.
+If the run is something you want to keep around — a verification log
+on a new SKU, a baseline timing reference — copy the relevant files
+back off the host (`scp`) before terminating. The leaderboard's
+Record History is populated by `submit.py` only; manual runs do not
+land there.
 
 ## 5. Tear down
 

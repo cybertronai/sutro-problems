@@ -8,7 +8,7 @@ Confirms three things:
 3. Energy attributable to a known stress workload is in the **expected
    ballpark** for the card (200–400 W average on an A100).
 
-Run on a Lambda On-Demand A100 80GB instance after installing
+Run on a Lambda On-Demand A100 40GB SXM4 instance after installing
 ``nvidia-ml-py`` and ``torch``::
 
     pip install nvidia-ml-py torch

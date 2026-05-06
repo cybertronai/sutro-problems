@@ -23,8 +23,14 @@ Setup (once):
       export GHCR_USER=<github_username>
 
 Usage:
-  python3 submit.py path/to/my_submission.py --config small
-  python3 submit.py example_submission.py --config tiny --yes
+  python3 submit.py path/to/my_submission.py
+  python3 submit.py example_submission.py --yes
+  python3 submit.py my_submission.py --wait-for-capacity --wait-timeout 3600
+
+Note: submit.py takes no model-sizing flags. Cost/timeout is fixed (see
+EST_INSTANCE_MIN). Per-config knobs (e.g. baseline_transformer's
+config="tiny"|"small"|"gpt2", n_steps, …) live inside your submission
+file's train() function; see example_submission.py.
 """
 from __future__ import annotations
 
@@ -45,16 +51,15 @@ import task  # task-pinned constants — single source of truth
 LAMBDA_API = "https://cloud.lambda.ai/api/v1"
 INSTANCE_TYPE = task.INSTANCE_TYPE
 
-# (est_instance_minutes, est_cost_usd_at_$1.79/hr) — informational, drives
-# only the wall-clock timeout. These cover the **whole instance lifetime**
-# (boot + image pull + NVML probe + data fetch + train + eval), which is
-# what Lambda actually bills for. Per-config training-only wall-clocks in
-# RUNBOOK.md are smaller; the gap is ~5–7 min of overhead per submission.
-COST_ESTIMATES = {
-    "tiny":  (10, 0.30),
-    "small": (50, 1.50),
-    "gpt2":  (310, 9.30),
-}
+# Estimated whole-instance-lifetime budget (boot + image pull + NVML
+# probe + data fetch + train + eval) — what Lambda actually bills for.
+# Training is bounded at ~5 min by task.E_MAX_JOULES = 100 kJ on the
+# pinned A100 SXM4 (≈329 W avg). Plus ~7 min Lambda boot + image pull +
+# NVML probe + data fetch + ~2 min eval gives ~15 min realistic /
+# ~25 min worst case. The estimate drives the cost-confirmation prompt;
+# the wall-clock timeout applies a 2.5× safety factor on top.
+EST_INSTANCE_MIN = 25
+EST_COST_USD = round(EST_INSTANCE_MIN * 1.99 / 60, 2)
 
 HERE = Path(__file__).resolve().parent
 
@@ -112,15 +117,61 @@ def lambda_request(method: str, path: str, body: dict | None = None) -> dict:
         sys.exit(f"Lambda API {method} {path} failed: {e.code} {e.read().decode()}")
 
 
-def find_available_region() -> str:
+def _region_inventory() -> tuple[list[str], list[str]]:
+    """Return ``(available, all_regions)`` for ``INSTANCE_TYPE``.
+
+    ``available`` is the list of region names with capacity right now;
+    ``all_regions`` is every region Lambda exposes for this SKU
+    (including those at zero capacity), used purely for diagnostics.
+    """
     info = lambda_request("GET", "/instance-types")["data"]
     if INSTANCE_TYPE not in info:
         sys.exit(f"Lambda no longer offers {INSTANCE_TYPE}; check API")
-    regions = info[INSTANCE_TYPE]["regions_with_capacity_available"]
-    if not regions:
-        sys.exit(f"no Lambda capacity for {INSTANCE_TYPE} in any region; "
-                 f"try later or fall back to RunPod (see RUNBOOK.md)")
-    return regions[0]["name"]
+    entry = info[INSTANCE_TYPE]
+    available = [r["name"] for r in entry.get("regions_with_capacity_available", [])]
+    all_regions = sorted({r["name"] for r in entry.get("regions_with_capacity_available", [])}
+                         | {r["name"] for r in entry.get("regions", [])})
+    return available, all_regions
+
+
+def find_available_region(wait_timeout_s: int | None = None,
+                          poll_interval_s: int = 60) -> str:
+    """Return a region name with current capacity for ``INSTANCE_TYPE``.
+
+    With ``wait_timeout_s=None`` (default) this is one-shot: empty
+    inventory exits immediately, preserving fail-fast semantics for CI.
+    With a positive timeout, poll every ``poll_interval_s`` seconds
+    until a region appears or the timeout expires.
+    """
+    available, all_regions = _region_inventory()
+    if available:
+        return available[0]
+
+    diag_regions = ", ".join(all_regions) if all_regions else "(none reported)"
+    if not wait_timeout_s:
+        sys.exit(
+            f"no Lambda capacity for {INSTANCE_TYPE} in any region.\n"
+            f"  checked regions: {diag_regions}\n"
+            f"  retry later, or pass --wait-for-capacity to poll until a "
+            f"region opens up."
+        )
+
+    print(f"[wait-capacity] no {INSTANCE_TYPE} capacity yet; "
+          f"polling every {poll_interval_s}s for up to {wait_timeout_s // 60} min")
+    print(f"[wait-capacity]   checked regions: {diag_regions}")
+    t_end = time.monotonic() + wait_timeout_s
+    while time.monotonic() < t_end:
+        time.sleep(poll_interval_s)
+        available, _ = _region_inventory()
+        if available:
+            print(f"[wait-capacity] capacity opened in {available[0]}")
+            return available[0]
+        remaining = int(t_end - time.monotonic())
+        print(f"[wait-capacity] still no capacity; {remaining // 60} min remaining")
+    sys.exit(
+        f"no Lambda capacity for {INSTANCE_TYPE} after waiting "
+        f"{wait_timeout_s // 60} min; aborting."
+    )
 
 
 def pick_ssh_key(name: str | None) -> str:
@@ -165,6 +216,61 @@ HARNESS_FILES = (
     "entrypoint.sh",
     "Dockerfile",
 )
+
+
+def check_submission_imports(submission_path: Path) -> None:
+    """Import the submission file in a child process. Fails fast on
+    SyntaxError, missing module deps (typo'd imports, missing torch),
+    and `train` not being defined — all of which would otherwise only
+    surface mid-run on the Lambda host, after the user is being billed.
+
+    This does NOT call train() — it only imports the module and checks
+    that a callable `train` exists at module scope.
+    """
+    snippet = (
+        "import importlib.util, inspect, sys\n"
+        f"spec = importlib.util.spec_from_file_location('s', {str(submission_path)!r})\n"
+        "mod = importlib.util.module_from_spec(spec)\n"
+        "spec.loader.exec_module(mod)\n"
+        "fn = getattr(mod, 'train', None)\n"
+        "assert callable(fn), 'submission must define train(train_text, valid_text=None) -> CharModel'\n"
+    )
+    r = subprocess.run(
+        [sys.executable, "-c", snippet], capture_output=True, text=True, cwd=HERE,
+    )
+    if r.returncode != 0:
+        msg = (r.stderr or r.stdout or "").strip()
+        sys.exit(
+            f"submission failed to import locally: {submission_path}\n"
+            f"{msg}\n"
+            "(Note: transformer-based submissions need `pip install torch` "
+            "locally to validate; CPU is fine.)"
+        )
+
+
+def check_ssh_agent() -> None:
+    """Verify ssh-agent is running with at least one identity loaded
+    before any cloud spend.
+
+    Without this, ``wait_for_ssh`` swallows the SSH client error (it
+    runs with ``capture_output``) and then times out with a misleading
+    "ssh to <ip> never became reachable" — pointing at the cloud, when
+    the problem is local. Caught early, the user pays no instance time.
+    """
+    msg = (
+        "ssh-agent has no identities loaded. submit.py reaches the "
+        "Lambda host over ssh — without an agent identity, it would "
+        "boot the instance, fail to connect, then bill you while it "
+        "times out. Start the agent and load your Lambda key:\n"
+        "  eval $(ssh-agent -s) && ssh-add ~/.ssh/<your-lambda-key>"
+    )
+    try:
+        r = subprocess.run(["ssh-add", "-l"], capture_output=True, timeout=5)
+    except (FileNotFoundError, subprocess.TimeoutExpired):
+        sys.exit(msg)
+    # ssh-add -l: 0 = identities listed, 1 = no identities, 2 = no agent.
+    if r.returncode != 0:
+        sys.exit(msg)
 
 
 def check_ghcr_login() -> None:
@@ -347,15 +453,21 @@ def append_record(result: dict, json_relpath: str) -> None:
     """Append one row to the Record History table in README.md.
 
     Replaces the placeholder dash row if present, otherwise appends.
+    Disqualified rows render their accuracy cell as ``DQ`` so they
+    don't pollute the leaderboard sort.
     """
     readme = HERE / "README.md"
     text = readme.read_text()
     energy = result.get("training_energy_J")
     energy_cell = f"{energy:>10,.0f}" if energy is not None else "         —"
+    if result.get("disqualified"):
+        acc_cell = "      DQ"
+    else:
+        acc_cell = f"{result['test_char_accuracy']:.4f}"
     row = (
         f"| {result['date_utc'][:10]} "
         f"| {energy_cell} "
-        f"| {result['test_char_accuracy']:.4f} "
+        f"| {acc_cell} "
         f"| {result['submission']} "
         f"| [json]({json_relpath}) "
         f"| @you |\n"
@@ -376,13 +488,21 @@ def main() -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     p.add_argument("submission", type=Path,
                    help="Python file exposing train(train_text, valid_text=None) -> CharModel")
-    p.add_argument("--config", choices=list(COST_ESTIMATES), default="small",
-                   help="Cost-estimate preset (used for the wall-clock timeout). "
-                        "Submission code is not bound by it.")
     p.add_argument("--ssh-key", default=None,
                    help="Lambda SSH key name (defaults to first registered)")
     p.add_argument("--yes", action="store_true",
                    help="Skip cost confirmation prompt")
+    p.add_argument("--wait-for-capacity", action="store_true",
+                   help="If no Lambda region currently has capacity for "
+                        "the pinned SKU, poll until one does (instead of "
+                        "exiting immediately).")
+    p.add_argument("--wait-timeout", type=int, default=3600,
+                   help="With --wait-for-capacity, max seconds to poll "
+                        "before giving up. Default: 3600 (1 hour). "
+                        "Set to 0 with --wait-for-capacity to wait "
+                        "indefinitely.")
+    p.add_argument("--wait-poll-interval", type=int, default=60,
+                   help="Seconds between capacity polls. Default: 60.")
     args = p.parse_args()
 
     if not args.submission.exists():
@@ -391,12 +511,10 @@ def main() -> int:
     if not repo_owner:
         sys.exit("GHCR_USER not set in environment")
 
-    est_min, est_cost = COST_ESTIMATES[args.config]
     print(f"╭─ Lambda A100 wikitext submission ────────────")
     print(f"│  submission:    {args.submission}")
-    print(f"│  config:        {args.config}")
-    print(f"│  est. instance: ~{est_min} min  (boot + train + eval)")
-    print(f"│  est. cost:     ~${est_cost:.2f}")
+    print(f"│  est. instance: ~{EST_INSTANCE_MIN} min  (boot + train + eval)")
+    print(f"│  est. cost:     ~${EST_COST_USD:.2f}")
     print(f"╰───────────────────────────────────────────────")
 
     # Surface and offer to clean any leaked instances from prior runs
@@ -406,29 +524,60 @@ def main() -> int:
         print(f"⚠ {len(leaked)} wikitext instance(s) currently running:")
         for i in leaked:
             print(f"    {i['id']}  {i.get('name')}  {i.get('ip')}")
-        if input("terminate them now? [Y/n] ").strip().lower() != "n":
+        if input("terminate them now? [y/N] ").strip().lower() == "y":
             for i in leaked:
                 terminate_instance(i["id"])
 
     if not args.yes and input("proceed? [y/N] ").strip().lower() != "y":
         sys.exit("aborted")
 
+    check_submission_imports(args.submission)
+    check_ssh_agent()
     check_ghcr_login()
     ssh_key = pick_ssh_key(args.ssh_key)
-    region = find_available_region()
+    # Capacity check runs *before* the slow build/push so the user
+    # doesn't pay multi-minute build time for a doomed run.
+    wait_timeout: int | None
+    if args.wait_for_capacity:
+        # 0 = wait indefinitely; expose as a very large finite bound to
+        # keep find_available_region's loop simple.
+        wait_timeout = args.wait_timeout if args.wait_timeout > 0 else 10**9
+    else:
+        wait_timeout = None
+    region = find_available_region(
+        wait_timeout_s=wait_timeout,
+        poll_interval_s=max(5, args.wait_poll_interval),
+    )
     image_tag = build_and_push_image(args.submission, repo_owner)
 
     instance_id = launch_instance(image_tag, ssh_key, region)
     try:
         ip = wait_for_active(instance_id, timeout_s=600)
         wait_for_ssh(ip, timeout_s=300)
-        result = wait_for_result(ip, timeout_s=int(est_min * 60 * 2.5))
+        result = wait_for_result(ip, timeout_s=int(EST_INSTANCE_MIN * 60 * 2.5))
         scp_artifacts(ip, args.submission.stem, result["date_utc"][:10])
     finally:
         terminate_instance(instance_id)
 
     out_path = save_result(result, args.submission)
     append_record(result, json_relpath=f"submissions/{out_path.name}")
+    if result.get("disqualified"):
+        e_max = result.get("e_max_joules")
+        e_at_kill = result.get("training_energy_J")
+        dur = result.get("training_duration_s")
+        print(f"[done] DISQUALIFIED — submission exceeded the training "
+              f"energy budget.")
+        print(f"       reason   = {result.get('reason', 'unknown')}")
+        if e_max is not None:
+            print(f"       e_max    = {e_max:,.0f} J")
+        if e_at_kill is not None:
+            print(f"       at_kill  = {e_at_kill:,.0f} J")
+        if dur is not None:
+            print(f"       duration = {dur:.1f} s")
+        print(f"       result   = {out_path}")
+        # Non-zero exit so CI scripts can distinguish DQ from a clean
+        # leaderboard submission, even though the harness ran cleanly.
+        return 2
     print(f"[done] {out_path}")
     print(f"       energy = {result['training_energy_J']:,.0f} J")
     print(f"       acc    = {result['test_char_accuracy']:.4f}")
