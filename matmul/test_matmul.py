@@ -79,6 +79,15 @@ def test_dead_input_outputs_packed_16x16_cost_matches_record_history():
         generate_dead_input_outputs_packed_16x16()) == 70_053
 
 
+def test_colmajor_fused_16x16_cost_matches_record_history():
+    from matmul.submissions.colmajor_fused_16x16 import (
+        generate_colmajor_fused_16x16,
+    )
+
+    assert matmul.score_16x16(
+        generate_colmajor_fused_16x16()) == 68_452
+
+
 # ---------------------------------------------------------------------------
 # Newline / semicolon line separators are interchangeable
 # ---------------------------------------------------------------------------
