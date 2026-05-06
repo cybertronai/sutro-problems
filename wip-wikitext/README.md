@@ -192,8 +192,10 @@ template):
 
 **Task constants** ([`task.py`](task.py)) define the leaderboard
 contract: `TEST_CHARS=60_000`, `INSTANCE_TYPE=gpu_1x_a100_sxm4`,
-`E_MAX_JOULES` (TBD). Submitters cannot vary these — `entrypoint.sh`
-forwards them from `task.py` to `run_eval.py` inside the container.
+`E_MAX_JOULES=100_000` (≈ 5 min × 329 W avg net on the pinned A100
+SXM4; see `NOTES.md:181`). Submitters cannot vary these —
+`entrypoint.sh` forwards them from `task.py` to `run_eval.py` inside
+the container.
 
 **Manual path**: [`RUNBOOK.md`](RUNBOOK.md) — provision the instance
 yourself and run `run_eval.py` directly. Useful for debugging, NVML
@@ -210,8 +212,9 @@ These block "promote out of WIP", not "ship the v0 scorer":
 - **Primary leaderboard**: pick fixed-budget or fixed-floor (or run
   both indefinitely). Currently both are reported; the
   primary-vs-secondary call waits on having actual records to point at.
-- **Target numbers**: pick `E_max` or `acc_min`. Needs the first real
-  Lambda A100 run for an anchor.
+- **Target numbers**: `E_max=100 kJ` set from the 329 W avg-net
+  measurement; revisit after the first real Lambda A100 run. `acc_min`
+  still needs an anchor.
 - **Official re-evaluator**: who runs the reproduction pass on
   submitted images.
 - **Reproduction tolerance**: ±X% on energy, ±Y points on accuracy.

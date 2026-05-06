@@ -21,9 +21,8 @@ TEST_CHARS: int = 60_000
 
 # Fixed-budget framing: hard cap on training energy. A run that crosses
 # this is killed by the EnergyMeter watchdog and reported DISQUALIFIED.
-# ``None`` until calibrated from the first reference Lambda run — see
-# README "Open items: pick E_max".
-E_MAX_JOULES: float | None = None
+# 100 kJ ≈ 5 min × 329 W avg net on the pinned A100 SXM4 (NOTES.md:181).
+E_MAX_JOULES: float | None = 100_000.0
 
 # Fixed-floor framing: minimum char-accuracy a submission must reach to
 # be eligible for the minimize-energy ranking. ``None`` until calibrated.
