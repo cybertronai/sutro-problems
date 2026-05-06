@@ -63,8 +63,8 @@ def plot_one(ir_path: Path, out_path: Path) -> int:
     edges = np.arange(distances.min(), distances.max() + 2) - 0.5
     ax_h.hist(distances, bins=edges, color="#3b78b4",
               edgecolor="white", linewidth=0.5)
-    ax_h.set_xlabel("read distance  ⌈√addr⌉")
-    ax_h.set_ylabel("count of reads")
+    ax_h.set_xlabel("distance")
+    ax_h.set_ylabel("count")
     ax_h.set_title(f"{ir_path.name}\n{n_reads:,} reads, total cost {total_cost:,}")
     ax_h.grid(axis="y", alpha=0.3)
 
@@ -72,7 +72,7 @@ def plot_one(ir_path: Path, out_path: Path) -> int:
     sorted_d = np.sort(distances)
     cumulative_cost = np.cumsum(sorted_d) / total_cost
     ax_c.plot(sorted_d, cumulative_cost, color="#cc4c4c", linewidth=1.5)
-    ax_c.set_xlabel("read distance  ⌈√addr⌉")
+    ax_c.set_xlabel("distance")
     ax_c.set_ylabel("cumulative cost share")
     ax_c.set_title("CDF (share of total cost ≤ distance)")
     ax_c.set_ylim(0, 1.02)
