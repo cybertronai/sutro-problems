@@ -68,7 +68,7 @@ was indistinguishable from v11 — no evidence of breakthrough.
 
 ### B. DFA (Direct Feedback Alignment, Lillicrap / Nøkland) — 1 variant
 
-Tried once, naively. v5 (`exp_dfa_v1.py`): a 6 × d=384 transformer
+Tried once, naively. v5 (`exp_dfa_v5.py`): a 6 × d=384 transformer
 with **fixed random Gaussian feedback matrices** per block (`fb_std =
 1/√V`), AdamW (peak lr 3e-4), 5000 steps. Hidden representations are
 trained against `Bᵀ · output_error` rather than the chained backprop
@@ -316,23 +316,22 @@ preserves it.
 wip-wikitext/
 ├── FINDINGS.md                      ← this file
 ├── experiments/
-│   ├── exp_dgl_v{1,2,3,4,6,7,8,9,10,11,12}.py    DGL variants
-│   ├── exp_dgl_v{1,2,3,4,6,7,8,9,10,11,12}.md    per-experiment writeups
-│   ├── exp_dfa_v1.py / .md                       DFA naive
-│   └── _smoke_*.py                               tiny CPU smoke variants
-├── records/
-│   └── 2026-05-06T10-33-29-…/        v11 (best, 0.6839) — full record + run.log
-└── submissions/
-    ├── 2026-05-06T08-00-45-…/        v1  result.json + submission.py + run.log
-    ├── 2026-05-06T08-25-18-…/        v3
-    ├── 2026-05-06T08-39-54-…/        v4
-    ├── 2026-05-06T09-10-33-…/        v6
-    ├── 2026-05-06T09-25-35-…/        v7  (recipe baseline for everything after)
-    ├── 2026-05-06T09-37-39-…/        v8
-    ├── 2026-05-06T09-53-53-…/        v9
-    └── 2026-05-06T10-16-58-…/        v10
+│   ├── exp_dgl_v{1..12}.md          per-experiment writeups (v5 = DFA, see below)
+│   ├── exp_dgl_v11.py               best-in-family DGL source (0.6839)
+│   ├── exp_dfa_v5.py / .md          DFA naive (the v5 slot)
+│   ├── _smoke_dfa_v5.py             tiny CPU smoke for DFA
+│   ├── _smoke_dgl_v3.py             tiny CPU smoke for DGL
+│   ├── visualize_dgl_v11.py + viz_dgl_v11/   v11 record figures
+│   └── runs/                        per-run artefacts (result.json, run.log, submission.py)
+│       └── 2026-05-06T*-dgl-greedy-layerwise-…/  ×8 — v1, v3, v4, v6, v7, v8, v9, v10
+└── records/
+    └── 2026-05-06T10-33-29-…/       v11 (best, 0.6839) — full record + run.log
 ```
 
-Per-experiment write-ups in `experiments/exp_*.md` give the per-layer
-NLL trajectories and inline reasoning. The 12-variant story is
-condensed in this top-level document.
+Only the best-in-family DGL source (`exp_dgl_v11.py`) is kept; earlier
+DGL variants are documented in their `.md` writeups but the `.py`
+sources were dropped — they were near-identical copies that differed
+only in a couple of hyperparameters easily reconstructed from the
+writeups + v11 source. Per-experiment write-ups in `experiments/exp_*.md`
+give the per-layer NLL trajectories and inline reasoning. The 12-variant
+story is condensed in this top-level document.

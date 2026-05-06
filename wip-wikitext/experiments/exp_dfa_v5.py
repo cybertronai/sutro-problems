@@ -1,4 +1,4 @@
-"""DFA v1 — Direct Feedback Alignment for char-level WikiText.
+"""DFA v5 — Direct Feedback Alignment for char-level WikiText.
 
 After 4 DGL variants plateaued at ≈0.65 char-acc on this 6×384
 transformer (per-layer NLL hits a hard ~1.20-nats/char ceiling
