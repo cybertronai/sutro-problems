@@ -128,12 +128,18 @@ against unintentional cheating from coding agents.
 | `wikitext.py`              | `CharModel` ABC, streaming `evaluate`, `EnergyMeter`, data loader |
 | `baseline_ngram.py`        | n-gram baseline with stupid-backoff smoothing (no torch dep)     |
 | `baseline_transformer.py`  | small GPT-2-style transformer with KV-cached streaming (PyTorch) |
-| `run_eval.py`              | CLI: trains a baseline (energy-measured), then evals             |
+| `task.py`                  | task-pinned constants (`TEST_CHARS`, `INSTANCE_TYPE`, `E_MAX_JOULES`) — single source of truth |
+| `run_eval.py`              | CLI: trains a baseline or user submission (energy-measured), then evals |
+| `submit.py`                | end-to-end submission orchestrator: build image → Lambda A100 → result |
+| `entrypoint.sh`            | container entrypoint: data fetch → NVML probe → `run_eval.py`    |
+| `fetch_data.py`            | HuggingFace WikiText-103 fetch (the canonical S3 URL is dead)    |
+| `example_submission.py`    | reference submission file (5-gram wrapper) — copy and edit       |
 | `verify_nvml.py`           | NVML energy-counter verification for a target host               |
 | `test_wikitext.py`         | tests for the evaluator + n-gram                                 |
 | `Dockerfile`               | submitter harness template (PyTorch 2.5.1 + CUDA 12.4)           |
-| `RUNBOOK.md`               | manual Lambda A100 procedure for the first record run            |
-| `submissions/`             | training logs + NVML JSON evidence per submission                |
+| `RUNBOOK.md`               | manual Lambda A100 procedure (fallback to `submit.py`)           |
+| `.env.example`             | env vars `submit.py` reads (`LAMBDA_API_KEY`, `GHCR_USER`)       |
+| `submissions/`             | result JSON + training log + NVML JSON evidence per submission   |
 
 ## Running
 
@@ -149,18 +155,53 @@ python3 run_eval.py --data-dir /path/to/wikitext-103-raw \
     --baseline transformer --config small --n-steps 30000
 ```
 
-## Submission format
+## Submission
 
-A Docker image + entrypoint that:
+The standard path is [`submit.py`](submit.py). Write a Python file
+that exposes:
 
-1. Trains from scratch on WikiText-103 train split.
-2. Exposes a `CharModel` matching the API above.
-3. Prints the final `training energy (J)` / `test char-accuracy`
-   block in the same format as `run_eval.py`.
+```python
+def train(train_text: str, valid_text: str | None = None) -> CharModel: ...
+```
 
-Submitter pays for their training run on the pinned Lambda SKU. The
-runner re-runs the image, reproduces the reported (energy, accuracy)
-within tolerance, and updates the record table.
+Then ship it:
+
+```bash
+cp example_submission.py my_submission.py    # edit to use your model
+python3 submit.py my_submission.py --config small
+```
+
+`submit.py` builds a Docker image around your file, pushes it to GHCR,
+provisions a Lambda A100 (pinned `INSTANCE_TYPE` from `task.py`),
+runs the harness end-to-end (NVML probe → data fetch → train under
+`EnergyMeter` → 60K-char eval), pulls the result back, terminates the
+instance in a `finally` block, and appends a row to the Record History
+below.
+
+**One-time setup** (see [`.env.example`](.env.example) for the env-var
+template):
+
+1. `LAMBDA_API_KEY` — cloud.lambda.ai → API keys.
+2. `GHCR_USER` — your GitHub username; the image lands at
+   `ghcr.io/<user>/wikitext-bench`.
+3. `gh auth token | docker login ghcr.io -u $GHCR_USER --password-stdin`.
+4. SSH key registered on the Lambda dashboard, private key in your
+   local `ssh-agent`.
+5. (New SKU only) run [`verify_nvml.py`](verify_nvml.py) once — see
+   `RUNBOOK.md` §1 and the NVML gotcha in `NOTES.md`.
+
+**Task constants** ([`task.py`](task.py)) define the leaderboard
+contract: `TEST_CHARS=60_000`, `INSTANCE_TYPE=gpu_1x_a100_sxm4`,
+`E_MAX_JOULES` (TBD). Submitters cannot vary these — `entrypoint.sh`
+forwards them from `task.py` to `run_eval.py` inside the container.
+
+**Manual path**: [`RUNBOOK.md`](RUNBOOK.md) — provision the instance
+yourself and run `run_eval.py` directly. Useful for debugging, NVML
+verification on a new SKU, or keeping a GPU warm across iterations.
+
+Submitter pays for their training run on the pinned Lambda SKU. An
+official re-evaluator (TBD — see Open items) re-runs the pushed image
+and reproduces the reported (energy, accuracy) within tolerance.
 
 ## Open items
 

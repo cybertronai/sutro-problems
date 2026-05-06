@@ -204,11 +204,30 @@ without retraining.
   matching `observe()`.
 - `Dockerfile` — submitter harness template, pins
   `pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime` + `nvidia-ml-py`.
+- `entrypoint.sh` — container entrypoint: stage data → NVML probe →
+  `run_eval.py`. Writes `/results/result.json` on success or
+  `/results/FAIL` on any failure (sentinel files the orchestrator
+  blocks on over SSH).
+- `task.py` — task-pinned constants (`TEST_CHARS`, `INSTANCE_TYPE`,
+  `E_MAX_JOULES`, `ACC_MIN`). Single source of truth; submitters
+  cannot vary these.
+- `fetch_data.py` — HuggingFace fetch + write `wiki.{split}.raw`
+  (the canonical S3 URL is dead — see Gotchas).
+- `submit.py` — end-to-end orchestrator. Builds the user's submission
+  into a Docker image, pushes to GHCR, launches a Lambda A100 in an
+  available region, blocks on the result sentinel, terminates the
+  instance in `finally`, SCPs back the log + nvml.json, saves the
+  result JSON, and appends one row to the Record History table.
+  Surfaces and offers to clean up leaked `wikitext-<unix>` instances
+  before launching.
+- `example_submission.py` — minimal reference: wraps the 5-gram
+  baseline so a smoke run finishes in seconds.
 - `verify_nvml.py` — verification script. Run on Lambda A100 SXM4
   40GB on 2026-05-05: idle 45 W, 30 s stress drew 11.6 kJ at 329 W
   avg, counter monotonic ✓.
 - `RUNBOOK.md` — Lambda provisioning + verification + train +
-  capture procedure with cost estimates.
+  capture procedure with cost estimates (manual fallback to
+  `submit.py`).
 
 ### In flight (as of 2026-05-05)
 
@@ -224,7 +243,6 @@ without retraining.
   once the in-flight run finishes.
 - Speedups for streaming eval (pre-compute byte→char map, bf16
   inference, CUDA graphs).
-- Add `wip-wikitext/` to root `README.md` "Problems" list.
 - Pick **leaderboard framing**: fixed-budget vs fixed-floor (or
   both).
 - Pick **target numbers**: budget level (e.g. 1 MJ? 100 kJ?) or
@@ -253,10 +271,16 @@ without retraining.
 | `wikitext.py`              | `CharModel` ABC, `evaluate()`, `EnergyMeter`, data loader        |
 | `baseline_ngram.py`        | Char n-gram baseline (no torch)                                  |
 | `baseline_transformer.py`  | GPT-2-style char transformer baseline (PyTorch)                  |
+| `task.py`                  | Task-pinned constants (`TEST_CHARS`, `INSTANCE_TYPE`, `E_MAX_JOULES`) |
 | `run_eval.py`              | CLI: train under `EnergyMeter`, optionally checkpoint, eval      |
+| `submit.py`                | End-to-end Lambda orchestrator (build → launch → result)         |
+| `entrypoint.sh`            | Container entrypoint: data fetch → NVML probe → `run_eval.py`    |
+| `fetch_data.py`            | HuggingFace WikiText-103 fetch                                   |
+| `example_submission.py`    | Reference submission stub (wraps 5-gram baseline)                |
 | `test_wikitext.py`         | Pytest-and-stdlib-runnable tests                                 |
 | `verify_nvml.py`           | NVML energy-counter verification script                          |
 | `Dockerfile`               | Submitter harness template                                       |
+| `.env.example`             | Env vars `submit.py` reads                                       |
 
 ---
 
@@ -273,13 +297,16 @@ To add a new baseline:
 
 To submit a record:
 
-1. Build a Docker image extending `Dockerfile` with your training
-   code.
-2. Run on a Lambda A100 (see `RUNBOOK.md`) with `--network=none`
-   during the eval phase. Test set must not be present in the
-   container during training.
-3. Capture (training_energy_J, test_char_acc) from the runner's final
-   output.
-4. PR with: log file under `submissions/`, your run's
-   `verify_nvml.py` JSON line, and a row appended to the
-   record-history table.
+1. Write your submission as a Python file exposing
+   `train(train_text, valid_text=None) -> CharModel`. See
+   `example_submission.py` for the minimal shape.
+2. Run `python3 submit.py path/to/your_submission.py --config small`.
+   `submit.py` builds the image, pushes to GHCR, runs on Lambda,
+   pulls the result, terminates the instance, and appends the row
+   to the Record History table for you.
+3. PR with: the result JSON / log / nvml.json files dropped into
+   `submissions/` by `submit.py`, plus the record-history row it
+   appended to `README.md`.
+
+If you need to drive the run by hand (debugging, NVML verification on
+a new SKU, keeping a GPU warm), see `RUNBOOK.md` for the manual path.
