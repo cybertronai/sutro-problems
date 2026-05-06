@@ -229,4 +229,4 @@ These block "promote out of WIP", not "ship the v0 scorer":
 
 | Date | Energy (J) | Char-acc | Config | Submission | Contributor |
 |------|-----------:|---------:|--------|------------|-------------|
-| —    |          — |        — | —      | —          | —           |
+| 2026-05-06 |     55,345 | 0.7310 | submission | [json](submissions/submission_modded_2026-05-06.json) | @ab-10 |

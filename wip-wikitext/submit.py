@@ -327,6 +327,7 @@ write_files:
       mkdir -p /results
       chmod 0777 /results
       while ! docker info >/dev/null 2>&1; do sleep 2; done
+      echo "{ghcr_token}" | docker login ghcr.io -u "{ghcr_user}" --password-stdin
       docker pull {image}
       docker run --rm --gpus all -v /results:/results {image} >>/results/docker.log 2>&1 || true
 runcmd:
@@ -334,12 +335,33 @@ runcmd:
 """
 
 
+def _ghcr_pull_token() -> str:
+    """Return a GHCR pull token. The image is pushed to a private repo by
+    default (GitHub Packages user-scope packages cannot be flipped to public
+    via the REST API), so the cloud-init has to authenticate before pulling.
+    Reused from `gh auth token`; the token is forwarded into Lambda's
+    user-data and never logged.
+    """
+    try:
+        return subprocess.check_output(["gh", "auth", "token"], text=True).strip()
+    except (FileNotFoundError, subprocess.CalledProcessError) as e:
+        sys.exit(
+            "could not get a GHCR pull token via `gh auth token` — install "
+            "gh and `gh auth login` first, or make the GHCR package "
+            f"visibility public manually. ({e})"
+        )
+
+
 def launch_instance(image_tag: str, ssh_key: str, region: str) -> str:
     body = {
         "region_name": region,
         "instance_type_name": INSTANCE_TYPE,
         "ssh_key_names": [ssh_key],
-        "user_data": CLOUD_INIT_TEMPLATE.format(image=image_tag),
+        "user_data": CLOUD_INIT_TEMPLATE.format(
+            image=image_tag,
+            ghcr_token=_ghcr_pull_token(),
+            ghcr_user=os.environ["GHCR_USER"],
+        ),
         "name": f"wikitext-{int(time.time())}",
     }
     print(f"[launch] {INSTANCE_TYPE} in {region}")
@@ -552,7 +574,10 @@ def main() -> int:
 
     instance_id = launch_instance(image_tag, ssh_key, region)
     try:
-        ip = wait_for_active(instance_id, timeout_s=600)
+        # Lambda asia-south-1 has been observed to take >10min from launch
+        # to active on capacity-tight days; bump to 20min so a slow-but-
+        # working provision doesn't cost a full re-launch.
+        ip = wait_for_active(instance_id, timeout_s=1200)
         wait_for_ssh(ip, timeout_s=300)
         result = wait_for_result(ip, timeout_s=int(EST_INSTANCE_MIN * 60 * 2.5))
         scp_artifacts(ip, args.submission.stem, result["date_utc"][:10])
