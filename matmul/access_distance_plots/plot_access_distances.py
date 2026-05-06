@@ -80,12 +80,11 @@ def plot_one(ir_path: Path, out_path: Path) -> int:
     ax_h.grid(axis="y", alpha=0.3)
 
     sorted_d = np.sort(distances)
-    cumulative_cost = np.cumsum(sorted_d) / total_cost
-    ax_c.plot(sorted_d, cumulative_cost, color="#cc4c4c", linewidth=1.5)
+    cumulative_count = np.arange(1, len(sorted_d) + 1)
+    ax_c.plot(sorted_d, cumulative_count, color="#cc4c4c", linewidth=1.5)
     ax_c.set_xlabel("distance")
-    ax_c.set_ylabel("cumulative cost share")
-    ax_c.set_title("CDF (share of total cost ≤ distance)")
-    ax_c.set_ylim(0, 1.02)
+    ax_c.set_ylabel("count")
+    ax_c.set_title("CDF (reads at distance ≤ x)")
     ax_c.grid(alpha=0.3)
 
     plt.tight_layout()
@@ -100,14 +99,13 @@ def plot_combined_cdf(ir_names: List[str], out_path: Path) -> None:
     for name, color in zip(ir_names, colors):
         ir_path = SUBMISSIONS / name
         distances = np.sort(collect_read_distances(ir_path.read_text()))
-        total = distances.sum()
-        cumulative = np.cumsum(distances) / total
+        total = int(distances.sum())
+        cumulative = np.arange(1, len(distances) + 1)
         ax.plot(distances, cumulative, label=f"{name}  (cost {total:,})",
                 color=color, linewidth=1.8)
     ax.set_xlabel("distance")
-    ax.set_ylabel("cumulative cost share")
-    ax.set_title("CDF — share of total cost at distance ≤ x")
-    ax.set_ylim(0, 1.02)
+    ax.set_ylabel("count")
+    ax.set_title("CDF — reads at distance ≤ x")
     ax.grid(alpha=0.3)
     ax.legend(loc="lower right", fontsize=9)
     plt.tight_layout()
