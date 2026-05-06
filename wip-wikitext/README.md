@@ -134,6 +134,7 @@ against unintentional cheating from coding agents.
 | `entrypoint.sh`            | container entrypoint: data fetch → NVML probe → `run_eval.py`    |
 | `fetch_data.py`            | HuggingFace WikiText-103 fetch (the canonical S3 URL is dead)    |
 | `example_submission.py`    | reference submission file (5-gram wrapper) — copy and edit       |
+| `fixtures/tiny/`           | tiny committed raw splits for local CPU smoke tests              |
 | `verify_nvml.py`           | NVML energy-counter verification for a target host               |
 | `test_wikitext.py`         | tests for the evaluator + n-gram                                 |
 | `Dockerfile`               | submitter harness template (PyTorch 2.5.1 + CUDA 12.4)           |
@@ -143,11 +144,30 @@ against unintentional cheating from coding agents.
 
 ## Running
 
+Fast local path, CPU only:
+
 ```bash
+# From the repo root. No Docker, cloud, GPU, HF download, or credentials.
+nix develop -c python3 wip-wikitext/test_wikitext.py
+nix develop -c python3 wip-wikitext/run_eval.py \
+    --data-dir wip-wikitext/fixtures/tiny \
+    --baseline ngram --n 3 --max-test-chars 300 --progress-every 0
+```
+
+Equivalent without Nix, if `python3` is already available:
+
+```bash
+cd wip-wikitext
+
 # Tests, locally (no GPU needed).
 python3 test_wikitext.py
 
-# Quick smoke run on the full pipeline (works on CPU; energy=NOT MEASURED).
+# Quick smoke run on the tiny committed fixture (works on CPU; energy=NOT MEASURED).
+python3 run_eval.py --data-dir fixtures/tiny \
+    --baseline ngram --n 3 --max-test-chars 300 --progress-every 0
+
+# Full WikiText-103 smoke run (works on CPU; energy=NOT MEASURED).
+# Requires preparing wiki.{train,valid,test}.raw first; see RUNBOOK.md.
 # (Note: torch-based submissions also need `pip install torch` locally —
 # submit.py runs an import-only precheck before any Lambda spend.)
 python3 run_eval.py --data-dir /path/to/wikitext-103-raw --baseline ngram --n 5

@@ -52,6 +52,9 @@ def main() -> None:
                         "task.TEST_CHARS (currently 60,000); local dev "
                         "may override. Pass 0 to score the full 1.3M-char "
                         "test split.")
+    p.add_argument("--progress-every", type=int, default=None,
+                   help="Print eval progress every N chars. Pass 0 to "
+                        "disable progress output. Default: about 50 updates.")
     p.add_argument("--save-model", type=Path, default=None,
                    help="(transformer) Save trained model to this path "
                         "after training, before eval — lets you re-run "
@@ -172,7 +175,11 @@ def main() -> None:
 
     print(f"training: {m}")
     print(f"evaluating on test split ...")
-    progress_every = max(1, len(test_text) // 50)
+    progress_every = (
+        args.progress_every
+        if args.progress_every is not None
+        else max(1, len(test_text) // 50)
+    )
     result = evaluate(model, test_text, progress_every=progress_every)
     print(result)
 
