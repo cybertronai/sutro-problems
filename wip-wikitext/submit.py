@@ -128,7 +128,9 @@ def _region_inventory() -> tuple[list[str], list[str]]:
     if INSTANCE_TYPE not in info:
         sys.exit(f"Lambda no longer offers {INSTANCE_TYPE}; check API")
     entry = info[INSTANCE_TYPE]
-    available = [r["name"] for r in entry.get("regions_with_capacity_available", [])]
+    skip = {r.strip() for r in os.environ.get("LAMBDA_SKIP_REGIONS", "").split(",") if r.strip()}
+    available = [r["name"] for r in entry.get("regions_with_capacity_available", [])
+                 if r["name"] not in skip]
     all_regions = sorted({r["name"] for r in entry.get("regions_with_capacity_available", [])}
                          | {r["name"] for r in entry.get("regions", [])})
     return available, all_regions
@@ -352,7 +354,10 @@ def _ghcr_pull_token() -> str:
         )
 
 
-def launch_instance(image_tag: str, ssh_key: str, region: str) -> str:
+def launch_instance(image_tag: str, ssh_key: str, region: str) -> str | None:
+    """Launch one instance. Returns None on transient capacity-vanished
+    errors (the typical race when capacity opens then closes between
+    poll and launch); sys.exit on any other API error."""
     body = {
         "region_name": region,
         "instance_type_name": INSTANCE_TYPE,
@@ -365,8 +370,48 @@ def launch_instance(image_tag: str, ssh_key: str, region: str) -> str:
         "name": f"wikitext-{int(time.time())}",
     }
     print(f"[launch] {INSTANCE_TYPE} in {region}")
-    resp = lambda_request("POST", "/instance-operations/launch", body)
-    return resp["data"]["instance_ids"][0]
+    data = json.dumps(body).encode()
+    req = urllib.request.Request(
+        f"{LAMBDA_API}/instance-operations/launch", data=data, method="POST",
+        headers={
+            "Authorization": _api_auth_header(),
+            "Content-Type": "application/json",
+            "User-Agent": "wikitext-submit/0.1",
+        },
+    )
+    try:
+        with urllib.request.urlopen(req) as r:
+            return json.load(r)["data"]["instance_ids"][0]
+    except urllib.error.HTTPError as e:
+        msg = e.read().decode()
+        if e.code == 400 and "insufficient-capacity" in msg:
+            print(f"[launch] capacity vanished in {region}; will retry")
+            return None
+        sys.exit(f"Lambda API POST /instance-operations/launch failed: {e.code} {msg}")
+
+
+def launch_with_capacity_retry(image_tag: str, ssh_key: str, region: str,
+                                wait_timeout_s: int | None,
+                                poll_interval_s: int,
+                                max_attempts: int = 8) -> str:
+    """Try to launch; on capacity-vanished errors, re-poll for a fresh
+    region (briefly) and retry. Re-raises sys.exit after exhausting
+    attempts."""
+    backoff_s = 30  # avoid Cloudflare 1015 from rapid-fire launches
+    for attempt in range(max_attempts):
+        instance_id = launch_instance(image_tag, ssh_key, region)
+        if instance_id is not None:
+            return instance_id
+        if attempt < max_attempts - 1:
+            print(f"[launch] sleeping {backoff_s}s before retry "
+                  f"({attempt + 2}/{max_attempts})")
+            time.sleep(backoff_s)
+        retry_timeout = min(600, wait_timeout_s or 600)
+        region = find_available_region(
+            wait_timeout_s=retry_timeout,
+            poll_interval_s=poll_interval_s,
+        )
+    sys.exit(f"launch failed after {max_attempts} capacity races; aborting")
 
 
 def wait_for_active(instance_id: str, timeout_s: int = 600) -> str:
@@ -572,7 +617,11 @@ def main() -> int:
     )
     image_tag = build_and_push_image(args.submission, repo_owner)
 
-    instance_id = launch_instance(image_tag, ssh_key, region)
+    instance_id = launch_with_capacity_retry(
+        image_tag, ssh_key, region,
+        wait_timeout_s=wait_timeout,
+        poll_interval_s=max(5, args.wait_poll_interval),
+    )
     try:
         # Lambda asia-south-1 has been observed to take >10min from launch
         # to active on capacity-tight days; bump to 20min so a slow-but-

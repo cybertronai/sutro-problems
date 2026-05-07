@@ -201,7 +201,7 @@ different ceilings than DGL.
 **Why it's the highest-priority untried direction**: it's the only
 candidate that fundamentally changes the per-layer signal type.
 
-### 2. DFA properly tuned
+### 2. DFA Parallelized
 
 The naive DFA in v5 used `fb_std = 1/√V` and AdamW lr=3e-4 — both
 likely too conservative. Real DFA training on transformers seems to

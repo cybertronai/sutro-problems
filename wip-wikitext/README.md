@@ -230,3 +230,5 @@ These block "promote out of WIP", not "ship the v0 scorer":
 | Date | Energy (J) | Char-acc | Config | Submission | Contributor |
 |------|-----------:|---------:|--------|------------|-------------|
 | 2026-05-06 |     55,345 | 0.7310 | submission | [json](submissions/submission_modded_2026-05-06.json) | @ab-10 |
+| 2026-05-06 |     51,512 | 0.5196 | DFA Parallelized (4k steps) | [json](submissions/submission_dfa_4ksteps_2026-05-06.json) | @you |
+| 2026-05-06 |     90,487 | 0.5250 | DFA Parallelized (7k steps) | [json](submissions/submission_dfa_7ksteps_2026-05-06.json) | @you |
