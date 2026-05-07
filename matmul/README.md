@@ -41,5 +41,5 @@ cost = matmul.score_16x16(ir)
 | 2026-05-01 |  72,642 | [ir](submissions/redirect_16x16.ir), report     | [@sjbaebae](https://github.com/sjbaebae)     | + redirect last-mul to addr 1                 |
 | 2026-05-01 |  71,724 | [ir](submissions/sc_outputs_16x16.ir), report   | [@sjbaebae](https://github.com/sjbaebae)     | + last-super-block outputs in sC              |
 | 2026-05-01 |  70,053 | [ir](submissions/dead_input_outputs_packed_16x16.ir), [report](submissions/dead_input_outputs_packed_16x16.md) | [@sjbaebae](https://github.com/sjbaebae)     | + dead-input output reuse + B packing |
-| 2026-05-06 |  69,697 | [ir](submissions/aliased_16x16.ir), report     | [@yaroslavvb](https://github.com/yaroslavvb) | C↔A address aliasing + final-add fusion       |
+| 2026-05-06 |  69,697 | [ir](submissions/aliased_16x16.ir), [report](submissions/aliased_16x16.md)     | [@yaroslavvb](https://github.com/yaroslavvb) | C↔A address aliasing + final-add fusion       |
 | 2026-05-05 |  68,452 | [ir](submissions/colmajor_fused_16x16.ir), [report](submissions/colmajor_fused_16x16.md) | [@zh4ngx](https://github.com/zh4ngx)         | + column-major order + fused final copy-out ★ best |
