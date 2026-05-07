@@ -386,7 +386,7 @@ def draw_progress(ax, frames: list[dict], up_to_idx: int):
 # ------------------------------------------------------------- main / build
 
 
-def build_animation():
+def build_animation(suffix: str = "", dpi_gif: int = 90, dpi_png: int = 120):
     VIZ_DIR.mkdir(exist_ok=True)
     frames = parse_run_log(RECORD / "run.log")
     print(f"loaded {len(frames)} log frames "
@@ -425,18 +425,22 @@ def build_animation():
         blit=False,
     )
 
-    out_gif = VIZ_DIR / "dgl_v11_animation.gif"
-    print(f"writing {out_gif} ({len(frames)} frames @ 6 fps) ...")
-    anim.save(out_gif, writer=animation.PillowWriter(fps=6), dpi=90)
+    out_gif = VIZ_DIR / f"dgl_v11_animation{suffix}.gif"
+    print(f"writing {out_gif} ({len(frames)} frames @ 6 fps, dpi={dpi_gif}) ...")
+    anim.save(out_gif, writer=animation.PillowWriter(fps=6), dpi=dpi_gif)
     print(f"wrote {out_gif}")
 
     # Final-frame PNG (for embedding in markdown)
     update(len(frames) - 1)
-    out_png = VIZ_DIR / "dgl_v11_animation_final.png"
-    fig.savefig(out_png, dpi=120)
+    out_png = VIZ_DIR / f"dgl_v11_animation_final{suffix}.png"
+    fig.savefig(out_png, dpi=dpi_png)
     print(f"wrote {out_png}")
     plt.close(fig)
 
 
 if __name__ == "__main__":
-    build_animation()
+    import sys
+    if "--hires" in sys.argv:
+        build_animation(suffix="_hires", dpi_gif=200, dpi_png=240)
+    else:
+        build_animation()
