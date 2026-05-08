@@ -5,9 +5,9 @@
 **Problem:** sparse parity (n=3, k=2, 4 train / 32 test)
 **Cost:** 6,918
 **IR:** [`baseline_small.ir`](baseline_small.ir)
-**Method:** `generate_baseline_small` (try-each-candidate, v2 `xor` + `and` + `or` + `set`)
+**Method:** `generate_baseline_small` (try-each-candidate, v3 `xor` + `and` + `or` + `set`)
 
-Baseline. The IR mirrors the brute-force solver in pure v2 IR: it
+Baseline. The IR mirrors the brute-force solver in pure v3 IR: it
 tries each of the `C(3, 2) = 3` candidate 2-subsets `T = (t0, t1)`,
 computes an indicator `ind_T = AND_i (1 XOR (y_train[i] XOR
 X_train[i,t0] XOR X_train[i,t1]))` from the training data, and uses

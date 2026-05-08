@@ -5,7 +5,7 @@
 **Problem:** sparse parity (n=8, k=3, 8 train / 64 test)
 **Cost:** 816,251
 **IR:** [`baseline_medium.ir`](baseline_medium.ir)
-**Method:** `generate_baseline_medium` (try-each-candidate, v2 `xor` + `and` + `or` + `set`)
+**Method:** `generate_baseline_medium` (try-each-candidate, v3 `xor` + `and` + `or` + `set`)
 
 Same try-each-candidate algorithm as the small baseline, but over
 `C(8, 3) = 56` candidate 3-subsets. For each candidate `T = (t0,t1,t2)`:

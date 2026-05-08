@@ -22,7 +22,7 @@ def test_score_worked_example():
 
 
 def test_set_op_is_free():
-    """v2's ``set`` writes an integer immediate at zero cost."""
+    """v3's ``set`` writes an integer immediate at zero cost."""
     actual, cost = sparse_parity._simulate("1;set 2,1;set 3,0;2,3", [42])
     assert actual == [1, 0]
     # Reads: addr 2 at exit (cost 2) + addr 3 at exit (cost 2). Both

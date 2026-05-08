@@ -51,7 +51,7 @@ cost = sparse_parity.score_medium(ir)            # → 816,251
 
 | Date       | Cost  | Submission                                                                   | Contributors                                 | Description                                              |
 | -          | -:    | -                                                                            | -                                            | -                                                        |
-| 2026-05-07 | 6,918 | [ir](submissions/baseline_small.ir), [report](submissions/baseline_small.md) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_baseline_small` (try-each-candidate, v2 ops)   |
+| 2026-05-07 | 6,918 | [ir](submissions/baseline_small.ir), [report](submissions/baseline_small.md) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_baseline_small` (try-each-candidate, v3 ops)   |
 | 2026-05-08 | 22,238 | [ir](submissions/ge_small.ir), [report](submissions/ge_small.md), [py](submissions/ge_small.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_ge_small` (GF(2) Gaussian elimination, v3 ops) |
 
 ## Medium Record History
@@ -60,4 +60,4 @@ cost = sparse_parity.score_medium(ir)            # → 816,251
 
 | Date       | Cost    | Submission                                                                     | Contributors                                 | Description                                                |
 | -          | -:      | -                                                                              | -                                            | -                                                          |
-| 2026-05-07 | 816,251 | [ir](submissions/baseline_medium.ir), [report](submissions/baseline_medium.md) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_baseline_medium` (try-each-candidate, v2 ops)    |
+| 2026-05-07 | 816,251 | [ir](submissions/baseline_medium.ir), [report](submissions/baseline_medium.md) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_baseline_medium` (try-each-candidate, v3 ops)    |

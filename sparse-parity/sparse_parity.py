@@ -5,9 +5,9 @@ training rows over ``{0, 1}^3`` and predict 32 test labels under the
 [simplified Dally model](https://github.com/cybertronai/simplified-dally-model)
 using the
 [v3 instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets/v3)
-(v2 ops plus ``div``, ``abs``, ``cmp``, ``select`` — sufficient for
-straight-line GF(2) Gaussian elimination with branchless partial
-pivoting).
+(``add``, ``sub``, ``mul``, ``div``, ``copy``, ``and``, ``or``, ``xor``,
+``not``, ``abs``, ``set``, ``cmp``, ``select`` — sufficient for straight-line
+GF(2) Gaussian elimination with branchless partial pivoting).
 
 **Cost model (v3).** Processor at the origin, memory laid out as a
 2D upper half-plane indexed by **positive integers**; the cell at
@@ -411,7 +411,7 @@ def score_medium(ir: str) -> int:
 def _generate_baseline(spec: Spec) -> str:
     """General predictor IR — works for any seed of *spec*.
 
-    Mirrors the brute-force solver in pure v2 IR. For each of the
+    Mirrors the brute-force solver in pure v3 IR. For each of the
     ``C(n, k)`` candidate k-subsets ``T = (t0, ..., t_{k-1})``:
 
       * Compute ``parity_T_i = y_train[i] XOR X_train[i,t0] XOR ...
