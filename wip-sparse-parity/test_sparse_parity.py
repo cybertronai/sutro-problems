@@ -1,4 +1,4 @@
-"""Tests for sparse_parity.score_sparse_parity. Run with:
+"""Tests for sparse_parity.score_small. Run with:
 ``python3 -m pytest test_sparse_parity.py`` or just
 ``python3 test_sparse_parity.py`` (built-in __main__ runner)."""
 from __future__ import annotations
@@ -42,7 +42,7 @@ def test_canonical_seeds_cover_all_secrets():
 def test_baseline_robust_across_secrets():
     """The general baseline IR predicts y_test correctly on every
     canonical seed and reports cost 6918."""
-    cost = sparse_parity.score_sparse_parity(sparse_parity.generate_baseline())
+    cost = sparse_parity.score_small(sparse_parity.generate_baseline_small())
     assert cost == 6918
 
 
@@ -68,7 +68,7 @@ def test_specialized_ir_rejected_by_robust_scorer():
     specialized = "\n".join(
         [",".join(map(str, inputs))] + ops + [",".join(map(str, outputs))])
     with pytest.raises(ValueError, match="correctness failed"):
-        sparse_parity.score_sparse_parity(specialized)
+        sparse_parity.score_small(specialized)
 
 
 def test_python_reference_solver():

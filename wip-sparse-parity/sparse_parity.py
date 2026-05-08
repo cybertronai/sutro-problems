@@ -244,7 +244,7 @@ def _simulate(ir: str, inputs: List[int]) -> Tuple[List[int], int]:
 # ---------------------------------------------------------------------------
 
 # Inputs are passed in this order (matches the IR address declaration
-# order in ``generate_baseline``):
+# order in ``generate_baseline_small``):
 #   X_train (row-major, 15 values)
 #   y_train               (5 values)
 #   X_test  (row-major, 15 values)
@@ -287,7 +287,7 @@ def _seeds_covering_all_secrets() -> Tuple[int, ...]:
 _CANONICAL_SEEDS: Tuple[int, ...] = _seeds_covering_all_secrets()
 
 
-def score_sparse_parity(ir: str) -> int:
+def score_small(ir: str) -> int:
     """Verify the IR predicts y_test correctly on instances covering
     every possible secret subset, and return its Dally read-cost.
 
@@ -320,7 +320,7 @@ def score_sparse_parity(ir: str) -> int:
 # OR-combine predictions
 # ---------------------------------------------------------------------------
 
-def generate_baseline() -> str:
+def generate_baseline_small() -> str:
     """General predictor IR — works for any seed.
 
     Mirrors the brute-force solver in pure v2 IR. For each of the
@@ -408,7 +408,7 @@ def generate_baseline() -> str:
 __all__ = [
     "N_BITS", "K_SECRET", "M_TRAIN", "M_TEST",
     "generate", "solve_bruteforce", "predict", "accuracy",
-    "score_sparse_parity", "generate_baseline",
+    "score_small", "generate_baseline_small",
 ]
 
 
@@ -422,7 +422,7 @@ if __name__ == "__main__":
     ir_dir = os.path.join(here, "submissions")
     os.makedirs(ir_dir, exist_ok=True)
     artifacts = [
-        ("baseline.ir", generate_baseline(), score_sparse_parity),
+        ("baseline_small.ir", generate_baseline_small(), score_small),
     ]
     for name, ir, scorer in artifacts:
         cost = scorer(ir)

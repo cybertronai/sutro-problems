@@ -38,15 +38,15 @@ $$
 import sparse_parity
 
 # Verify your IR predicts y_test correctly and return its read-cost.
-ir   = sparse_parity.generate_baseline()       # naive try-each-candidate
-cost = sparse_parity.score_sparse_parity(ir)   # → 6,918
+ir   = sparse_parity.generate_baseline_small()  # naive try-each-candidate
+cost = sparse_parity.score_small(ir)            # → 6,918
 ```
 
 ## Small Record History
 
-| Date       | Cost  | Submission                                                       | Contributors                                 | Description                                       |
-| -          | -:    | -                                                                | -                                            | -                                                 |
-| 2026-05-07 | 6,918 | [ir](submissions/baseline.ir), [report](submissions/baseline.md) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_baseline` (try-each-candidate, v2 ops)  |
+| Date       | Cost  | Submission                                                                   | Contributors                                 | Description                                              |
+| -          | -:    | -                                                                            | -                                            | -                                                        |
+| 2026-05-07 | 6,918 | [ir](submissions/baseline_small.ir), [report](submissions/baseline_small.md) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_baseline_small` (try-each-candidate, v2 ops)   |
 
 ## Medium Record History
 
