@@ -35,9 +35,16 @@ import matmul as mm  # noqa: E402
 
 COMBINED = [
     "baseline_16x16.ir",
+    "recursive_16x16.ir",
     "tiled_16x16.ir",
+    "tiled_16x16_opt1.ir",
     "hierarchical_16x16.ir",
     "sa_cache_16x16.ir",
+    "redirect_16x16.ir",
+    "sc_outputs_16x16.ir",
+    "dead_input_outputs_packed_16x16.ir",
+    "aliased_16x16.ir",
+    "colmajor_fused_16x16.ir",
 ]
 
 
@@ -94,20 +101,26 @@ def plot_one(ir_path: Path, out_path: Path) -> int:
 
 
 def plot_combined_cdf(ir_names: List[str], out_path: Path) -> None:
-    fig, ax = plt.subplots(figsize=(8, 5))
-    colors = ["#3b78b4", "#e0863c", "#5fa055", "#cc4c4c"]
-    for name, color in zip(ir_names, colors):
+    fig, ax = plt.subplots(figsize=(9, 6))
+    cmap = plt.get_cmap("turbo")
+    rows = []
+    for name in ir_names:
         ir_path = SUBMISSIONS / name
         distances = np.sort(collect_read_distances(ir_path.read_text()))
-        total = int(distances.sum())
+        rows.append((name, distances, int(distances.sum())))
+    # Sort legend by cost (cheapest first reads bottom→top in stacked order).
+    rows.sort(key=lambda r: r[2])
+    n = len(rows)
+    for i, (name, distances, total) in enumerate(rows):
+        color = cmap(0.05 + 0.9 * i / max(n - 1, 1))
         cumulative = np.arange(1, len(distances) + 1)
         ax.plot(distances, cumulative, label=f"{name}  (cost {total:,})",
-                color=color, linewidth=1.8)
+                color=color, linewidth=1.5)
     ax.set_xlabel("distance")
     ax.set_ylabel("count")
-    ax.set_title("CDF — reads at distance ≤ x")
+    ax.set_title(f"CDF — reads at distance ≤ x  ({n} submissions)")
     ax.grid(alpha=0.3)
-    ax.legend(loc="lower right", fontsize=9)
+    ax.legend(loc="lower right", fontsize=8)
     plt.tight_layout()
     plt.savefig(out_path, dpi=120)
     plt.close(fig)
