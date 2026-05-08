@@ -2,8 +2,8 @@
 
 **Author:** [@yaroslavvb](https://github.com/yaroslavvb)
 **Date:** 2026-05-07
-**Problem:** sparse parity (n=3, k=2, 5 train / 5 test)
-**Cost:** 1,269
+**Problem:** sparse parity (n=3, k=2, 4 train / 32 test)
+**Cost:** 6,918
 **IR:** [`baseline.ir`](baseline.ir)
 **Method:** `generate_baseline` (try-each-candidate, v2 `xor` + `and` + `or` + `set`)
 
@@ -16,25 +16,28 @@ Because the training set is constructed so that exactly one
 candidate explains every label, exactly one `ind_T` is 1, and the
 final OR cleanly selects that candidate's prediction.
 
-Memory layout:
+Memory layout (computed from `M_TRAIN=4`, `M_TEST=32`, `N_BITS=3`):
 
-| region    | range  | role                                 |
-|-----------|--------|--------------------------------------|
-| pred      | 1..5   | output (5 predictions)               |
-| X_train   | 6..20  | input (5 × 3, row-major)             |
-| y_train   | 21..25 | input                                |
-| X_test    | 26..40 | input (5 × 3, row-major)             |
-| ONE       | 41     | constant 1, written by `set` (free)  |
-| tmp       | 42     | scratch, reused                      |
-| parity    | 43     | scratch, reused                      |
-| matched_T | 44..58 | per-row match flag, 3 cands × 5 rows |
-| ind_T     | 59..61 | per-candidate "explains all" flag    |
-| predT     | 62     | scratch, reused per test row         |
-| term_T    | 63..65 | per-candidate masked test prediction |
+| region    | range    | role                                 |
+|-----------|----------|--------------------------------------|
+| pred      | 1..32    | output (32 predictions)              |
+| X_train   | 33..44   | input (4 × 3, row-major)             |
+| y_train   | 45..48   | input                                |
+| X_test    | 49..144  | input (32 × 3, row-major)            |
+| ONE       | 145      | constant 1, written by `set` (free)  |
+| tmp       | 146      | scratch, reused                      |
+| parity    | 147      | scratch, reused                      |
+| matched_T | 148..159 | per-row match flag, 3 cands × 4 rows |
+| ind_T     | 160..162 | per-candidate "explains all" flag    |
+| predT     | 163      | scratch, reused per test row         |
+| term_T    | 164..166 | per-candidate masked test prediction |
 
-Op count: 1 `set` (free) + 97 binary ops = 98 instructions. Cost
-breakdown: 97 binary ops × 2 reads/op + 5 output reads = 199 read
-events, with addresses concentrated in `[1, 65]` (mean ⌈√addr⌉ ≈ 6).
+Op count: 1 `set` (free) + 301 binary ops = 302 instructions.
+
+- Decoding (per candidate): 4 rows × 3 xors + 3 AND-reductions = 15 ops.
+  Three candidates → 45 ops.
+- Predictions (per test row): 3 candidates × (1 xor + 1 and) + 2 ORs = 8 ops.
+  Thirty-two test rows → 256 ops.
 
 Robustness: scored against three canonical seeds (one per possible
 secret subset), and the cost is identical across all seeds — the

@@ -41,23 +41,32 @@ def test_canonical_seeds_cover_all_secrets():
 
 def test_baseline_robust_across_secrets():
     """The general baseline IR predicts y_test correctly on every
-    canonical seed and reports cost 1269."""
+    canonical seed and reports cost 6918."""
     cost = sparse_parity.score_sparse_parity(sparse_parity.generate_baseline())
-    assert cost == 1269
+    assert cost == 6918
 
 
 def test_specialized_ir_rejected_by_robust_scorer():
-    """A predictor IR specialized to seed=0 (secret=[1,2]) must fail
-    the multi-seed scorer because secrets differ across canonical seeds."""
-    specialized = "\n".join([
-        ",".join(str(x) for x in range(1, 36)),
-        "xor 36,22,23",  # X_test[0,1] ^ X_test[0,2] -- only correct for S=[1,2]
-        "xor 37,25,26",
-        "xor 38,28,29",
-        "xor 39,31,32",
-        "xor 40,34,35",
-        "36,37,38,39,40",
-    ])
+    """A predictor IR specialized to a single hardcoded secret (here [1,2])
+    must fail the multi-seed scorer because canonical seeds use different
+    secrets."""
+    M_TRAIN, M_TEST, N_BITS = (
+        sparse_parity.M_TRAIN, sparse_parity.M_TEST, sparse_parity.N_BITS,
+    )
+    pred_base = 1
+    X_tr_base = pred_base + M_TEST
+    y_tr_base = X_tr_base + N_BITS * M_TRAIN
+    X_te_base = y_tr_base + M_TRAIN
+    inputs = list(range(X_tr_base, X_te_base + N_BITS * M_TEST))
+    ops = [
+        # secret = [1, 2] hardcoded (correct only for seeds whose secret is [1,2])
+        f"xor {pred_base + j},"
+        f"{X_te_base + j * N_BITS + 1},{X_te_base + j * N_BITS + 2}"
+        for j in range(M_TEST)
+    ]
+    outputs = list(range(pred_base, pred_base + M_TEST))
+    specialized = "\n".join(
+        [",".join(map(str, inputs))] + ops + [",".join(map(str, outputs))])
     with pytest.raises(ValueError, match="correctness failed"):
         sparse_parity.score_sparse_parity(specialized)
 

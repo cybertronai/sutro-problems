@@ -1,7 +1,7 @@
 """Energy-efficient sparse-parity scorer + baselines.
 
-Scores IR programs that recover the secret 2-subset of bits from m=5
-training rows over ``{0, 1}^3`` and predict 5 test labels under the
+Scores IR programs that recover the secret 2-subset of bits from m=4
+training rows over ``{0, 1}^3`` and predict 32 test labels under the
 [simplified Dally model](https://github.com/cybertronai/simplified-dally-model)
 using the
 [v2 instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets/v2)
@@ -53,8 +53,8 @@ from typing import Dict, List, Sequence, Tuple
 
 N_BITS = 3
 K_SECRET = 2
-M_TRAIN = 5
-M_TEST = 5
+M_TRAIN = 4
+M_TEST = 32  # 4 × 8
 
 
 def _label(row: Sequence[int], subset: Sequence[int]) -> int:
@@ -84,7 +84,7 @@ def generate(seed: int = 0) -> Tuple[
 
     The training rows are resampled until the secret is the unique
     weight-k subset matching y_train. The expected number of resamples
-    is ~1 (E[false subsets] = 2 · 2^-5 = 0.0625 for n=3, k=2, m=5).
+    is ~1 (E[false subsets] = 2 · 2^-4 = 0.125 for n=3, k=2, m=4).
     """
     rng = Random(seed)
     secret = sorted(rng.sample(range(N_BITS), K_SECRET))
@@ -335,32 +335,41 @@ def generate_baseline() -> str:
     ``OR_T (ind_T AND (X_test[j,t0] XOR X_test[j,t1]))`` — the OR
     selects the lone non-zero term.
 
-    Memory layout:
-      pred       at  1..5   (output)
-      X_train    at  6..20  (input, row-major, 5×3)
-      y_train    at 21..25  (input)
-      X_test     at 26..40  (input, row-major)
-      ONE        at 41      (constant 1, written by ``set``, free)
-      tmp        at 42      (scratch, reused)
-      parity     at 43      (scratch, reused)
-      matched_T  at 44..58  (3 candidates × 5 rows)
-      ind_T      at 59..61  (3 candidates)
-      predT      at 62      (scratch, reused per test row)
-      term_T     at 63..65  (3 candidates, reused per test row)
+    Memory layout (computed from M_TRAIN, M_TEST, N_BITS, K_SECRET):
+      pred       starts at 1                       (output, M_TEST cells)
+      X_train    next                              (M_TRAIN × N_BITS, row-major)
+      y_train    next                              (M_TRAIN cells)
+      X_test     next                              (M_TEST × N_BITS, row-major)
+      ONE        next                              (constant 1 via ``set``, free)
+      tmp        next                              (scratch, reused)
+      parity     next                              (scratch, reused)
+      matched_T  next                              (C(n,k) × M_TRAIN cells)
+      ind_T      next                              (C(n,k) cells)
+      predT      next                              (scratch, reused per test row)
+      term_T     next                              (C(n,k) cells, reused per row)
     """
-    pred_at  = lambda j: 1 + j
-    X_tr_at  = lambda i, c: 6 + i * N_BITS + c
-    y_tr_at  = lambda i: 21 + i
-    X_te_at  = lambda j, c: 26 + j * N_BITS + c
-    ONE     = 41
-    TMP     = 42
-    PARITY  = 43
-    matched_at = lambda T_idx, i: 44 + T_idx * M_TRAIN + i
-    ind_T_at   = lambda T_idx: 59 + T_idx
-    PREDT      = 62
-    term_at    = lambda T_idx: 63 + T_idx
-
     candidates = list(combinations(range(N_BITS), K_SECRET))
+    n_cands = len(candidates)
+
+    pred_base   = 1
+    X_tr_base   = pred_base + M_TEST
+    y_tr_base   = X_tr_base + N_BITS * M_TRAIN
+    X_te_base   = y_tr_base + M_TRAIN
+    ONE         = X_te_base + N_BITS * M_TEST
+    TMP         = ONE + 1
+    PARITY      = TMP + 1
+    matched_base = PARITY + 1
+    ind_T_base  = matched_base + n_cands * M_TRAIN
+    PREDT       = ind_T_base + n_cands
+    term_base   = PREDT + 1
+
+    pred_at    = lambda j: pred_base + j
+    X_tr_at    = lambda i, c: X_tr_base + i * N_BITS + c
+    y_tr_at    = lambda i: y_tr_base + i
+    X_te_at    = lambda j, c: X_te_base + j * N_BITS + c
+    matched_at = lambda T_idx, i: matched_base + T_idx * M_TRAIN + i
+    ind_T_at   = lambda T_idx: ind_T_base + T_idx
+    term_at    = lambda T_idx: term_base + T_idx
 
     inputs = (
         [X_tr_at(i, c) for i in range(M_TRAIN) for c in range(N_BITS)]
