@@ -4,11 +4,12 @@ Scores IR programs that recover the secret 2-subset of bits from m=4
 training rows over ``{0, 1}^3`` and predict 32 test labels under the
 [simplified Dally model](https://github.com/cybertronai/simplified-dally-model)
 using the
-[v2 instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets/v2)
-(``add``, ``sub``, ``mul``, ``copy``, ``and``, ``or``, ``xor``, ``not``,
-``set``).
+[v3 instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets/v3)
+(v2 ops plus ``div``, ``abs``, ``cmp``, ``select`` — sufficient for
+straight-line GF(2) Gaussian elimination with branchless partial
+pivoting).
 
-**Cost model (v2).** Processor at the origin, memory laid out as a
+**Cost model (v3).** Processor at the origin, memory laid out as a
 2D upper half-plane indexed by **positive integers**; the cell at
 linear index ``addr`` sits at Manhattan distance ``⌈√addr⌉`` from the
 core. Each operand read pays that distance; writes and arithmetic are
@@ -23,22 +24,30 @@ line separator so that single-line strings work):
     xor 3,1,2             ← mem[3] = mem[1] ^ mem[2]; reads ⌈√1⌉ + ⌈√2⌉
     3                     ← exit: read mem[3]; cost ⌈√3⌉
 
-Supported ops (all from v2):
+Supported ops (all from v3):
 
-* ``add  dest, src1, src2``  — ``mem[dest] = mem[src1] + mem[src2]``
-* ``sub  dest, src1, src2``  — ``mem[dest] = mem[src1] - mem[src2]``
-* ``mul  dest, src1, src2``  — ``mem[dest] = mem[src1] * mem[src2]``
-* ``and  dest, src1, src2``  — ``mem[dest] = mem[src1] & mem[src2]``
-* ``or   dest, src1, src2``  — ``mem[dest] = mem[src1] | mem[src2]``
-* ``xor  dest, src1, src2``  — ``mem[dest] = mem[src1] ^ mem[src2]``
-* ``copy dest, src``         — ``mem[dest] = mem[src]``  (1 read)
-* ``not  dest, src``         — ``mem[dest] = ~mem[src]`` (1 read)
-* ``set  dest, K``           — ``mem[dest] = K`` (free; K is a literal)
+* ``add    dest, src1, src2``       — ``mem[dest] = mem[src1] + mem[src2]``
+* ``sub    dest, src1, src2``       — ``mem[dest] = mem[src1] - mem[src2]``
+* ``mul    dest, src1, src2``       — ``mem[dest] = mem[src1] * mem[src2]``
+* ``div    dest, src1, src2``       — ``mem[dest] = mem[src1] // mem[src2]``
+* ``and    dest, src1, src2``       — ``mem[dest] = mem[src1] & mem[src2]``
+* ``or     dest, src1, src2``       — ``mem[dest] = mem[src1] | mem[src2]``
+* ``xor    dest, src1, src2``       — ``mem[dest] = mem[src1] ^ mem[src2]``
+* ``copy   dest, src``              — ``mem[dest] = mem[src]``  (1 read)
+* ``not    dest, src``              — ``mem[dest] = ~mem[src]`` (1 read)
+* ``abs    dest, src``              — ``mem[dest] = |mem[src]|`` (1 read)
+* ``set    dest, K``                — ``mem[dest] = K`` (free; K is a literal)
+* ``cmp    dest, a, b, pred``       — ``mem[dest] = 1 if mem[a] <pred> mem[b]
+                                       else 0``; ``pred`` ∈
+                                       {``eq, ne, lt, le, gt, ge``}; reads a + b
+* ``select dest, c, t, f``          — ``mem[dest] = mem[t] if mem[c] else mem[f]``;
+                                       reads c + t + f
 
 Two-operand short form for the binary ops: ``xor dest, src`` is wire
 sugar for ``xor dest, dest, src`` (in-place). Addresses must be
 positive integers; ``addr ≤ 0`` raises. ``set``'s second operand is
-an integer literal, not an address.
+an integer literal, not an address; ``cmp``'s last operand is a
+predicate keyword, not an address.
 """
 from __future__ import annotations
 
@@ -163,6 +172,7 @@ _BINARY = {
     "add": lambda a, b: a + b,
     "sub": lambda a, b: a - b,
     "mul": lambda a, b: a * b,
+    "div": lambda a, b: a // b,  # integer division
     "and": lambda a, b: a & b,
     "or":  lambda a, b: a | b,
     "xor": lambda a, b: a ^ b,
@@ -170,6 +180,15 @@ _BINARY = {
 _UNARY = {
     "copy": lambda a: a,
     "not":  lambda a: ~a,
+    "abs":  lambda a: abs(a),
+}
+_CMP_PRED = {
+    "eq": lambda a, b: a == b,
+    "ne": lambda a, b: a != b,
+    "lt": lambda a, b: a <  b,
+    "le": lambda a, b: a <= b,
+    "gt": lambda a, b: a >  b,
+    "ge": lambda a, b: a >= b,
 }
 
 
@@ -187,13 +206,26 @@ def _parse(ir: str):
         head, _, rest = ln.partition(" ")
         if not rest:
             raise ValueError(f"malformed instruction: {ln!r}")
-        operands = [int(x) for x in rest.split(",")]
+        raw = [tok.strip() for tok in rest.split(",")]
         if head == "set":
-            if len(operands) != 2:
-                raise ValueError(f"set needs 2 operands (dest, K); got {operands}")
+            if len(raw) != 2:
+                raise ValueError(f"set needs 2 operands (dest, K); got {raw}")
+            operands = [int(raw[0]), int(raw[1])]
             _check_addrs(operands[:1], "`set` dest")
             # operands[1] is a literal — any integer is allowed.
+        elif head == "cmp":
+            if len(raw) != 4:
+                raise ValueError(
+                    f"cmp needs 4 operands (dest, a, b, pred); got {raw}")
+            pred = raw[3]
+            if pred not in _CMP_PRED:
+                raise ValueError(
+                    f"cmp predicate must be one of {sorted(_CMP_PRED)}; "
+                    f"got {pred!r}")
+            operands = [int(raw[0]), int(raw[1]), int(raw[2]), pred]
+            _check_addrs(operands[:3], "`cmp` operands")
         else:
+            operands = [int(x) for x in raw]
             _check_addrs(operands, f"`{head}` operands")
         ops.append((head, operands))
     return input_addrs, ops, output_addrs
@@ -213,6 +245,27 @@ def _simulate(ir: str, inputs: List[int]) -> Tuple[List[int], int]:
             dest, literal = oprs
             mem[dest] = literal  # no read, no cost
             continue
+        if op == "cmp":
+            dest, a, b, pred = oprs
+            for src in (a, b):
+                if src not in mem:
+                    raise ValueError(
+                        f"cmp reads uninitialized addr {src}")
+            cost += _cost(a) + _cost(b)
+            mem[dest] = 1 if _CMP_PRED[pred](mem[a], mem[b]) else 0
+            continue
+        if op == "select":
+            if len(oprs) != 4:
+                raise ValueError(
+                    f"select needs 4 operands (dest, c, t, f); got {oprs}")
+            dest, c, t, f = oprs
+            for src in (c, t, f):
+                if src not in mem:
+                    raise ValueError(
+                        f"select reads uninitialized addr {src}")
+            cost += _cost(c) + _cost(t) + _cost(f)
+            mem[dest] = mem[t] if mem[c] else mem[f]
+            continue
         if op in _UNARY:
             if len(oprs) != 2:
                 raise ValueError(f"{op} needs 2 operands; got {oprs}")
@@ -225,8 +278,8 @@ def _simulate(ir: str, inputs: List[int]) -> Tuple[List[int], int]:
             continue
         if op not in _BINARY:
             raise ValueError(
-                f"unknown op: {op!r}  (v2 supports "
-                f"add/sub/mul/copy/and/or/xor/not/set)")
+                f"unknown op: {op!r}  (v3 supports add/sub/mul/div/copy/"
+                f"and/or/xor/not/abs/set/cmp/select)")
         if len(oprs) == 3:
             dest, s1, s2 = oprs
         elif len(oprs) == 2:

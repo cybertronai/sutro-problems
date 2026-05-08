@@ -30,7 +30,7 @@ $$
 
 - Given some labeled examples of sparse parity, and 8x more unlabeled ones.
 - What is the most energy-efficient way to label them?
-- To measure energy, use simplified version of Bill Dally's [proposal](https://cacm.acm.org/opinion/on-the-model-of-computation-point/), ([model](https://github.com/cybertronai/simplified-dally-model), [v2](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets) instruction set)
+- To measure energy, use simplified version of Bill Dally's [proposal](https://cacm.acm.org/opinion/on-the-model-of-computation-point/), ([model](https://github.com/cybertronai/simplified-dally-model), [v3](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets/v3) instruction set)
 
 ## API
 
@@ -52,6 +52,7 @@ cost = sparse_parity.score_medium(ir)            # → 816,251
 | Date       | Cost  | Submission                                                                   | Contributors                                 | Description                                              |
 | -          | -:    | -                                                                            | -                                            | -                                                        |
 | 2026-05-07 | 6,918 | [ir](submissions/baseline_small.ir), [report](submissions/baseline_small.md) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_baseline_small` (try-each-candidate, v2 ops)   |
+| 2026-05-08 | 22,238 | [ir](submissions/ge_small.ir), [report](submissions/ge_small.md), [py](submissions/ge_small.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_ge_small` (GF(2) Gaussian elimination, v3 ops) |
 
 ## Medium Record History
 
