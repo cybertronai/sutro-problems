@@ -1,10 +1,11 @@
-"""Sparse parity: recover k=3 secret bits among n=16 from m=16 training rows.
+"""Sparse parity: recover k=2 secret bits among n=3 from m=5 training rows.
 
-Each row of X is in {-1,+1}^16. The label is the product of the k secret
-bits: ``y[i] = prod(X[i, j] for j in secret)``. The training set is chosen
-(by rejection sampling) so that the secret subset is the *unique* 3-subset
-of columns consistent with the training labels — therefore the brute-force
-solver always recovers it, and the 64-row test set is classified at 100%.
+Each row of X is in {-1,+1}^3 (2 secret bits + 1 noise bit). The label is
+the product of the k secret bits: ``y[i] = prod(X[i, j] for j in secret)``.
+The training set is chosen (by rejection sampling) so that the secret
+subset is the *unique* 2-subset of columns consistent with the training
+labels — therefore the brute-force solver always recovers it, and the
+5-row test set is classified at 100%.
 """
 from __future__ import annotations
 
@@ -12,10 +13,10 @@ from itertools import combinations
 from random import Random
 from typing import List, Sequence, Tuple
 
-N_BITS = 16
-K_SECRET = 3
-M_TRAIN = 16
-M_TEST = 64
+N_BITS = 3
+K_SECRET = 2
+M_TRAIN = 5
+M_TEST = 5
 
 
 def _label(row: Sequence[int], subset: Sequence[int]) -> int:
@@ -44,7 +45,7 @@ def generate(seed: int = 0) -> Tuple[
 
     The training rows are resampled until the secret is the unique
     weight-k subset matching y_train. The expected number of resamples
-    is ~1 (E[false subsets] ≈ 0.0085 for n=16, k=3, m=16).
+    is ~1 (E[false subsets] = 2 · 2^-5 = 0.0625 for n=3, k=2, m=5).
     """
     rng = Random(seed)
     secret = sorted(rng.sample(range(N_BITS), K_SECRET))
