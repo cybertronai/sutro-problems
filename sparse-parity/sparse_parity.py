@@ -275,40 +275,48 @@ def _instance(seed: int, spec: Spec) -> Tuple[List[int], List[int]]:
     return inputs, list(y_te)
 
 
-def _canonical_seeds(spec: Spec, max_seeds: int) -> Tuple[int, ...]:
-    """Up to ``max_seeds`` seeds covering distinct secrets (scanning
-    seed=0,1,2,…). Stops when ``max_seeds`` distinct secrets are seen
-    or the secret space is exhausted, whichever comes first."""
-    target = min(max_seeds, math.comb(spec.n_bits, spec.k_secret))
+def _canonical_seeds(
+    spec: Spec, max_seeds: int, rng: "Random | None" = None,
+) -> Tuple[int, ...]:
+    """Random seeds covering distinct secrets, drawn from *rng* (defaults
+    to a fresh nondeterministic ``Random()``).
+
+    Returns up to ``max_seeds`` seeds, each producing a different secret
+    subset. Drawing seeds randomly (instead of scanning 0, 1, 2, …)
+    means the scorer cannot be gamed by an IR that hard-codes its
+    predictions to a specific known seed list.
+    """
+    if rng is None:
+        rng = Random()
+    n_secrets = math.comb(spec.n_bits, spec.k_secret)
+    target = min(max_seeds, n_secrets)
     seen: Dict[Tuple[int, ...], int] = {}
-    for seed in range(target * 50 + 100):
+    # Coupon-collector bound: E[draws to collect ``target`` of N secrets]
+    # is bounded by N · H_N for full coverage; allow a generous multiple.
+    max_draws = 50 * (n_secrets + 1)
+    for _ in range(max_draws):
         if len(seen) >= target:
             break
+        seed = rng.randrange(1 << 31)
         _, _, _, _, secret = generate(seed=seed, spec=spec)
         key = tuple(secret)
         if key not in seen:
             seen[key] = seed
     if len(seen) < target:
         raise RuntimeError(
-            f"could not find {target} distinct secrets within seed range")
+            f"could not draw {target} distinct secrets in {max_draws} attempts")
     return tuple(sorted(seen.values()))
 
 
-# For ``small`` we cover all C(3,2)=3 secrets (3 seeds total). For
-# ``medium`` C(8,3)=56 secrets, scoring all of them per call would be
-# slow (~16k ops × 56 ≈ 1M op evals); 8 distinct seeds give a strong
-# probabilistic robustness check (a hardcoded-secret IR fails unless its
-# secret happens to be one of those 8 out of 56).
-_CANONICAL_SEEDS_SMALL:  Tuple[int, ...] = _canonical_seeds(SMALL,  max_seeds=64)
-_CANONICAL_SEEDS_MEDIUM: Tuple[int, ...] = _canonical_seeds(MEDIUM, max_seeds=8)
+def _score(ir: str, spec: Spec, max_seeds: int) -> int:
+    """Run *ir* on a fresh random batch of canonical seeds for *spec*,
+    verify outputs, and return the (data-independent) Dally read-cost.
 
-# Backward-compat alias.
-_CANONICAL_SEEDS = _CANONICAL_SEEDS_SMALL
-
-
-def _score(ir: str, spec: Spec, seeds: Tuple[int, ...]) -> int:
-    """Run *ir* on each canonical seed for *spec*, verify outputs, and
-    return the (data-independent) Dally read-cost."""
+    Seeds are drawn at random each call (see ``_canonical_seeds``), so
+    the scorer cannot be gamed by an IR that hard-codes predictions to
+    a known seed list.
+    """
+    seeds = _canonical_seeds(spec, max_seeds=max_seeds)
     seen_cost: int | None = None
     for seed in seeds:
         inputs, expected = _instance(seed, spec)
@@ -328,13 +336,18 @@ def _score(ir: str, spec: Spec, seeds: Tuple[int, ...]) -> int:
 
 
 def score_small(ir: str) -> int:
-    """Score *ir* on the small instance (covers all 3 possible secrets)."""
-    return _score(ir, SMALL, _CANONICAL_SEEDS_SMALL)
+    """Score *ir* on the small instance (3 random seeds — one per secret).
+
+    Cost is data-independent for any given IR, so the returned value is
+    deterministic; only the *which-instance* sampling is random.
+    """
+    return _score(ir, SMALL, max_seeds=64)
 
 
 def score_medium(ir: str) -> int:
-    """Score *ir* on the medium instance (8 canonical seeds)."""
-    return _score(ir, MEDIUM, _CANONICAL_SEEDS_MEDIUM)
+    """Score *ir* on the medium instance (8 random distinct secrets out
+    of C(8,3)=56). See ``score_small`` for the data-independence note."""
+    return _score(ir, MEDIUM, max_seeds=8)
 
 
 # ---------------------------------------------------------------------------

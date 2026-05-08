@@ -30,13 +30,20 @@ def test_set_op_is_free():
     assert cost == 4
 
 
-def test_canonical_seeds_cover_all_secrets():
-    """``_CANONICAL_SEEDS`` exercises every C(3,2)=3 secret subset."""
-    secrets = set()
-    for seed in sparse_parity._CANONICAL_SEEDS:
-        _, _, _, _, secret = sparse_parity.generate(seed=seed)
-        secrets.add(tuple(secret))
-    assert len(secrets) == 3
+def test_canonical_seeds_are_random_and_cover_all_secrets():
+    """``_canonical_seeds`` returns random seeds covering every C(3,2)=3
+    secret subset for the small instance, and produces a different seed
+    list across calls (drawn from a fresh nondeterministic RNG)."""
+    seeds_a = sparse_parity._canonical_seeds(sparse_parity.SMALL, max_seeds=64)
+    seeds_b = sparse_parity._canonical_seeds(sparse_parity.SMALL, max_seeds=64)
+    assert len(seeds_a) == 3 and len(seeds_b) == 3
+    secrets_a = {
+        tuple(sparse_parity.generate(seed=s, spec=sparse_parity.SMALL)[4])
+        for s in seeds_a
+    }
+    assert secrets_a == {(0, 1), (0, 2), (1, 2)}
+    # Two independent draws should almost never coincide on all three seeds.
+    assert seeds_a != seeds_b, (seeds_a, seeds_b)
 
 
 def test_baseline_small_robust_across_secrets():
