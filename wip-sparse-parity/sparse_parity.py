@@ -6,12 +6,25 @@ The training set is chosen (by rejection sampling) so that the secret
 subset is the *unique* 2-subset of columns consistent with the training
 labels — therefore the brute-force solver always recovers it, and the
 5-row test set is classified at 100%.
+
+This module also exposes a v0-IR scorer (``score_sparse_parity``) and a
+naive baseline IR generator (``generate_baseline``), mirroring the
+[simplified Dally model](https://github.com/cybertronai/simplified-dally-model)
++ v0 instruction-set (``add``, ``sub``, ``mul``, ``copy``) used by
+``../matmul``. Read-cost = ⌈√addr⌉ per operand; writes and arithmetic
+are free; inputs are placed for free at caller-specified addresses;
+every output address pays one standard read at exit.
 """
 from __future__ import annotations
 
+import math
 from itertools import combinations
 from random import Random
-from typing import List, Sequence, Tuple
+from typing import Dict, List, Sequence, Tuple
+
+# --------------------------------------------------------------------------
+# Problem spec
+# --------------------------------------------------------------------------
 
 N_BITS = 3
 K_SECRET = 2
@@ -86,10 +99,188 @@ def accuracy(y_pred: Sequence[int], y_true: Sequence[int]) -> float:
     return sum(a == b for a, b in zip(y_pred, y_true)) / len(y_true)
 
 
+# --------------------------------------------------------------------------
+# v0 IR cost model — same as ../matmul. Memory cells are positive
+# integers; cell at linear index ``addr`` sits at Manhattan distance
+# ``⌈√addr⌉`` from the core. Each operand read pays that distance.
+# --------------------------------------------------------------------------
+
+def _cost(addr: int) -> int:
+    if not isinstance(addr, int) or addr < 1:
+        raise ValueError(
+            f"addresses must be positive integers; got {addr!r}")
+    return math.isqrt(addr - 1) + 1
+
+
+def _check_addrs(addrs, where):
+    for a in addrs:
+        if not isinstance(a, int) or a < 1:
+            raise ValueError(
+                f"{where}: addresses must be positive integers; got {a!r}")
+
+
+_BINARY = {
+    "add": lambda a, b: a + b,
+    "sub": lambda a, b: a - b,
+    "mul": lambda a, b: a * b,
+}
+
+
+def _parse(ir: str):
+    text = ir.replace(";", "\n")
+    lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+    if len(lines) < 2:
+        raise ValueError("IR needs at least an input line and an output line")
+    input_addrs = [int(x) for x in lines[0].split(",")]
+    output_addrs = [int(x) for x in lines[-1].split(",")]
+    _check_addrs(input_addrs, "input line")
+    _check_addrs(output_addrs, "output line")
+    ops = []
+    for ln in lines[1:-1]:
+        head, _, rest = ln.partition(" ")
+        if not rest:
+            raise ValueError(f"malformed instruction: {ln!r}")
+        operands = [int(x) for x in rest.split(",")]
+        _check_addrs(operands, f"`{head}` operands")
+        ops.append((head, operands))
+    return input_addrs, ops, output_addrs
+
+
+def _simulate(ir: str, inputs: List[int]) -> Tuple[List[int], int]:
+    input_addrs, ops, output_addrs = _parse(ir)
+    if len(input_addrs) != len(inputs):
+        raise ValueError(
+            f"IR declares {len(input_addrs)} inputs; {len(inputs)} provided")
+    if len(set(input_addrs)) != len(input_addrs):
+        raise ValueError("input addresses must be distinct")
+    mem: Dict[int, int] = {a: v for a, v in zip(input_addrs, inputs)}
+    cost = 0
+    for op, oprs in ops:
+        if op == "copy":
+            if len(oprs) != 2:
+                raise ValueError(f"copy needs 2 operands: copy {oprs}")
+            dest, src = oprs
+            if src not in mem:
+                raise ValueError(
+                    f"copy {dest},{src} reads uninitialized addr {src}")
+            cost += _cost(src)
+            mem[dest] = mem[src]
+            continue
+        if op not in _BINARY:
+            raise ValueError(
+                f"unknown op: {op!r}  (v0 supports add/sub/mul/copy)")
+        if len(oprs) == 3:
+            dest, s1, s2 = oprs
+        elif len(oprs) == 2:
+            dest, s2 = oprs
+            s1 = dest
+        else:
+            raise ValueError(f"{op} needs 2 or 3 operands; got {oprs}")
+        for src in (s1, s2):
+            if src not in mem:
+                raise ValueError(
+                    f"{op} {','.join(map(str,oprs))} reads "
+                    f"uninitialized addr {src}")
+        cost += _cost(s1) + _cost(s2)
+        mem[dest] = _BINARY[op](mem[s1], mem[s2])
+    outputs = []
+    for a in output_addrs:
+        if a not in mem:
+            raise ValueError(f"output addr {a} never written")
+        cost += _cost(a)
+        outputs.append(mem[a])
+    return outputs, cost
+
+
+# --------------------------------------------------------------------------
+# Scoring + baseline IR
+# --------------------------------------------------------------------------
+
+# Inputs are passed in this order (matches the IR address declaration
+# order in ``generate_baseline``):
+#   X_train (row-major, 15 values)
+#   y_train               (5 values)
+#   X_test  (row-major, 15 values)
+_N_INPUTS = N_BITS * M_TRAIN + M_TRAIN + N_BITS * M_TEST  # = 35
+
+
+def score_sparse_parity(ir: str) -> int:
+    """Run *ir* on the canonical (seed=0) instance, verify it predicts
+    y_test exactly, and return the total Dally read-cost."""
+    X_tr, y_tr, X_te, y_te, _ = generate(seed=0)
+    inputs = (
+        [v for row in X_tr for v in row]
+        + list(y_tr)
+        + [v for row in X_te for v in row]
+    )
+    actual, cost = _simulate(ir, inputs)
+    if actual != list(y_te):
+        raise ValueError(
+            f"prediction mismatch:\n  got      {actual}\n"
+            f"  expected {list(y_te)}")
+    return cost
+
+
+def generate_baseline() -> str:
+    """Naive predictor IR for the seed=0 instance.
+
+    The Python ``solve_bruteforce`` discovers ``S`` (free, just like
+    matmul's algorithm choice is free); the IR then emits one ``mul``
+    per test row reading the two secret columns of ``X_test``.
+
+    Layout:
+      X_train at addrs 1..15   (row-major)
+      y_train at addrs 16..20
+      X_test  at addrs 21..35  (row-major)
+      pred    at addrs 36..40  (output)
+    """
+    X_tr, y_tr, _, _, _ = generate(seed=0)
+    secret = solve_bruteforce(X_tr, y_tr)
+    s0, s1 = secret  # k=2
+
+    X_test_at = lambda i, j: 1 + N_BITS * M_TRAIN + M_TRAIN + i * N_BITS + j
+    pred_at = lambda i: 1 + _N_INPUTS + i
+
+    inputs = list(range(1, _N_INPUTS + 1))
+    outputs = [pred_at(i) for i in range(M_TEST)]
+
+    lines = [",".join(map(str, inputs))]
+    for i in range(M_TEST):
+        lines.append(
+            f"mul {pred_at(i)},{X_test_at(i, s0)},{X_test_at(i, s1)}")
+    lines.append(",".join(map(str, outputs)))
+    return "\n".join(lines)
+
+
+__all__ = [
+    "N_BITS", "K_SECRET", "M_TRAIN", "M_TEST",
+    "generate", "solve_bruteforce", "predict", "accuracy",
+    "score_sparse_parity", "generate_baseline",
+]
+
+
+# --------------------------------------------------------------------------
+# Reproducer for the record-history IR file (``python sparse_parity.py``).
+# --------------------------------------------------------------------------
+
 if __name__ == "__main__":
+    import os
+
     X_tr, y_tr, X_te, y_te, secret = generate(seed=0)
     found = solve_bruteforce(X_tr, y_tr)
     acc = accuracy(predict(X_te, found), y_te)
     print(f"secret    = {secret}")
     print(f"recovered = {found}")
     print(f"test acc  = {acc:.0%}")
+
+    ir = generate_baseline()
+    cost = score_sparse_parity(ir)
+    here = os.path.dirname(os.path.abspath(__file__))
+    sub_dir = os.path.join(here, "submissions")
+    os.makedirs(sub_dir, exist_ok=True)
+    path = os.path.join(sub_dir, "baseline.ir")
+    with open(path, "w") as f:
+        f.write(ir)
+        f.write("\n")
+    n_ops = len(ir.splitlines()) - 2
+    print(f"baseline  cost={cost:>4}  ops={n_ops}  -> {path}")
