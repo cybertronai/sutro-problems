@@ -43,3 +43,6 @@ cost = matmul.score_16x16(ir)
 | 2026-05-01 |  70,053 | [ir](submissions/dead_input_outputs_packed_16x16.ir), [report](submissions/dead_input_outputs_packed_16x16.md) | [@sjbaebae](https://github.com/sjbaebae)     | + dead-input output reuse + B packing |
 | 2026-05-06 |  69,697 | [ir](submissions/aliased_16x16.ir), [report](submissions/aliased_16x16.md)     | [@yaroslavvb](https://github.com/yaroslavvb) | C↔A address aliasing + final-add fusion       |
 | 2026-05-05 |  68,452 | [ir](submissions/colmajor_fused_16x16.ir), [report](submissions/colmajor_fused_16x16.md) | [@zh4ngx](https://github.com/zh4ngx)         | + column-major order + fused final copy-out ★ best |
+| 2026-05-08 | 237,456 | [ir](submissions/recursive_16x16.ir), report   | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_recursive_16x16` (1×1-leaf D&C, Z-order) |
+
+[distance_histograms](doc/access_distance_plots/) — per-submission read-distance histogram + CDF for every IR above.
