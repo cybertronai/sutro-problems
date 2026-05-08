@@ -10,8 +10,5 @@ To add a new problem, create a new directory and add a `README.md` at its root.
 
 ## Problems
 
-- [`matmul/`](matmul/) — cheapest matrix multiplication under a
-  simplified Dally explicit-communication cost model
-- [`sparse-parity/`](sparse-parity/) — cheapest IR that recovers
-  the secret bits of a sparse parity from a few labeled examples
-  and labels 8× more unlabeled ones
+- [`matmul/`](matmul/) — 4x4 and 16x16 matmul
+- [`sparse-parity/`](sparse-parity/) — joint train+test sparse parity task
