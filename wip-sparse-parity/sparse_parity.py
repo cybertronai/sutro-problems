@@ -43,6 +43,7 @@ an integer literal, not an address.
 from __future__ import annotations
 
 import math
+from collections import namedtuple
 from itertools import combinations
 from random import Random
 from typing import Dict, List, Sequence, Tuple
@@ -51,10 +52,21 @@ from typing import Dict, List, Sequence, Tuple
 # Problem spec
 # --------------------------------------------------------------------------
 
-N_BITS = 3
-K_SECRET = 2
-M_TRAIN = 4
-M_TEST = 32  # 4 × 8
+Spec = namedtuple("Spec", "n_bits k_secret m_train m_test")
+
+#: Small instance — 3 bits, 2 secret, 4 train / 32 test. Parity recovery
+#: is identifiable with 4 random training rows (E[false subsets] ≈ 0.125).
+SMALL = Spec(n_bits=3, k_secret=2, m_train=4, m_test=32)
+
+#: Medium instance — 8 bits, 3 secret, 8 train / 64 test. Identifiability
+#: also high-probability per draw (E[false subsets] = (C(8,3)-1) · 2⁻⁸ ≈ 0.215).
+MEDIUM = Spec(n_bits=8, k_secret=3, m_train=8, m_test=64)
+
+# Backward-compat aliases for the small instance.
+N_BITS = SMALL.n_bits
+K_SECRET = SMALL.k_secret
+M_TRAIN = SMALL.m_train
+M_TEST = SMALL.m_test
 
 
 def _label(row: Sequence[int], subset: Sequence[int]) -> int:
@@ -77,28 +89,27 @@ def _identifiable(X: Sequence[Sequence[int]], y: Sequence[int], k: int) -> bool:
     return matches == 1
 
 
-def generate(seed: int = 0) -> Tuple[
+def generate(seed: int = 0, *, spec: Spec = SMALL) -> Tuple[
     List[List[int]], List[int], List[List[int]], List[int], List[int]
 ]:
     """Return ``(X_train, y_train, X_test, y_test, secret)``.
 
     The training rows are resampled until the secret is the unique
-    weight-k subset matching y_train. The expected number of resamples
-    is ~1 (E[false subsets] = 2 · 2^-4 = 0.125 for n=3, k=2, m=4).
+    weight-k subset matching y_train.
     """
     rng = Random(seed)
-    secret = sorted(rng.sample(range(N_BITS), K_SECRET))
+    secret = sorted(rng.sample(range(spec.n_bits), spec.k_secret))
     while True:
         X_train = [
-            [rng.choice((0, 1)) for _ in range(N_BITS)]
-            for _ in range(M_TRAIN)
+            [rng.choice((0, 1)) for _ in range(spec.n_bits)]
+            for _ in range(spec.m_train)
         ]
         y_train = [_label(row, secret) for row in X_train]
-        if _identifiable(X_train, y_train, K_SECRET):
+        if _identifiable(X_train, y_train, spec.k_secret):
             break
     X_test = [
-        [rng.choice((0, 1)) for _ in range(N_BITS)]
-        for _ in range(M_TEST)
+        [rng.choice((0, 1)) for _ in range(spec.n_bits)]
+        for _ in range(spec.m_test)
     ]
     y_test = [_label(row, secret) for row in X_test]
     return X_train, y_train, X_test, y_test, secret
@@ -107,7 +118,7 @@ def generate(seed: int = 0) -> Tuple[
 def solve_bruteforce(
     X: Sequence[Sequence[int]],
     y: Sequence[int],
-    k: int = K_SECRET,
+    k: int = SMALL.k_secret,
 ) -> List[int]:
     """Return the unique k-subset of columns matching every label in y."""
     n = len(X[0])
@@ -243,22 +254,19 @@ def _simulate(ir: str, inputs: List[int]) -> Tuple[List[int], int]:
 # Test instances + scorer
 # ---------------------------------------------------------------------------
 
-# Inputs are passed in this order (matches the IR address declaration
-# order in ``generate_baseline_small``):
-#   X_train (row-major, 15 values)
-#   y_train               (5 values)
-#   X_test  (row-major, 15 values)
-_N_INPUTS = N_BITS * M_TRAIN + M_TRAIN + N_BITS * M_TEST  # = 35
+def _n_inputs(spec: Spec) -> int:
+    """Number of input values: X_train + y_train + X_test, flat."""
+    return spec.n_bits * spec.m_train + spec.m_train + spec.n_bits * spec.m_test
 
 
-def _instance(seed: int) -> Tuple[List[int], List[int]]:
-    """Return ``(inputs, expected)`` for one seed.
+def _instance(seed: int, spec: Spec) -> Tuple[List[int], List[int]]:
+    """Return ``(inputs, expected)`` for one seed under *spec*.
 
-    ``inputs`` is the 35-value flat list ``[X_train..., y_train..., X_test...]``
-    that the IR receives; ``expected`` is the 5-element ``y_test`` the IR's
+    ``inputs`` is the flat list ``[X_train..., y_train..., X_test...]``
+    that the IR receives; ``expected`` is the ``y_test`` the IR's
     outputs must match.
     """
-    X_tr, y_tr, X_te, y_te, _ = generate(seed=seed)
+    X_tr, y_tr, X_te, y_te, _ = generate(seed=seed, spec=spec)
     inputs = (
         [v for row in X_tr for v in row]
         + list(y_tr)
@@ -267,39 +275,43 @@ def _instance(seed: int) -> Tuple[List[int], List[int]]:
     return inputs, list(y_te)
 
 
-def _seeds_covering_all_secrets() -> Tuple[int, ...]:
-    """Smallest set of seeds (scanning seed=0,1,2,...) that exercises
-    every possible secret 2-subset of {0, 1, 2}. There are ``C(3,2)=3``
-    such subsets, so this returns three seeds. Computed once at import."""
+def _canonical_seeds(spec: Spec, max_seeds: int) -> Tuple[int, ...]:
+    """Up to ``max_seeds`` seeds covering distinct secrets (scanning
+    seed=0,1,2,…). Stops when ``max_seeds`` distinct secrets are seen
+    or the secret space is exhausted, whichever comes first."""
+    target = min(max_seeds, math.comb(spec.n_bits, spec.k_secret))
     seen: Dict[Tuple[int, ...], int] = {}
-    for seed in range(200):
-        _, _, _, _, secret = generate(seed=seed)
+    for seed in range(target * 50 + 100):
+        if len(seen) >= target:
+            break
+        _, _, _, _, secret = generate(seed=seed, spec=spec)
         key = tuple(secret)
         if key not in seen:
             seen[key] = seed
-            if len(seen) == 3:
-                break
-    if len(seen) != 3:
-        raise RuntimeError("could not cover all 3 secrets within 200 seeds")
+    if len(seen) < target:
+        raise RuntimeError(
+            f"could not find {target} distinct secrets within seed range")
     return tuple(sorted(seen.values()))
 
 
-_CANONICAL_SEEDS: Tuple[int, ...] = _seeds_covering_all_secrets()
+# For ``small`` we cover all C(3,2)=3 secrets (3 seeds total). For
+# ``medium`` C(8,3)=56 secrets, scoring all of them per call would be
+# slow (~16k ops × 56 ≈ 1M op evals); 8 distinct seeds give a strong
+# probabilistic robustness check (a hardcoded-secret IR fails unless its
+# secret happens to be one of those 8 out of 56).
+_CANONICAL_SEEDS_SMALL:  Tuple[int, ...] = _canonical_seeds(SMALL,  max_seeds=64)
+_CANONICAL_SEEDS_MEDIUM: Tuple[int, ...] = _canonical_seeds(MEDIUM, max_seeds=8)
+
+# Backward-compat alias.
+_CANONICAL_SEEDS = _CANONICAL_SEEDS_SMALL
 
 
-def score_small(ir: str) -> int:
-    """Verify the IR predicts y_test correctly on instances covering
-    every possible secret subset, and return its Dally read-cost.
-
-    The scorer walks ``_CANONICAL_SEEDS`` (one seed per distinct secret).
-    Cost is determined by the IR alone — the same set of operand reads
-    is performed regardless of input *values* — so the scorer also
-    asserts the cost is identical across seeds (a cheap robustness
-    check that the IR's control flow is data-independent).
-    """
+def _score(ir: str, spec: Spec, seeds: Tuple[int, ...]) -> int:
+    """Run *ir* on each canonical seed for *spec*, verify outputs, and
+    return the (data-independent) Dally read-cost."""
     seen_cost: int | None = None
-    for seed in _CANONICAL_SEEDS:
-        inputs, expected = _instance(seed)
+    for seed in seeds:
+        inputs, expected = _instance(seed, spec)
         actual, cost = _simulate(ir, inputs)
         if actual != expected:
             raise ValueError(
@@ -315,105 +327,139 @@ def score_small(ir: str) -> int:
     return seen_cost
 
 
+def score_small(ir: str) -> int:
+    """Score *ir* on the small instance (covers all 3 possible secrets)."""
+    return _score(ir, SMALL, _CANONICAL_SEEDS_SMALL)
+
+
+def score_medium(ir: str) -> int:
+    """Score *ir* on the medium instance (8 canonical seeds)."""
+    return _score(ir, MEDIUM, _CANONICAL_SEEDS_MEDIUM)
+
+
 # ---------------------------------------------------------------------------
 # Baseline generator — try every candidate subset, AND-reduce match,
 # OR-combine predictions
 # ---------------------------------------------------------------------------
 
-def generate_baseline_small() -> str:
-    """General predictor IR — works for any seed.
+def _generate_baseline(spec: Spec) -> str:
+    """General predictor IR — works for any seed of *spec*.
 
     Mirrors the brute-force solver in pure v2 IR. For each of the
-    ``C(3, 2) = 3`` candidate 2-subsets ``T = (t0, t1)``:
+    ``C(n, k)`` candidate k-subsets ``T = (t0, ..., t_{k-1})``:
 
-      * Compute ``matched_T_i = 1 XOR (y_train[i] XOR X_train[i,t0]
-        XOR X_train[i,t1])`` — that's 1 iff T matches row i.
+      * Compute ``parity_T_i = y_train[i] XOR X_train[i,t0] XOR ...
+        XOR X_train[i,t_{k-1}]`` — 0 iff T matches row i.
+      * ``matched_T_i = parity_T_i XOR 1`` — 1 iff T matches row i.
       * ``ind_T = AND_i matched_T_i`` — 1 iff T matches every row.
 
     By identifiability, exactly one ``ind_T`` is 1 (the true secret).
     Each test row is then predicted as
-    ``OR_T (ind_T AND (X_test[j,t0] XOR X_test[j,t1]))`` — the OR
-    selects the lone non-zero term.
+    ``OR_T (ind_T AND (X_test[j,t0] XOR ... XOR X_test[j,t_{k-1}]))`` —
+    the OR selects the lone non-zero term.
 
-    Memory layout (computed from M_TRAIN, M_TEST, N_BITS, K_SECRET):
-      pred       starts at 1                       (output, M_TEST cells)
-      X_train    next                              (M_TRAIN × N_BITS, row-major)
-      y_train    next                              (M_TRAIN cells)
-      X_test     next                              (M_TEST × N_BITS, row-major)
+    Memory layout (computed from spec):
+      pred       starts at 1                       (output, m_test cells)
+      X_train    next                              (m_train × n_bits, row-major)
+      y_train    next                              (m_train cells)
+      X_test     next                              (m_test × n_bits, row-major)
       ONE        next                              (constant 1 via ``set``, free)
       tmp        next                              (scratch, reused)
       parity     next                              (scratch, reused)
-      matched_T  next                              (C(n,k) × M_TRAIN cells)
+      matched_T  next                              (C(n,k) × m_train cells)
       ind_T      next                              (C(n,k) cells)
       predT      next                              (scratch, reused per test row)
       term_T     next                              (C(n,k) cells, reused per row)
     """
-    candidates = list(combinations(range(N_BITS), K_SECRET))
+    candidates = list(combinations(range(spec.n_bits), spec.k_secret))
     n_cands = len(candidates)
 
-    pred_base   = 1
-    X_tr_base   = pred_base + M_TEST
-    y_tr_base   = X_tr_base + N_BITS * M_TRAIN
-    X_te_base   = y_tr_base + M_TRAIN
-    ONE         = X_te_base + N_BITS * M_TEST
-    TMP         = ONE + 1
-    PARITY      = TMP + 1
+    pred_base    = 1
+    X_tr_base    = pred_base + spec.m_test
+    y_tr_base    = X_tr_base + spec.n_bits * spec.m_train
+    X_te_base    = y_tr_base + spec.m_train
+    ONE          = X_te_base + spec.n_bits * spec.m_test
+    TMP          = ONE + 1
+    PARITY       = TMP + 1
     matched_base = PARITY + 1
-    ind_T_base  = matched_base + n_cands * M_TRAIN
-    PREDT       = ind_T_base + n_cands
-    term_base   = PREDT + 1
+    ind_T_base   = matched_base + n_cands * spec.m_train
+    PREDT        = ind_T_base + n_cands
+    term_base    = PREDT + 1
 
     pred_at    = lambda j: pred_base + j
-    X_tr_at    = lambda i, c: X_tr_base + i * N_BITS + c
+    X_tr_at    = lambda i, c: X_tr_base + i * spec.n_bits + c
     y_tr_at    = lambda i: y_tr_base + i
-    X_te_at    = lambda j, c: X_te_base + j * N_BITS + c
-    matched_at = lambda T_idx, i: matched_base + T_idx * M_TRAIN + i
+    X_te_at    = lambda j, c: X_te_base + j * spec.n_bits + c
+    matched_at = lambda T_idx, i: matched_base + T_idx * spec.m_train + i
     ind_T_at   = lambda T_idx: ind_T_base + T_idx
     term_at    = lambda T_idx: term_base + T_idx
 
     inputs = (
-        [X_tr_at(i, c) for i in range(M_TRAIN) for c in range(N_BITS)]
-        + [y_tr_at(i) for i in range(M_TRAIN)]
-        + [X_te_at(j, c) for j in range(M_TEST) for c in range(N_BITS)]
+        [X_tr_at(i, c) for i in range(spec.m_train) for c in range(spec.n_bits)]
+        + [y_tr_at(i) for i in range(spec.m_train)]
+        + [X_te_at(j, c) for j in range(spec.m_test) for c in range(spec.n_bits)]
     )
-    outputs = [pred_at(j) for j in range(M_TEST)]
+    outputs = [pred_at(j) for j in range(spec.m_test)]
 
     lines = [",".join(map(str, inputs))]
     lines.append(f"set {ONE},1")
 
     # --- decoding: ind_T per candidate ----------------------------------
-    for T_idx, (t0, t1) in enumerate(candidates):
-        for i in range(M_TRAIN):
-            lines.append(f"xor {TMP},{y_tr_at(i)},{X_tr_at(i, t0)}")
-            lines.append(f"xor {PARITY},{TMP},{X_tr_at(i, t1)}")
+    for T_idx, T in enumerate(candidates):
+        for i in range(spec.m_train):
+            # parity_T_i = y_train[i] XOR X_train[i,t0] XOR ... XOR X_train[i,t_{k-1}]
+            lines.append(f"xor {TMP},{y_tr_at(i)},{X_tr_at(i, T[0])}")
+            for k in range(1, spec.k_secret - 1):
+                lines.append(f"xor {TMP},{X_tr_at(i, T[k])}")
+            lines.append(
+                f"xor {PARITY},{TMP},{X_tr_at(i, T[spec.k_secret - 1])}")
+            # matched_T_i = parity XOR 1
             lines.append(f"xor {matched_at(T_idx, i)},{PARITY},{ONE}")
         # ind_T = AND of all matched_T_i
         lines.append(
-            f"and {ind_T_at(T_idx)},{matched_at(T_idx, 0)},{matched_at(T_idx, 1)}")
-        for i in range(2, M_TRAIN):
+            f"and {ind_T_at(T_idx)},"
+            f"{matched_at(T_idx, 0)},{matched_at(T_idx, 1)}")
+        for i in range(2, spec.m_train):
             lines.append(f"and {ind_T_at(T_idx)},{matched_at(T_idx, i)}")
 
     # --- predictions: pred[j] = OR_T (ind_T AND predT) ------------------
-    for j in range(M_TEST):
-        for T_idx, (t0, t1) in enumerate(candidates):
-            lines.append(f"xor {PREDT},{X_te_at(j, t0)},{X_te_at(j, t1)}")
+    for j in range(spec.m_test):
+        for T_idx, T in enumerate(candidates):
+            # predT = X_test[j,t0] XOR X_test[j,t1] XOR ... XOR X_test[j,t_{k-1}]
+            lines.append(f"xor {PREDT},{X_te_at(j, T[0])},{X_te_at(j, T[1])}")
+            for k in range(2, spec.k_secret):
+                lines.append(f"xor {PREDT},{X_te_at(j, T[k])}")
             lines.append(f"and {term_at(T_idx)},{ind_T_at(T_idx)},{PREDT}")
+        # pred[j] = OR_T term_T
         lines.append(f"or {pred_at(j)},{term_at(0)},{term_at(1)}")
-        lines.append(f"or {pred_at(j)},{term_at(2)}")
+        for T_idx in range(2, n_cands):
+            lines.append(f"or {pred_at(j)},{term_at(T_idx)}")
 
     lines.append(",".join(map(str, outputs)))
     return "\n".join(lines)
 
 
+def generate_baseline_small() -> str:
+    """Baseline predictor IR for the *small* instance (n=3, k=2, 4/32)."""
+    return _generate_baseline(SMALL)
+
+
+def generate_baseline_medium() -> str:
+    """Baseline predictor IR for the *medium* instance (n=8, k=3, 8/64)."""
+    return _generate_baseline(MEDIUM)
+
+
 __all__ = [
+    "Spec", "SMALL", "MEDIUM",
     "N_BITS", "K_SECRET", "M_TRAIN", "M_TEST",
     "generate", "solve_bruteforce", "predict", "accuracy",
     "score_small", "generate_baseline_small",
+    "score_medium", "generate_baseline_medium",
 ]
 
 
 # ---------------------------------------------------------------------------
-# Reproducer for the record-history IR file (``python sparse_parity.py``).
+# Reproducer for the record-history IR files (``python sparse_parity.py``).
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
@@ -422,7 +468,8 @@ if __name__ == "__main__":
     ir_dir = os.path.join(here, "submissions")
     os.makedirs(ir_dir, exist_ok=True)
     artifacts = [
-        ("baseline_small.ir", generate_baseline_small(), score_small),
+        ("baseline_small.ir",  generate_baseline_small(),  score_small),
+        ("baseline_medium.ir", generate_baseline_medium(), score_medium),
     ]
     for name, ir, scorer in artifacts:
         cost = scorer(ir)
@@ -431,4 +478,4 @@ if __name__ == "__main__":
             f.write(ir)
             f.write("\n")
         n_ops = len(ir.splitlines()) - 2
-        print(f"  {name:<14} cost={cost:>5,}  ops={n_ops:>3,}  -> {path}")
+        print(f"  {name:<20} cost={cost:>9,}  ops={n_ops:>6,}  -> {path}")

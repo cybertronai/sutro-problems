@@ -39,11 +39,18 @@ def test_canonical_seeds_cover_all_secrets():
     assert len(secrets) == 3
 
 
-def test_baseline_robust_across_secrets():
-    """The general baseline IR predicts y_test correctly on every
+def test_baseline_small_robust_across_secrets():
+    """The small baseline IR predicts y_test correctly on every
     canonical seed and reports cost 6918."""
     cost = sparse_parity.score_small(sparse_parity.generate_baseline_small())
     assert cost == 6918
+
+
+def test_baseline_medium_robust_across_secrets():
+    """The medium baseline IR predicts y_test correctly on every
+    medium canonical seed and reports cost 816,251."""
+    cost = sparse_parity.score_medium(sparse_parity.generate_baseline_medium())
+    assert cost == 816251
 
 
 def test_specialized_ir_rejected_by_robust_scorer():
