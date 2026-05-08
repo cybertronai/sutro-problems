@@ -1,21 +1,44 @@
-"""Sparse parity: recover k=2 secret bits among n=3 from m=5 training rows.
+"""Energy-efficient sparse-parity scorer + baselines.
 
-Each row of X is in {0, 1}^3 (2 secret bits + 1 noise bit). The label is
-the XOR (parity) of the k secret bits: ``y[i] = XOR(X[i, j] for j in S)``.
-The training set is chosen (by rejection sampling) so that the secret
-subset is the *unique* 2-subset of columns consistent with the training
-labels — therefore the brute-force solver always recovers it, and the
-5-row test set is classified at 100%.
-
-This module also exposes a v1-IR scorer (``score_sparse_parity``) and a
-naive baseline IR generator (``generate_baseline``), mirroring the
+Scores IR programs that recover the secret 2-subset of bits from m=5
+training rows over ``{0, 1}^3`` and predict 5 test labels under the
 [simplified Dally model](https://github.com/cybertronai/simplified-dally-model)
-+ [v1 instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets/v1)
-(``add``, ``sub``, ``mul``, ``copy`` from v0, plus ``and``, ``or``, ``xor``,
-``not``). v1 is the natural fit: parity is a single ``xor`` per test row.
-Read-cost = ⌈√addr⌉ per operand; writes and arithmetic are free; inputs
-are placed for free at caller-specified addresses; every output address
-pays one standard read at exit.
+using the
+[v2 instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets/v2)
+(``add``, ``sub``, ``mul``, ``copy``, ``and``, ``or``, ``xor``, ``not``,
+``set``).
+
+**Cost model (v2).** Processor at the origin, memory laid out as a
+2D upper half-plane indexed by **positive integers**; the cell at
+linear index ``addr`` sits at Manhattan distance ``⌈√addr⌉`` from the
+core. Each operand read pays that distance; writes and arithmetic are
+free; inputs are placed for free at caller-specified addresses; every
+output address pays one standard read at exit. ``set`` writes an
+integer immediate without reading anything, so it is free.
+
+Three-address-code IR (one instruction per line; ``;`` is also a
+line separator so that single-line strings work):
+
+    1,2                   ← input placement: a@1, b@2
+    xor 3,1,2             ← mem[3] = mem[1] ^ mem[2]; reads ⌈√1⌉ + ⌈√2⌉
+    3                     ← exit: read mem[3]; cost ⌈√3⌉
+
+Supported ops (all from v2):
+
+* ``add  dest, src1, src2``  — ``mem[dest] = mem[src1] + mem[src2]``
+* ``sub  dest, src1, src2``  — ``mem[dest] = mem[src1] - mem[src2]``
+* ``mul  dest, src1, src2``  — ``mem[dest] = mem[src1] * mem[src2]``
+* ``and  dest, src1, src2``  — ``mem[dest] = mem[src1] & mem[src2]``
+* ``or   dest, src1, src2``  — ``mem[dest] = mem[src1] | mem[src2]``
+* ``xor  dest, src1, src2``  — ``mem[dest] = mem[src1] ^ mem[src2]``
+* ``copy dest, src``         — ``mem[dest] = mem[src]``  (1 read)
+* ``not  dest, src``         — ``mem[dest] = ~mem[src]`` (1 read)
+* ``set  dest, K``           — ``mem[dest] = K`` (free; K is a literal)
+
+Two-operand short form for the binary ops: ``xor dest, src`` is wire
+sugar for ``xor dest, dest, src`` (in-place). Addresses must be
+positive integers; ``addr ≤ 0`` raises. ``set``'s second operand is
+an integer literal, not an address.
 """
 from __future__ import annotations
 
@@ -102,13 +125,12 @@ def accuracy(y_pred: Sequence[int], y_true: Sequence[int]) -> float:
     return sum(a == b for a, b in zip(y_pred, y_true)) / len(y_true)
 
 
-# --------------------------------------------------------------------------
-# v1 IR cost model — same simplified Dally model as ../matmul, with the
-# v1 instruction set: v0's ``add``, ``sub``, ``mul``, ``copy`` plus
-# bitwise ``and``, ``or``, ``xor`` (binary) and ``not`` (unary).
-# --------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Cost model
+# ---------------------------------------------------------------------------
 
 def _cost(addr: int) -> int:
+    """``⌈√addr⌉`` for a positive integer ``addr``; raises otherwise."""
     if not isinstance(addr, int) or addr < 1:
         raise ValueError(
             f"addresses must be positive integers; got {addr!r}")
@@ -121,6 +143,10 @@ def _check_addrs(addrs, where):
             raise ValueError(
                 f"{where}: addresses must be positive integers; got {a!r}")
 
+
+# ---------------------------------------------------------------------------
+# Parser + simulator
+# ---------------------------------------------------------------------------
 
 _BINARY = {
     "add": lambda a, b: a + b,
@@ -143,7 +169,7 @@ def _parse(ir: str):
         raise ValueError("IR needs at least an input line and an output line")
     input_addrs = [int(x) for x in lines[0].split(",")]
     output_addrs = [int(x) for x in lines[-1].split(",")]
-    _check_addrs(input_addrs, "input line")
+    _check_addrs(input_addrs,  "input line")
     _check_addrs(output_addrs, "output line")
     ops = []
     for ln in lines[1:-1]:
@@ -151,7 +177,13 @@ def _parse(ir: str):
         if not rest:
             raise ValueError(f"malformed instruction: {ln!r}")
         operands = [int(x) for x in rest.split(",")]
-        _check_addrs(operands, f"`{head}` operands")
+        if head == "set":
+            if len(operands) != 2:
+                raise ValueError(f"set needs 2 operands (dest, K); got {operands}")
+            _check_addrs(operands[:1], "`set` dest")
+            # operands[1] is a literal — any integer is allowed.
+        else:
+            _check_addrs(operands, f"`{head}` operands")
         ops.append((head, operands))
     return input_addrs, ops, output_addrs
 
@@ -166,6 +198,10 @@ def _simulate(ir: str, inputs: List[int]) -> Tuple[List[int], int]:
     mem: Dict[int, int] = {a: v for a, v in zip(input_addrs, inputs)}
     cost = 0
     for op, oprs in ops:
+        if op == "set":
+            dest, literal = oprs
+            mem[dest] = literal  # no read, no cost
+            continue
         if op in _UNARY:
             if len(oprs) != 2:
                 raise ValueError(f"{op} needs 2 operands; got {oprs}")
@@ -178,8 +214,8 @@ def _simulate(ir: str, inputs: List[int]) -> Tuple[List[int], int]:
             continue
         if op not in _BINARY:
             raise ValueError(
-                f"unknown op: {op!r}  (v1 supports "
-                f"add/sub/mul/copy/and/or/xor/not)")
+                f"unknown op: {op!r}  (v2 supports "
+                f"add/sub/mul/copy/and/or/xor/not/set)")
         if len(oprs) == 3:
             dest, s1, s2 = oprs
         elif len(oprs) == 2:
@@ -203,9 +239,9 @@ def _simulate(ir: str, inputs: List[int]) -> Tuple[List[int], int]:
     return outputs, cost
 
 
-# --------------------------------------------------------------------------
-# Scoring + baseline IR
-# --------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Test instance + scorer
+# ---------------------------------------------------------------------------
 
 # Inputs are passed in this order (matches the IR address declaration
 # order in ``generate_baseline``):
@@ -215,44 +251,57 @@ def _simulate(ir: str, inputs: List[int]) -> Tuple[List[int], int]:
 _N_INPUTS = N_BITS * M_TRAIN + M_TRAIN + N_BITS * M_TEST  # = 35
 
 
-def score_sparse_parity(ir: str) -> int:
-    """Run *ir* on the canonical (seed=0) instance, verify it predicts
-    y_test exactly, and return the total Dally read-cost."""
+def _sparse_parity_test() -> Tuple[List[int], List[int]]:
+    """Deterministic seed=0 instance.
+
+    Returns ``(inputs, expected)`` where ``inputs`` is the 35-value flat
+    list ``[X_train..., y_train..., X_test...]`` and ``expected`` is the
+    5-element ``y_test`` the IR's outputs must match.
+    """
     X_tr, y_tr, X_te, y_te, _ = generate(seed=0)
     inputs = (
         [v for row in X_tr for v in row]
         + list(y_tr)
         + [v for row in X_te for v in row]
     )
+    expected = list(y_te)
+    return inputs, expected
+
+
+def score_sparse_parity(ir: str) -> int:
+    """Verify the IR predicts y_test on the seed=0 instance and return
+    its total Dally read-cost."""
+    inputs, expected = _sparse_parity_test()
     actual, cost = _simulate(ir, inputs)
-    if actual != list(y_te):
+    if actual != expected:
         raise ValueError(
-            f"prediction mismatch:\n  got      {actual}\n"
-            f"  expected {list(y_te)}")
+            f"correctness failed:\n  got      {actual}\n"
+            f"  expected {expected}")
     return cost
 
 
-def generate_baseline() -> str:
-    """Naive predictor IR for the seed=0 instance.
+# ---------------------------------------------------------------------------
+# Baseline generator — one xor per test row
+# ---------------------------------------------------------------------------
 
-    The Python ``solve_bruteforce`` discovers ``S`` (free, just like
-    matmul's algorithm choice is free); the IR then emits one ``xor``
+def generate_baseline() -> str:
+    """Naive predictor: discover the secret subset in Python (free,
+    just like matmul's algorithm choice is free) and emit one ``xor``
     per test row reading the two secret columns of ``X_test``.
 
-    Layout:
+    Layout (worst case — bulk arrays placed contiguously, output after):
       X_train at addrs 1..15   (row-major)
       y_train at addrs 16..20
       X_test  at addrs 21..35  (row-major)
       pred    at addrs 36..40  (output)
     """
     X_tr, y_tr, _, _, _ = generate(seed=0)
-    secret = solve_bruteforce(X_tr, y_tr)
-    s0, s1 = secret  # k=2
+    s0, s1 = solve_bruteforce(X_tr, y_tr)  # k=2
 
     X_test_at = lambda i, j: 1 + N_BITS * M_TRAIN + M_TRAIN + i * N_BITS + j
-    pred_at = lambda i: 1 + _N_INPUTS + i
+    pred_at   = lambda i: 1 + _N_INPUTS + i
 
-    inputs = list(range(1, _N_INPUTS + 1))
+    inputs  = list(range(1, _N_INPUTS + 1))
     outputs = [pred_at(i) for i in range(M_TEST)]
 
     lines = [",".join(map(str, inputs))]
@@ -270,28 +319,23 @@ __all__ = [
 ]
 
 
-# --------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 # Reproducer for the record-history IR file (``python sparse_parity.py``).
-# --------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 
 if __name__ == "__main__":
     import os
-
-    X_tr, y_tr, X_te, y_te, secret = generate(seed=0)
-    found = solve_bruteforce(X_tr, y_tr)
-    acc = accuracy(predict(X_te, found), y_te)
-    print(f"secret    = {secret}")
-    print(f"recovered = {found}")
-    print(f"test acc  = {acc:.0%}")
-
-    ir = generate_baseline()
-    cost = score_sparse_parity(ir)
     here = os.path.dirname(os.path.abspath(__file__))
-    sub_dir = os.path.join(here, "submissions")
-    os.makedirs(sub_dir, exist_ok=True)
-    path = os.path.join(sub_dir, "baseline.ir")
-    with open(path, "w") as f:
-        f.write(ir)
-        f.write("\n")
-    n_ops = len(ir.splitlines()) - 2
-    print(f"baseline  cost={cost:>4}  ops={n_ops}  -> {path}")
+    ir_dir = os.path.join(here, "submissions")
+    os.makedirs(ir_dir, exist_ok=True)
+    artifacts = [
+        ("baseline.ir", generate_baseline(), score_sparse_parity),
+    ]
+    for name, ir, scorer in artifacts:
+        cost = scorer(ir)
+        path = os.path.join(ir_dir, name)
+        with open(path, "w") as f:
+            f.write(ir)
+            f.write("\n")
+        n_ops = len(ir.splitlines()) - 2
+        print(f"  {name:<14} cost={cost:>5,}  ops={n_ops:>3,}  -> {path}")
