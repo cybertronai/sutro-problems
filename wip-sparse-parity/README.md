@@ -11,10 +11,29 @@ A toy example with `m_train = 2` and `m_test = 2` (the actual problem has 4 trai
 
 $$
 \begin{array}{cl|c}
-& \text{bits} & \text{sparse parity} \\
-\text{train} & \left\lbrace \begin{array}{ccccc} 1 & 0 & 1 & 0 & 0 \\ 1 & 0 & 0 & 0 & 1 \end{array} \right. & \begin{array}{c} 1 \\ 0 \end{array} \\
+ & \text{bits} & \text{sparse parity} \\
+\text{train} &
+\left\lbrace \begin{array}{ccccc}
+1 & 0 & 1 & 0 & 0 \\
+1 & 0 & 0 & 0 & 1
+\end{array} \right. &
+\begin{array}{c}
+1 \\
+0
+\end{array} \\
 \\
-\begin{array}{c} \text{test} \\ \text{8x larger} \end{array} & \left\lbrace \begin{array}{ccccc} 1 & 0 & 0 & 0 & 1 \\ 1 & 1 & 1 & 0 & 0 \end{array} \right. & \begin{array}{c} ? \\ ? \end{array}
+\begin{array}{c}
+\text{test} \\
+\text{8x larger}
+\end{array} &
+\left\lbrace \begin{array}{ccccc}
+1 & 0 & 0 & 0 & 1 \\
+1 & 1 & 1 & 0 & 0
+\end{array} \right. &
+\begin{array}{c}
+? \\
+?
+\end{array}
 \end{array}
 $$
 
