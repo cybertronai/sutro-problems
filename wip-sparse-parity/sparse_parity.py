@@ -1,19 +1,21 @@
 """Sparse parity: recover k=2 secret bits among n=3 from m=5 training rows.
 
-Each row of X is in {-1,+1}^3 (2 secret bits + 1 noise bit). The label is
-the product of the k secret bits: ``y[i] = prod(X[i, j] for j in secret)``.
+Each row of X is in {0, 1}^3 (2 secret bits + 1 noise bit). The label is
+the XOR (parity) of the k secret bits: ``y[i] = XOR(X[i, j] for j in S)``.
 The training set is chosen (by rejection sampling) so that the secret
 subset is the *unique* 2-subset of columns consistent with the training
 labels — therefore the brute-force solver always recovers it, and the
 5-row test set is classified at 100%.
 
-This module also exposes a v0-IR scorer (``score_sparse_parity``) and a
+This module also exposes a v1-IR scorer (``score_sparse_parity``) and a
 naive baseline IR generator (``generate_baseline``), mirroring the
 [simplified Dally model](https://github.com/cybertronai/simplified-dally-model)
-+ v0 instruction-set (``add``, ``sub``, ``mul``, ``copy``) used by
-``../matmul``. Read-cost = ⌈√addr⌉ per operand; writes and arithmetic
-are free; inputs are placed for free at caller-specified addresses;
-every output address pays one standard read at exit.
++ [v1 instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets/v1)
+(``add``, ``sub``, ``mul``, ``copy`` from v0, plus ``and``, ``or``, ``xor``,
+``not``). v1 is the natural fit: parity is a single ``xor`` per test row.
+Read-cost = ⌈√addr⌉ per operand; writes and arithmetic are free; inputs
+are placed for free at caller-specified addresses; every output address
+pays one standard read at exit.
 """
 from __future__ import annotations
 
@@ -33,9 +35,10 @@ M_TEST = 5
 
 
 def _label(row: Sequence[int], subset: Sequence[int]) -> int:
-    p = 1
+    """XOR (parity) of the bits at positions in ``subset``."""
+    p = 0
     for j in subset:
-        p *= row[j]
+        p ^= row[j]
     return p
 
 
@@ -64,14 +67,14 @@ def generate(seed: int = 0) -> Tuple[
     secret = sorted(rng.sample(range(N_BITS), K_SECRET))
     while True:
         X_train = [
-            [rng.choice((-1, 1)) for _ in range(N_BITS)]
+            [rng.choice((0, 1)) for _ in range(N_BITS)]
             for _ in range(M_TRAIN)
         ]
         y_train = [_label(row, secret) for row in X_train]
         if _identifiable(X_train, y_train, K_SECRET):
             break
     X_test = [
-        [rng.choice((-1, 1)) for _ in range(N_BITS)]
+        [rng.choice((0, 1)) for _ in range(N_BITS)]
         for _ in range(M_TEST)
     ]
     y_test = [_label(row, secret) for row in X_test]
@@ -100,9 +103,9 @@ def accuracy(y_pred: Sequence[int], y_true: Sequence[int]) -> float:
 
 
 # --------------------------------------------------------------------------
-# v0 IR cost model — same as ../matmul. Memory cells are positive
-# integers; cell at linear index ``addr`` sits at Manhattan distance
-# ``⌈√addr⌉`` from the core. Each operand read pays that distance.
+# v1 IR cost model — same simplified Dally model as ../matmul, with the
+# v1 instruction set: v0's ``add``, ``sub``, ``mul``, ``copy`` plus
+# bitwise ``and``, ``or``, ``xor`` (binary) and ``not`` (unary).
 # --------------------------------------------------------------------------
 
 def _cost(addr: int) -> int:
@@ -123,6 +126,13 @@ _BINARY = {
     "add": lambda a, b: a + b,
     "sub": lambda a, b: a - b,
     "mul": lambda a, b: a * b,
+    "and": lambda a, b: a & b,
+    "or":  lambda a, b: a | b,
+    "xor": lambda a, b: a ^ b,
+}
+_UNARY = {
+    "copy": lambda a: a,
+    "not":  lambda a: ~a,
 }
 
 
@@ -156,19 +166,20 @@ def _simulate(ir: str, inputs: List[int]) -> Tuple[List[int], int]:
     mem: Dict[int, int] = {a: v for a, v in zip(input_addrs, inputs)}
     cost = 0
     for op, oprs in ops:
-        if op == "copy":
+        if op in _UNARY:
             if len(oprs) != 2:
-                raise ValueError(f"copy needs 2 operands: copy {oprs}")
+                raise ValueError(f"{op} needs 2 operands; got {oprs}")
             dest, src = oprs
             if src not in mem:
                 raise ValueError(
-                    f"copy {dest},{src} reads uninitialized addr {src}")
+                    f"{op} {dest},{src} reads uninitialized addr {src}")
             cost += _cost(src)
-            mem[dest] = mem[src]
+            mem[dest] = _UNARY[op](mem[src])
             continue
         if op not in _BINARY:
             raise ValueError(
-                f"unknown op: {op!r}  (v0 supports add/sub/mul/copy)")
+                f"unknown op: {op!r}  (v1 supports "
+                f"add/sub/mul/copy/and/or/xor/not)")
         if len(oprs) == 3:
             dest, s1, s2 = oprs
         elif len(oprs) == 2:
@@ -225,7 +236,7 @@ def generate_baseline() -> str:
     """Naive predictor IR for the seed=0 instance.
 
     The Python ``solve_bruteforce`` discovers ``S`` (free, just like
-    matmul's algorithm choice is free); the IR then emits one ``mul``
+    matmul's algorithm choice is free); the IR then emits one ``xor``
     per test row reading the two secret columns of ``X_test``.
 
     Layout:
@@ -247,7 +258,7 @@ def generate_baseline() -> str:
     lines = [",".join(map(str, inputs))]
     for i in range(M_TEST):
         lines.append(
-            f"mul {pred_at(i)},{X_test_at(i, s0)},{X_test_at(i, s1)}")
+            f"xor {pred_at(i)},{X_test_at(i, s0)},{X_test_at(i, s1)}")
     lines.append(",".join(map(str, outputs)))
     return "\n".join(lines)
 
