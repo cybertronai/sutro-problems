@@ -240,7 +240,7 @@ def _simulate(ir: str, inputs: List[int]) -> Tuple[List[int], int]:
 
 
 # ---------------------------------------------------------------------------
-# Test instance + scorer
+# Test instances + scorer
 # ---------------------------------------------------------------------------
 
 # Inputs are passed in this order (matches the IR address declaration
@@ -251,63 +251,147 @@ def _simulate(ir: str, inputs: List[int]) -> Tuple[List[int], int]:
 _N_INPUTS = N_BITS * M_TRAIN + M_TRAIN + N_BITS * M_TEST  # = 35
 
 
-def _sparse_parity_test() -> Tuple[List[int], List[int]]:
-    """Deterministic seed=0 instance.
+def _instance(seed: int) -> Tuple[List[int], List[int]]:
+    """Return ``(inputs, expected)`` for one seed.
 
-    Returns ``(inputs, expected)`` where ``inputs`` is the 35-value flat
-    list ``[X_train..., y_train..., X_test...]`` and ``expected`` is the
-    5-element ``y_test`` the IR's outputs must match.
+    ``inputs`` is the 35-value flat list ``[X_train..., y_train..., X_test...]``
+    that the IR receives; ``expected`` is the 5-element ``y_test`` the IR's
+    outputs must match.
     """
-    X_tr, y_tr, X_te, y_te, _ = generate(seed=0)
+    X_tr, y_tr, X_te, y_te, _ = generate(seed=seed)
     inputs = (
         [v for row in X_tr for v in row]
         + list(y_tr)
         + [v for row in X_te for v in row]
     )
-    expected = list(y_te)
-    return inputs, expected
+    return inputs, list(y_te)
+
+
+def _seeds_covering_all_secrets() -> Tuple[int, ...]:
+    """Smallest set of seeds (scanning seed=0,1,2,...) that exercises
+    every possible secret 2-subset of {0, 1, 2}. There are ``C(3,2)=3``
+    such subsets, so this returns three seeds. Computed once at import."""
+    seen: Dict[Tuple[int, ...], int] = {}
+    for seed in range(200):
+        _, _, _, _, secret = generate(seed=seed)
+        key = tuple(secret)
+        if key not in seen:
+            seen[key] = seed
+            if len(seen) == 3:
+                break
+    if len(seen) != 3:
+        raise RuntimeError("could not cover all 3 secrets within 200 seeds")
+    return tuple(sorted(seen.values()))
+
+
+_CANONICAL_SEEDS: Tuple[int, ...] = _seeds_covering_all_secrets()
 
 
 def score_sparse_parity(ir: str) -> int:
-    """Verify the IR predicts y_test on the seed=0 instance and return
-    its total Dally read-cost."""
-    inputs, expected = _sparse_parity_test()
-    actual, cost = _simulate(ir, inputs)
-    if actual != expected:
-        raise ValueError(
-            f"correctness failed:\n  got      {actual}\n"
-            f"  expected {expected}")
-    return cost
+    """Verify the IR predicts y_test correctly on instances covering
+    every possible secret subset, and return its Dally read-cost.
+
+    The scorer walks ``_CANONICAL_SEEDS`` (one seed per distinct secret).
+    Cost is determined by the IR alone — the same set of operand reads
+    is performed regardless of input *values* — so the scorer also
+    asserts the cost is identical across seeds (a cheap robustness
+    check that the IR's control flow is data-independent).
+    """
+    seen_cost: int | None = None
+    for seed in _CANONICAL_SEEDS:
+        inputs, expected = _instance(seed)
+        actual, cost = _simulate(ir, inputs)
+        if actual != expected:
+            raise ValueError(
+                f"correctness failed (seed={seed}):\n  got      {actual}\n"
+                f"  expected {expected}")
+        if seen_cost is None:
+            seen_cost = cost
+        elif cost != seen_cost:
+            raise ValueError(
+                f"non-deterministic cost across seeds: "
+                f"{seen_cost} (earlier) vs {cost} (seed={seed})")
+    assert seen_cost is not None
+    return seen_cost
 
 
 # ---------------------------------------------------------------------------
-# Baseline generator — one xor per test row
+# Baseline generator — try every candidate subset, AND-reduce match,
+# OR-combine predictions
 # ---------------------------------------------------------------------------
 
 def generate_baseline() -> str:
-    """Naive predictor: discover the secret subset in Python (free,
-    just like matmul's algorithm choice is free) and emit one ``xor``
-    per test row reading the two secret columns of ``X_test``.
+    """General predictor IR — works for any seed.
 
-    Layout (worst case — bulk arrays placed contiguously, output after):
-      X_train at addrs 1..15   (row-major)
-      y_train at addrs 16..20
-      X_test  at addrs 21..35  (row-major)
-      pred    at addrs 36..40  (output)
+    Mirrors the brute-force solver in pure v2 IR. For each of the
+    ``C(3, 2) = 3`` candidate 2-subsets ``T = (t0, t1)``:
+
+      * Compute ``matched_T_i = 1 XOR (y_train[i] XOR X_train[i,t0]
+        XOR X_train[i,t1])`` — that's 1 iff T matches row i.
+      * ``ind_T = AND_i matched_T_i`` — 1 iff T matches every row.
+
+    By identifiability, exactly one ``ind_T`` is 1 (the true secret).
+    Each test row is then predicted as
+    ``OR_T (ind_T AND (X_test[j,t0] XOR X_test[j,t1]))`` — the OR
+    selects the lone non-zero term.
+
+    Memory layout:
+      pred       at  1..5   (output)
+      X_train    at  6..20  (input, row-major, 5×3)
+      y_train    at 21..25  (input)
+      X_test     at 26..40  (input, row-major)
+      ONE        at 41      (constant 1, written by ``set``, free)
+      tmp        at 42      (scratch, reused)
+      parity     at 43      (scratch, reused)
+      matched_T  at 44..58  (3 candidates × 5 rows)
+      ind_T      at 59..61  (3 candidates)
+      predT      at 62      (scratch, reused per test row)
+      term_T     at 63..65  (3 candidates, reused per test row)
     """
-    X_tr, y_tr, _, _, _ = generate(seed=0)
-    s0, s1 = solve_bruteforce(X_tr, y_tr)  # k=2
+    pred_at  = lambda j: 1 + j
+    X_tr_at  = lambda i, c: 6 + i * N_BITS + c
+    y_tr_at  = lambda i: 21 + i
+    X_te_at  = lambda j, c: 26 + j * N_BITS + c
+    ONE     = 41
+    TMP     = 42
+    PARITY  = 43
+    matched_at = lambda T_idx, i: 44 + T_idx * M_TRAIN + i
+    ind_T_at   = lambda T_idx: 59 + T_idx
+    PREDT      = 62
+    term_at    = lambda T_idx: 63 + T_idx
 
-    X_test_at = lambda i, j: 1 + N_BITS * M_TRAIN + M_TRAIN + i * N_BITS + j
-    pred_at   = lambda i: 1 + _N_INPUTS + i
+    candidates = list(combinations(range(N_BITS), K_SECRET))
 
-    inputs  = list(range(1, _N_INPUTS + 1))
-    outputs = [pred_at(i) for i in range(M_TEST)]
+    inputs = (
+        [X_tr_at(i, c) for i in range(M_TRAIN) for c in range(N_BITS)]
+        + [y_tr_at(i) for i in range(M_TRAIN)]
+        + [X_te_at(j, c) for j in range(M_TEST) for c in range(N_BITS)]
+    )
+    outputs = [pred_at(j) for j in range(M_TEST)]
 
     lines = [",".join(map(str, inputs))]
-    for i in range(M_TEST):
+    lines.append(f"set {ONE},1")
+
+    # --- decoding: ind_T per candidate ----------------------------------
+    for T_idx, (t0, t1) in enumerate(candidates):
+        for i in range(M_TRAIN):
+            lines.append(f"xor {TMP},{y_tr_at(i)},{X_tr_at(i, t0)}")
+            lines.append(f"xor {PARITY},{TMP},{X_tr_at(i, t1)}")
+            lines.append(f"xor {matched_at(T_idx, i)},{PARITY},{ONE}")
+        # ind_T = AND of all matched_T_i
         lines.append(
-            f"xor {pred_at(i)},{X_test_at(i, s0)},{X_test_at(i, s1)}")
+            f"and {ind_T_at(T_idx)},{matched_at(T_idx, 0)},{matched_at(T_idx, 1)}")
+        for i in range(2, M_TRAIN):
+            lines.append(f"and {ind_T_at(T_idx)},{matched_at(T_idx, i)}")
+
+    # --- predictions: pred[j] = OR_T (ind_T AND predT) ------------------
+    for j in range(M_TEST):
+        for T_idx, (t0, t1) in enumerate(candidates):
+            lines.append(f"xor {PREDT},{X_te_at(j, t0)},{X_te_at(j, t1)}")
+            lines.append(f"and {term_at(T_idx)},{ind_T_at(T_idx)},{PREDT}")
+        lines.append(f"or {pred_at(j)},{term_at(0)},{term_at(1)}")
+        lines.append(f"or {pred_at(j)},{term_at(2)}")
+
     lines.append(",".join(map(str, outputs)))
     return "\n".join(lines)
 

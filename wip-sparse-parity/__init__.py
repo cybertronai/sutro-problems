@@ -21,7 +21,9 @@ from .sparse_parity import (  # noqa: F401
 )
 
 # Re-export private helpers so the in-tree test suite can probe them.
-from .sparse_parity import _simulate, _cost, _parse, _sparse_parity_test  # noqa: F401
+from .sparse_parity import (  # noqa: F401
+    _simulate, _cost, _parse, _instance, _CANONICAL_SEEDS,
+)
 
 __all__ = [
     "N_BITS", "K_SECRET", "M_TRAIN", "M_TEST",

@@ -30,10 +30,36 @@ def test_set_op_is_free():
     assert cost == 4
 
 
-def test_baseline_recovers_secret():
-    """The naive baseline IR predicts y_test exactly and reports cost 91."""
+def test_canonical_seeds_cover_all_secrets():
+    """``_CANONICAL_SEEDS`` exercises every C(3,2)=3 secret subset."""
+    secrets = set()
+    for seed in sparse_parity._CANONICAL_SEEDS:
+        _, _, _, _, secret = sparse_parity.generate(seed=seed)
+        secrets.add(tuple(secret))
+    assert len(secrets) == 3
+
+
+def test_baseline_robust_across_secrets():
+    """The general baseline IR predicts y_test correctly on every
+    canonical seed and reports cost 1269."""
     cost = sparse_parity.score_sparse_parity(sparse_parity.generate_baseline())
-    assert cost == 91
+    assert cost == 1269
+
+
+def test_specialized_ir_rejected_by_robust_scorer():
+    """A predictor IR specialized to seed=0 (secret=[1,2]) must fail
+    the multi-seed scorer because secrets differ across canonical seeds."""
+    specialized = "\n".join([
+        ",".join(str(x) for x in range(1, 36)),
+        "xor 36,22,23",  # X_test[0,1] ^ X_test[0,2] -- only correct for S=[1,2]
+        "xor 37,25,26",
+        "xor 38,28,29",
+        "xor 39,31,32",
+        "xor 40,34,35",
+        "36,37,38,39,40",
+    ])
+    with pytest.raises(ValueError, match="correctness failed"):
+        sparse_parity.score_sparse_parity(specialized)
 
 
 def test_python_reference_solver():
