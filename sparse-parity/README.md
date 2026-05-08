@@ -1,9 +1,5 @@
 # Sparse parity
 
-- Given some labeled examples of sparse parity, and 8x more unlabeled ones.
-- What is the most energy-efficient way to label them?
-- To measure energy, use [simplified version](https://github.com/cybertronai/simplified-dally-model) of Bill Dally's *Parallel Explicit Communication Model*
-
 $$
 \begin{array}{cl|c}
  & \text{bits} & \text{sparse parity} \\
@@ -32,26 +28,34 @@ $$
 \end{array}
 $$
 
+- Given some labeled examples of sparse parity, and 8x more unlabeled ones.
+- What is the most energy-efficient way to label them?
+- To measure energy, use [simplified version](https://github.com/cybertronai/simplified-dally-model) of Bill Dally's *Parallel Explicit Communication Model*
+
 ## API
 
 ```python
 import sparse_parity
 
 # Verify your IR predicts y_test correctly and return its read-cost.
-ir   = sparse_parity.generate_baseline_small()   # n=3, k=2, 4 train / 32 test
+ir   = sparse_parity.generate_baseline_small()   # small
 cost = sparse_parity.score_small(ir)             # → 6,918
 
-ir   = sparse_parity.generate_baseline_medium()  # n=8, k=3, 8 train / 64 test
+ir   = sparse_parity.generate_baseline_medium()  # medium
 cost = sparse_parity.score_medium(ir)            # → 816,251
 ```
 
 ## Small Record History
+
+2 hidden bits, 3 total bits, 4 train examples, 32 test.
 
 | Date       | Cost  | Submission                                                                   | Contributors                                 | Description                                              |
 | -          | -:    | -                                                                            | -                                            | -                                                        |
 | 2026-05-07 | 6,918 | [ir](submissions/baseline_small.ir), [report](submissions/baseline_small.md) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_baseline_small` (try-each-candidate, v2 ops)   |
 
 ## Medium Record History
+
+3 hidden bits, 8 total bits, 8 train examples, 64 test.
 
 | Date       | Cost    | Submission                                                                     | Contributors                                 | Description                                                |
 | -          | -:      | -                                                                              | -                                            | -                                                          |

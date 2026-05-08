@@ -2,7 +2,7 @@
 ``sparse_parity.sparse_parity``.
 
 Lets ``import sparse_parity`` work from outside the
-``wip-sparse-parity/`` directory:
+``sparse-parity/`` directory:
 
     from sparse_parity import score_small, generate_baseline_small
     cost = score_small(generate_baseline_small())
