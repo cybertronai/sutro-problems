@@ -45,4 +45,4 @@ cost = matmul.score_16x16(ir)
 | 2026-05-05 |  68,452 | [ir](submissions/colmajor_fused_16x16.ir), [report](submissions/colmajor_fused_16x16.md) | [@zh4ngx](https://github.com/zh4ngx)         | + column-major order + fused final copy-out ★ best |
 | 2026-05-08 | 237,456 | [ir](submissions/recursive_16x16.ir), report   | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_recursive_16x16` (1×1-leaf D&C, Z-order) |
 
-[distance_histograms](doc/access_distance_plots/) — per-submission read-distance histogram + CDF for every IR above.
+[access_distance](doc/access_distance/) — per-submission read-distance histogram + CDF for every IR above.

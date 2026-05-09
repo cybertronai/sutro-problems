@@ -16,7 +16,7 @@ declares ``M_TRAIN*N_BITS + M_TRAIN + M_TEST*N_BITS`` for the small
 spec (112) and medium for the medium spec (584).
 
 Run:
-    python3 sparse-parity/doc/access_distance_plots/plot_access_distances.py
+    python3 sparse-parity/doc/access_distance/plot_access_distance.py
 """
 from __future__ import annotations
 

@@ -67,4 +67,4 @@ cost = sparse_parity.score_medium(ir)            # → 816,251
 | 2026-05-08 |  15,960 | 5.5 ms | [ir](submissions/predpack_medium.ir), [report](submissions/predpack_medium.md), [py](submissions/predpack_medium.py) | [@sjbaebae](https://github.com/sjbaebae) | packed-column decoder + pair-XOR reuse |
 | 2026-05-08 |  15,691 | 5.4 ms | [ir](submissions/predpack_tuned_medium.ir), [report](submissions/predpack_tuned.md), [py](submissions/predpack_tuned.py) | [@sjbaebae](https://github.com/sjbaebae) | pair-XOR reuse + address/liveness tuning ★ best |
 
-[distance_histograms](doc/access_distance_plots/) — memory-access histograms
+[access_distance](doc/access_distance/) — per-submission read-distance histogram + CDF for every IR above.

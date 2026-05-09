@@ -14,7 +14,7 @@ Also emits a single combined CDF (`combined_cdf.png`) overlaying four
 representative 16×16 submissions on one axis.
 
 Run:
-    python3 matmul/doc/access_distance_plots/plot_access_distances.py
+    python3 matmul/doc/access_distance/plot_access_distance.py
 """
 from __future__ import annotations
 
