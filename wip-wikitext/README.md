@@ -23,6 +23,29 @@ For CI / non-interactive setups, set `MODAL_TOKEN_ID` and
 PyTorch-based submissions also need `pip install torch` locally;
 `submit.py` runs an import-only precheck before any Modal spend.
 
+## Local CPU smoke
+
+Run this first if you only want to check the evaluator and n-gram
+baseline locally. It does not require Docker, Modal, a GPU, NVML, cloud
+credentials, or a WikiText-103 download.
+
+```bash
+# From the repo root.
+nix develop -c python3 wip-wikitext/test_wikitext.py
+nix develop -c python3 wip-wikitext/run_eval.py \
+    --data-dir wip-wikitext/fixtures/tiny \
+    --baseline ngram --n 3 --max-test-chars 300 --progress-every 0
+```
+
+Equivalent without Nix, if `python3` is already available:
+
+```bash
+cd wip-wikitext
+python3 test_wikitext.py
+python3 run_eval.py --data-dir fixtures/tiny \
+    --baseline ngram --n 3 --max-test-chars 300 --progress-every 0
+```
+
 ## Reproducing the modded-nanogpt submission
 
 ```bash
@@ -200,6 +223,7 @@ against unintentional cheating from coding agents.
 | `fetch_data.py`            | local-host HuggingFace WikiText-103 fetch (the canonical S3 URL is dead) |
 | `example_submission.py`    | reference submission file (5-gram wrapper) — copy and edit       |
 | `submission_modded_nanogpt.py` | byte-vocab port of [modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt) (Muon + RoPE + ReLU²) for 1xA100-40GB |
+| `fixtures/tiny/`           | tiny committed raw splits for local CPU smoke tests              |
 | `verify_nvml.py`           | NVML energy-counter verification for a target host               |
 | `test_wikitext.py`         | tests for the evaluator + n-gram                                 |
 | `RUNBOOK.md`               | NVML verification + manual baseline experimentation on Modal A100 |
