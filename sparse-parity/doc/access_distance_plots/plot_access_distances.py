@@ -131,10 +131,13 @@ def plot_combined_cdf(ir_paths: List[Path], out_path: Path, title: str) -> int:
         cumulative = np.arange(1, len(distances) + 1)
         ax.plot(distances, cumulative, label=f"{name}  (cost {total:,})",
                 color=color, linewidth=1.6)
+    # Log y so submissions whose read counts differ by 10× (e.g. baseline
+    # vs packed-decoder) all stay visible instead of bunching at the bottom.
+    ax.set_yscale("log")
     ax.set_xlabel("distance")
-    ax.set_ylabel("count")
+    ax.set_ylabel("count (log)")
     ax.set_title(f"{title}  ({n} submissions)")
-    ax.grid(alpha=0.3)
+    ax.grid(alpha=0.3, which="both")
     ax.legend(loc="lower right", fontsize=9)
     plt.tight_layout()
     plt.savefig(out_path, dpi=120)
