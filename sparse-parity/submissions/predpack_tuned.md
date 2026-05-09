@@ -60,3 +60,10 @@ Opcode counts:
 
 The IR uses only official v3 operations: `set`, `copy`, `xor`, `and`, `or`,
 `mul`, and `cmp`.
+
+## Performance snapshot
+
+Read-cost across all sparse-parity submissions, normalized to each
+problem's upstream try-each-candidate baseline (lower is better):
+
+![Sparse parity cost versus baseline](../doc/performance_vs_baseline.svg)

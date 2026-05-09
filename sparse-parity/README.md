@@ -45,10 +45,6 @@ ir   = sparse_parity.generate_baseline_medium()  # medium
 cost = sparse_parity.score_medium(ir)            # → 816,251
 ```
 
-## Performance Snapshot
-
-![Sparse parity cost versus baseline](doc/performance_vs_baseline.svg)
-
 ## Small Record History
 
 2 hidden bits, 3 total bits, 4 train examples, 32 test.

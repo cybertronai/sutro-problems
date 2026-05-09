@@ -9,8 +9,11 @@ and reads nothing). Save a 2-panel PNG into this directory:
     [left]  histogram: how many reads happen at each distance
     [right] CDF:       count of reads at distance ≤ x
 
-Also emits a combined CDF (`combined_cdf_medium.png`) overlaying
-every medium-category submission on one axis.
+Also emits two combined CDFs — one per problem size — overlaying every
+submission of that size on a single axis (legend sorted by total cost,
+cheapest first). Size is detected from the IR's input count: small
+declares ``M_TRAIN*N_BITS + M_TRAIN + M_TEST*N_BITS`` for the small
+spec (112) and medium for the medium spec (584).
 
 Run:
     python3 sparse-parity/doc/access_distance_plots/plot_access_distances.py
@@ -19,7 +22,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import List
+from typing import Dict, List, Tuple
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -34,9 +37,21 @@ import sparse_parity as sp  # noqa: E402
 _BINARY = {"add", "sub", "mul", "div", "and", "or", "xor"}
 _UNARY = {"copy", "not", "abs"}
 
+# Map input-count → label for figuring out which problem size the IR
+# was authored against.
+_SIZE_BY_INPUT_COUNT: Dict[int, str] = {
+    sp._n_inputs(sp.SMALL):  "small",
+    sp._n_inputs(sp.MEDIUM): "medium",
+}
+
+
+def _ir_size(ir: str) -> str:
+    input_addrs, _, _ = sp._parse(ir)
+    return _SIZE_BY_INPUT_COUNT.get(len(input_addrs), "unknown")
+
 
 def collect_read_distances(ir: str) -> List[int]:
-    """Replay the IR exactly the way sparse_parity._simulate counts
+    """Replay the IR exactly the way sparse_parity's simulator counts
     reads, recording ⌈√addr⌉ for every operand read."""
     _, ops, output_addrs = sp._parse(ir)
     distances: List[int] = []
@@ -73,7 +88,7 @@ def collect_read_distances(ir: str) -> List[int]:
     return distances
 
 
-def plot_one(ir_path: Path, out_path: Path) -> int:
+def plot_one(ir_path: Path, out_path: Path) -> Tuple[int, int]:
     distances = np.array(collect_read_distances(ir_path.read_text()))
     total_cost = int(distances.sum())
     n_reads = len(distances)
@@ -99,7 +114,7 @@ def plot_one(ir_path: Path, out_path: Path) -> int:
     plt.tight_layout()
     plt.savefig(out_path, dpi=120)
     plt.close(fig)
-    return total_cost
+    return total_cost, n_reads
 
 
 def plot_combined_cdf(ir_paths: List[Path], out_path: Path, title: str) -> int:
@@ -109,7 +124,7 @@ def plot_combined_cdf(ir_paths: List[Path], out_path: Path, title: str) -> int:
     for ir_path in ir_paths:
         distances = np.sort(collect_read_distances(ir_path.read_text()))
         rows.append((ir_path.name, distances, int(distances.sum())))
-    rows.sort(key=lambda r: r[2])
+    rows.sort(key=lambda r: r[2])  # cheapest first
     n = len(rows)
     for i, (name, distances, total) in enumerate(rows):
         color = cmap(0.05 + 0.9 * i / max(n - 1, 1))
@@ -128,23 +143,28 @@ def plot_combined_cdf(ir_paths: List[Path], out_path: Path, title: str) -> int:
 
 
 def main() -> None:
-    print(f"{'submission':<32}{'reads':>10}{'total_cost':>14}  out")
-    print("-" * 78)
-    medium_paths: List[Path] = []
+    by_size: Dict[str, List[Path]] = {"small": [], "medium": [], "unknown": []}
+    print(f"{'submission':<32}{'size':>8}{'reads':>10}{'total_cost':>14}  out")
+    print("-" * 86)
     for ir_path in sorted(SUBMISSIONS.glob("*.ir")):
+        ir = ir_path.read_text()
+        size = _ir_size(ir)
         out_path = HERE / (ir_path.stem + ".png")
-        total_cost = plot_one(ir_path, out_path)
-        n_reads = len(collect_read_distances(ir_path.read_text()))
-        print(f"{ir_path.name:<32}{n_reads:>10,}{total_cost:>14,}  "
+        total_cost, n_reads = plot_one(ir_path, out_path)
+        by_size[size].append(ir_path)
+        print(f"{ir_path.name:<32}{size:>8}{n_reads:>10,}{total_cost:>14,}  "
               f"{out_path.name}")
-        if "_medium" in ir_path.stem:
-            medium_paths.append(ir_path)
 
-    if medium_paths:
-        combined_path = HERE / "combined_cdf_medium.png"
-        n = plot_combined_cdf(medium_paths, combined_path,
-                              "CDF — reads at distance ≤ x  (medium)")
-        print(f"\nCombined medium CDF: {combined_path.name}  ({n} submissions)")
+    for size in ("small", "medium"):
+        paths = by_size[size]
+        if not paths:
+            continue
+        combined_path = HERE / f"combined_cdf_{size}.png"
+        n = plot_combined_cdf(
+            paths, combined_path,
+            f"CDF — reads at distance ≤ x  ({size})",
+        )
+        print(f"\nCombined {size} CDF: {combined_path.name}  ({n} submissions)")
 
 
 if __name__ == "__main__":
