@@ -1,9 +1,12 @@
 """Energy-efficient sparse-parity scorer + baselines.
 
-Scores IR programs that recover the secret 2-subset of bits from m=4
-training rows over ``{0, 1}^3`` and predict 32 test labels under the
-simplified Dally model using the v3 instruction set, with all data
-values constrained to a signed 8-bit ALU (``[-128, 127]``).
+Scores IR programs that recover the unknown secret bit-subset from a
+small number of labeled training rows and predict the labels of a
+held-out test set, under the simplified Dally model using the v3
+instruction set with all data values constrained to a signed 8-bit
+ALU (``[-128, 127]``). The same scorer covers both the SMALL
+(n=3 bits, k=2 secret, 4 train / 32 test) and MEDIUM (n=8 bits, k=3
+secret, 8 train / 64 test) configurations defined below.
 """
 from __future__ import annotations
 
