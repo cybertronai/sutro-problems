@@ -41,12 +41,12 @@ import sparse_parity  # noqa: E402
 from sparse_parity import SMALL, score_small  # noqa: E402
 
 
-def generate_ge_small() -> str:
-    spec = SMALL
-    n = spec.n_bits          # 3
-    m = spec.m_train         # 4
-    n_aug = n + 1            # 4
-    m_test = spec.m_test     # 32
+def _generate_ge(spec) -> str:
+    """Branchless GF(2) GE + brute-force fallback IR for any *spec*."""
+    n = spec.n_bits
+    m = spec.m_train
+    n_aug = n + 1
+    m_test = spec.m_test
 
     # ----- memory layout ---------------------------------------------------
     pred_base = 1
@@ -276,6 +276,11 @@ def generate_ge_small() -> str:
 
     lines.append(",".join(map(str, outputs)))
     return "\n".join(lines)
+
+
+def generate_ge_small() -> str:
+    """GE-based predictor IR for the small instance."""
+    return _generate_ge(SMALL)
 
 
 if __name__ == "__main__":
