@@ -32,7 +32,7 @@ $$
 \end{array}
 $$
 
-- Given some labeled examples of sparse parity, and 8x more unlabeled ones.
+- Given some labeled examples of k-sparse parity, and 8x more unlabeled ones.
 - What is the most energy-efficient way to label them?
 - To measure energy, use simplified version of Bill Dally's [model](https://github.com/cybertronai/simplified-dally-model), v3 [instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets), 8-bits
 
