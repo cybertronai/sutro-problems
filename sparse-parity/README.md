@@ -51,8 +51,8 @@ cost = sparse_parity.score_medium(ir)            # → 816,251
 
 | Date       | Cost   | Time   | Submission                                                                   | Contributors                                 | Description                                      |
 | -          | -:     | -:     | -                                                                            | -                                            | -                                                |
-| 2026-05-07 |  6,918 | 0.5 ms | [ir](submissions/baseline_small.ir), [report](submissions/baseline_small.md) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_baseline_small` (try-each-candidate)   |
-| 2026-05-08 | 22,238 | 1.0 ms | [ir](submissions/ge_small.ir), [report](submissions/ge_small.md), [py](submissions/ge_small.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_ge_small` (GF(2) Gaussian elimination) |
+| 2026-05-07 |  6,918 | 0.8 ms | [ir](submissions/baseline_small.ir), [report](submissions/baseline_small.md) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_baseline_small` (try-each-candidate)   |
+| 2026-05-08 | 22,238 | 1.7 ms | [ir](submissions/ge_small.ir), [report](submissions/ge_small.md), [py](submissions/ge_small.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_ge_small` (GF(2) Gaussian elimination) |
 
 ## Medium Record History
 
@@ -60,9 +60,9 @@ cost = sparse_parity.score_medium(ir)            # → 816,251
 
 | Date       | Cost    | Time  | Submission                                                                     | Contributors                                 | Description                                       |
 | -          | -:      | -:    | -                                                                              | -                                            | -                                                 |
-| 2026-05-07 | 816,251 | 25 ms | [ir](submissions/baseline_medium.ir), [report](submissions/baseline_medium.md) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_baseline_medium` (try-each-candidate)   |
+| 2026-05-07 | 816,251 | 27 ms | [ir](submissions/baseline_medium.ir), [report](submissions/baseline_medium.md) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_baseline_medium` (try-each-candidate)   |
 | 2026-05-08 | 473,046 | 13 ms | [ir](submissions/ge_medium.ir), [report](submissions/ge_medium.md), [py](submissions/ge_medium.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_ge_medium` (GF(2) Gaussian elimination) |
 
-> Time = wall-clock best-of-5 timing (via `timeit`) for `generate_*()` + `score_*()` on the author's M3 Mac. Reproduces with `python -m timeit -s "import sparse_parity as s" "s.score_medium(s.generate_baseline_medium())"`.
+> Time = wall-clock duration of a single `generate_*()` + `score_*()` call on the author's M3 Mac (via `time.perf_counter()`).
 
 [distance_histograms](doc/access_distance_plots/) — memory-access histograms
