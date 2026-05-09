@@ -77,6 +77,6 @@ Same instance shape as Medium 100%, but scored with `score_medium_approx50` — 
 
 | Date       | Cost   | Time   | Submission                                                                                  | Contributors                                 | Description                                                                |
 | -          | -:     | -:     | -                                                                                           | -                                            | -                                                                          |
-| 2026-05-09 | 8,723  | 5.4 ms | [ir](submissions/half_packed_approx50.ir), [report](submissions/half_packed_approx50.md), [py](submissions/half_packed_approx50.py) | [@yaroslavvb](https://github.com/yaroslavvb) | packed-column candidate check on first 32 outputs; remaining 32 set to 0   |
+| 2026-05-09 | 8,723  | 5.4 ms | [ir](submissions/half_packed_approx50.ir), [report](submissions/half_packed_approx50.md), [py](submissions/half_packed_approx50.py) | [@yaroslavvb](https://github.com/yaroslavvb) | packed-column candidate which only labels first 32 test examples   |
 
 [access_distance](doc/access_distance/) — per-submission read-distance histogram + CDF for every IR above.
