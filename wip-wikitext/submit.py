@@ -31,6 +31,7 @@ from pathlib import Path
 
 import modal
 
+import bake_wikitext  # image-build dataset hook — kept in its own module
 import task  # task-pinned constants — single source of truth
 
 HERE = Path(__file__).resolve().parent
@@ -99,29 +100,11 @@ HARNESS_FILES = (
 )
 
 
-def _bake_wikitext() -> None:
-    """Build-time: materialize WikiText-103 raw splits into /data inside
-    the image. Runs once per image build, layer-cached by Modal across
-    every subsequent submission. Mirrors fetch_data.py but writes into
-    the image instead of a runtime Volume."""
-    from pathlib import Path
-    from datasets import load_dataset
-    out = Path("/data")
-    out.mkdir(parents=True, exist_ok=True)
-    ds = load_dataset("Salesforce/wikitext", "wikitext-103-raw-v1")
-    for hf_split, fname in [
-        ("train", "wiki.train.raw"),
-        ("validation", "wiki.valid.raw"),
-        ("test", "wiki.test.raw"),
-    ]:
-        (out / fname).write_text("\n".join(ds[hf_split]["text"]), encoding="utf-8")
-
-
 app = modal.App("wikitext-bench")
 
 # CUDA 12.4 PyTorch wheels match the driver Modal exposes on its A100
 # fleet. nvidia-ml-py is the NVML binding EnergyMeter uses; datasets is
-# how _bake_wikitext pulls WikiText-103 from the HuggingFace mirror at
+# how bake_wikitext pulls WikiText-103 from the HuggingFace mirror at
 # image build time.
 image = (
     modal.Image.debian_slim(python_version="3.11")
@@ -135,8 +118,10 @@ image = (
     )
     # Bake WikiText-103 into the image. Placed above add_local_file so
     # editing harness code does not invalidate the data layer — Modal
-    # caches each layer by content hash.
-    .run_function(_bake_wikitext)
+    # caches each layer by content hash. Lives in bake_wikitext.py so the
+    # build container resolves the callable without importing submit.py
+    # (which pulls in task and other harness files not in this layer yet).
+    .run_function(bake_wikitext.bake)
     .workdir("/workspace")
     # Modal re-imports submit.py inside the container to resolve the
     # remote function. submit.py does a top-level `import task`, so
@@ -168,7 +153,7 @@ def run_submission(submission_bytes: bytes, submission_name: str) -> dict:
     workspace = Path("/workspace")
     os.chdir(workspace)
 
-    # WikiText-103 is baked into /data inside the image — see _bake_wikitext.
+    # WikiText-103 is baked into /data inside the image — see bake_wikitext.
 
     # NVML probe — bail before training cycles if the energy counter
     # isn't exposed on this host.
@@ -359,7 +344,7 @@ def main() -> int:
     submission_name = args.submission.stem
 
     print(f"[modal] launching {MODAL_GPU} ...")
-    with app.run():
+    with modal.enable_output(), app.run():
         result = run_submission.remote(submission_bytes, submission_name)
 
     result["contributor"] = contributor
