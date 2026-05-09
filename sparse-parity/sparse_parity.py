@@ -11,6 +11,7 @@ secret, 8 train / 64 test) configurations defined below.
 from __future__ import annotations
 
 import math
+import operator
 import secrets
 from collections import namedtuple
 from itertools import combinations
@@ -119,15 +120,6 @@ def _cost(addr: int) -> int:
     return math.isqrt(addr - 1) + 1
 
 
-def _check_addrs(addrs: Sequence[int], where: str) -> None:
-    for a in addrs:
-        if not isinstance(a, int) or a < 1:
-            raise ValueError(f"{where}: addresses must be positive integers; got {a!r}")
-        # HARDENING: Prevent massive layout offsets attempting OS memory exploits
-        if a.bit_length() > 64:
-            raise ValueError(f"{where}: address exceeds 64-bit bounds")
-
-
 def _to_signed_8bit(val: int) -> int:
     """Normalize integer to canonical signed 8-bit form [-128, 127]."""
     val &= 0xFF
@@ -138,111 +130,117 @@ def _to_signed_8bit(val: int) -> int:
 # Static Compiler + Fast Array Simulator
 # ---------------------------------------------------------------------------
 
-_BINARY = {"add", "sub", "mul", "div", "and", "or", "xor"}
-_UNARY = {"copy", "not", "abs"}
-_CMP_PRED = {"eq", "ne", "lt", "le", "gt", "ge"}
+def _safe_div(a: int, b: int) -> int:
+    if b == 0: raise ZeroDivisionError("integer division or modulo by zero")
+    return a // b
+
+_CMP_OPS = {
+    "eq": operator.eq, "ne": operator.ne, "lt": operator.lt,
+    "le": operator.le, "gt": operator.gt, "ge": operator.ge
+}
+
+_BINARY_OPS = {
+    "add": operator.add, "sub": operator.sub, "mul": operator.mul,
+    "div": _safe_div,    "and": operator.and_, "or": operator.or_, "xor": operator.xor
+}
+
+_UNARY_OPS = {
+    "copy": lambda x: x, "not": operator.invert, "abs": abs
+}
 
 
-def _parse(ir: str) -> Tuple[List[int], List[Tuple[str, List[int]]], List[int]]:
+def _compile_ir(ir: str) -> Tuple[Callable[[List[int]], List[int]], int, int]:
     text = ir.replace(";", "\n")
     lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
 
-    # HARDENING: Protect grader against DoS (Denial of Service) via bloated IR files
+    # Protect grader against DoS (Denial of Service) via bloated IR files
     if len(lines) > 100_000:
         raise ValueError("IR exceeds maximum allowed length (100,000 instructions)")
     if len(lines) < 2:
         raise ValueError("IR needs at least an input line and an output line")
 
+    def parse_addrs(line: str) -> List[int]:
+        addrs = [int(x) for x in line.split(",") if x.strip()]
+        for a in addrs:
+            if a < 1 or a.bit_length() > 64:
+                raise ValueError(f"invalid address {a}")
+        return addrs
+
     try:
-        input_addrs = [int(x) for x in lines[0].split(",") if x.strip()]
-        output_addrs = [int(x) for x in lines[-1].split(",") if x.strip()]
+        input_addrs = parse_addrs(lines[0])
+        output_addrs = parse_addrs(lines[-1])
     except ValueError as e:
         raise ValueError(f"malformed input/output line: {e}")
-
-    _check_addrs(input_addrs, "input line")
-    _check_addrs(output_addrs, "output line")
 
     if len(set(input_addrs)) != len(input_addrs):
         raise ValueError("input addresses must be distinct")
 
+    init = set(input_addrs)
+    cost = 0
     ops = []
+
+    # 1. Validation, Translation, and Static Cost Determination
     for ln in lines[1:-1]:
         head, _, rest = ln.partition(" ")
-        if not rest:
-            raise ValueError(f"malformed instruction: {ln!r}")
-        raw = [tok.strip() for tok in rest.split(",")]
+        raw = [x.strip() for x in rest.split(",") if x.strip()] if rest else []
 
-        if head == "set":
-            if len(raw) != 2: raise ValueError(f"set needs 2 operands (dest, K); got {raw}")
-            literal = int(raw[1])
-            # HARDENING: Limit immediate values to 8-bit byte range.
-            if not (-128 <= literal <= 255):
-                raise ValueError("set literal must fit in 8 bits (-128..255)")
-            operands = [int(raw[0]), literal]
-            _check_addrs(operands[:1], "`set` dest")
+        try:
+            if head == "set":
+                if len(raw) != 2: raise ValueError("needs 2 operands")
+                dest, literal = int(raw[0]), int(raw[1])
+                if not (-128 <= literal <= 255): raise ValueError("literal out of bounds")
+                reads = []
+                ops.append((0, dest, _to_signed_8bit(literal), 0, None))
 
-        elif head == "cmp":
-            if len(raw) != 4: raise ValueError(f"cmp needs 4 operands (dest, a, b, pred); got {raw}")
-            pred = raw[3]
-            if pred not in _CMP_PRED: raise ValueError(f"cmp predicate must be one of {sorted(_CMP_PRED)}")
-            operands = [int(raw[0]), int(raw[1]), int(raw[2]), pred]
-            _check_addrs(operands[:3], "`cmp` operands")
+            elif head == "cmp":
+                if len(raw) != 4: raise ValueError("needs 4 operands")
+                dest, a, b = int(raw[0]), int(raw[1]), int(raw[2])
+                pred = raw[3]
+                if pred not in _CMP_OPS: raise ValueError("invalid predicate")
+                reads = [a, b]
+                ops.append((1, dest, a, b, _CMP_OPS[pred]))
 
-        else:
-            try: operands = [int(x) for x in raw]
-            except ValueError: raise ValueError(f"malformed integer in `{head}` operands: {raw}")
-            _check_addrs(operands, f"`{head}` operands")
+            elif head == "select":
+                if len(raw) != 4: raise ValueError("needs 4 operands")
+                dest, c, t, f = int(raw[0]), int(raw[1]), int(raw[2]), int(raw[3])
+                reads = [c, t, f]
+                ops.append((2, dest, c, t, f))
 
-            if head in _UNARY and len(operands) != 2:
-                raise ValueError(f"{head} needs 2 operands; got {operands}")
-            elif head in _BINARY and len(operands) not in (2, 3):
-                raise ValueError(f"{head} needs 2 or 3 operands; got {operands}")
-            elif head == "select" and len(operands) != 4:
-                raise ValueError(f"select needs 4 operands (dest, c, t, f); got {operands}")
-            elif head not in _UNARY | _BINARY | {"select"}:
+            elif head in _UNARY_OPS:
+                if len(raw) != 2: raise ValueError("needs 2 operands")
+                dest, a = int(raw[0]), int(raw[1])
+                reads = [a]
+                ops.append((3, dest, a, 0, _UNARY_OPS[head]))
+
+            elif head in _BINARY_OPS:
+                if len(raw) not in (2, 3): raise ValueError("needs 2 or 3 operands")
+                dest = int(raw[0])
+                s1, s2 = (int(raw[1]), int(raw[2])) if len(raw) == 3 else (dest, int(raw[1]))
+                reads = [s1, s2]
+                ops.append((4, dest, s1, s2, _BINARY_OPS[head]))
+
+            else:
                 raise ValueError(f"unknown op: {head!r}")
 
-        ops.append((head, operands))
+            # General validation
+            if dest < 1 or dest.bit_length() > 64:
+                raise ValueError(f"invalid dest address {dest}")
 
-    return input_addrs, ops, output_addrs
+            for src in reads:
+                if src not in init: raise ValueError(f"uninitialized read: {src}")
+                cost += _cost(src)
 
+            init.add(dest)
 
-def _compile_ir(ir: str) -> Tuple[Callable[[List[int]], List[int]], int, int]:
-    input_addrs, ops, output_addrs = _parse(ir)
-
-    # 1. Validation and Static Cost Determination
-    cost = 0
-    init = set(input_addrs)
-
-    for op, oprs in ops:
-        dest = oprs[0]
-
-        if op == "set":
-            read_addrs = []
-        elif op == "cmp":
-            read_addrs = oprs[1:3]
-        elif op == "select":
-            read_addrs = oprs[1:4]
-        elif op in _UNARY:
-            read_addrs = [oprs[1]]
-        elif op in _BINARY:
-            read_addrs = oprs[1:3] if len(oprs) == 3 else [dest, oprs[1]]
-        else:
-            read_addrs = []
-
-        for src in read_addrs:
-            if src not in init:
-                raise ValueError(f"{op} reads uninitialized addr {src}")
-            cost += _cost(src)
-
-        init.add(dest)
+        except ValueError as e:
+            raise ValueError(f"malformed instruction '{ln}': {e}")
 
     for a in output_addrs:
         if a not in init:
             raise ValueError(f"output addr {a} never written")
         cost += _cost(a)
 
-    # 2. Build dense execution map and packed instruction list
+    # 2. Build dense execution map and dynamically packed instruction list
     sorted_addrs = sorted(list(init))
     addr_to_idx = {a: i for i, a in enumerate(sorted_addrs)}
 
@@ -251,21 +249,12 @@ def _compile_ir(ir: str) -> Tuple[Callable[[List[int]], List[int]], int, int]:
     n_mem = len(sorted_addrs)
 
     fast_ops = []
-    for op, oprs in ops:
-        dest_idx = addr_to_idx[oprs[0]]
-        if op == "set":
-            # HARDENING: Immediate values securely clamped at compile-time
-            fast_ops.append((0, dest_idx, _to_signed_8bit(oprs[1]), 0, 0))
-        elif op == "cmp":
-            fast_ops.append((1, dest_idx, addr_to_idx[oprs[1]], addr_to_idx[oprs[2]], oprs[3]))
-        elif op == "select":
-            fast_ops.append((2, dest_idx, addr_to_idx[oprs[1]], addr_to_idx[oprs[2]], addr_to_idx[oprs[3]]))
-        elif op in _UNARY:
-            fast_ops.append((3, dest_idx, addr_to_idx[oprs[1]], 0, op))
-        elif op in _BINARY:
-            s1_idx = addr_to_idx[oprs[1] if len(oprs) == 3 else oprs[0]]
-            s2_idx = addr_to_idx[oprs[2] if len(oprs) == 3 else oprs[1]]
-            fast_ops.append((4, dest_idx, s1_idx, s2_idx, op))
+    for kind, dest, arg1, arg2, aux in ops:
+        if kind == 0:    fast_ops.append((0, addr_to_idx[dest], arg1, 0, None))
+        elif kind == 1:  fast_ops.append((1, addr_to_idx[dest], addr_to_idx[arg1], addr_to_idx[arg2], aux))
+        elif kind == 2:  fast_ops.append((2, addr_to_idx[dest], addr_to_idx[arg1], addr_to_idx[arg2], addr_to_idx[aux]))
+        elif kind == 3:  fast_ops.append((3, addr_to_idx[dest], addr_to_idx[arg1], 0, aux))
+        elif kind == 4:  fast_ops.append((4, addr_to_idx[dest], addr_to_idx[arg1], addr_to_idx[arg2], aux))
 
     def simulate_fn(inputs: List[int]) -> List[int]:
         mem = [0] * n_mem
@@ -273,37 +262,16 @@ def _compile_ir(ir: str) -> Tuple[Callable[[List[int]], List[int]], int, int]:
             mem[i] = val
 
         for kind, dest, arg1, arg2, aux in fast_ops:
-            if kind == 0:
+            if kind == 0:     # set
                 mem[dest] = arg1
-            elif kind == 1:
-                a, b = mem[arg1], mem[arg2]
-                if aux == "eq": res = a == b
-                elif aux == "ne": res = a != b
-                elif aux == "lt": res = a < b
-                elif aux == "le": res = a <= b
-                elif aux == "gt": res = a > b
-                else: res = a >= b
-                mem[dest] = 1 if res else 0
-            elif kind == 2:
+            elif kind == 1:   # cmp
+                mem[dest] = 1 if aux(mem[arg1], mem[arg2]) else 0
+            elif kind == 2:   # select
                 mem[dest] = mem[arg2] if mem[arg1] else mem[aux]
-            elif kind == 3:
-                src = mem[arg1]
-                if aux == "copy": res = src
-                elif aux == "not": res = ~src
-                else: res = abs(src)
-                mem[dest] = _to_signed_8bit(res)
-            elif kind == 4:
-                s1, s2 = mem[arg1], mem[arg2]
-                if aux == "add": res = s1 + s2
-                elif aux == "sub": res = s1 - s2
-                elif aux == "mul": res = s1 * s2
-                elif aux == "div":
-                    if s2 == 0: raise ZeroDivisionError("integer division or modulo by zero")
-                    res = s1 // s2
-                elif aux == "and": res = s1 & s2
-                elif aux == "or": res = s1 | s2
-                else: res = s1 ^ s2
-                mem[dest] = _to_signed_8bit(res)
+            elif kind == 3:   # unary
+                mem[dest] = _to_signed_8bit(aux(mem[arg1]))
+            elif kind == 4:   # binary
+                mem[dest] = _to_signed_8bit(aux(mem[arg1], mem[arg2]))
 
         return [mem[i] for i in out_idx]
 
@@ -347,9 +315,7 @@ def _canonical_seeds(spec: Spec, max_seeds: int, rng: Random | None = None) -> T
     seen_secrets = set()
     used_seeds = set()
 
-    max_draws = 500 * max(max_seeds, n_secrets)
-    for _ in range(max_draws):
-        # HARDENING: Decouple secret coverage check from total array size.
+    for _ in range(500 * max(max_seeds, n_secrets)):
         if len(seeds) >= max_seeds and len(seen_secrets) >= target_secrets:
             break
 
@@ -362,23 +328,19 @@ def _canonical_seeds(spec: Spec, max_seeds: int, rng: Random | None = None) -> T
         secret = tuple(sorted(rng_peek.sample(range(spec.n_bits), spec.k_secret)))
 
         # Ensure we don't accidentally fill up our max_seeds before discovering unique secrets
-        slots_left = max_seeds - len(seeds)
-        secrets_needed = target_secrets - len(seen_secrets)
-        if slots_left <= secrets_needed and secret in seen_secrets:
+        if max_seeds - len(seeds) <= target_secrets - len(seen_secrets) and secret in seen_secrets:
             continue
 
         seeds.append(seed)
         used_seeds.add(seed)
         seen_secrets.add(secret)
+    else:
+        raise RuntimeError(f"could not draw {max_seeds} instances covering {target_secrets} distinct secrets")
 
-    if len(seeds) < max_seeds or len(seen_secrets) < target_secrets:
-        raise RuntimeError(
-            f"could not draw {max_seeds} instances covering {target_secrets} distinct secrets"
-        )
     return tuple(seeds)
 
 
-def _score(ir: str, spec: Spec, max_seeds: int) -> int:
+def _score(ir: str, spec: Spec, max_seeds: int, threshold: float = 1.0) -> int:
     simulate_fn, static_cost, expected_inputs = _compile_ir(ir)
     if expected_inputs != _n_inputs(spec):
         raise ValueError(f"IR declares {expected_inputs} inputs; {_n_inputs(spec)} provided")
@@ -391,15 +353,29 @@ def _score(ir: str, spec: Spec, max_seeds: int) -> int:
             actual = simulate_fn(inputs)
         except Exception:
             # HARDENING: Mask exceptions so attackers can't intentionally fail logic
-            # to scrape evaluation datasets off the tracebacks (Oracle exploit).
             raise ValueError("execution failed on a hidden test instance.") from None
 
-        if actual != expected:
-            # HARDENING: Stop the Oracle Leak. Do not echo arrays to the console.
+        if len(actual) != len(expected):
             raise ValueError(
-                f"correctness failed on hidden test instance {i+1}/{max_seeds}. "
-                "(Test arrays are hidden securely to prevent hardcoding)"
+                f"output count mismatch on hidden test instance {i+1}/{max_seeds}."
             )
+
+        if threshold >= 1.0:
+            if actual != expected:
+                # HARDENING: Stop the Oracle Leak. Do not echo arrays to the console.
+                raise ValueError(
+                    f"correctness failed on hidden test instance {i+1}/{max_seeds}. "
+                    "(Test arrays are hidden securely to prevent hardcoding)"
+                )
+        else:
+            n_correct = sum(1 for a, e in zip(actual, expected) if a == e)
+            frac = n_correct / len(expected)
+            if frac < threshold:
+                raise ValueError(
+                    f"correctness below {threshold:.0%} on hidden test instance "
+                    f"{i+1}/{max_seeds} (got {frac:.0%}). "
+                    "(Test arrays are hidden securely to prevent hardcoding)"
+                )
 
     return static_cost
 
@@ -412,37 +388,9 @@ def score_medium(ir: str) -> int:
     return _score(ir, MEDIUM, max_seeds=8)
 
 
-def _score_approx(ir: str, spec: Spec, max_seeds: int, threshold: float) -> int:
-    """Approximate-correctness scorer — passes if every canonical seed
-    achieves at least *threshold* fraction of correct outputs."""
-    simulate_fn, static_cost, expected_inputs = _compile_ir(ir)
-    if expected_inputs != _n_inputs(spec):
-        raise ValueError(f"IR declares {expected_inputs} inputs; {_n_inputs(spec)} provided")
-
-    seeds = _canonical_seeds(spec, max_seeds=max_seeds)
-    for i, seed in enumerate(seeds):
-        inputs, expected = _instance(seed, spec)
-        try:
-            actual = simulate_fn(inputs)
-        except Exception:
-            raise ValueError("execution failed on a hidden test instance.") from None
-        if len(actual) != len(expected):
-            raise ValueError(
-                f"output count mismatch on hidden test instance {i+1}/{max_seeds}.")
-        n_correct = sum(1 for a, e in zip(actual, expected) if a == e)
-        frac = n_correct / len(expected)
-        if frac < threshold:
-            raise ValueError(
-                f"correctness below {threshold:.0%} on hidden test instance "
-                f"{i+1}/{max_seeds} (got {frac:.0%}). "
-                "(Test arrays are hidden securely to prevent hardcoding)"
-            )
-    return static_cost
-
-
 def score_medium_approx50(ir: str) -> int:
     """Medium-instance scorer that requires only ≥ 50 % per-seed accuracy."""
-    return _score_approx(ir, MEDIUM, max_seeds=8, threshold=0.5)
+    return _score(ir, MEDIUM, max_seeds=8, threshold=0.5)
 
 
 # ---------------------------------------------------------------------------
@@ -481,32 +429,36 @@ def _generate_baseline(spec: Spec) -> str:
     outputs = [pred_at(j) for j in range(spec.m_test)]
 
     lines = [",".join(map(str, inputs))]
-    lines.append(f"set {ONE},1")
+
+    def emit(op: str, *args: int) -> None:
+        lines.append(f"{op} " + ",".join(map(str, args)))
+
+    emit("set", ONE, 1)
 
     # --- decoding: ind_T per candidate ----------------------------------
     for T_idx, T in enumerate(candidates):
         for i in range(spec.m_train):
-            lines.append(f"xor {TMP},{y_tr_at(i)},{X_tr_at(i, T[0])}")
+            emit("xor", TMP, y_tr_at(i), X_tr_at(i, T[0]))
             for k in range(1, spec.k_secret - 1):
-                lines.append(f"xor {TMP},{X_tr_at(i, T[k])}")
-            lines.append(f"xor {PARITY},{TMP},{X_tr_at(i, T[spec.k_secret - 1])}")
-            lines.append(f"xor {matched_at(T_idx, i)},{PARITY},{ONE}")
+                emit("xor", TMP, X_tr_at(i, T[k]))
+            emit("xor", PARITY, TMP, X_tr_at(i, T[-1]))
+            emit("xor", matched_at(T_idx, i), PARITY, ONE)
 
-        lines.append(f"and {ind_T_at(T_idx)},{matched_at(T_idx, 0)},{matched_at(T_idx, 1)}")
+        emit("and", ind_T_at(T_idx), matched_at(T_idx, 0), matched_at(T_idx, 1))
         for i in range(2, spec.m_train):
-            lines.append(f"and {ind_T_at(T_idx)},{matched_at(T_idx, i)}")
+            emit("and", ind_T_at(T_idx), matched_at(T_idx, i))
 
     # --- predictions: pred[j] = OR_T (ind_T AND predT) ------------------
     for j in range(spec.m_test):
         for T_idx, T in enumerate(candidates):
-            lines.append(f"xor {PREDT},{X_te_at(j, T[0])},{X_te_at(j, T[1])}")
+            emit("xor", PREDT, X_te_at(j, T[0]), X_te_at(j, T[1]))
             for k in range(2, spec.k_secret):
-                lines.append(f"xor {PREDT},{X_te_at(j, T[k])}")
-            lines.append(f"and {term_at(T_idx)},{ind_T_at(T_idx)},{PREDT}")
+                emit("xor", PREDT, X_te_at(j, T[k]))
+            emit("and", term_at(T_idx), ind_T_at(T_idx), PREDT)
 
-        lines.append(f"or {pred_at(j)},{term_at(0)},{term_at(1)}")
+        emit("or", pred_at(j), term_at(0), term_at(1))
         for T_idx in range(2, n_cands):
-            lines.append(f"or {pred_at(j)},{term_at(T_idx)}")
+            emit("or", pred_at(j), term_at(T_idx))
 
     lines.append(",".join(map(str, outputs)))
     return "\n".join(lines)
@@ -535,15 +487,16 @@ if __name__ == "__main__":
     here = os.path.dirname(os.path.abspath(__file__))
     ir_dir = os.path.join(here, "submissions")
     os.makedirs(ir_dir, exist_ok=True)
+
     artifacts = [
         ("baseline_small.ir",  generate_baseline_small(),  score_small),
         ("baseline_medium.ir", generate_baseline_medium(), score_medium),
     ]
+
     for name, ir, scorer in artifacts:
         cost = scorer(ir)
         path = os.path.join(ir_dir, name)
         with open(path, "w") as f:
-            f.write(ir)
-            f.write("\n")
+            f.write(ir + "\n")
         n_ops = len(ir.splitlines()) - 2
         print(f"  {name:<20} cost={cost:>9,}  ops={n_ops:>6,}  -> {path}")
