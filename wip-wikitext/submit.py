@@ -1,73 +1,68 @@
 #!/usr/bin/env python3
-"""End-to-end submission runner for the wikitext energy benchmark.
+"""End-to-end submission runner for the wikitext energy benchmark on Modal.
 
 What it does:
-  1. Build a Docker image with the user's submission baked in.
-  2. Push it to GHCR (you must already be logged in to ghcr.io).
-  3. Provision a Lambda On-Demand A100 SXM4 instance.
-  4. Cloud-init pulls + runs the image; entrypoint.sh writes
-     /results/result.json on success or /results/FAIL on any failure.
-  5. Orchestrator opens one blocking SSH command that waits for either
-     sentinel, prints the result, then terminates the instance (always,
-     in a finally block).
-  6. Saves the result JSON to submissions/ and appends a row to the
+  1. Imports the user's submission file locally as a precheck (catches
+     SyntaxError / missing torch / missing `train` before any cloud spend).
+  2. Defines a Modal App with an inline image (PyTorch + nvidia-ml-py +
+     datasets) and a single A100-40GB function.
+  3. The remote function: stages WikiText-103 onto a persistent Modal
+     Volume (cached across runs), verifies NVML, writes the user's
+     submission to disk, runs run_eval, and returns the result dict.
+  4. Saves the result JSON to submissions/ and appends a row to the
      Record History table in README.md.
 
 Setup (once):
-  - Lambda Cloud account; SSH key registered on cloud.lambda.ai with the
-    matching private key loaded in your local ssh-agent.
-  - GHCR auth on this machine:
-      gh auth token | docker login ghcr.io -u <github_username> --password-stdin
-  - Environment:
-      export LAMBDA_API_KEY=...        # cloud.lambda.ai → API keys
-      export GHCR_USER=<github_username>
+  pip install modal
+  modal token new      # opens browser, writes ~/.modal.toml
 
 Usage:
   python3 submit.py path/to/my_submission.py
   python3 submit.py example_submission.py --yes
-  python3 submit.py my_submission.py --wait-for-capacity --wait-timeout 3600
-
-Note: submit.py takes no model-sizing flags. Cost/timeout is fixed (see
-EST_INSTANCE_MIN). Per-config knobs (e.g. baseline_transformer's
-config="tiny"|"small"|"gpt2", n_steps, …) live inside your submission
-file's train() function; see example_submission.py.
 """
 from __future__ import annotations
 
 import argparse
 import json
 import os
-import shutil
 import subprocess
 import sys
-import tempfile
-import time
-import urllib.error
-import urllib.request
 from pathlib import Path
+
+import modal
 
 import task  # task-pinned constants — single source of truth
 
-LAMBDA_API = "https://cloud.lambda.ai/api/v1"
-INSTANCE_TYPE = task.INSTANCE_TYPE
-
-# Estimated whole-instance-lifetime budget (boot + image pull + NVML
-# probe + data fetch + train + eval) — what Lambda actually bills for.
-# Training is bounded at ~5 min by task.E_MAX_JOULES = 100 kJ on the
-# pinned A100 SXM4 (≈329 W avg). Plus ~7 min Lambda boot + image pull +
-# NVML probe + data fetch + ~2 min eval gives ~15 min realistic /
-# ~25 min worst case. The estimate drives the cost-confirmation prompt;
-# the wall-clock timeout applies a 2.5× safety factor on top.
-EST_INSTANCE_MIN = 25
-EST_COST_USD = round(EST_INSTANCE_MIN * 1.99 / 60, 2)
-
 HERE = Path(__file__).resolve().parent
+
+# Modal A100-40GB list price as of 2026-05: $2.10/hr.
+# A typical run is ~10 min (image cold-start + verify_nvml + WikiText-103
+# fetch on first run + ~5 min training capped by E_MAX_JOULES + ~2 min
+# eval). After the first run the dataset is cached on a Modal Volume,
+# so subsequent runs are ~7 min. We size the estimate for a *first* run.
+EST_RUNTIME_MIN = 10
+EST_RATE_USD_PER_HR = 2.10
+EST_COST_USD = round(EST_RUNTIME_MIN * EST_RATE_USD_PER_HR / 60, 2)
+
+# task.INSTANCE_TYPE is the leaderboard-pinned hardware string. The
+# "modal:" prefix is informational; Modal's gpu= kwarg takes the bare
+# SKU. Strip and validate so a future change to task.INSTANCE_TYPE
+# (different provider, different GPU) fails loudly here instead of
+# silently launching on the wrong hardware.
+_provider, _, MODAL_GPU = task.INSTANCE_TYPE.partition(":")
+if _provider != "modal" or not MODAL_GPU:
+    sys.exit(
+        f"task.INSTANCE_TYPE = {task.INSTANCE_TYPE!r} not understood by "
+        f"submit.py — expected 'modal:<gpu>' (e.g. 'modal:A100-40GB')."
+    )
 
 
 def _load_dotenv() -> None:
     """Load KEY=VALUE pairs from the nearest .env on the way up to the
-    repo root. Doesn't overwrite anything already set in os.environ —
-    so explicit `export FOO=bar` still wins.
+    repo root. Doesn't overwrite anything already in os.environ — so an
+    explicit ``export FOO=bar`` still wins. Modal auth normally lives in
+    ``~/.modal.toml`` (written by ``modal token new``); .env is here for
+    CI-style overrides via ``MODAL_TOKEN_ID`` / ``MODAL_TOKEN_SECRET``.
     """
     for d in (HERE, *HERE.parents):
         env = d / ".env"
@@ -86,124 +81,13 @@ _load_dotenv()
 
 
 # ---------------------------------------------------------------------------
-# Lambda Cloud REST helpers
+# Modal app definition
 # ---------------------------------------------------------------------------
-
-def _api_auth_header() -> str:
-    api_key = os.environ.get("LAMBDA_API_KEY")
-    if not api_key:
-        sys.exit("LAMBDA_API_KEY not set in environment")
-    return f"Bearer {api_key}"
-
-
-def lambda_request(method: str, path: str, body: dict | None = None) -> dict:
-    data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request(
-        f"{LAMBDA_API}{path}",
-        data=data,
-        method=method,
-        headers={
-            "Authorization": _api_auth_header(),
-            "Content-Type": "application/json",
-            # Cloudflare in front of cloud.lambda.ai blocks the default
-            # Python-urllib UA with a 403; pass an explicit one.
-            "User-Agent": "wikitext-submit/0.1",
-        },
-    )
-    try:
-        with urllib.request.urlopen(req) as r:
-            return json.load(r)
-    except urllib.error.HTTPError as e:
-        sys.exit(f"Lambda API {method} {path} failed: {e.code} {e.read().decode()}")
-
-
-def _region_inventory() -> tuple[list[str], list[str]]:
-    """Return ``(available, all_regions)`` for ``INSTANCE_TYPE``.
-
-    ``available`` is the list of region names with capacity right now;
-    ``all_regions`` is every region Lambda exposes for this SKU
-    (including those at zero capacity), used purely for diagnostics.
-    """
-    info = lambda_request("GET", "/instance-types")["data"]
-    if INSTANCE_TYPE not in info:
-        sys.exit(f"Lambda no longer offers {INSTANCE_TYPE}; check API")
-    entry = info[INSTANCE_TYPE]
-    available = [r["name"] for r in entry.get("regions_with_capacity_available", [])]
-    all_regions = sorted({r["name"] for r in entry.get("regions_with_capacity_available", [])}
-                         | {r["name"] for r in entry.get("regions", [])})
-    return available, all_regions
-
-
-def find_available_region(wait_timeout_s: int | None = None,
-                          poll_interval_s: int = 60) -> str:
-    """Return a region name with current capacity for ``INSTANCE_TYPE``.
-
-    With ``wait_timeout_s=None`` (default) this is one-shot: empty
-    inventory exits immediately, preserving fail-fast semantics for CI.
-    With a positive timeout, poll every ``poll_interval_s`` seconds
-    until a region appears or the timeout expires.
-    """
-    available, all_regions = _region_inventory()
-    if available:
-        return available[0]
-
-    diag_regions = ", ".join(all_regions) if all_regions else "(none reported)"
-    if not wait_timeout_s:
-        sys.exit(
-            f"no Lambda capacity for {INSTANCE_TYPE} in any region.\n"
-            f"  checked regions: {diag_regions}\n"
-            f"  retry later, or pass --wait-for-capacity to poll until a "
-            f"region opens up."
-        )
-
-    print(f"[wait-capacity] no {INSTANCE_TYPE} capacity yet; "
-          f"polling every {poll_interval_s}s for up to {wait_timeout_s // 60} min")
-    print(f"[wait-capacity]   checked regions: {diag_regions}")
-    t_end = time.monotonic() + wait_timeout_s
-    while time.monotonic() < t_end:
-        time.sleep(poll_interval_s)
-        available, _ = _region_inventory()
-        if available:
-            print(f"[wait-capacity] capacity opened in {available[0]}")
-            return available[0]
-        remaining = int(t_end - time.monotonic())
-        print(f"[wait-capacity] still no capacity; {remaining // 60} min remaining")
-    sys.exit(
-        f"no Lambda capacity for {INSTANCE_TYPE} after waiting "
-        f"{wait_timeout_s // 60} min; aborting."
-    )
-
-
-def pick_ssh_key(name: str | None) -> str:
-    keys = lambda_request("GET", "/ssh-keys")["data"]
-    if not keys:
-        sys.exit("no SSH keys registered with Lambda; add one in the dashboard first")
-    if name:
-        for k in keys:
-            if k["name"] == name:
-                return name
-        sys.exit(f"SSH key {name!r} not found among: {[k['name'] for k in keys]}")
-    return keys[0]["name"]
-
-
-def list_running_wikitext_instances() -> list[dict]:
-    """Return only instances whose name matches the exact pattern
-    ``submit.py`` creates (``wikitext-<10-digit-unix-timestamp>``).
-
-    Other ``wikitext-…``-prefixed instances (e.g. ``wikitext-baseline``,
-    ``wikitext-timing-…``) belong to the user's own work and must not
-    be flagged as "leaked" — that's how a previous run accidentally
-    terminated active user instances.
-    """
-    import re
-    pat = re.compile(r"^wikitext-\d{10}$")
-    insts = lambda_request("GET", "/instances")["data"]
-    return [i for i in insts if pat.match(i.get("name") or "")]
-
-
-# ---------------------------------------------------------------------------
-# Image build + push
-# ---------------------------------------------------------------------------
+#
+# Harness files are added to /workspace inside the container. The user's
+# submission is *not* baked in — it's passed as bytes to the function
+# call, so we don't rebuild the image per submission. Image-level deps
+# (torch, nvidia-ml-py, datasets) are cached by Modal and reused.
 
 HARNESS_FILES = (
     "wikitext.py",
@@ -213,22 +97,137 @@ HARNESS_FILES = (
     "verify_nvml.py",
     "fetch_data.py",
     "task.py",
-    "entrypoint.sh",
-    "Dockerfile",
 )
 
+app = modal.App("wikitext-bench")
+
+# CUDA 12.4 PyTorch wheels match the driver Modal exposes on its A100
+# fleet. nvidia-ml-py is the NVML binding EnergyMeter uses; datasets is
+# how fetch_data.py pulls WikiText-103 from the HuggingFace mirror.
+image = (
+    modal.Image.debian_slim(python_version="3.11")
+    .pip_install(
+        "torch==2.5.1",
+        index_url="https://download.pytorch.org/whl/cu124",
+    )
+    .pip_install(
+        "nvidia-ml-py==12.560.30",
+        "datasets==3.2.0",
+    )
+    .workdir("/workspace")
+)
+for _f in HARNESS_FILES:
+    image = image.add_local_file(str(HERE / _f), f"/workspace/{_f}")
+
+# WikiText-103 cached across runs. ~750 MB of raw text; first run pays
+# the ~1 min HuggingFace fetch, all subsequent runs reuse the volume.
+data_volume = modal.Volume.from_name("wikitext-103-data", create_if_missing=True)
+
+
+@app.function(
+    image=image,
+    gpu=MODAL_GPU,
+    # Hard wall-clock cap. Training is bounded at ~5 min by
+    # task.E_MAX_JOULES (NVML watchdog), plus image cold-start +
+    # data fetch + eval ≈ <15 min realistic. 30 min gives 2× safety.
+    timeout=30 * 60,
+    volumes={"/data": data_volume},
+)
+def run_submission(submission_bytes: bytes, submission_name: str) -> dict:
+    """Run a submission end-to-end on the pinned Modal GPU and return
+    the result dict that submit.py will save and record."""
+    import json
+    import os
+    import subprocess
+    import sys
+    from pathlib import Path
+
+    workspace = Path("/workspace")
+    os.chdir(workspace)
+
+    # Stage WikiText-103 onto the volume on first run; reuse otherwise.
+    train_raw = Path("/data") / "wiki.train.raw"
+    if not train_raw.exists():
+        print("[modal] fetching WikiText-103 (one-time, cached on volume) ...")
+        subprocess.run(
+            [sys.executable, "fetch_data.py", "/data"], check=True
+        )
+        data_volume.commit()
+    else:
+        print("[modal] WikiText-103 already cached on volume")
+
+    # NVML probe — bail before training cycles if the energy counter
+    # isn't exposed on this host.
+    print("[modal] verifying NVML energy counter ...")
+    nvml = subprocess.run(
+        [sys.executable, "verify_nvml.py"], capture_output=True, text=True
+    )
+    print(nvml.stdout)
+    if nvml.returncode != 0:
+        raise RuntimeError(
+            f"verify_nvml.py failed (rc={nvml.returncode}). "
+            f"stderr:\n{nvml.stderr}"
+        )
+    # verify_nvml prints a JSON summary as its final stdout line.
+    nvml_summary = json.loads(nvml.stdout.strip().splitlines()[-1])
+
+    # Drop the user's submission next to the harness files. Keep the
+    # original stem so run_eval.py's submission_name (== Path(...).stem)
+    # propagates into the result JSON and the README record row.
+    if submission_name in {Path(f).stem for f in HARNESS_FILES} | {"submission"}:
+        raise RuntimeError(
+            f"submission name {submission_name!r} collides with a harness "
+            f"file; rename your submission file."
+        )
+    sub_path = workspace / f"{submission_name}.py"
+    sub_path.write_bytes(submission_bytes)
+
+    # Pull task constants from the in-image task.py (single source of
+    # truth — submitters do not get to vary these).
+    sys.path.insert(0, str(workspace))
+    import importlib
+    task_mod = importlib.import_module("task")
+    test_chars = task_mod.TEST_CHARS
+    e_max = task_mod.E_MAX_JOULES
+
+    eval_args = [
+        sys.executable, "run_eval.py",
+        "--data-dir", "/data",
+        "--submission", str(sub_path),
+        "--results-json", "/tmp/result.json",
+        "--max-test-chars", str(test_chars),
+    ]
+    if e_max is not None:
+        eval_args += ["--e-max-joules", str(e_max)]
+
+    print(f"[modal] running submission "
+          f"(TEST_CHARS={test_chars} E_MAX={e_max}) ...")
+    rc = subprocess.run(eval_args).returncode
+
+    # run_eval exits 2 on the energy-budget DQ path *with* a written
+    # result.json — that's a valid leaderboard outcome and we ship it.
+    # Anything else missing the JSON is a harness failure.
+    rj = Path("/tmp/result.json")
+    if not rj.exists():
+        raise RuntimeError(f"run_eval.py failed (rc={rc}); no result.json written")
+
+    result = json.loads(rj.read_text())
+    result["_nvml"] = nvml_summary
+    return result
+
+
+# ---------------------------------------------------------------------------
+# Local orchestration
+# ---------------------------------------------------------------------------
 
 def check_submission_imports(submission_path: Path) -> None:
     """Import the submission file in a child process. Fails fast on
     SyntaxError, missing module deps (typo'd imports, missing torch),
-    and `train` not being defined — all of which would otherwise only
-    surface mid-run on the Lambda host, after the user is being billed.
-
-    This does NOT call train() — it only imports the module and checks
-    that a callable `train` exists at module scope.
+    and ``train`` not being defined — all of which would otherwise only
+    surface mid-run on the Modal host, after Modal billing started.
     """
     snippet = (
-        "import importlib.util, inspect, sys\n"
+        "import importlib.util, sys\n"
         f"spec = importlib.util.spec_from_file_location('s', {str(submission_path)!r})\n"
         "mod = importlib.util.module_from_spec(spec)\n"
         "spec.loader.exec_module(mod)\n"
@@ -248,197 +247,6 @@ def check_submission_imports(submission_path: Path) -> None:
         )
 
 
-def check_ssh_agent() -> None:
-    """Verify ssh-agent is running with at least one identity loaded
-    before any cloud spend.
-
-    Without this, ``wait_for_ssh`` swallows the SSH client error (it
-    runs with ``capture_output``) and then times out with a misleading
-    "ssh to <ip> never became reachable" — pointing at the cloud, when
-    the problem is local. Caught early, the user pays no instance time.
-    """
-    msg = (
-        "ssh-agent has no identities loaded. submit.py reaches the "
-        "Lambda host over ssh — without an agent identity, it would "
-        "boot the instance, fail to connect, then bill you while it "
-        "times out. Start the agent and load your Lambda key:\n"
-        "  eval $(ssh-agent -s) && ssh-add ~/.ssh/<your-lambda-key>"
-    )
-    try:
-        r = subprocess.run(["ssh-add", "-l"], capture_output=True, timeout=5)
-    except (FileNotFoundError, subprocess.TimeoutExpired):
-        sys.exit(msg)
-    # ssh-add -l: 0 = identities listed, 1 = no identities, 2 = no agent.
-    if r.returncode != 0:
-        sys.exit(msg)
-
-
-def check_ghcr_login() -> None:
-    """Verify the local Docker config has a ghcr.io entry before the
-    slow build+push step. Saves a multi-minute round-trip when the
-    user hasn't run ``docker login ghcr.io`` yet.
-    """
-    cfg_path = Path.home() / ".docker" / "config.json"
-    msg = (
-        "GHCR auth not found. Run:\n"
-        "  gh auth token | docker login ghcr.io -u $GHCR_USER --password-stdin"
-    )
-    if not cfg_path.exists():
-        sys.exit(msg)
-    try:
-        cfg = json.loads(cfg_path.read_text())
-    except (OSError, json.JSONDecodeError):
-        sys.exit(msg)
-    if "ghcr.io" not in (cfg.get("auths") or {}):
-        sys.exit(msg)
-
-
-def build_and_push_image(submission_path: Path, repo_owner: str) -> str:
-    sub_name = submission_path.stem.replace("_", "-")
-    git_sha = subprocess.check_output(
-        ["git", "rev-parse", "--short=10", "HEAD"], cwd=HERE
-    ).decode().strip()
-    tag = f"ghcr.io/{repo_owner.lower()}/wikitext-bench:{sub_name}-{git_sha}"
-
-    print(f"[build] {tag}")
-    with tempfile.TemporaryDirectory() as td:
-        td_path = Path(td)
-        for f in HARNESS_FILES:
-            shutil.copy(HERE / f, td_path / f)
-        shutil.copy(submission_path, td_path / "submission.py")
-        subprocess.run(["docker", "build", "-t", tag, str(td_path)], check=True)
-
-    print(f"[push] {tag}")
-    subprocess.run(["docker", "push", tag], check=True)
-    return tag
-
-
-# ---------------------------------------------------------------------------
-# Launch + wait + terminate
-# ---------------------------------------------------------------------------
-
-CLOUD_INIT_TEMPLATE = """#cloud-config
-write_files:
-  - path: /opt/run.sh
-    permissions: '0755'
-    content: |
-      #!/bin/bash
-      set -e
-      mkdir -p /results
-      chmod 0777 /results
-      while ! docker info >/dev/null 2>&1; do sleep 2; done
-      docker pull {image}
-      docker run --rm --gpus all -v /results:/results {image} >>/results/docker.log 2>&1 || true
-runcmd:
-  - /opt/run.sh
-"""
-
-
-def launch_instance(image_tag: str, ssh_key: str, region: str) -> str:
-    body = {
-        "region_name": region,
-        "instance_type_name": INSTANCE_TYPE,
-        "ssh_key_names": [ssh_key],
-        "user_data": CLOUD_INIT_TEMPLATE.format(image=image_tag),
-        "name": f"wikitext-{int(time.time())}",
-    }
-    print(f"[launch] {INSTANCE_TYPE} in {region}")
-    resp = lambda_request("POST", "/instance-operations/launch", body)
-    return resp["data"]["instance_ids"][0]
-
-
-def wait_for_active(instance_id: str, timeout_s: int = 600) -> str:
-    print(f"[wait] instance {instance_id} → active")
-    t_end = time.monotonic() + timeout_s
-    while time.monotonic() < t_end:
-        info = lambda_request("GET", f"/instances/{instance_id}")["data"]
-        if info["status"] == "active" and info.get("ip"):
-            print(f"  active at {info['ip']}")
-            return info["ip"]
-        time.sleep(10)
-    raise TimeoutError(f"instance {instance_id} never became active")
-
-
-SSH_OPTS = [
-    "-o", "StrictHostKeyChecking=no",
-    "-o", "UserKnownHostsFile=/dev/null",
-    "-o", "LogLevel=ERROR",
-]
-
-
-def wait_for_ssh(ip: str, timeout_s: int = 300) -> None:
-    print(f"[wait] ssh {ip}")
-    t_end = time.monotonic() + timeout_s
-    while time.monotonic() < t_end:
-        r = subprocess.run(
-            ["ssh", *SSH_OPTS, "-o", "ConnectTimeout=5", f"ubuntu@{ip}", "true"],
-            capture_output=True,
-        )
-        if r.returncode == 0:
-            return
-        time.sleep(5)
-    raise TimeoutError(f"ssh to {ip} never became reachable")
-
-
-def wait_for_result(ip: str, timeout_s: int) -> dict:
-    """Block on a single SSH connection until /results/result.json or
-    /results/FAIL appears, then print + parse the result JSON."""
-    print(f"[wait] result (timeout {timeout_s // 60} min)")
-    remote_cmd = (
-        "until [ -f /results/result.json ] || [ -f /results/FAIL ]; do sleep 10; done; "
-        "if [ -f /results/result.json ]; then cat /results/result.json; "
-        "else echo __FAIL__; tail -100 /results/error.log 2>/dev/null; "
-        "tail -50 /results/docker.log 2>/dev/null; fi"
-    )
-    r = subprocess.run(
-        ["ssh", *SSH_OPTS, "-o", "ServerAliveInterval=30", f"ubuntu@{ip}", remote_cmd],
-        capture_output=True, text=True, timeout=timeout_s,
-    )
-    if r.stdout.startswith("__FAIL__"):
-        raise RuntimeError(f"container failed:\n{r.stdout}")
-    return json.loads(r.stdout)
-
-
-def terminate_instance(instance_id: str) -> None:
-    print(f"[terminate] {instance_id}")
-    lambda_request(
-        "POST",
-        "/instance-operations/terminate",
-        {"instance_ids": [instance_id]},
-    )
-
-
-def scp_artifacts(ip: str, sub_name: str, date: str) -> None:
-    """Pull /results/run.log + /results/nvml.json from the Lambda host
-    into submissions/ with the names submissions/README.md documents.
-
-    Failures are logged but non-fatal — result.json already has the
-    canonical (energy, accuracy) tuple; the log + NVML evidence files
-    are supporting artifacts.
-    """
-    out_dir = HERE / "submissions"
-    out_dir.mkdir(exist_ok=True)
-    pulls = [
-        ("/results/run.log", f"{sub_name}_{date}.log"),
-        ("/results/nvml.json", f"{sub_name}_{date}.nvml.json"),
-    ]
-    for remote, local_name in pulls:
-        local = out_dir / local_name
-        r = subprocess.run(
-            ["scp", *SSH_OPTS, f"ubuntu@{ip}:{remote}", str(local)],
-            capture_output=True,
-        )
-        if r.returncode == 0 and local.exists():
-            print(f"[scp] {remote} → submissions/{local_name}")
-        else:
-            print(f"[scp] WARN: could not pull {remote} "
-                  f"({r.stderr.decode().strip() or 'unknown error'})")
-
-
-# ---------------------------------------------------------------------------
-# Result persistence
-# ---------------------------------------------------------------------------
-
 def save_result(result: dict, submission_path: Path) -> Path:
     out_dir = HERE / "submissions"
     out_dir.mkdir(exist_ok=True)
@@ -446,6 +254,23 @@ def save_result(result: dict, submission_path: Path) -> Path:
     date = result["date_utc"][:10]
     out_path = out_dir / f"{sub_name}_{date}.json"
     out_path.write_text(json.dumps(result, indent=2) + "\n")
+    return out_path
+
+
+def save_nvml_artifact(result: dict, submission_path: Path) -> Path | None:
+    """Mirror the Lambda-era ``submissions/<sub>_<date>.nvml.json``
+    artifact, sourced from the embedded ``_nvml`` field that the Modal
+    function returns. Returns the path written, or None if absent.
+    """
+    nvml = result.get("_nvml")
+    if not nvml:
+        return None
+    out_dir = HERE / "submissions"
+    out_dir.mkdir(exist_ok=True)
+    sub_name = submission_path.stem
+    date = result["date_utc"][:10]
+    out_path = out_dir / f"{sub_name}_{date}.nvml.json"
+    out_path.write_text(json.dumps(nvml, indent=2) + "\n")
     return out_path
 
 
@@ -480,87 +305,39 @@ def append_record(result: dict, json_relpath: str) -> None:
     readme.write_text(text)
 
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
-
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     p.add_argument("submission", type=Path,
                    help="Python file exposing train(train_text, valid_text=None) -> CharModel")
-    p.add_argument("--ssh-key", default=None,
-                   help="Lambda SSH key name (defaults to first registered)")
     p.add_argument("--yes", action="store_true",
                    help="Skip cost confirmation prompt")
-    p.add_argument("--wait-for-capacity", action="store_true",
-                   help="If no Lambda region currently has capacity for "
-                        "the pinned SKU, poll until one does (instead of "
-                        "exiting immediately).")
-    p.add_argument("--wait-timeout", type=int, default=3600,
-                   help="With --wait-for-capacity, max seconds to poll "
-                        "before giving up. Default: 3600 (1 hour). "
-                        "Set to 0 with --wait-for-capacity to wait "
-                        "indefinitely.")
-    p.add_argument("--wait-poll-interval", type=int, default=60,
-                   help="Seconds between capacity polls. Default: 60.")
     args = p.parse_args()
 
     if not args.submission.exists():
         sys.exit(f"submission file not found: {args.submission}")
-    repo_owner = os.environ.get("GHCR_USER")
-    if not repo_owner:
-        sys.exit("GHCR_USER not set in environment")
 
-    print(f"╭─ Lambda A100 wikitext submission ────────────")
+    print(f"╭─ Modal {MODAL_GPU} wikitext submission ───────")
     print(f"│  submission:    {args.submission}")
-    print(f"│  est. instance: ~{EST_INSTANCE_MIN} min  (boot + train + eval)")
-    print(f"│  est. cost:     ~${EST_COST_USD:.2f}")
+    print(f"│  est. runtime:  ~{EST_RUNTIME_MIN} min  (cold start + train + eval)")
+    print(f"│  est. cost:     ~${EST_COST_USD:.2f}  (@ ${EST_RATE_USD_PER_HR:.2f}/hr)")
     print(f"╰───────────────────────────────────────────────")
-
-    # Surface and offer to clean any leaked instances from prior runs
-    # before launching a new one.
-    leaked = list_running_wikitext_instances()
-    if leaked:
-        print(f"⚠ {len(leaked)} wikitext instance(s) currently running:")
-        for i in leaked:
-            print(f"    {i['id']}  {i.get('name')}  {i.get('ip')}")
-        if input("terminate them now? [y/N] ").strip().lower() == "y":
-            for i in leaked:
-                terminate_instance(i["id"])
 
     if not args.yes and input("proceed? [y/N] ").strip().lower() != "y":
         sys.exit("aborted")
 
     check_submission_imports(args.submission)
-    check_ssh_agent()
-    check_ghcr_login()
-    ssh_key = pick_ssh_key(args.ssh_key)
-    # Capacity check runs *before* the slow build/push so the user
-    # doesn't pay multi-minute build time for a doomed run.
-    wait_timeout: int | None
-    if args.wait_for_capacity:
-        # 0 = wait indefinitely; expose as a very large finite bound to
-        # keep find_available_region's loop simple.
-        wait_timeout = args.wait_timeout if args.wait_timeout > 0 else 10**9
-    else:
-        wait_timeout = None
-    region = find_available_region(
-        wait_timeout_s=wait_timeout,
-        poll_interval_s=max(5, args.wait_poll_interval),
-    )
-    image_tag = build_and_push_image(args.submission, repo_owner)
 
-    instance_id = launch_instance(image_tag, ssh_key, region)
-    try:
-        ip = wait_for_active(instance_id, timeout_s=600)
-        wait_for_ssh(ip, timeout_s=300)
-        result = wait_for_result(ip, timeout_s=int(EST_INSTANCE_MIN * 60 * 2.5))
-        scp_artifacts(ip, args.submission.stem, result["date_utc"][:10])
-    finally:
-        terminate_instance(instance_id)
+    submission_bytes = args.submission.read_bytes()
+    submission_name = args.submission.stem
+
+    print(f"[modal] launching {MODAL_GPU} ...")
+    with app.run():
+        result = run_submission.remote(submission_bytes, submission_name)
 
     out_path = save_result(result, args.submission)
+    save_nvml_artifact(result, args.submission)
     append_record(result, json_relpath=f"submissions/{out_path.name}")
+
     if result.get("disqualified"):
         e_max = result.get("e_max_joules")
         e_at_kill = result.get("training_energy_J")
@@ -578,8 +355,13 @@ def main() -> int:
         # Non-zero exit so CI scripts can distinguish DQ from a clean
         # leaderboard submission, even though the harness ran cleanly.
         return 2
+
     print(f"[done] {out_path}")
-    print(f"       energy = {result['training_energy_J']:,.0f} J")
+    energy = result.get("training_energy_J")
+    if energy is not None:
+        print(f"       energy = {energy:,.0f} J")
+    else:
+        print(f"       energy = NOT MEASURED")
     print(f"       acc    = {result['test_char_accuracy']:.4f}")
     return 0
 

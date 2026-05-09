@@ -2,7 +2,7 @@
 
 Onboarding notes for someone picking this up cold. Pairs with
 [`README.md`](README.md) (problem definition) and
-[`RUNBOOK.md`](RUNBOOK.md) (Lambda provisioning steps); this file is
+[`RUNBOOK.md`](RUNBOOK.md) (Modal provisioning steps); this file is
 the *why* and the gotchas, not the *what*.
 
 ---
@@ -36,8 +36,9 @@ proxy was discussed and explicitly rejected — its biases (under-rewarding
 memory-efficient methods, over-rewarding overclocking) erase exactly
 what the benchmark exists to measure.
 
-This drives the provider choice (NVML must be exposed, ruling out
-Modal and other serverless GPU hosts).
+This drives the provider choice (NVML must be exposed). `submit.py`
+runs on Modal A100-40GB and gates each submission on a `verify_nvml`
+probe at function start.
 
 ### 3. Char-accuracy, not perplexity or x-entropy
 
@@ -87,25 +88,25 @@ text = "\n".join(ds["train"]["text"])
 submission Docker doesn't need a `datasets` dep at run time); the HF
 fetch is a one-shot host-side step.
 
-### NVML energy counter is virtualized away on most clouds
+### NVML energy counter is virtualized away on some clouds
 
 `nvmlDeviceGetTotalEnergyConsumption` is exposed only on bare-metal or
-near-bare-metal hosts. Confirmed exposed (as of 2026-05-05): Lambda
-On-Demand, RunPod Secure, AWS p4d/p4de, GCP a2, CoreWeave. Confirmed
-*not* exposed: Modal. Treat any "serverless GPU" provider as
-unverified until you've run `verify_nvml.py` there.
+near-bare-metal hosts. Confirmed exposed (as of 2026-05-08): Lambda
+On-Demand, RunPod Secure, AWS p4d/p4de, GCP a2, CoreWeave, Modal.
+Treat any "serverless GPU" provider as unverified until you've run
+`verify_nvml.py` there.
 
-This is the single biggest constraint on provider choice and the
-reason RUNBOOK.md pins Lambda (with RunPod Secure as documented
-fallback).
+`submit.py` runs `verify_nvml.py` inside the Modal container on every
+submission and aborts on counter unavailability — so this constraint
+is checked on each run, not just at provider-bring-up.
 
-### Pinned SKU is A100 40GB SXM4 (`gpu_1x_a100_sxm4`)
+### Pinned SKU is A100 40GB SXM4 (`modal:A100-40GB`)
 
-We pin the 40GB SXM4 because it has reliable capacity on Lambda; the
-80GB SXM4 SKU is frequently capacity-blocked. Same chip, same 400W
-TDP — only memory differs — so submissions that fit in 40GB produce
-energy numbers directly comparable to anything you'd measure on 80GB
-if capacity returned.
+We pin the 40GB SXM4 because it has reliable capacity on Modal; the
+80GB SXM4 SKU is more expensive without changing the chip. Same chip,
+same 400W TDP — only memory differs — so submissions that fit in 40GB
+produce energy numbers directly comparable to anything you'd measure
+on 80GB.
 
 **Important:** never substitute a *different-chip* GPU (e.g. H100) for
 A100 without explicit user approval. TDP, tensor-core efficiency, and
@@ -139,11 +140,12 @@ forward as a CUDA graph.
 The progress indicator (`progress_every` parameter on `evaluate()`)
 makes the wait visible but does not speed it up.
 
-### Lambda doesn't auto-stop instances
+### Modal auto-shuts-down; per-second billing
 
-Lambda bills per minute and does *not* auto-terminate idle instances.
-Always tear down via the API or web console as soon as a run
-completes, or you'll pay overnight rates for nothing.
+Modal bills per function-second of GPU time and tears the container
+down automatically when the function returns. There's nothing to
+terminate by hand — the Lambda-era leaked-instance cleanup that
+`submit.py` used to do is gone with the migration.
 
 ### `--e-max-joules` is a soft cap, not a hard one
 
@@ -198,30 +200,25 @@ without retraining.
 - `test_wikitext.py` — 7 tests, all passing on CPU. Includes a
   structural test that `predict()` is always called before the
   matching `observe()`.
-- `Dockerfile` — submitter harness template, pins
-  `pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime` + `nvidia-ml-py`.
-- `entrypoint.sh` — container entrypoint: stage data → NVML probe →
-  `run_eval.py`. Writes `/results/result.json` on success or
-  `/results/FAIL` on any failure (sentinel files the orchestrator
-  blocks on over SSH).
 - `task.py` — task-pinned constants (`TEST_CHARS`, `INSTANCE_TYPE`,
   `E_MAX_JOULES`, `ACC_MIN`). Single source of truth; submitters
   cannot vary these.
 - `fetch_data.py` — HuggingFace fetch + write `wiki.{split}.raw`
   (the canonical S3 URL is dead — see Gotchas).
-- `submit.py` — end-to-end orchestrator. Builds the user's submission
-  into a Docker image, pushes to GHCR, launches a Lambda A100 in an
-  available region, blocks on the result sentinel, terminates the
-  instance in `finally`, SCPs back the log + nvml.json, saves the
-  result JSON, and appends one row to the Record History table.
-  Surfaces and offers to clean up leaked `wikitext-<unix>` instances
-  before launching.
+- `submit.py` — end-to-end orchestrator. Defines a Modal app +
+  A100-40GB function with the harness baked into the image; the
+  user's submission file is passed as bytes per call (no per-run
+  image rebuild). The remote function stages WikiText-103 onto a
+  persistent Modal Volume on first run, verifies NVML, runs
+  `run_eval.py`, returns the result dict. `submit.py` saves the JSON
+  to `submissions/` and appends one row to the Record History table.
 - `example_submission.py` — minimal reference: wraps the 5-gram
   baseline so a smoke run finishes in seconds.
 - `verify_nvml.py` — verification script. Run on Lambda A100 SXM4
   40GB on 2026-05-05: idle 45 W, 30 s stress drew 11.6 kJ at 329 W
-  avg, counter monotonic ✓.
-- `RUNBOOK.md` — manual Lambda procedure for NVML verification on
+  avg, counter monotonic ✓. Now invoked inside the Modal container
+  on every submission.
+- `RUNBOOK.md` — manual Modal procedure for NVML verification on
   new SKUs and standalone baseline experimentation (not a submission
   path; submissions go through `submit.py`).
 
@@ -232,8 +229,9 @@ without retraining.
 - Pick **leaderboard framing**: fixed-budget vs fixed-floor (or
   both).
 - Pick **`ACC_MIN`** for the fixed-floor framing — needs an anchor
-  from a real Lambda A100 baseline record. (`E_MAX_JOULES` is pinned
-  at 100 kJ from the 329 W avg-net measurement.)
+  from a real Modal A100 baseline record. (`E_MAX_JOULES` is pinned
+  at 100 kJ from the 329 W avg-net measurement on the equivalent
+  Lambda SKU.)
 - Designate **official evaluator** (who runs the re-evaluation pass).
 - Pick **reproduction tolerance** (energy ±X%, accuracy ±Y points).
 - Optional: run `gpt2` config (~22M params, ~$10 on A100) once
@@ -241,8 +239,9 @@ without retraining.
 - **External hard-floor SIGKILL** at ~1.5× E_max wall-clock (or a
   fixed ceiling like 7.5 min) as a second-layer defense against
   submissions that bypass the in-meter watchdog. Lives wherever the
-  official re-evaluator lives — likely a wrapper / sidecar around
-  the submission's Docker container, not in `wikitext.py`.
+  official re-evaluator lives — likely a wall-clock cap on the
+  Modal function (currently set to 30 min as a coarse 2× safety
+  factor, not a tight enforcer), not in `wikitext.py`.
 
 ---
 
@@ -251,21 +250,19 @@ without retraining.
 | file                       | purpose                                                          |
 |----------------------------|------------------------------------------------------------------|
 | `README.md`                | Problem definition, design rationale, open items                 |
-| `RUNBOOK.md`               | Manual Lambda procedure: NVML verification + baseline experiments |
+| `RUNBOOK.md`               | Manual Modal procedure: NVML verification + baseline experiments |
 | `NOTES.md`                 | (this file) Why decisions, gotchas, status                       |
 | `wikitext.py`              | `CharModel` ABC, `evaluate()`, `EnergyMeter`, data loader        |
 | `baseline_ngram.py`        | Char n-gram baseline (no torch)                                  |
 | `baseline_transformer.py`  | GPT-2-style char transformer baseline (PyTorch)                  |
 | `task.py`                  | Task-pinned constants (`TEST_CHARS`, `INSTANCE_TYPE`, `E_MAX_JOULES`) |
 | `run_eval.py`              | CLI: train under `EnergyMeter`, optionally checkpoint, eval      |
-| `submit.py`                | End-to-end Lambda orchestrator (build → launch → result)         |
-| `entrypoint.sh`            | Container entrypoint: data fetch → NVML probe → `run_eval.py`    |
+| `submit.py`                | End-to-end Modal orchestrator (define app → invoke A100 fn → save result) |
 | `fetch_data.py`            | HuggingFace WikiText-103 fetch                                   |
 | `example_submission.py`    | Reference submission stub (wraps 5-gram baseline)                |
 | `test_wikitext.py`         | Pytest-and-stdlib-runnable tests                                 |
 | `verify_nvml.py`           | NVML energy-counter verification script                          |
-| `Dockerfile`               | Submitter harness template                                       |
-| `.env.example`             | Env vars `submit.py` reads                                       |
+| `.env.example`             | Optional CI env vars `submit.py` reads                           |
 
 ---
 
@@ -286,10 +283,11 @@ To submit a record:
    `train(train_text, valid_text=None) -> CharModel`. See
    `example_submission.py` for the minimal shape.
 2. Run `python3 submit.py path/to/your_submission.py`.
-   `submit.py` builds the image, pushes to GHCR, runs on Lambda,
-   pulls the result, terminates the instance, and appends the row
-   to the Record History table for you.
-3. PR with: the result JSON / log / nvml.json files dropped into
+   `submit.py` defines a Modal app, ships your file as bytes to a
+   pinned A100-40GB function, captures the returned result dict, and
+   appends the row to the Record History table for you. Modal
+   auto-shuts-down the container when the function returns.
+3. PR with: the result JSON / nvml.json files dropped into
    `submissions/` by `submit.py`, plus the record-history row it
    appended to `README.md`.
 

@@ -1,9 +1,9 @@
 # wikitext (WIP)
 
 > *Work in progress.* The v0 reference scorer, both baselines, and the
-> Docker harness exist (this folder). What's still pending is the first
-> Lambda A100 record — submit one with [`submit.py`](submit.py); the
-> empty Record History table at the bottom is where it lands.
+> Modal A100 harness exist (this folder). What's still pending is the
+> first record — submit one with [`submit.py`](submit.py); the empty
+> Record History table at the bottom is where it lands.
 
 ## Motivation
 
@@ -82,9 +82,10 @@ xfmr_streamer = TransformerModel(xfmr)   # KV-cached streaming wrapper
 
 ## Energy measurement
 
-- **Hardware**: pinned **Lambda On-Demand A100 40GB SXM4**
-  (`gpu_1x_a100_sxm4`). Documented fallback if capacity unavailable:
-  RunPod Secure A100 40GB SXM4.
+- **Hardware**: pinned **Modal A100 40GB SXM4** (`gpu="A100-40GB"`).
+  Same silicon as Lambda's `gpu_1x_a100_sxm4`, so prior energy
+  calibrations carry over. Documented fallback if Modal capacity is
+  unavailable: RunPod Secure A100 40GB SXM4.
 - **Counter**: `nvmlDeviceGetTotalEnergyConsumption` — monotonic
   millijoule counter exposed on Volta+. Read at run start, read at
   run end, subtract. No sampling-rate error, no power-draw integration.
@@ -96,7 +97,8 @@ xfmr_streamer = TransformerModel(xfmr)   # KV-cached streaming wrapper
 
 [`verify_nvml.py`](verify_nvml.py) confirms the counter is exposed,
 monotonic, and produces plausible Watts on the chosen SKU before any
-record-class run.
+record-class run. `submit.py` invokes it inside the Modal container
+on every run; first failure aborts before training spend.
 
 ## Anti-cheat
 
@@ -130,16 +132,14 @@ against unintentional cheating from coding agents.
 | `baseline_transformer.py`  | small GPT-2-style transformer with KV-cached streaming (PyTorch) |
 | `task.py`                  | task-pinned constants (`TEST_CHARS`, `INSTANCE_TYPE`, `E_MAX_JOULES`) — single source of truth |
 | `run_eval.py`              | CLI: trains a baseline or user submission (energy-measured), then evals |
-| `submit.py`                | end-to-end submission orchestrator: build image → Lambda A100 → result |
-| `entrypoint.sh`            | container entrypoint: data fetch → NVML probe → `run_eval.py`    |
+| `submit.py`                | end-to-end submission orchestrator: defines a Modal A100 function and runs it |
 | `fetch_data.py`            | HuggingFace WikiText-103 fetch (the canonical S3 URL is dead)    |
 | `example_submission.py`    | reference submission file (5-gram wrapper) — copy and edit       |
 | `verify_nvml.py`           | NVML energy-counter verification for a target host               |
 | `test_wikitext.py`         | tests for the evaluator + n-gram                                 |
-| `Dockerfile`               | submitter harness template (PyTorch 2.5.1 + CUDA 12.4)           |
-| `RUNBOOK.md`               | NVML verification + manual baseline experimentation on Lambda A100 |
-| `.env.example`             | env vars `submit.py` reads (`LAMBDA_API_KEY`, `GHCR_USER`)       |
-| `submissions/`             | result JSON + training log + NVML JSON evidence per submission   |
+| `RUNBOOK.md`               | NVML verification + manual baseline experimentation on Modal A100 |
+| `.env.example`             | optional CI env vars `submit.py` reads (`MODAL_TOKEN_ID`, `MODAL_TOKEN_SECRET`) |
+| `submissions/`             | result JSON + NVML JSON evidence per submission                  |
 
 ## Running
 
@@ -149,10 +149,10 @@ python3 test_wikitext.py
 
 # Quick smoke run on the full pipeline (works on CPU; energy=NOT MEASURED).
 # (Note: torch-based submissions also need `pip install torch` locally —
-# submit.py runs an import-only precheck before any Lambda spend.)
+# submit.py runs an import-only precheck before any Modal spend.)
 python3 run_eval.py --data-dir /path/to/wikitext-103-raw --baseline ngram --n 5
 
-# Reference transformer run on a Lambda A100 (see RUNBOOK.md).
+# Reference transformer run on a Modal A100 (see RUNBOOK.md).
 python3 run_eval.py --data-dir /path/to/wikitext-103-raw \
     --baseline transformer --config small --n-steps 30000
 ```
@@ -180,35 +180,40 @@ fixed (see `EST_INSTANCE_MIN` in `submit.py`). Per-config knobs (e.g.
 The `--config` flag *only* applies to manual `run_eval.py` runs (see
 [`RUNBOOK.md`](RUNBOOK.md) §3).
 
-`submit.py` builds a Docker image around your file, pushes it to GHCR,
-provisions a Lambda A100 (pinned `INSTANCE_TYPE` from `task.py`),
-runs the harness end-to-end (NVML probe → data fetch → train under
-`EnergyMeter` → 60K-char eval), pulls the result back, terminates the
-instance in a `finally` block, and appends a row to the Record History
-below.
+`submit.py` defines a Modal app with the harness baked into the
+image, calls a single A100-40GB function with your submission file's
+bytes as the only argument, and the function runs the pipeline
+end-to-end (NVML probe → data fetch → train under `EnergyMeter` →
+60K-char eval) and returns the result dict. WikiText-103 is cached on
+a Modal Volume so only the first run pays the ~1 min HuggingFace
+fetch. After the result lands locally, `submit.py` saves the JSON to
+`submissions/` and appends a row to the Record History below.
 
-**One-time setup** (see [`.env.example`](.env.example) for the env-var
-template):
+**One-time setup**:
 
-1. `LAMBDA_API_KEY` — cloud.lambda.ai → API keys.
-2. `GHCR_USER` — your GitHub username; the image lands at
-   `ghcr.io/<user>/wikitext-bench`.
-3. `gh auth token | docker login ghcr.io -u $GHCR_USER --password-stdin`.
-4. SSH key registered on the Lambda dashboard, private key in your
-   local `ssh-agent`.
-5. (New SKU only) run [`verify_nvml.py`](verify_nvml.py) once on the
-   target host — see [`RUNBOOK.md`](RUNBOOK.md) §1 and the NVML gotcha
-   in `NOTES.md`.
+```bash
+pip install modal
+modal token new      # opens browser, writes ~/.modal.toml
+```
+
+That's it — Modal builds the image, hosts it, runs the function, and
+auto-shuts-down when it returns. No GHCR, no Docker login, no SSH
+key, no leaked-instance cleanup.
+
+For CI / non-interactive setups where `~/.modal.toml` isn't available,
+see [`.env.example`](.env.example) for the
+`MODAL_TOKEN_ID` / `MODAL_TOKEN_SECRET` fallback.
 
 **Task constants** ([`task.py`](task.py)) define the leaderboard
-contract: `TEST_CHARS=60_000`, `INSTANCE_TYPE=gpu_1x_a100_sxm4`,
-`E_MAX_JOULES=100_000`. Submitters cannot vary these —
-`entrypoint.sh` forwards them from `task.py` to `run_eval.py` inside
-the container.
+contract: `TEST_CHARS=60_000`, `INSTANCE_TYPE=modal:A100-40GB`,
+`E_MAX_JOULES=100_000`. Submitters cannot vary these — `submit.py`
+reads them from `task.py` (baked into the image) and forwards them to
+`run_eval.py` inside the container.
 
-Submitter pays for their training run on the pinned Lambda SKU. An
-official re-evaluator (TBD — see Open items) re-runs the pushed image
-and reproduces the reported (energy, accuracy) within tolerance.
+Submitter pays for their training run on the pinned Modal SKU. An
+official re-evaluator (TBD — see Open items) re-runs the same Modal
+function on the pushed submission and reproduces the reported (energy,
+accuracy) within tolerance.
 
 ## Open items
 
