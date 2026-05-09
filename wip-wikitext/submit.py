@@ -138,6 +138,11 @@ image = (
     # caches each layer by content hash.
     .run_function(_bake_wikitext)
     .workdir("/workspace")
+    # Modal re-imports submit.py inside the container to resolve the
+    # remote function. submit.py does a top-level `import task`, so
+    # /workspace (where task.py lands via add_local_file) must be on
+    # sys.path before that import runs.
+    .env({"PYTHONPATH": "/workspace"})
 )
 for _f in HARNESS_FILES:
     image = image.add_local_file(str(HERE / _f), f"/workspace/{_f}")
