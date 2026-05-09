@@ -62,3 +62,5 @@ cost = sparse_parity.score_medium(ir)            # → 816,251
 | -          | -:      | -                                                                              | -                                            | -                                                          |
 | 2026-05-07 | 816,251 | [ir](submissions/baseline_medium.ir), [report](submissions/baseline_medium.md) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_baseline_medium` (try-each-candidate)    |
 | 2026-05-08 | 473,046 | [ir](submissions/ge_medium.ir), [report](submissions/ge_medium.md), [py](submissions/ge_medium.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_ge_medium` (GF(2) Gaussian elimination)  |
+
+[distance_histograms](doc/access_distance_plots/) — per-submission read-distance histogram + CDF for every IR above; combined CDF covers the medium category.
