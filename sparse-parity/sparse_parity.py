@@ -7,6 +7,7 @@ simplified Dally model using the v3 instruction set.
 from __future__ import annotations
 
 import math
+import secrets
 from collections import namedtuple
 from itertools import combinations
 from random import Random
@@ -56,9 +57,14 @@ def _identifiable(X: Sequence[Sequence[int]], y: Sequence[int], k: int) -> bool:
     return matches == 1
 
 
-def generate(seed: int = 0, *, spec: Spec = SMALL) -> Tuple[
+def generate(seed: int | None = None, *, spec: Spec = SMALL) -> Tuple[
     List[List[int]], List[int], List[List[int]], List[int], List[int]
 ]:
+    # HARDENING: Fallback to SystemRandom (secrets) to prevent test-case predictability
+    # if evaluated inside globally seeded test platforms (like CI environments).
+    if seed is None:
+        seed = secrets.randbits(256)
+
     rng = Random(seed)
     secret = sorted(rng.sample(range(spec.n_bits), spec.k_secret))
     all_combs = list(combinations(range(spec.n_bits), spec.k_secret))
@@ -137,6 +143,9 @@ def _check_addrs(addrs, where):
     for a in addrs:
         if not isinstance(a, int) or a < 1:
             raise ValueError(f"{where}: addresses must be positive integers; got {a!r}")
+        # HARDENING: Prevent massive layout offsets attempting OS memory exploits
+        if a.bit_length() > 64:
+            raise ValueError(f"{where}: address exceeds 64-bit bounds")
 
 
 # ---------------------------------------------------------------------------
@@ -148,13 +157,12 @@ _UNARY = {"copy", "not", "abs"}
 _CMP_PRED = {"eq", "ne", "lt", "le", "gt", "ge"}
 
 def _parse(ir: str) -> Tuple[List[int], List, List[int]]:
-    """Parse the IR text into ``(input_addrs, ops, output_addrs)``.
-
-    Each entry in ``ops`` is ``(mnemonic, operands)`` where ``operands``
-    is a list of ints (with the trailing predicate string for ``cmp``).
-    Used by the simulator and by the access-distance plotter."""
     text = ir.replace(";", "\n")
     lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+
+    # HARDENING: Protect grader against DoS (Denial of Service) via bloated IR files
+    if len(lines) > 100_000:
+        raise ValueError("IR exceeds maximum allowed length (100,000 instructions)")
     if len(lines) < 2:
         raise ValueError("IR needs at least an input line and an output line")
 
@@ -179,7 +187,11 @@ def _parse(ir: str) -> Tuple[List[int], List, List[int]]:
 
         if head == "set":
             if len(raw) != 2: raise ValueError(f"set needs 2 operands (dest, K); got {raw}")
-            operands = [int(raw[0]), int(raw[1])]
+            literal = int(raw[1])
+            # HARDENING: Limit immediate values to 64-bit signed to stop big-int SIMD exploits
+            if literal.bit_length() > 64:
+                raise ValueError("set literal exceeds 64 bits")
+            operands = [int(raw[0]), literal]
             _check_addrs(operands[:1], "`set` dest")
         elif head == "cmp":
             if len(raw) != 4: raise ValueError(f"cmp needs 4 operands (dest, a, b, pred); got {raw}")
@@ -300,22 +312,35 @@ def _compile_ir(ir: str) -> Tuple[Callable[[List[int]], List[int]], int, int]:
             elif kind == 3:
                 head_u = instr[4]
                 src = mem[instr[2]]
-                if head_u == "copy": mem[instr[1]] = src
-                elif head_u == "not": mem[instr[1]] = ~src
-                else: mem[instr[1]] = abs(src)
+                if head_u == "copy": res = src
+                elif head_u == "not": res = ~src
+                else: res = abs(src)
+
+                # HARDENING: Force strict 64-bit bounds so Python big-int limits SIMD exploits
+                res &= 0xFFFFFFFFFFFFFFFF
+                if res >= 0x8000000000000000:
+                    res -= 0x10000000000000000
+                mem[instr[1]] = res
+
             elif kind == 4:
                 head_b = instr[4]
                 s1 = mem[instr[2]]
                 s2 = mem[instr[3]]
-                if head_b == "add": mem[instr[1]] = s1 + s2
-                elif head_b == "sub": mem[instr[1]] = s1 - s2
-                elif head_b == "mul": mem[instr[1]] = s1 * s2
+                if head_b == "add": res = s1 + s2
+                elif head_b == "sub": res = s1 - s2
+                elif head_b == "mul": res = s1 * s2
                 elif head_b == "div":
                     if s2 == 0: raise ZeroDivisionError("integer division or modulo by zero")
-                    mem[instr[1]] = s1 // s2
-                elif head_b == "and": mem[instr[1]] = s1 & s2
-                elif head_b == "or": mem[instr[1]] = s1 | s2
-                else: mem[instr[1]] = s1 ^ s2
+                    res = s1 // s2
+                elif head_b == "and": res = s1 & s2
+                elif head_b == "or": res = s1 | s2
+                else: res = s1 ^ s2
+
+                # HARDENING: Force strict 64-bit bounds
+                res &= 0xFFFFFFFFFFFFFFFF
+                if res >= 0x8000000000000000:
+                    res -= 0x10000000000000000
+                mem[instr[1]] = res
 
         return [mem[i] for i in out_idx]
 
@@ -350,25 +375,46 @@ def _canonical_seeds(
     spec: Spec, max_seeds: int, rng: "Random | None" = None,
 ) -> Tuple[int, ...]:
     if rng is None:
-        rng = Random()
-    n_secrets = math.comb(spec.n_bits, spec.k_secret)
-    target = min(max_seeds, n_secrets)
-    seen: Dict[Tuple[int, ...], int] = {}
+        # HARDENING: Enforce SystemRandom to prevent CI global seed predictability
+        rng = secrets.SystemRandom()
 
-    max_draws = 50 * (n_secrets + 1)
+    n_secrets = math.comb(spec.n_bits, spec.k_secret)
+    target_secrets = min(max_seeds, n_secrets)
+
+    seeds = []
+    seen_secrets = set()
+    used_seeds = set()
+
+    max_draws = 500 * max(max_seeds, n_secrets)
     for _ in range(max_draws):
-        if len(seen) >= target:
+        # HARDENING: Decouple secret coverage check from total array size to ensure
+        # max_seeds are ALWAYS evaluated, instead of quitting after exactly 3 loops for SMALL
+        if len(seeds) >= max_seeds and len(seen_secrets) >= target_secrets:
             break
-        seed = rng.randrange(1 << 31)
-        # Fast peek at the secret without triggering heavy random Matrix builds
+
+        # HARDENING: Expand PRNG range to 256 bits, thwarting lookup tables mappings
+        seed = rng.randrange(1 << 256)
+        if seed in used_seeds:
+            continue
+
         rng_peek = Random(seed)
         secret = tuple(sorted(rng_peek.sample(range(spec.n_bits), spec.k_secret)))
-        if secret not in seen:
-            seen[secret] = seed
-    if len(seen) < target:
+
+        # Ensure we don't accidentally fill up our max_seeds before discovering unique secrets
+        slots_left = max_seeds - len(seeds)
+        secrets_needed = target_secrets - len(seen_secrets)
+        if slots_left <= secrets_needed and secret in seen_secrets:
+            continue
+
+        seeds.append(seed)
+        used_seeds.add(seed)
+        seen_secrets.add(secret)
+
+    if len(seeds) < max_seeds or len(seen_secrets) < target_secrets:
         raise RuntimeError(
-            f"could not draw {target} distinct secrets in {max_draws} attempts")
-    return tuple(sorted(seen.values()))
+            f"could not draw {max_seeds} instances covering {target_secrets} distinct secrets"
+        )
+    return tuple(seeds)
 
 
 def _score(ir: str, spec: Spec, max_seeds: int) -> int:
@@ -377,13 +423,23 @@ def _score(ir: str, spec: Spec, max_seeds: int) -> int:
         raise ValueError(f"IR declares {expected_inputs} inputs; {_n_inputs(spec)} provided")
 
     seeds = _canonical_seeds(spec, max_seeds=max_seeds)
-    for seed in seeds:
+    for i, seed in enumerate(seeds):
         inputs, expected = _instance(seed, spec)
-        actual = simulate_fn(inputs)
+
+        try:
+            actual = simulate_fn(inputs)
+        except Exception:
+            # HARDENING: Mask exceptions so attackers can't intentionally fail logic
+            # to scrape evaluation datasets off the tracebacks (Oracle exploit).
+            raise ValueError("execution failed on a hidden test instance.") from None
+
         if actual != expected:
+            # HARDENING: Stop the Oracle Leak. Do not echo arrays to the console.
             raise ValueError(
-                f"correctness failed (seed={seed}):\n  got      {actual}\n"
-                f"  expected {expected}")
+                f"correctness failed on hidden test instance {i+1}/{max_seeds}. "
+                "(Test arrays are hidden securely to prevent hardcoding)"
+            )
+
     return static_cost
 
 

@@ -51,9 +51,9 @@ cost = sparse_parity.score_medium(ir)            # → 816,251
 
 | Date       | Cost   | Time   | Submission                                                                   | Contributors                                 | Description                                      |
 | -          | -:     | -:     | -                                                                            | -                                            | -                                                |
-| 2026-05-07 |  6,918 | 0.8 ms | [ir](submissions/baseline_small.ir), [report](submissions/baseline_small.md) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_baseline_small` (try-each-candidate)   |
-| 2026-05-08 |  1,932 | 0.7 ms | [ir](submissions/small_pack_best.ir), [report](submissions/small_pack_report.md), [py](submissions/small_pack_generator.py) | [@sjbaebae](https://github.com/sjbaebae) | low-address row decoder + scheduled output/test aliasing ★ best |
-| 2026-05-08 | 22,238 | 1.7 ms | [ir](submissions/ge_small.ir), [report](submissions/ge_small.md), [py](submissions/ge_small.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_ge_small` (GF(2) Gaussian elimination) |
+| 2026-05-07 |  6,918 | 4.2 ms | [ir](submissions/baseline_small.ir), [report](submissions/baseline_small.md) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_baseline_small` (try-each-candidate)   |
+| 2026-05-08 |  1,932 | 3.8 ms | [ir](submissions/small_pack_best.ir), [report](submissions/small_pack_report.md), [py](submissions/small_pack_generator.py) | [@sjbaebae](https://github.com/sjbaebae) | low-address row decoder + scheduled output/test aliasing ★ best |
+| 2026-05-08 | 22,238 | 6.7 ms | [ir](submissions/ge_small.ir), [report](submissions/ge_small.md), [py](submissions/ge_small.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_ge_small` (GF(2) Gaussian elimination) |
 
 ## Medium Record History
 
