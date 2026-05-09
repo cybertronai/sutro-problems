@@ -49,7 +49,7 @@ ir   = sparse_parity.generate_baseline_medium()  # medium
 cost = sparse_parity.score_medium(ir)            # → 816,251
 ```
 
-## Small Record History
+## Small, 100% target
 
 2 hidden bits, 3 total bits, 4 train examples, 32 test.
 
@@ -59,7 +59,7 @@ cost = sparse_parity.score_medium(ir)            # → 816,251
 | 2026-05-08 |  1,932 | 3.8 ms | [ir](submissions/small_pack_best.ir), [report](submissions/small_pack_report.md), [py](submissions/small_pack_generator.py) | [@sjbaebae](https://github.com/sjbaebae) | low-address row decoder + scheduled output/test aliasing ★ best |
 | 2026-05-08 | 22,238 | 6.7 ms | [ir](submissions/ge_small.ir), [report](submissions/ge_small.md), [py](submissions/ge_small.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_ge_small` (GF(2) Gaussian elimination) |
 
-## Medium Record History
+## Medium, 100% target
 
 3 hidden bits, 8 total bits, 8 train examples, 64 test.
 
