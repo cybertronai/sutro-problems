@@ -1,5 +1,7 @@
 # Sparse parity
 
+> *Scored with the [v3 instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets/v3) and an 8-bit signed-byte ALU — every cell holds a value in `[-128, 127]`; `add`/`sub`/`mul`/`div`/`copy`/`not`/`abs`/`and`/`or`/`xor` results wrap modulo 256.*
+
 $$
 \begin{array}{cl|c}
  & \text{bits} & \text{sparse parity} \\

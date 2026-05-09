@@ -2,7 +2,8 @@
 
 Scores IR programs that recover the secret 2-subset of bits from m=4
 training rows over ``{0, 1}^3`` and predict 32 test labels under the
-simplified Dally model using the v3 instruction set.
+simplified Dally model using the v3 instruction set, with all data
+values constrained to a signed 8-bit ALU (``[-128, 127]``).
 """
 from __future__ import annotations
 
@@ -188,9 +189,13 @@ def _parse(ir: str) -> Tuple[List[int], List, List[int]]:
         if head == "set":
             if len(raw) != 2: raise ValueError(f"set needs 2 operands (dest, K); got {raw}")
             literal = int(raw[1])
-            # HARDENING: Limit immediate values to 64-bit signed to stop big-int SIMD exploits
-            if literal.bit_length() > 64:
-                raise ValueError("set literal exceeds 64 bits")
+            # HARDENING: Limit immediate values to 8-bit byte range. Accept either
+            # signed (-128..127) or unsigned (0..255) interpretation; store time
+            # below normalizes to canonical signed [-128, 127] so arithmetic stays
+            # consistent with the byte-ALU semantics used for add/sub/mul/etc.
+            if not (-128 <= literal <= 255):
+                raise ValueError(
+                    "set literal must fit in 8 bits (-128..255)")
             operands = [int(raw[0]), literal]
             _check_addrs(operands[:1], "`set` dest")
         elif head == "cmp":
@@ -295,7 +300,12 @@ def _compile_ir(ir: str) -> Tuple[Callable[[List[int]], List[int]], int, int]:
         for instr in fast_ops:
             kind = instr[0]
             if kind == 0:
-                mem[instr[1]] = instr[2]
+                # Normalize the literal to canonical signed-byte form so
+                # `set X, 128` and `set X, -128` produce the same in-memory value.
+                v = instr[2] & 0xFF
+                if v >= 0x80:
+                    v -= 0x100
+                mem[instr[1]] = v
             elif kind == 1:
                 pred = instr[4]
                 a = mem[instr[2]]
@@ -316,10 +326,11 @@ def _compile_ir(ir: str) -> Tuple[Callable[[List[int]], List[int]], int, int]:
                 elif head_u == "not": res = ~src
                 else: res = abs(src)
 
-                # HARDENING: Force strict 64-bit bounds so Python big-int limits SIMD exploits
-                res &= 0xFFFFFFFFFFFFFFFF
-                if res >= 0x8000000000000000:
-                    res -= 0x10000000000000000
+                # HARDENING: Force strict 8-bit (signed byte) bounds so Python big-int
+                # limits SIMD exploits. Values live in [-128, 127] post-mask.
+                res &= 0xFF
+                if res >= 0x80:
+                    res -= 0x100
                 mem[instr[1]] = res
 
             elif kind == 4:
