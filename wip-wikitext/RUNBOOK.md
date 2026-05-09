@@ -1,48 +1,51 @@
-# Lambda A100 runbook
+# Modal A100 runbook
 
-Manual Lambda A100 procedure for two **non-submission** uses:
+Manual Modal A100 procedure for two **non-submission** uses:
 
 1. Verify `nvmlDeviceGetTotalEnergyConsumption` is exposed on a new
-   GPU SKU (currently the Lambda On-Demand A100 40GB SXM4,
-   `gpu_1x_a100_sxm4`).
+   GPU SKU (currently `gpu="A100-40GB"`).
 2. Train a from-scratch transformer baseline by hand — for debugging,
    timing experiments, or seeding a baseline number.
 
 **This is not the submission path.** Records go through
 [`submit.py`](submit.py), which orchestrates everything below
-automatically. Use this runbook only when you need to drive the host
-yourself.
+automatically. Use this runbook only when you need to drive the
+container yourself (e.g. to bisect a regression in the harness or
+collect timing data outside the leaderboard contract).
 
-It assumes you have a Lambda account, an SSH key registered, and the
-Lambda web console.
+It assumes you have a Modal account and have run `modal token new`.
 
 ---
 
-## 0. Provision
-
-Web console → **Launch instance** → **A100 (40 GB) SXM** → 1× GPU →
-Ubuntu 22.04 image → your SSH key. Wait for it to boot, then:
+## 0. Setup
 
 ```bash
-ssh ubuntu@<instance-ip>
+pip install modal
+modal token new      # opens browser, writes ~/.modal.toml
 ```
 
-Cost is billed per minute. Tear down with **Terminate instance** in
-the console as soon as the run finishes — Lambda does *not* auto-stop.
+Modal bills per function-second of GPU time and auto-shuts-down when
+the function returns. There's nothing to terminate by hand.
 
-## 1. NVML verification (5 minutes, ≈$0.17)
+## 1. NVML verification (≈2 min, ≈$0.07)
+
+A one-shot Modal function that runs [`verify_nvml.py`](verify_nvml.py)
+on the pinned GPU and returns the JSON summary:
 
 ```bash
-# On the Lambda host
-git clone <repo-url> sutro-problems
-cd sutro-problems/wip-wikitext
-
-# Native install (no Docker needed for verification).
-pip install --user nvidia-ml-py torch
-python3 verify_nvml.py
+modal run -m submit::run_submission --help    # confirm wiring
 ```
 
-Expected output:
+The cleanest one-liner is to run `verify_nvml.py` in a Modal shell
+on the same image:
+
+```bash
+modal shell --gpu A100-40GB submit.py
+# inside the shell:
+python verify_nvml.py
+```
+
+Expected output (last line is JSON):
 
 ```
 GPU: NVIDIA A100-SXM4-40GB
@@ -57,92 +60,54 @@ running 30s stress workload ...
 {"nvml_available": true, "energy_counter_supported": true, "monotonic": true, ...}
 ```
 
-**Pass criteria** (script returns exit 0):
+**Pass criteria** (`verify_nvml.py` returns exit 0):
 
 - `nvml_available == true`
 - `energy_counter_supported == true`
 - `monotonic == true`
 - `100 W < stress_watts_avg < 700 W`
 
-If any fail, capture the JSON line and the failure note from
-`verify_nvml.py` — that's the data point we need to either confirm
-Lambda works for this benchmark or fall back to RunPod Secure.
+If any fail, capture the JSON line — that's the data point we need to
+either confirm Modal works for this benchmark or fall back to RunPod
+Secure.
 
-## 2. Download WikiText-103 (≈1 min)
+## 2. WikiText-103 staging
 
-The original `s3.amazonaws.com/research.metamind.io/wikitext/...` URL is
-dead (PermanentRedirect → SNI mismatch on the dotted-bucket cert). Pull
-from the HuggingFace mirror instead and write out `wiki.{split}.raw`
-files in the layout `load_wikitext103` expects:
+`submit.py` keeps WikiText-103 on a persistent Modal Volume named
+`wikitext-103-data`. The first run downloads ~750 MB from the
+HuggingFace mirror via [`fetch_data.py`](fetch_data.py); subsequent
+runs reuse the cached volume. To inspect or clear the volume:
 
 ```bash
-mkdir -p ~/data/wikitext-103-raw
-pip install --user datasets
-
-python3 - <<'PY'
-from pathlib import Path
-from datasets import load_dataset
-
-out = Path.home() / "data" / "wikitext-103-raw"
-ds = load_dataset("Salesforce/wikitext", "wikitext-103-raw-v1")
-for hf_split, fname in [
-    ("train", "wiki.train.raw"),
-    ("validation", "wiki.valid.raw"),
-    ("test", "wiki.test.raw"),
-]:
-    (out / fname).write_text("\n".join(ds[hf_split]["text"]), encoding="utf-8")
-PY
-
-ls ~/data/wikitext-103-raw/   # wiki.{train,valid,test}.raw
+modal volume list
+modal volume ls wikitext-103-data /
+modal volume rm wikitext-103-data /wiki.train.raw    # force re-fetch
 ```
 
-## 3. Train a transformer baseline
+## 3. Train a transformer baseline by hand
 
-Three configs ship in `baseline_transformer.py`. Pick one based on
-how much A100 time you want to burn for the experiment:
+Three configs ship in `baseline_transformer.py`:
 
-| config | params | recommended steps | training wall-clock | training cost @ $1.99/hr |
+| config | params | recommended steps | training wall-clock | training cost @ $2.10/hr |
 |--------|--------|-------------------|---------------------|--------------------------|
-| tiny   | ~0.6 M | 5,000             | ~5 min              | ~$0.17                   |
-| small  | ~5 M   | 30,000            | ~45 min             | ~$1.49                   |
-| gpt2   | ~22 M  | 100,000           | ~5 hr               | ~$10                     |
+| tiny   | ~0.6 M | 5,000             | ~5 min              | ~$0.18                   |
+| small  | ~5 M   | 30,000            | ~45 min             | ~$1.58                   |
+| gpt2   | ~22 M  | 100,000           | ~5 hr               | ~$10.50                  |
 
-(Training wall-clock is rough — depends on CPU bottleneck on data
-shuffling etc. Re-time after the first run. These numbers cover
-training only; eval on the 60K-char slice adds ~2 min.)
+(Wall-clock is rough — depends on CPU bottleneck on data shuffling
+etc. Re-time after the first run. These cover training only; eval on
+the 60K-char slice adds ~2 min.)
 
-Quick **tiny** smoke run (validates the full pipeline before any
-expensive run):
-
-```bash
-cd ~/sutro-problems/wip-wikitext
-python3 run_eval.py \
-  --data-dir ~/data/wikitext-103-raw \
-  --baseline transformer \
-  --config tiny \
-  --n-steps 5000
-```
-
-Full **small** baseline (representative training run):
+The harness function in `submit.py` only takes a submission file as
+input. For ad-hoc transformer experiments without authoring a
+submission, `modal shell --gpu A100-40GB submit.py` drops you into an
+interactive container with the harness on `PYTHONPATH`; from there
+`run_eval.py` works the same as on a Lambda host:
 
 ```bash
-python3 run_eval.py \
-  --data-dir ~/data/wikitext-103-raw \
-  --baseline transformer \
-  --config small \
-  --n-steps 30000 \
-  | tee training.log
-```
-
-**Fixed-budget runs** — pass `--e-max-joules N` to arm the in-meter
-watchdog. It polls NVML every 250 ms; once running net energy crosses
-`N` joules the training is killed, the runner prints a
-`DISQUALIFIED:` block, and exits with code 2. The leaderboard value
-is `task.E_MAX_JOULES = 100_000`:
-
-```bash
-python3 run_eval.py \
-  --data-dir ~/data/wikitext-103-raw \
+# inside the modal shell:
+python run_eval.py \
+  --data-dir /data \
   --baseline transformer --config small --n-steps 30000 \
   --e-max-joules 100000 \
   | tee training.log
@@ -151,7 +116,7 @@ python3 run_eval.py \
 The runner prints a final block like:
 
 ```
-baseline           : transformer
+submission         : baseline_transformer_small
 training energy (J): 4,832,109.4
 test char-accuracy : 0.6234
 test chars         : 60,000
@@ -169,18 +134,13 @@ training energy (J): 100,142.0  (at kill)
 (exit code 2; eval is skipped — the partially-trained model is not
 scored.)
 
-## 4. Save artifacts and tear down
+## 4. Save artifacts
 
-If the run is something you want to keep around — a verification log
-on a new SKU, a baseline timing reference — copy the relevant files
-back off the host (`scp`) before terminating. The leaderboard's
-Record History is populated by `submit.py` only; manual runs do not
-land there.
+`modal shell` containers are ephemeral — anything written to local
+paths is lost when you exit. Write to `/data` (the WikiText volume)
+or copy out via `modal volume put` if you want to keep a log.
 
-## 5. Tear down
-
-```bash
-# In the Lambda web console: Terminate instance.
-```
-
-Confirm in **Billing** that the instance is no longer accruing.
+For the leaderboard path, all artifacts (`run.log`, `nvml.json`,
+`result.json`) are persisted automatically by `submit.py` to
+`submissions/`. Manual `modal shell` runs do not land in Record
+History.

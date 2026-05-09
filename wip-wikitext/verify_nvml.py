@@ -1,15 +1,16 @@
-"""NVML energy-counter verification for a Lambda A100 (or any Volta+ GPU).
+"""NVML energy-counter verification for a Modal A100 (or any Volta+ GPU).
 
 Confirms three things:
 
 1. ``nvmlDeviceGetTotalEnergyConsumption`` is **exposed** (not all
-   virtualized hosts surface it; e.g. Modal does not).
+   virtualized hosts surface it; verify per-provider).
 2. The counter is **monotonic** across a short idle-then-stress run.
 3. Energy attributable to a known stress workload is in the **expected
    ballpark** for the card (200–400 W average on an A100).
 
-Run on a Lambda On-Demand A100 40GB SXM4 instance after installing
-``nvidia-ml-py`` and ``torch``::
+Runs inside the Modal container on every ``submit.py`` invocation
+(see ``submit.run_submission``). Can also be run by hand on any host
+that has ``nvidia-ml-py`` + ``torch`` installed::
 
     pip install nvidia-ml-py torch
     python3 verify_nvml.py
