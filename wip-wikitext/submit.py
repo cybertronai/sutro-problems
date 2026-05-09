@@ -95,15 +95,34 @@ HARNESS_FILES = (
     "baseline_transformer.py",
     "run_eval.py",
     "verify_nvml.py",
-    "fetch_data.py",
     "task.py",
 )
+
+
+def _bake_wikitext() -> None:
+    """Build-time: materialize WikiText-103 raw splits into /data inside
+    the image. Runs once per image build, layer-cached by Modal across
+    every subsequent submission. Mirrors fetch_data.py but writes into
+    the image instead of a runtime Volume."""
+    from pathlib import Path
+    from datasets import load_dataset
+    out = Path("/data")
+    out.mkdir(parents=True, exist_ok=True)
+    ds = load_dataset("Salesforce/wikitext", "wikitext-103-raw-v1")
+    for hf_split, fname in [
+        ("train", "wiki.train.raw"),
+        ("validation", "wiki.valid.raw"),
+        ("test", "wiki.test.raw"),
+    ]:
+        (out / fname).write_text("\n".join(ds[hf_split]["text"]), encoding="utf-8")
+
 
 app = modal.App("wikitext-bench")
 
 # CUDA 12.4 PyTorch wheels match the driver Modal exposes on its A100
 # fleet. nvidia-ml-py is the NVML binding EnergyMeter uses; datasets is
-# how fetch_data.py pulls WikiText-103 from the HuggingFace mirror.
+# how _bake_wikitext pulls WikiText-103 from the HuggingFace mirror at
+# image build time.
 image = (
     modal.Image.debian_slim(python_version="3.11")
     .pip_install(
@@ -114,14 +133,14 @@ image = (
         "nvidia-ml-py==12.560.30",
         "datasets==3.2.0",
     )
+    # Bake WikiText-103 into the image. Placed above add_local_file so
+    # editing harness code does not invalidate the data layer — Modal
+    # caches each layer by content hash.
+    .run_function(_bake_wikitext)
     .workdir("/workspace")
 )
 for _f in HARNESS_FILES:
     image = image.add_local_file(str(HERE / _f), f"/workspace/{_f}")
-
-# WikiText-103 cached across runs. ~750 MB of raw text; first run pays
-# the ~1 min HuggingFace fetch, all subsequent runs reuse the volume.
-data_volume = modal.Volume.from_name("wikitext-103-data", create_if_missing=True)
 
 
 @app.function(
@@ -129,9 +148,8 @@ data_volume = modal.Volume.from_name("wikitext-103-data", create_if_missing=True
     gpu=MODAL_GPU,
     # Hard wall-clock cap. Training is bounded at ~5 min by
     # task.E_MAX_JOULES (NVML watchdog), plus image cold-start +
-    # data fetch + eval ≈ <15 min realistic. 30 min gives 2× safety.
+    # eval ≈ <15 min realistic. 30 min gives 2× safety.
     timeout=30 * 60,
-    volumes={"/data": data_volume},
 )
 def run_submission(submission_bytes: bytes, submission_name: str) -> dict:
     """Run a submission end-to-end on the pinned Modal GPU and return
@@ -145,16 +163,7 @@ def run_submission(submission_bytes: bytes, submission_name: str) -> dict:
     workspace = Path("/workspace")
     os.chdir(workspace)
 
-    # Stage WikiText-103 onto the volume on first run; reuse otherwise.
-    train_raw = Path("/data") / "wiki.train.raw"
-    if not train_raw.exists():
-        print("[modal] fetching WikiText-103 (one-time, cached on volume) ...")
-        subprocess.run(
-            [sys.executable, "fetch_data.py", "/data"], check=True
-        )
-        data_volume.commit()
-    else:
-        print("[modal] WikiText-103 already cached on volume")
+    # WikiText-103 is baked into /data inside the image — see _bake_wikitext.
 
     # NVML probe — bail before training cycles if the energy counter
     # isn't exposed on this host.

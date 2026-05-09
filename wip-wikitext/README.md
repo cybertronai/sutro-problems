@@ -135,11 +135,31 @@ against unintentional cheating from coding agents.
 | `submit.py`                | end-to-end submission orchestrator: defines a Modal A100 function and runs it |
 | `fetch_data.py`            | HuggingFace WikiText-103 fetch (the canonical S3 URL is dead)    |
 | `example_submission.py`    | reference submission file (5-gram wrapper) — copy and edit       |
+| `submission_modded_nanogpt.py` | byte-vocab port of [modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt) (Muon + RoPE + ReLU²) for 1xA100-40GB |
 | `verify_nvml.py`           | NVML energy-counter verification for a target host               |
 | `test_wikitext.py`         | tests for the evaluator + n-gram                                 |
 | `RUNBOOK.md`               | NVML verification + manual baseline experimentation on Modal A100 |
 | `.env.example`             | optional CI env vars `submit.py` reads (`MODAL_TOKEN_ID`, `MODAL_TOKEN_SECRET`) |
 | `submissions/`             | result JSON + NVML JSON evidence per submission                  |
+
+## Setup
+
+Pre-requisites: Python 3.11 or higher and a Modal account.
+
+```bash
+pip install modal
+modal token new      # opens a browser, writes ~/.modal.toml
+```
+
+For CI / non-interactive setups where `~/.modal.toml` isn't available,
+set `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` in the environment (or in
+a `.env` file alongside `submit.py` — see [`.env.example`](.env.example)).
+
+PyTorch + nvidia-ml-py + datasets and WikiText-103 itself are baked into
+the Modal image at build time. Modal builds the image once on first
+`submit.py` run (~1 min HuggingFace fetch); every subsequent run reuses
+the cached layers, so editing your submission code does **not** trigger
+a re-fetch. No Modal Volume to manage.
 
 ## Running
 
@@ -180,29 +200,17 @@ fixed (see `EST_INSTANCE_MIN` in `submit.py`). Per-config knobs (e.g.
 The `--config` flag *only* applies to manual `run_eval.py` runs (see
 [`RUNBOOK.md`](RUNBOOK.md) §3).
 
-`submit.py` defines a Modal app with the harness baked into the
-image, calls a single A100-40GB function with your submission file's
-bytes as the only argument, and the function runs the pipeline
-end-to-end (NVML probe → data fetch → train under `EnergyMeter` →
-60K-char eval) and returns the result dict. WikiText-103 is cached on
-a Modal Volume so only the first run pays the ~1 min HuggingFace
-fetch. After the result lands locally, `submit.py` saves the JSON to
-`submissions/` and appends a row to the Record History below.
+`submit.py` defines a Modal app with the harness *and* WikiText-103
+baked into the image, calls a single A100-40GB function with your
+submission file's bytes as the only argument, and the function runs the
+pipeline end-to-end (NVML probe → train under `EnergyMeter` → 60K-char
+eval) and returns the result dict. After the result lands locally,
+`submit.py` saves the JSON to `submissions/` and appends a row to the
+Record History below.
 
-**One-time setup**:
-
-```bash
-pip install modal
-modal token new      # opens browser, writes ~/.modal.toml
-```
-
-That's it — Modal builds the image, hosts it, runs the function, and
-auto-shuts-down when it returns. No GHCR, no Docker login, no SSH
-key, no leaked-instance cleanup.
-
-For CI / non-interactive setups where `~/.modal.toml` isn't available,
-see [`.env.example`](.env.example) for the
-`MODAL_TOKEN_ID` / `MODAL_TOKEN_SECRET` fallback.
+Modal builds the image, hosts it, runs the function, and auto-shuts-down
+when it returns. No GHCR, no Docker login, no SSH key, no leaked-instance
+cleanup. See [Setup](#setup) for one-time install instructions.
 
 **Task constants** ([`task.py`](task.py)) define the leaderboard
 contract: `TEST_CHARS=60_000`, `INSTANCE_TYPE=modal:A100-40GB`,
@@ -214,6 +222,53 @@ Submitter pays for their training run on the pinned Modal SKU. An
 official re-evaluator (TBD — see Open items) re-runs the same Modal
 function on the pushed submission and reproduces the reported (energy,
 accuracy) within tolerance.
+
+## Reproducing the modded-nanogpt submission
+
+[`submission_modded_nanogpt.py`](submission_modded_nanogpt.py) is a port
+of [KellerJordan/modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt)'s
+"simple" recipe to the byte-vocab / single-A100 / WikiText-103 regime.
+Tricks ported verbatim from upstream:
+
+- **Muon optimizer** (Newton-Schulz orthogonalized momentum) for the
+  2-D block weights; AdamW for embeddings, lm_head, and 1-D scalars.
+- Half-truncate **RoPE** with base-freq tuning (`base=1024`, second
+  half of angular_freq zeroed).
+- **QK RMSNorm before RoPE**, attention scale `0.12`.
+- **ReLU² MLP**, RMSNorm pre-norm, soft-capped logits (cap 15).
+- Zero-init projections + lm_head; "stable then decay" LR schedule
+  (`cooldown_frac=0.7`).
+
+Adaptations from upstream: `vocab_size` 50304 → 256 (raw bytes),
+distributed all-gather stripped from Muon (single-GPU), and a streaming
+KV-cache wrapper added so the same module serves training and the
+`CharModel` per-byte interface.
+
+Reproduce on the pinned Modal A100-40GB:
+
+```bash
+python3 submit.py submission_modded_nanogpt.py
+```
+
+Defaults (in `submission_modded_nanogpt.py`'s `TrainConfig`): ~22M
+params, 2400 steps, batch 32, seq 1024 — should land within the
+100 kJ training-energy budget pinned in [`task.py`](task.py).
+`submit.py` prints the energy / accuracy block at the end and appends
+a row to the [Record History](#record-history) table.
+
+To experiment without forking the file, edit the `TrainConfig` defaults
+(`model_dim`, `num_layers`, `n_steps`, per-group LRs, `cooldown_frac`,
+`muon_wd`, …) and re-run.
+
+**Estimated cost**: ~$0.35 per run at Modal's $2.10/hr A100-40GB rate
+(~10 min wall clock for a fresh-image build, ~7 min for warm runs).
+
+This is a *port*, not a 1:1 reproduction of the upstream record:
+upstream targets FineWeb tokens on 8xH100 (3.28 cross-entropy in
+under 90 s); this benchmark is bytes on 1xA100-40GB (greedy
+char-accuracy under 100 kJ). LRs are still upstream defaults and almost
+certainly want re-tuning for the byte / A100 / WikiText regime — that
+is the obvious next record-improvement.
 
 ## Open items
 
