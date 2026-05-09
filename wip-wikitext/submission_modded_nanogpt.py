@@ -26,6 +26,8 @@ Training tricks ported verbatim:
 """
 from __future__ import annotations
 
+__author__ = "@ab-10"
+
 import math
 import time
 

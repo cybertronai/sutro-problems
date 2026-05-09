@@ -229,11 +229,17 @@ def run_submission(submission_bytes: bytes, submission_name: str) -> dict:
 # Local orchestration
 # ---------------------------------------------------------------------------
 
-def check_submission_imports(submission_path: Path) -> None:
+_AUTHOR_SENTINEL = "==AUTHOR=="
+
+
+def check_submission_imports(submission_path: Path) -> str:
     """Import the submission file in a child process. Fails fast on
     SyntaxError, missing module deps (typo'd imports, missing torch),
     and ``train`` not being defined — all of which would otherwise only
     surface mid-run on the Modal host, after Modal billing started.
+
+    Returns the submission's ``__author__`` string if defined, else
+    ``"@you"`` — used to credit the contributor in the Record History.
     """
     snippet = (
         "import importlib.util, sys\n"
@@ -242,6 +248,7 @@ def check_submission_imports(submission_path: Path) -> None:
         "spec.loader.exec_module(mod)\n"
         "fn = getattr(mod, 'train', None)\n"
         "assert callable(fn), 'submission must define train(train_text, valid_text=None) -> CharModel'\n"
+        f"print({_AUTHOR_SENTINEL!r} + (getattr(mod, '__author__', '') or ''))\n"
     )
     r = subprocess.run(
         [sys.executable, "-c", snippet], capture_output=True, text=True, cwd=HERE,
@@ -254,6 +261,12 @@ def check_submission_imports(submission_path: Path) -> None:
             "(Note: transformer-based submissions need `pip install torch` "
             "locally to validate; CPU is fine.)"
         )
+    author = ""
+    for line in (r.stdout or "").splitlines():
+        if line.startswith(_AUTHOR_SENTINEL):
+            author = line[len(_AUTHOR_SENTINEL):].strip()
+            break
+    return author or "@you"
 
 
 def save_result(result: dict, submission_path: Path) -> Path:
@@ -298,13 +311,14 @@ def append_record(result: dict, json_relpath: str) -> None:
         acc_cell = "      DQ"
     else:
         acc_cell = f"{result['test_char_accuracy']:.4f}"
+    contributor = result.get("contributor") or "@you"
     row = (
         f"| {result['date_utc'][:10]} "
         f"| {energy_cell} "
         f"| {acc_cell} "
         f"| {result['submission']} "
         f"| [json]({json_relpath}) "
-        f"| @you |\n"
+        f"| {contributor} |\n"
     )
     placeholder = "| —    |          — |        — | —      | —          | —           |\n"
     if placeholder in text:
@@ -334,7 +348,7 @@ def main() -> int:
     if not args.yes and input("proceed? [y/N] ").strip().lower() != "y":
         sys.exit("aborted")
 
-    check_submission_imports(args.submission)
+    contributor = check_submission_imports(args.submission)
 
     submission_bytes = args.submission.read_bytes()
     submission_name = args.submission.stem
@@ -343,6 +357,7 @@ def main() -> int:
     with app.run():
         result = run_submission.remote(submission_bytes, submission_name)
 
+    result["contributor"] = contributor
     out_path = save_result(result, args.submission)
     save_nvml_artifact(result, args.submission)
     append_record(result, json_relpath=f"submissions/{out_path.name}")
