@@ -1,5 +1,7 @@
 # Submitting a sparse-parity solver
 
+> *Instructions AI-generated from prompt: "make sure there's python file, IR file and .md report"*
+
 Each entry in this directory is **one** record-table row. To submit a new
 solver, drop in three files that share a base name `<my_solver>`:
 
