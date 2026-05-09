@@ -30,7 +30,7 @@ $$
 
 - Given some labeled examples of sparse parity, and 8x more unlabeled ones.
 - What is the most energy-efficient way to label them?
-- To measure energy, use simplified version of Bill Dally's [proposal](https://cacm.acm.org/opinion/on-the-model-of-computation-point/), ([model](https://github.com/cybertronai/simplified-dally-model), [v3](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets/v3) instruction set)
+- To measure energy, use simplified version of Bill Dally's [model](https://github.com/cybertronai/simplified-dally-model), [v3](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets/v3) instruction set.
 
 ## API
 
