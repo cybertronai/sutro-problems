@@ -147,7 +147,12 @@ _BINARY = {"add", "sub", "mul", "div", "and", "or", "xor"}
 _UNARY = {"copy", "not", "abs"}
 _CMP_PRED = {"eq", "ne", "lt", "le", "gt", "ge"}
 
-def _compile_ir(ir: str) -> Tuple[Callable[[List[int]], List[int]], int, int]:
+def _parse(ir: str) -> Tuple[List[int], List, List[int]]:
+    """Parse the IR text into ``(input_addrs, ops, output_addrs)``.
+
+    Each entry in ``ops`` is ``(mnemonic, operands)`` where ``operands``
+    is a list of ints (with the trailing predicate string for ``cmp``).
+    Used by the simulator and by the access-distance plotter."""
     text = ir.replace(";", "\n")
     lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
     if len(lines) < 2:
@@ -197,6 +202,12 @@ def _compile_ir(ir: str) -> Tuple[Callable[[List[int]], List[int]], int, int]:
                 raise ValueError(f"unknown op: {head!r}")
 
         ops.append((head, operands))
+
+    return input_addrs, ops, output_addrs
+
+
+def _compile_ir(ir: str) -> Tuple[Callable[[List[int]], List[int]], int, int]:
+    input_addrs, ops, output_addrs = _parse(ir)
 
     # 1. Validation and Static Cost Determination Run Exactly Once
     cost = 0
