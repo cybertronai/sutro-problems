@@ -347,10 +347,15 @@ def _compile_ir(ir: str) -> Tuple[Callable[[List[int]], List[int]], int, int]:
                 elif head_b == "or": res = s1 | s2
                 else: res = s1 ^ s2
 
-                # HARDENING: Force strict 64-bit bounds
-                res &= 0xFFFFFFFFFFFFFFFF
-                if res >= 0x8000000000000000:
-                    res -= 0x10000000000000000
+                # HARDENING: Force strict 8-bit (signed byte) bounds to fully
+                # stop SIMD packing via wider-than-byte arithmetic. Without
+                # this, `add`/`sub`/`mul`/`and`/`or`/`xor` could quietly
+                # accumulate up to 64-bit values and let an attacker pack
+                # multiple test rows into a single integer for parallel
+                # evaluation that bypasses the read-cost model.
+                res &= 0xFF
+                if res >= 0x80:
+                    res -= 0x100
                 mem[instr[1]] = res
 
         return [mem[i] for i in out_idx]
