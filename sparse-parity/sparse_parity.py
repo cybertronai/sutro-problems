@@ -462,6 +462,39 @@ def score_medium(ir: str) -> int:
     return _score(ir, MEDIUM, max_seeds=8)
 
 
+def _score_approx(ir: str, spec: Spec, max_seeds: int, threshold: float) -> int:
+    """Approximate-correctness scorer — passes if every canonical seed
+    achieves at least *threshold* fraction of correct outputs."""
+    simulate_fn, static_cost, expected_inputs = _compile_ir(ir)
+    if expected_inputs != _n_inputs(spec):
+        raise ValueError(f"IR declares {expected_inputs} inputs; {_n_inputs(spec)} provided")
+
+    seeds = _canonical_seeds(spec, max_seeds=max_seeds)
+    for i, seed in enumerate(seeds):
+        inputs, expected = _instance(seed, spec)
+        try:
+            actual = simulate_fn(inputs)
+        except Exception:
+            raise ValueError("execution failed on a hidden test instance.") from None
+        if len(actual) != len(expected):
+            raise ValueError(
+                f"output count mismatch on hidden test instance {i+1}/{max_seeds}.")
+        n_correct = sum(1 for a, e in zip(actual, expected) if a == e)
+        frac = n_correct / len(expected)
+        if frac < threshold:
+            raise ValueError(
+                f"correctness below {threshold:.0%} on hidden test instance "
+                f"{i+1}/{max_seeds} (got {frac:.0%}). "
+                "(Test arrays are hidden securely to prevent hardcoding)"
+            )
+    return static_cost
+
+
+def score_medium_approx50(ir: str) -> int:
+    """Medium-instance scorer that requires only ≥ 50 % per-seed accuracy."""
+    return _score_approx(ir, MEDIUM, max_seeds=8, threshold=0.5)
+
+
 # ---------------------------------------------------------------------------
 # Baseline generator
 # ---------------------------------------------------------------------------
@@ -546,6 +579,7 @@ __all__ = [
     "generate", "solve_bruteforce", "predict", "accuracy",
     "score_small", "generate_baseline_small",
     "score_medium", "generate_baseline_medium",
+    "score_medium_approx50",
 ]
 
 

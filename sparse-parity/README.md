@@ -71,4 +71,12 @@ cost = sparse_parity.score_medium(ir)            # → 816,251
 | 2026-05-08 |  15,960 | 5.5 ms | [ir](submissions/predpack_medium.ir), [report](submissions/predpack_medium.md), [py](submissions/predpack_medium.py) | [@sjbaebae](https://github.com/sjbaebae) | packed-column decoder + pair-XOR reuse |
 | 2026-05-08 |  15,691 | 5.4 ms | [ir](submissions/predpack_tuned_medium.ir), [report](submissions/predpack_tuned.md), [py](submissions/predpack_tuned.py) | [@sjbaebae](https://github.com/sjbaebae) | pair-XOR reuse + address/liveness tuning ★ best |
 
+## Medium, 50% target
+
+Same instance shape as Medium 100%, but scored with `score_medium_approx50` — the IR only has to label ≥ 50 % of test rows correctly per hidden seed.
+
+| Date       | Cost   | Time   | Submission                                                                                  | Contributors                                 | Description                                                                |
+| -          | -:     | -:     | -                                                                                           | -                                            | -                                                                          |
+| 2026-05-09 | 8,723  | 5.4 ms | [ir](submissions/half_packed_approx50.ir), [report](submissions/half_packed_approx50.md), [py](submissions/half_packed_approx50.py) | [@yaroslavvb](https://github.com/yaroslavvb) | packed-column candidate check on first 32 outputs; remaining 32 set to 0   |
+
 [access_distance](doc/access_distance/) — per-submission read-distance histogram + CDF for every IR above.

@@ -48,3 +48,6 @@ All medium-category submissions on one axis:
 
 **`predpack_tuned_medium.ir`**
 ![predpack_tuned_medium](predpack_tuned_medium.png)
+
+**`half_packed_approx50.ir`** *(50% target)*
+![half_packed_approx50](half_packed_approx50.png)
