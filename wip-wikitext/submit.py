@@ -6,9 +6,9 @@ What it does:
      SyntaxError / missing torch / missing `train` before any cloud spend).
   2. Defines a Modal App with an inline image (PyTorch + nvidia-ml-py +
      datasets) and a single A100-40GB function.
-  3. The remote function: stages WikiText-103 onto a persistent Modal
-     Volume (cached across runs), verifies NVML, writes the user's
-     submission to disk, runs run_eval, and returns the result dict.
+  3. The image-build hook bakes WikiText-103 raw splits into /data via
+     bake_wikitext.py. The remote function verifies NVML, writes the
+     user's submission to disk, runs run_eval, and returns the result dict.
   4. Saves the result JSON to submissions/ and appends a row to the
      Record History table in README.md.
 
@@ -39,8 +39,9 @@ HERE = Path(__file__).resolve().parent
 # Modal A100-40GB list price as of 2026-05: $2.10/hr.
 # A typical run is ~10 min (image cold-start + verify_nvml + WikiText-103
 # fetch on first run + ~5 min training capped by E_MAX_JOULES + ~2 min
-# eval). After the first run the dataset is cached on a Modal Volume,
-# so subsequent runs are ~7 min. We size the estimate for a *first* run.
+# eval). The dataset is baked into a Modal image layer and cached by
+# content hash, so subsequent runs that reuse that layer avoid the
+# HuggingFace download. We size the estimate for a *first* run.
 EST_RUNTIME_MIN = 10
 EST_RATE_USD_PER_HR = 2.10
 EST_COST_USD = round(EST_RUNTIME_MIN * EST_RATE_USD_PER_HR / 60, 2)
@@ -270,9 +271,10 @@ def save_result(result: dict, submission_path: Path) -> Path:
 
 
 def save_nvml_artifact(result: dict, submission_path: Path) -> Path | None:
-    """Mirror the Lambda-era ``submissions/<sub>_<date>.nvml.json``
-    artifact, sourced from the embedded ``_nvml`` field that the Modal
-    function returns. Returns the path written, or None if absent.
+    """Write ``submissions/<sub>_<date>.nvml.json`` evidence from the
+    embedded ``_nvml`` field returned by the Modal function.
+
+    Returns the path written, or None if absent.
     """
     nvml = result.get("_nvml")
     if not nvml:

@@ -14,8 +14,7 @@ Defines:
   only correction; everything else is the raw NVML counter. On hosts
   without NVML the meter reports ``available=False`` and an energy of
   ``None`` — the eval still runs for development, but submissions must
-  use a host where NVML is exposed (Lambda On-Demand A100, RunPod
-  Secure, etc.).
+  use a verified NVML host such as the pinned Modal A100 runner.
 * ``load_wikitext103(data_dir, split)`` — load the raw WikiText-103
   splits (``wiki.{train,valid,test}.raw``) as a single string.
 
