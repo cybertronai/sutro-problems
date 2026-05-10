@@ -5,9 +5,10 @@ Runs with ``python3 -m pytest test_wikitext.py`` or ``python3 test_wikitext.py``
 """
 from __future__ import annotations
 
+from pathlib import Path
 import time
 
-from wikitext import BudgetExceededError, CharModel, EnergyMeter, evaluate
+from wikitext import BudgetExceededError, CharModel, EnergyMeter, evaluate, load_wikitext103
 from baseline_ngram import NGramModel
 
 
@@ -198,6 +199,18 @@ def test_ngram_backoff_to_unigram() -> None:
     dist = m.predict()
     assert "a" in dist
     assert dist["a"] == 1.0
+
+
+def test_tiny_fixture_ngram_smoke() -> None:
+    """The committed fixture exercises the local evaluator path."""
+    data_dir = Path(__file__).parent / "fixtures" / "tiny"
+    train = load_wikitext103(data_dir, "train")
+    test = load_wikitext103(data_dir, "test")
+    m = NGramModel(n=3)
+    m.train(train)
+    r = evaluate(m, test)
+    assert r.n_chars == len(test)
+    assert r.accuracy > 0.65
 
 
 # ---------------------------------------------------------------------------
