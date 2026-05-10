@@ -73,16 +73,21 @@ Secure.
 
 ## 2. WikiText-103 staging
 
-`submit.py` keeps WikiText-103 on a persistent Modal Volume named
-`wikitext-103-data`. The first run downloads ~750 MB from the
-HuggingFace mirror via [`fetch_data.py`](fetch_data.py); subsequent
-runs reuse the cached volume. To inspect or clear the volume:
+`submit.py` bakes WikiText-103 into the Modal image at build time via
+[`bake_wikitext.py`](bake_wikitext.py). The hook downloads the
+`Salesforce/wikitext` HuggingFace dataset and writes these files inside
+the image:
 
 ```bash
-modal volume list
-modal volume ls wikitext-103-data /
-modal volume rm wikitext-103-data /wiki.train.raw    # force re-fetch
+/data/wiki.train.raw
+/data/wiki.valid.raw
+/data/wiki.test.raw
 ```
+
+Modal caches that data layer by content hash, so normal submission
+edits do not re-download WikiText-103. The current runner does not
+create or rely on a persistent Modal data volume. To inspect the
+image-baked files, open a shell on the same image and list `/data`.
 
 ## 3. Train a transformer baseline by hand
 
@@ -102,7 +107,7 @@ The harness function in `submit.py` only takes a submission file as
 input. For ad-hoc transformer experiments without authoring a
 submission, `modal shell --gpu A100-40GB submit.py` drops you into an
 interactive container with the harness on `PYTHONPATH`; from there
-`run_eval.py` works the same as on a Lambda host:
+`run_eval.py` works the same way the submission function invokes it:
 
 ```bash
 # inside the modal shell:
@@ -136,9 +141,10 @@ scored.)
 
 ## 4. Save artifacts
 
-`modal shell` containers are ephemeral — anything written to local
-paths is lost when you exit. Write to `/data` (the WikiText volume)
-or copy out via `modal volume put` if you want to keep a log.
+`modal shell` containers are ephemeral. Anything written inside the
+container, including under `/workspace`, `/tmp`, or `/data`, should be
+treated as temporary. Capture logs from stdout or copy them out before
+exiting if you need to keep them.
 
 For the leaderboard path, all artifacts (`run.log`, `nvml.json`,
 `result.json`) are persisted automatically by `submit.py` to

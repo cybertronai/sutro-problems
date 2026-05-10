@@ -13,9 +13,7 @@ from __future__ import annotations
 
 # Hardware platform. Energy numbers are only comparable across submissions
 # when measured on the same SKU; the README pins this. Modal exposes the
-# A100-40GB as `gpu="A100-40GB"` (SXM4 form factor) — same silicon as the
-# Lambda On-Demand A100 SXM4, so energy budgets calibrated on Lambda
-# (E_MAX_JOULES below) carry over.
+# A100-40GB as `gpu="A100-40GB"` (SXM4 form factor).
 INSTANCE_TYPE: str = "modal:A100-40GB"
 
 # Test-stream length scored by the runner. 60K is the v0 standard:

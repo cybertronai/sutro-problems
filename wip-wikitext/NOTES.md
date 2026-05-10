@@ -74,9 +74,8 @@ returns an S3 PermanentRedirect. The redirect target
 S3 wildcard cert doesn't cover the dotted-bucket hostname — **both
 direct paths fail**.
 
-Workaround (now baked into `RUNBOOK.md` step 2 and the
-`load_wikitext103` error message): pull from HuggingFace via the
-`datasets` library and write out `wiki.{train,valid,test}.raw`:
+Workaround: pull from HuggingFace via the `datasets` library and write
+out `wiki.{train,valid,test}.raw`:
 
 ```python
 from datasets import load_dataset
@@ -84,17 +83,17 @@ ds = load_dataset("Salesforce/wikitext", "wikitext-103-raw-v1")
 text = "\n".join(ds["train"]["text"])
 ```
 
-`load_wikitext103` itself still expects the local raw files (so the
-submission Docker doesn't need a `datasets` dep at run time); the HF
-fetch is a one-shot host-side step.
+`load_wikitext103` itself still expects the local raw files. In the
+Modal runner, [`bake_wikitext.py`](bake_wikitext.py) performs this
+fetch at image-build time and writes the files under `/data`. For local
+experiments, [`fetch_data.py`](fetch_data.py) remains a manual helper.
 
 ### NVML energy counter is virtualized away on some clouds
 
-`nvmlDeviceGetTotalEnergyConsumption` is exposed only on bare-metal or
-near-bare-metal hosts. Confirmed exposed (as of 2026-05-08): Lambda
-On-Demand, RunPod Secure, AWS p4d/p4de, GCP a2, CoreWeave, Modal.
-Treat any "serverless GPU" provider as unverified until you've run
-`verify_nvml.py` there.
+`nvmlDeviceGetTotalEnergyConsumption` is exposed only on some GPU
+hosts. Treat any provider as unverified until you've run
+`verify_nvml.py` there and recorded the SKU, driver stack, idle power,
+and counter behavior.
 
 `submit.py` runs `verify_nvml.py` inside the Modal container on every
 submission and aborts on counter unavailability — so this constraint
@@ -144,8 +143,7 @@ makes the wait visible but does not speed it up.
 
 Modal bills per function-second of GPU time and tears the container
 down automatically when the function returns. There's nothing to
-terminate by hand — the Lambda-era leaked-instance cleanup that
-`submit.py` used to do is gone with the migration.
+terminate by hand.
 
 ### `--e-max-joules` is a soft cap, not a hard one
 
@@ -197,27 +195,29 @@ without retraining.
   saves a checkpoint, then evaluates. `--e-max-joules N` arms an
   NVML-polling watchdog that kills training over budget and reports
   the run as DISQUALIFIED (exit 2).
-- `test_wikitext.py` — 7 tests, all passing on CPU. Includes a
+- `test_wikitext.py` — stdlib-runnable tests, all passing on CPU.
+  Includes a
   structural test that `predict()` is always called before the
   matching `observe()`.
 - `task.py` — task-pinned constants (`TEST_CHARS`, `INSTANCE_TYPE`,
   `E_MAX_JOULES`, `ACC_MIN`). Single source of truth; submitters
   cannot vary these.
-- `fetch_data.py` — HuggingFace fetch + write `wiki.{split}.raw`
-  (the canonical S3 URL is dead — see Gotchas).
+- `fetch_data.py` — local/manual HuggingFace fetch + write
+  `wiki.{split}.raw` (the canonical S3 URL is dead — see Gotchas).
+- `bake_wikitext.py` — Modal image-build hook that performs the same
+  HuggingFace fetch and writes raw splits to `/data`.
 - `submit.py` — end-to-end orchestrator. Defines a Modal app +
   A100-40GB function with the harness baked into the image; the
   user's submission file is passed as bytes per call (no per-run
-  image rebuild). The remote function stages WikiText-103 onto a
-  persistent Modal Volume on first run, verifies NVML, runs
-  `run_eval.py`, returns the result dict. `submit.py` saves the JSON
-  to `submissions/` and appends one row to the Record History table.
+  image rebuild). WikiText-103 is baked into `/data` by
+  `bake_wikitext.py`; the remote function verifies NVML, runs
+  `run_eval.py`, and returns the result dict. `submit.py` saves the
+  JSON to `submissions/` and appends one row to the Record History
+  table.
 - `example_submission.py` — minimal reference: wraps the 5-gram
   baseline so a smoke run finishes in seconds.
-- `verify_nvml.py` — verification script. Run on Lambda A100 SXM4
-  40GB on 2026-05-05: idle 45 W, 30 s stress drew 11.6 kJ at 329 W
-  avg, counter monotonic ✓. Now invoked inside the Modal container
-  on every submission.
+- `verify_nvml.py` — verification script. Invoked inside the Modal
+  container on every submission before training starts.
 - `RUNBOOK.md` — manual Modal procedure for NVML verification on
   new SKUs and standalone baseline experimentation (not a submission
   path; submissions go through `submit.py`).
@@ -229,9 +229,8 @@ without retraining.
 - Pick **leaderboard framing**: fixed-budget vs fixed-floor (or
   both).
 - Pick **`ACC_MIN`** for the fixed-floor framing — needs an anchor
-  from a real Modal A100 baseline record. (`E_MAX_JOULES` is pinned
-  at 100 kJ from the 329 W avg-net measurement on the equivalent
-  Lambda SKU.)
+  from a real Modal A100 baseline record. (`E_MAX_JOULES` is currently
+  pinned at 100 kJ.)
 - Designate **official evaluator** (who runs the re-evaluation pass).
 - Pick **reproduction tolerance** (energy ±X%, accuracy ±Y points).
 - Optional: run `gpt2` config (~22M params, ~$10 on A100) once
@@ -258,7 +257,8 @@ without retraining.
 | `task.py`                  | Task-pinned constants (`TEST_CHARS`, `INSTANCE_TYPE`, `E_MAX_JOULES`) |
 | `run_eval.py`              | CLI: train under `EnergyMeter`, optionally checkpoint, eval      |
 | `submit.py`                | End-to-end Modal orchestrator (define app → invoke A100 fn → save result) |
-| `fetch_data.py`            | HuggingFace WikiText-103 fetch                                   |
+| `bake_wikitext.py`         | Modal image-build hook that writes WikiText-103 raw splits to `/data` |
+| `fetch_data.py`            | Local/manual HuggingFace WikiText-103 fetch helper               |
 | `example_submission.py`    | Reference submission stub (wraps 5-gram baseline)                |
 | `test_wikitext.py`         | Pytest-and-stdlib-runnable tests                                 |
 | `verify_nvml.py`           | NVML energy-counter verification script                          |

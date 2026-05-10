@@ -85,9 +85,10 @@ python3 submit.py my_submission.py
 baked into the image, calls a single A100-40GB function with your
 file's bytes as the only argument, runs the pipeline end-to-end (NVML
 probe → train under `EnergyMeter` → 60K-char eval), and returns the
-result dict. Modal builds the image once on first run (~1 min HF
-fetch); subsequent runs reuse the cached layers, so editing your code
-does not re-fetch the dataset.
+result dict. During image build, [`bake_wikitext.py`](bake_wikitext.py)
+downloads WikiText-103 from HuggingFace and writes the raw splits to
+`/data`. Modal caches that image layer by content hash, so editing your
+submission or the harness does not re-fetch the dataset.
 
 After the result lands locally, `submit.py` saves the JSON to
 `submissions/` and appends a row to the [Record History](#record-history).
@@ -172,9 +173,9 @@ xfmr_streamer = TransformerModel(xfmr)   # KV-cached streaming wrapper
 ## Energy measurement
 
 - **Hardware**: pinned **Modal A100 40GB SXM4** (`gpu="A100-40GB"`).
-  Same silicon as Lambda's `gpu_1x_a100_sxm4`, so prior energy
-  calibrations carry over. Documented fallback: RunPod Secure A100 40GB
-  SXM4.
+  Energy numbers are comparable only on this pinned SKU and runner
+  configuration unless a fallback provider is separately verified and
+  recorded as a distinct `INSTANCE_TYPE`.
 - **Counter**: `nvmlDeviceGetTotalEnergyConsumption` — monotonic
   millijoule counter exposed on Volta+. Read at run start, read at run
   end, subtract.
@@ -202,9 +203,12 @@ pass.
 
 Beyond that:
 
-- Eval container runs with `--network=none`.
-- Test set is **not present** in the container during training; mounted
-  read-only only during the eval phase.
+- The current Modal runner bakes the fixed train/valid/test raw splits
+  into `/data` for reproducibility and faster warm runs. This is not a
+  test-hiding mechanism.
+- No container-level network isolation or train/eval split remounting
+  is implemented in v0. Add those before treating this as an adversarial
+  leaderboard.
 - Pre-trained weights disallowed (train-from-scratch only).
 
 That's it for v0. We trust the submitter; the design above defends
@@ -220,7 +224,8 @@ against unintentional cheating from coding agents.
 | `task.py`                  | task-pinned constants (`TEST_CHARS`, `INSTANCE_TYPE`, `E_MAX_JOULES`) |
 | `run_eval.py`              | CLI: trains a baseline or user submission (energy-measured), then evals |
 | `submit.py`                | end-to-end submission orchestrator: defines a Modal A100 function and runs it |
-| `fetch_data.py`            | local-host HuggingFace WikiText-103 fetch (the canonical S3 URL is dead) |
+| `bake_wikitext.py`         | Modal image-build hook that writes WikiText-103 raw splits to `/data` |
+| `fetch_data.py`            | local/manual HuggingFace WikiText-103 fetch helper (the canonical S3 URL is dead) |
 | `example_submission.py`    | reference submission file (5-gram wrapper) — copy and edit       |
 | `submission_modded_nanogpt.py` | byte-vocab port of [modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt) (Muon + RoPE + ReLU²) for 1xA100-40GB |
 | `fixtures/tiny/`           | tiny committed raw splits for local CPU smoke tests              |
@@ -239,7 +244,7 @@ These block "promote out of WIP", not "ship the v0 scorer":
   primary-vs-secondary call waits on having actual records to point at.
 - **`acc_min`**: needs an anchor from a real Modal A100 baseline run.
 - **Official re-evaluator**: who runs the reproduction pass on
-  submitted images.
+  submitted records.
 - **Reproduction tolerance**: ±X% on energy, ±Y points on accuracy.
   Needs run-to-run variance numbers from a real host.
 
