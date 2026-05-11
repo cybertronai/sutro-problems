@@ -4,24 +4,29 @@ Char-level WikiText-103 under a 100 kJ training-energy budget on a
 pinned Modal A100-40GB. Maximize greedy-argmax char-accuracy on the
 first 60K chars of test under the budget.
 
-> *Work in progress.* No records yet — first row lands after
-> `submit.py` runs.
+## Quickstart
 
-## Setup
-
-Pre-requisites: Python 3.11+ and a Modal account.
+Prereqs: Python 3.11+ and a [Modal](https://modal.com) account. From
+`wip-wikitext/`:
 
 ```bash
-pip install modal
-modal token new      # opens a browser, writes ~/.modal.toml
+# 1. Create + activate the venv, install deps (one time)
+python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
+
+# 2. Authenticate Modal (one time; opens a browser, writes ~/.modal.toml)
+modal token new
+
+# 3. Run the baseline submission end-to-end on Modal A100-40GB
+python submit.py submissions/modded_nanogpt
 ```
 
-For CI / non-interactive setups, set `MODAL_TOKEN_ID` and
-`MODAL_TOKEN_SECRET` in the environment (or in a `.env` file alongside
-`submit.py` — see [`.env.example`](.env.example)).
+In subsequent shells, just `source .venv/bin/activate` before steps 2/3.
+`requirements.txt` only pins `modal` + `pytest`; submission deps
+(`torch` etc.) live inside the Modal container, not the local venv.
 
-PyTorch-based submissions also need `pip install torch` locally;
-`submit.py` runs an import-only precheck before any Modal spend.
+The baseline run takes ~10 min and ~$0.35 on Modal's $2.10/hr A100-40GB
+rate, and lands the first row in the [Record History](#record-history)
+below.
 
 ## Local CPU smoke
 
@@ -30,38 +35,21 @@ baseline locally. It does not require Docker, Modal, a GPU, NVML, cloud
 credentials, or a WikiText-103 download.
 
 ```bash
-# From the repo root.
-nix develop -c python3 wip-wikitext/test_wikitext.py
-nix develop -c python3 wip-wikitext/run_eval.py \
-    --data-dir wip-wikitext/fixtures/tiny \
+# From wip-wikitext/, with the venv activated.
+python test_wikitext.py
+python run_eval.py \
+    --data-dir fixtures/tiny \
     --baseline ngram --n 3 --max-test-chars 300 --progress-every 0
 ```
 
-Equivalent without Nix, if `python3` is already available:
+## Baseline submission
 
-```bash
-cd wip-wikitext
-python3 test_wikitext.py
-python3 run_eval.py --data-dir fixtures/tiny \
-    --baseline ngram --n 3 --max-test-chars 300 --progress-every 0
-```
-
-## Run the baseline submission
-
-The baseline run — start here to verify your Modal setup end-to-end and
-to land the first record in the table below:
-
-```bash
-python3 submit.py submission_baseline.py
-```
-
-[`submission_baseline.py`](submission_baseline.py) is a byte-vocab port
-of the modded-nanogpt "simple" recipe (Muon + RoPE + QK RMSNorm + ReLU²
-+ zero-init projections + stable-then-decay LR) for 1xA100-40GB.
-Defaults (in `TrainConfig`): ~22M params, 2400 steps, batch 32, seq
-1024 — fits within the 100 kJ budget pinned in [`task.py`](task.py).
-~$0.35 / ~10 min per fresh-image run on Modal's $2.10/hr A100-40GB
-rate.
+[`submissions/modded_nanogpt/submission.py`](submissions/modded_nanogpt/submission.py)
+is a byte-vocab port of the modded-nanogpt "simple" recipe (Muon + RoPE
++ QK RMSNorm + ReLU² + zero-init projections + stable-then-decay LR)
+for 1xA100-40GB. Defaults (in `TrainConfig`): ~22M params, 2400 steps,
+batch 32, seq 1024 — fits within the 100 kJ budget pinned in
+[`task.py`](task.py).
 
 A *port*, not a 1:1 reproduction: upstream targets FineWeb tokens on
 8xH100 in <90 s; this is bytes on 1xA100-40GB under 100 kJ. LRs are
@@ -71,21 +59,23 @@ list of tricks ported / adapted / dropped.
 
 ## Submitting your own model
 
-Write a Python file exposing:
+1. Create a directory under `submissions/` named after your submission
+   (e.g. `submissions/my_model/`).
+2. Add a `submission.py` exposing:
 
-```python
-def train(train_text: str, valid_text: str | None = None) -> CharModel: ...
-```
+   ```python
+   def train(train_text: str, valid_text: str | None = None) -> CharModel: ...
+   ```
 
-then ship it:
+   Optionally set `__author__ = "@you"` at module top — `submit.py`
+   credits it in the Record History row. Use the
+   [`modded_nanogpt`](submissions/modded_nanogpt/submission.py)
+   submission as a starting template.
+3. Ship it:
 
-```bash
-python3 submit.py path/to/my_submission.py
-```
-
-[`submission_baseline.py`](submission_baseline.py) is the closest
-in-tree starting template if you want a working PyTorch `train()` to
-copy and modify.
+   ```bash
+   python3 wip-wikitext/submit.py wip-wikitext/submissions/my_model
+   ```
 
 `submit.py` defines a Modal app that pulls a prebuilt public image
 (`ghcr.io/ab-10/wikitext-bench`, source: [`Dockerfile`](Dockerfile))
@@ -97,8 +87,9 @@ eval), returning the result dict. Modal caches the registry digest, so
 cold start is just the one-time ~85s pull; harness / submission edits
 do not re-pull or re-fetch the dataset.
 
-After the result lands locally, `submit.py` saves the JSON to
-`submissions/` and appends a row to the [Record History](#record-history).
+After the result lands locally, `submit.py` writes `result.json`,
+`nvml.json`, and `run.log` into the same submission directory and
+appends a row to the [Record History](#record-history).
 
 Per-config knobs (model size, n_steps, peak_lr, …) live inside your
 file's `train()` function. `submit.py` itself takes no model-sizing
@@ -234,31 +225,15 @@ against unintentional cheating from coding agents.
 | `Dockerfile`               | builds `ghcr.io/ab-10/wikitext-bench` (torch + pyarrow + WikiText-103 baked into `/data`) — pulled by `submit.py` via `Image.from_registry` |
 | `fetch_data.py`            | downloads WikiText-103 from `gs://wikitext-103-raw-v1` to a local dir — used to stage `wikitext-103-raw-v1/` for the Dockerfile build context |
 | `bake_wikitext.py`         | parquet → `wiki.{split}.raw` helper used by `fetch_data.py`      |
-| `submission_baseline.py`   | baseline submission — byte-vocab port of [modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt) (Muon + RoPE + ReLU²) for 1xA100-40GB; the first run referenced in this README |
+| `submissions/`             | one subdirectory per submission: `submission.py` + `result.json` + `nvml.json` + `run.log` |
+| `submissions/modded_nanogpt/` | baseline submission — byte-vocab port of [modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt) (Muon + RoPE + ReLU²) for 1xA100-40GB |
 | `fixtures/tiny/`           | tiny committed raw splits for local CPU smoke tests              |
 | `verify_nvml.py`           | NVML energy-counter verification for a target host               |
 | `test_wikitext.py`         | tests for the evaluator + n-gram                                 |
 | `RUNBOOK.md`               | NVML verification + manual baseline experimentation on Modal A100 |
-| `.env.example`             | optional CI env vars `submit.py` reads (`MODAL_TOKEN_ID`, `MODAL_TOKEN_SECRET`) |
-| `submissions/`             | result JSON + NVML JSON evidence per submission                  |
-
-## Open items
-
-These block "promote out of WIP", not "ship the v0 scorer":
-
-- **Primary leaderboard**: pick fixed-budget or fixed-floor (or run
-  both indefinitely). Currently both are reported; the
-  primary-vs-secondary call waits on having actual records to point at.
-- **`acc_min`**: needs an anchor from a real Modal A100 baseline run.
-- **Official re-evaluator**: who runs the reproduction pass on
-  submitted records.
-- **Reproduction tolerance**: ±X% on energy, ±Y points on accuracy.
-  Needs run-to-run variance numbers from a real host.
 
 ## Record History
 
-*(no records yet — first row lands after `submit.py` runs)*
-
 | Date | Energy (J) | Char-acc | Config | Submission | Contributor |
 |------|-----------:|---------:|--------|------------|-------------|
-| 2026-05-11 |     53,337 | 0.7300 | submission_modded_nanogpt | [json](submissions/submission_modded_nanogpt_2026-05-11.json) | @ab-10 |
+| 2026-05-11 |     53,337 | 0.7300 | modded_nanogpt | [dir](submissions/modded_nanogpt) | @ab-10 |

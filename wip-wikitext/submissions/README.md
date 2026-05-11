@@ -1,17 +1,32 @@
 # Submissions
 
-Each submission lands three files here:
+One subdirectory per submission. Submitter authors `submission.py`;
+`submit.py` populates the rest.
 
-| file | content |
-|------|---------|
-| `<name>_<YYYY-MM-DD>.json` | canonical `(training_energy_J, training_duration_s, test_char_accuracy, gpu_name, …)` tuple written by `run_eval.py --results-json`. This is what `submit.py` saves and links from the Record History row. |
-| `<name>_<YYYY-MM-DD>.log` | full stdout from `run_eval.py`, including the `training energy (J)` / `test char-accuracy` block at the end |
-| `<name>_<YYYY-MM-DD>.nvml.json` | the JSON summary line from `verify_nvml.py` produced on the same host before the run, as evidence the energy counter was exposed and monotonic |
+```
+submissions/
+└── <name>/
+    ├── submission.py     # train(train_text, valid_text=None) -> CharModel
+    ├── result.json       # canonical (training_energy_J, training_duration_s,
+    │                     #   test_char_accuracy, gpu_name, _nvml, …) tuple
+    ├── nvml.json         # NVML probe summary from the same Modal host
+    │                     #   (same data as result.json["_nvml"], split out
+    │                     #   as a standalone evidence file)
+    └── run.log           # captured stdout from `submit.py`
+```
 
-`<name>` is the submission file's stem (e.g. `my_submission` from
-`my_submission.py`), or `baseline_transformer_<config>` /
-`baseline_ngram_n<N>` for direct `run_eval.py` runs.
+`<name>` is whatever directory name the submitter picks; the same
+string ends up in the `Config` column of the Record History table. Pick
+something short and snake_case (e.g. `modded_nanogpt`).
 
-`submit.py` writes all three automatically and appends the Record
-History row in [`../README.md`](../README.md). For manual runs via
-`RUNBOOK.md`, drop the files in by hand and append the row yourself.
+To submit:
+
+```bash
+python3 wip-wikitext/submit.py wip-wikitext/submissions/<name>
+```
+
+`submit.py` writes `result.json`, `nvml.json`, and `run.log`
+automatically and appends the row to the Record History in
+[`../README.md`](../README.md). For manual runs via
+[`../RUNBOOK.md`](../RUNBOOK.md), drop the files in by hand and append
+the row yourself.

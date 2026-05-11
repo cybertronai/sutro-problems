@@ -2,31 +2,37 @@
 """End-to-end submission runner for the wikitext energy benchmark on Modal.
 
 What it does:
-  1. Imports the user's submission file locally as a precheck (catches
-     SyntaxError / missing torch / missing `train` before any cloud spend).
+  1. AST-parses the user's submission file locally as a precheck (catches
+     SyntaxError and missing `train` before any cloud spend; works without
+     the submission's heavy deps installed in the local env).
   2. Defines a Modal App that pulls a prebuilt public image from ghcr.io
      containing PyTorch + nvidia-ml-py + pyarrow and the WikiText-103 raw
      splits already baked into /data, and a single A100-40GB function.
   3. The remote function verifies NVML, writes the user's submission to
      disk, runs run_eval, and returns the result dict.
-  4. Saves the result JSON to submissions/ and appends a row to the
-     Record History table in README.md.
+  4. Saves result.json + nvml.json + run.log into the submission directory
+     and appends a row to the Record History table in README.md.
 
-Setup (once):
-  pip install modal
-  modal token new      # opens browser, writes ~/.modal.toml
+Setup (once, from wip-wikitext/):
+  python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
+  modal token new       # opens browser, writes ~/.modal.toml
 
 Usage:
-  python3 submit.py path/to/my_submission.py
-  python3 submit.py submission_baseline.py --yes
+  python submit.py path/to/my_submission_dir/
+  python submit.py submissions/modded_nanogpt --yes
+
+The submission directory must contain a `submission.py` that defines
+`train(train_text, valid_text=None) -> CharModel`.
 """
 from __future__ import annotations
 
 import argparse
+import ast
+import io
 import json
 import os
-import subprocess
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import modal
@@ -56,29 +62,6 @@ if _provider != "modal" or not MODAL_GPU:
         f"task.INSTANCE_TYPE = {task.INSTANCE_TYPE!r} not understood by "
         f"submit.py — expected 'modal:<gpu>' (e.g. 'modal:A100-40GB')."
     )
-
-
-def _load_dotenv() -> None:
-    """Load KEY=VALUE pairs from the nearest .env on the way up to the
-    repo root. Doesn't overwrite anything already in os.environ — so an
-    explicit ``export FOO=bar`` still wins. Modal auth normally lives in
-    ``~/.modal.toml`` (written by ``modal token new``); .env is here for
-    CI-style overrides via ``MODAL_TOKEN_ID`` / ``MODAL_TOKEN_SECRET``.
-    """
-    for d in (HERE, *HERE.parents):
-        env = d / ".env"
-        if env.is_file():
-            for line in env.read_text().splitlines():
-                line = line.strip()
-                if not line or line.startswith("#") or "=" not in line:
-                    continue
-                k, _, v = line.partition("=")
-                k, v = k.strip(), v.strip().strip('"').strip("'")
-                os.environ.setdefault(k, v)
-            return
-
-
-_load_dotenv()
 
 
 # ---------------------------------------------------------------------------
@@ -235,75 +218,65 @@ def run_submission(submission_bytes: bytes, submission_name: str) -> dict:
 # Local orchestration
 # ---------------------------------------------------------------------------
 
-_AUTHOR_SENTINEL = "==AUTHOR=="
-
-
-def check_submission_imports(submission_path: Path) -> str:
-    """Import the submission file in a child process. Fails fast on
-    SyntaxError, missing module deps (typo'd imports, missing torch),
-    and ``train`` not being defined — all of which would otherwise only
-    surface mid-run on the Modal host, after Modal billing started.
+def precheck_submission(submission_path: Path) -> str:
+    """AST-parse the submission file. Fails fast on SyntaxError and on
+    ``train`` not being defined — both would otherwise surface mid-run
+    on the Modal host, after Modal billing started.
 
     Returns the submission's ``__author__`` string if defined, else
     ``"@you"`` — used to credit the contributor in the Record History.
+
+    AST-only on purpose: importing the submission would require its deps
+    (torch etc.) in the local venv, which requirements.txt deliberately
+    does not pin. The Modal container has them.
     """
-    snippet = (
-        "import importlib.util, sys\n"
-        f"spec = importlib.util.spec_from_file_location('s', {str(submission_path)!r})\n"
-        "mod = importlib.util.module_from_spec(spec)\n"
-        "spec.loader.exec_module(mod)\n"
-        "fn = getattr(mod, 'train', None)\n"
-        "assert callable(fn), 'submission must define train(train_text, valid_text=None) -> CharModel'\n"
-        f"print({_AUTHOR_SENTINEL!r} + (getattr(mod, '__author__', '') or ''))\n"
-    )
-    r = subprocess.run(
-        [sys.executable, "-c", snippet], capture_output=True, text=True, cwd=HERE,
-    )
-    if r.returncode != 0:
-        msg = (r.stderr or r.stdout or "").strip()
-        sys.exit(
-            f"submission failed to import locally: {submission_path}\n"
-            f"{msg}\n"
-            "(Note: transformer-based submissions need `pip install torch` "
-            "locally to validate; CPU is fine.)"
-        )
+    src = submission_path.read_text()
+    try:
+        tree = ast.parse(src, filename=str(submission_path))
+    except SyntaxError as e:
+        sys.exit(f"submission has a syntax error: {submission_path}\n  {e}")
+
+    has_train = False
     author = ""
-    for line in (r.stdout or "").splitlines():
-        if line.startswith(_AUTHOR_SENTINEL):
-            author = line[len(_AUTHOR_SENTINEL):].strip()
-            break
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) and node.name == "train":
+            has_train = True
+        elif isinstance(node, ast.Assign):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == "train":
+                    has_train = True
+                if isinstance(target, ast.Name) and target.id == "__author__":
+                    if isinstance(node.value, ast.Constant) and isinstance(node.value.value, str):
+                        author = node.value.value
+    if not has_train:
+        sys.exit(
+            f"submission must define train(train_text, valid_text=None) -> CharModel "
+            f"at module level: {submission_path}"
+        )
     return author or "@you"
 
 
-def save_result(result: dict, submission_path: Path) -> Path:
-    out_dir = HERE / "submissions"
-    out_dir.mkdir(exist_ok=True)
-    sub_name = submission_path.stem
-    date = result["date_utc"][:10]
-    out_path = out_dir / f"{sub_name}_{date}.json"
+def save_result(result: dict, sub_dir: Path) -> Path:
+    out_path = sub_dir / "result.json"
     out_path.write_text(json.dumps(result, indent=2) + "\n")
     return out_path
 
 
-def save_nvml_artifact(result: dict, submission_path: Path) -> Path | None:
-    """Write ``submissions/<sub>_<date>.nvml.json`` evidence from the
-    embedded ``_nvml`` field returned by the Modal function.
+def save_nvml_artifact(result: dict, sub_dir: Path) -> Path | None:
+    """Write ``<sub_dir>/nvml.json`` evidence from the embedded
+    ``_nvml`` field returned by the Modal function.
 
     Returns the path written, or None if absent.
     """
     nvml = result.get("_nvml")
     if not nvml:
         return None
-    out_dir = HERE / "submissions"
-    out_dir.mkdir(exist_ok=True)
-    sub_name = submission_path.stem
-    date = result["date_utc"][:10]
-    out_path = out_dir / f"{sub_name}_{date}.nvml.json"
+    out_path = sub_dir / "nvml.json"
     out_path.write_text(json.dumps(nvml, indent=2) + "\n")
     return out_path
 
 
-def append_record(result: dict, json_relpath: str) -> None:
+def append_record(result: dict, dir_relpath: str) -> None:
     """Append one row to the Record History table in README.md.
 
     Replaces the placeholder dash row if present, otherwise appends.
@@ -324,7 +297,7 @@ def append_record(result: dict, json_relpath: str) -> None:
         f"| {energy_cell} "
         f"| {acc_cell} "
         f"| {result['submission']} "
-        f"| [json]({json_relpath}) "
+        f"| [dir]({dir_relpath}) "
         f"| {contributor} |\n"
     )
     placeholder = "| —    |          — |        — | —      | —          | —           |\n"
@@ -335,19 +308,46 @@ def append_record(result: dict, json_relpath: str) -> None:
     readme.write_text(text)
 
 
+class _Tee(io.TextIOBase):
+    """Mirror writes to multiple text streams. Used to capture submit.py
+    stdout into <sub_dir>/run.log while still showing it in the terminal.
+    """
+    def __init__(self, *streams):
+        self.streams = streams
+
+    def write(self, data: str) -> int:
+        for s in self.streams:
+            s.write(data)
+            s.flush()
+        return len(data)
+
+    def flush(self) -> None:
+        for s in self.streams:
+            s.flush()
+
+
 def main() -> int:
     p = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    p.add_argument("submission", type=Path,
-                   help="Python file exposing train(train_text, valid_text=None) -> CharModel")
+    p.add_argument("submission_dir", type=Path,
+                   help="Directory containing submission.py "
+                        "(exposing train(train_text, valid_text=None) -> CharModel). "
+                        "Run artifacts (result.json, nvml.json, run.log) are written "
+                        "into this directory.")
     p.add_argument("--yes", action="store_true",
                    help="Skip cost confirmation prompt")
     args = p.parse_args()
 
-    if not args.submission.exists():
-        sys.exit(f"submission file not found: {args.submission}")
+    sub_dir = args.submission_dir.resolve()
+    if not sub_dir.is_dir():
+        sys.exit(f"submission directory not found: {args.submission_dir}")
+    sub_path = sub_dir / "submission.py"
+    if not sub_path.is_file():
+        sys.exit(f"missing submission.py inside {sub_dir}")
+
+    submission_name = sub_dir.name
 
     print(f"╭─ Modal {MODAL_GPU} wikitext submission ───────")
-    print(f"│  submission:    {args.submission}")
+    print(f"│  submission:    {sub_dir}")
     print(f"│  est. runtime:  ~{EST_RUNTIME_MIN} min  (cold start + train + eval)")
     print(f"│  est. cost:     ~${EST_COST_USD:.2f}  (@ ${EST_RATE_USD_PER_HR:.2f}/hr)")
     print(f"╰───────────────────────────────────────────────")
@@ -355,19 +355,37 @@ def main() -> int:
     if not args.yes and input("proceed? [Y/n] ").strip().lower() not in ("", "y", "yes"):
         sys.exit("aborted")
 
-    contributor = check_submission_imports(args.submission)
+    contributor = precheck_submission(sub_path)
+    submission_bytes = sub_path.read_bytes()
 
-    submission_bytes = args.submission.read_bytes()
-    submission_name = args.submission.stem
+    log_path = sub_dir / "run.log"
+    log_f = log_path.open("w")
+    log_f.write(
+        f"# wikitext submit.py log — {submission_name} — "
+        f"{datetime.now(timezone.utc).replace(microsecond=0).isoformat()}Z\n"
+    )
 
-    print(f"[modal] launching {MODAL_GPU} ...")
-    with modal.enable_output(), app.run():
-        result = run_submission.remote(submission_bytes, submission_name)
+    real_stdout = sys.stdout
+    sys.stdout = _Tee(real_stdout, log_f)
+    try:
+        print(f"[modal] launching {MODAL_GPU} ...")
+        # modal.enable_output() writes to the real stdout fd, so its
+        # progress feed is visible in the terminal but not captured into
+        # run.log. Our prints + the result block are captured.
+        with modal.enable_output(), app.run():
+            result = run_submission.remote(submission_bytes, submission_name)
+    finally:
+        sys.stdout = real_stdout
 
     result["contributor"] = contributor
-    out_path = save_result(result, args.submission)
-    save_nvml_artifact(result, args.submission)
-    append_record(result, json_relpath=f"submissions/{out_path.name}")
+    out_path = save_result(result, sub_dir)
+    save_nvml_artifact(result, sub_dir)
+    rel_dir = sub_dir.relative_to(HERE).as_posix()
+    append_record(result, dir_relpath=rel_dir)
+
+    log_f.write("\n# final result\n")
+    log_f.write(json.dumps(result, indent=2) + "\n")
+    log_f.close()
 
     if result.get("disqualified"):
         e_max = result.get("e_max_joules")

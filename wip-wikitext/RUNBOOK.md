@@ -19,8 +19,10 @@ It assumes you have a Modal account and have run `modal token new`.
 
 ## 0. Setup
 
+From `wip-wikitext/`:
+
 ```bash
-pip install modal
+python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
 modal token new      # opens browser, writes ~/.modal.toml
 ```
 
@@ -29,15 +31,8 @@ the function returns. There's nothing to terminate by hand.
 
 ## 1. NVML verification (≈2 min, ≈$0.07)
 
-A one-shot Modal function that runs [`verify_nvml.py`](verify_nvml.py)
-on the pinned GPU and returns the JSON summary:
-
-```bash
-modal run -m submit::run_submission --help    # confirm wiring
-```
-
-The cleanest one-liner is to run `verify_nvml.py` in a Modal shell
-on the same image:
+The cleanest one-liner is to run [`verify_nvml.py`](verify_nvml.py) in
+a Modal shell on the same image used by submissions:
 
 ```bash
 modal shell --gpu A100-40GB submit.py
@@ -154,6 +149,6 @@ treated as temporary. Capture logs from stdout or copy them out before
 exiting if you need to keep them.
 
 For the leaderboard path, all artifacts (`run.log`, `nvml.json`,
-`result.json`) are persisted automatically by `submit.py` to
-`submissions/`. Manual `modal shell` runs do not land in Record
+`result.json`) are persisted automatically by `submit.py` into
+`submissions/<name>/`. Manual `modal shell` runs do not land in Record
 History.

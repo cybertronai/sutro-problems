@@ -1,0 +1,9 @@
+# Local deps for running submit.py.
+#
+# Only `modal` is needed for `submit.py` itself — the precheck is
+# AST-based, so the submission's own deps (torch etc.) do NOT need to
+# be installed locally; the Modal container has them.
+modal>=0.66
+# Optional: tests run with stdlib if pytest is missing, but `pytest
+# test_wikitext.py` gives nicer output.
+pytest

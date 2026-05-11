@@ -17,12 +17,12 @@ from __future__ import annotations
 INSTANCE_TYPE: str = "modal:A100-40GB"
 
 # Test-stream length scored by the runner. 60K is the v0 standard:
-# ~2 min eval on A100, ±0.4–1.3pp 95% CI on accuracy. See NOTES.md.
+# ~2 min eval on A100, ±0.4–1.3pp 95% CI on accuracy.
 TEST_CHARS: int = 60_000
 
 # Fixed-budget framing: hard cap on training energy. A run that crosses
 # this is killed by the EnergyMeter watchdog and reported DISQUALIFIED.
-# 100 kJ ≈ 5 min × 329 W avg net on the pinned A100 SXM4 (NOTES.md:181).
+# 100 kJ ≈ 5 min × 329 W avg net on the pinned A100 SXM4.
 E_MAX_JOULES: float | None = 100_000.0
 
 # Fixed-floor framing: minimum char-accuracy a submission must reach to
