@@ -6,17 +6,18 @@ first 60K chars of test under the budget.
 
 ## Quickstart
 
-Prereqs: Python 3.11+ and a [Modal](https://modal.com) account. From
-`wip-wikitext/`:
+**Pre-requisites:**
+1. Python 3.11+
+2. [Modal](https://modal.com) account.
+
 
 ```bash
-# 1. Create + activate the venv, install deps (one time)
+# From wip-wikitext/
+
 python3 -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt
 
-# 2. Authenticate Modal (one time; opens a browser, writes ~/.modal.toml)
 modal token new
 
-# 3. Run the baseline submission end-to-end on Modal A100-40GB
 python submit.py submissions/modded_nanogpt
 ```
 
@@ -24,7 +25,7 @@ In subsequent shells, just `source .venv/bin/activate` before steps 2/3.
 `requirements.txt` only pins `modal` + `pytest`; submission deps
 (`torch` etc.) live inside the Modal container, not the local venv.
 
-The baseline run takes ~10 min and ~$0.35 on Modal's $2.10/hr A100-40GB
+The baseline run takes ~15 min and ~$0.53 on Modal's $2.10/hr A100-40GB
 rate, and lands the first row in the [Record History](#record-history)
 below.
 
