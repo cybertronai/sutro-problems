@@ -225,8 +225,9 @@ without retraining.
   `run_eval.py`, and returns the result dict. `submit.py` saves the
   JSON to `submissions/` and appends one row to the Record History
   table.
-- `example_submission.py` — minimal reference: wraps the 5-gram
-  baseline so a smoke run finishes in seconds.
+- `submission_baseline.py` — baseline submission: byte-vocab
+  modded-nanogpt port (~22M params, 2400 steps) sized to fit the
+  100 kJ A100-40GB budget. The "first run" referenced in `README.md`.
 - `verify_nvml.py` — verification script. Invoked inside the Modal
   container on every submission before training starts.
 - `RUNBOOK.md` — manual Modal procedure for NVML verification on
@@ -271,7 +272,7 @@ without retraining.
 | `Dockerfile`               | Builds `ghcr.io/ab-10/wikitext-bench` (torch + WikiText-103 baked into `/data`) |
 | `bake_wikitext.py`         | parquet → `wiki.{split}.raw` helper used by `fetch_data.py`      |
 | `fetch_data.py`            | Local/manual GCS WikiText-103 fetch helper                       |
-| `example_submission.py`    | Reference submission stub (wraps 5-gram baseline)                |
+| `submission_baseline.py`   | Baseline submission (modded-nanogpt port, 1xA100-40GB, ~22M params) |
 | `test_wikitext.py`         | Pytest-and-stdlib-runnable tests                                 |
 | `verify_nvml.py`           | NVML energy-counter verification script                          |
 | `.env.example`             | Optional CI env vars `submit.py` reads                           |
@@ -293,7 +294,7 @@ To submit a record:
 
 1. Write your submission as a Python file exposing
    `train(train_text, valid_text=None) -> CharModel`. See
-   `example_submission.py` for the minimal shape.
+   `submission_baseline.py` for a working PyTorch reference.
 2. Run `python3 submit.py path/to/your_submission.py`.
    `submit.py` defines a Modal app, ships your file as bytes to a
    pinned A100-40GB function, captures the returned result dict, and

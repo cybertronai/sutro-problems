@@ -18,7 +18,7 @@ Setup (once):
 
 Usage:
   python3 submit.py path/to/my_submission.py
-  python3 submit.py example_submission.py --yes
+  python3 submit.py submission_baseline.py --yes
 """
 from __future__ import annotations
 
@@ -104,8 +104,8 @@ HARNESS_FILES = (
 app = modal.App("wikitext-bench")
 
 # Public prebuilt image:
-#   python 3.11, torch 2.5.1+cu124, nvidia-ml-py 12.560.30, pyarrow 18.1.0,
-#   /data/wiki.{train,valid,test}.raw
+#   python 3.11, torch 2.5.1+cu124, numpy 2.1.3, nvidia-ml-py 12.560.30,
+#   pyarrow 18.1.0, /data/wiki.{train,valid,test}.raw
 #
 # Source: wip-wikitext/Dockerfile in this repo; rebuild + push via
 #   docker build -t ghcr.io/ab-10/wikitext-bench:latest -f Dockerfile .

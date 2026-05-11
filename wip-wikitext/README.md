@@ -46,19 +46,22 @@ python3 run_eval.py --data-dir fixtures/tiny \
     --baseline ngram --n 3 --max-test-chars 300 --progress-every 0
 ```
 
-## Reproducing the modded-nanogpt submission
+## Run the baseline submission
+
+The baseline run — start here to verify your Modal setup end-to-end and
+to land the first record in the table below:
 
 ```bash
-python3 submit.py submission_modded_nanogpt.py
+python3 submit.py submission_baseline.py
 ```
 
-[`submission_modded_nanogpt.py`](submission_modded_nanogpt.py) is a
-byte-vocab port of the modded-nanogpt "simple" recipe (Muon + RoPE +
-QK RMSNorm + ReLU² + zero-init projections + stable-then-decay LR) for
-1xA100-40GB. Defaults (in `TrainConfig`): ~22M params, 2400 steps,
-batch 32, seq 1024 — fits within the 100 kJ budget pinned in
-[`task.py`](task.py). ~$0.35 / ~10 min per fresh-image run on Modal's
-$2.10/hr A100-40GB rate.
+[`submission_baseline.py`](submission_baseline.py) is a byte-vocab port
+of the modded-nanogpt "simple" recipe (Muon + RoPE + QK RMSNorm + ReLU²
++ zero-init projections + stable-then-decay LR) for 1xA100-40GB.
+Defaults (in `TrainConfig`): ~22M params, 2400 steps, batch 32, seq
+1024 — fits within the 100 kJ budget pinned in [`task.py`](task.py).
+~$0.35 / ~10 min per fresh-image run on Modal's $2.10/hr A100-40GB
+rate.
 
 A *port*, not a 1:1 reproduction: upstream targets FineWeb tokens on
 8xH100 in <90 s; this is bytes on 1xA100-40GB under 100 kJ. LRs are
@@ -77,9 +80,12 @@ def train(train_text: str, valid_text: str | None = None) -> CharModel: ...
 then ship it:
 
 ```bash
-cp example_submission.py my_submission.py    # edit to use your model
-python3 submit.py my_submission.py
+python3 submit.py path/to/my_submission.py
 ```
+
+[`submission_baseline.py`](submission_baseline.py) is the closest
+in-tree starting template if you want a working PyTorch `train()` to
+copy and modify.
 
 `submit.py` defines a Modal app that pulls a prebuilt public image
 (`ghcr.io/ab-10/wikitext-bench`, source: [`Dockerfile`](Dockerfile))
@@ -228,8 +234,7 @@ against unintentional cheating from coding agents.
 | `Dockerfile`               | builds `ghcr.io/ab-10/wikitext-bench` (torch + pyarrow + WikiText-103 baked into `/data`) — pulled by `submit.py` via `Image.from_registry` |
 | `fetch_data.py`            | downloads WikiText-103 from `gs://wikitext-103-raw-v1` to a local dir — used to stage `wikitext-103-raw-v1/` for the Dockerfile build context |
 | `bake_wikitext.py`         | parquet → `wiki.{split}.raw` helper used by `fetch_data.py`      |
-| `example_submission.py`    | reference submission file (5-gram wrapper) — copy and edit       |
-| `submission_modded_nanogpt.py` | byte-vocab port of [modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt) (Muon + RoPE + ReLU²) for 1xA100-40GB |
+| `submission_baseline.py`   | baseline submission — byte-vocab port of [modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt) (Muon + RoPE + ReLU²) for 1xA100-40GB; the first run referenced in this README |
 | `fixtures/tiny/`           | tiny committed raw splits for local CPU smoke tests              |
 | `verify_nvml.py`           | NVML energy-counter verification for a target host               |
 | `test_wikitext.py`         | tests for the evaluator + n-gram                                 |
@@ -256,4 +261,4 @@ These block "promote out of WIP", not "ship the v0 scorer":
 
 | Date | Energy (J) | Char-acc | Config | Submission | Contributor |
 |------|-----------:|---------:|--------|------------|-------------|
-| 2026-05-11 |      7,249 | 0.6228 | example_submission | [json](submissions/example_submission_2026-05-11.json) | @you |
+| 2026-05-11 |     53,337 | 0.7300 | submission_modded_nanogpt | [json](submissions/submission_modded_nanogpt_2026-05-11.json) | @ab-10 |
