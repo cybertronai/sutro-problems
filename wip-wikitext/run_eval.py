@@ -55,10 +55,6 @@ def main() -> None:
     p.add_argument("--progress-every", type=int, default=None,
                    help="Print eval progress every N chars. Pass 0 to "
                         "disable progress output. Default: about 50 updates.")
-    p.add_argument("--save-model", type=Path, default=None,
-                   help="(transformer) Save trained model to this path "
-                        "after training, before eval — lets you re-run "
-                        "eval without retraining if eval crashes.")
     p.add_argument("--submission", type=Path, default=None,
                    help="Path to a Python file exposing "
                         "`train(train_text, valid_text=None) -> CharModel`. "
@@ -141,13 +137,6 @@ def main() -> None:
                     n_steps=args.n_steps,
                     peak_lr=args.peak_lr,
                 )
-            if args.save_model is not None:
-                import torch
-                torch.save({
-                    "state_dict": trained.state_dict(),
-                    "config": args.config,
-                }, args.save_model)
-                print(f"saved trained model to {args.save_model}")
             model = TransformerModel(trained)
     except BudgetExceededError as e:
         print("---")

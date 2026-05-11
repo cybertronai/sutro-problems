@@ -104,7 +104,6 @@ def evaluate(
     stream: Iterable[str],
     *,
     progress_every: int = 0,
-    total: int | None = None,
 ) -> EvalResult:
     """Score ``model`` on ``stream`` by greedy-argmax char-accuracy.
 
@@ -113,11 +112,9 @@ def evaluate(
     its own context-window management.
 
     ``progress_every``: if > 0, print one line every N characters with
-    throughput, running accuracy, and ETA (if ``total`` is set or the
-    stream is sized).
+    throughput, running accuracy, and ETA (if the stream is sized).
     """
-    if total is None and hasattr(stream, "__len__"):
-        total = len(stream)  # type: ignore[arg-type]
+    total = len(stream) if hasattr(stream, "__len__") else None  # type: ignore[arg-type]
 
     n_chars = 0
     n_correct = 0
@@ -319,7 +316,7 @@ def _make_budget_signal_handler(m: Measurement, e_max: float | None):
 # Data loading
 # ---------------------------------------------------------------------------
 
-def load_wikitext103(data_dir: Path | str, split: str = "test") -> str:
+def load_wikitext103(data_dir: Path | str, split: str) -> str:
     """Return one of the WikiText-103 raw splits as a single string.
 
     Expects ``data_dir`` to contain ``wiki.train.raw``, ``wiki.valid.raw``,
