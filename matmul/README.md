@@ -34,6 +34,7 @@ cost = matmul.score_16x16(ir)
 | Date       | Cost    | Submission                                          | Contributors                                 | Description                                   |
 | -          | -:      | -                                                   | -                                            | -                                             |
 | 2026-04-29 | 340,704 | [ir](submissions/baseline_16x16.ir), [report](submissions/baseline_16x16.md)     | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_baseline_16x16` (naive)             |
+| 2026-05-08 | 237,456 | [ir](submissions/recursive_16x16.ir), report   | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_recursive_16x16` (1×1-leaf D&C, Z-order) |
 | 2026-04-29 | 133,783 | [ir](submissions/tiled_16x16.ir), [report](submissions/tiled_16x16.md)        | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_tiled_16x16` (4×4 tiles)            |
 | 2026-04-30 | 110,743 | [ir](submissions/tiled_16x16_opt1.ir), report   | [@SethTS](https://github.com/SethTS)         | `generate_tiled_16x16_opt1` (tmp@1)           |
 | 2026-04-30 |  80,217 | [ir](submissions/hierarchical_16x16.ir), report | [@sjbaebae](https://github.com/sjbaebae)     | `generate_hierarchical_16x16` (asym. reload)  |
@@ -43,6 +44,5 @@ cost = matmul.score_16x16(ir)
 | 2026-05-01 |  70,053 | [ir](submissions/dead_input_outputs_packed_16x16.ir), [report](submissions/dead_input_outputs_packed_16x16.md) | [@sjbaebae](https://github.com/sjbaebae)     | + dead-input output reuse + B packing |
 | 2026-05-06 |  69,697 | [ir](submissions/aliased_16x16.ir), [report](submissions/aliased_16x16.md)     | [@yaroslavvb](https://github.com/yaroslavvb) | C↔A address aliasing + final-add fusion       |
 | 2026-05-05 |  68,452 | [ir](submissions/colmajor_fused_16x16.ir), [report](submissions/colmajor_fused_16x16.md) | [@zh4ngx](https://github.com/zh4ngx)         | + column-major order + fused final copy-out ★ best |
-| 2026-05-08 | 237,456 | [ir](submissions/recursive_16x16.ir), report   | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_recursive_16x16` (1×1-leaf D&C, Z-order) |
 
 [access_distance](doc/access_distance/) — per-submission read-distance histogram + CDF for every IR above.
