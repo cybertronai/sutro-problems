@@ -81,14 +81,15 @@ cp example_submission.py my_submission.py    # edit to use your model
 python3 submit.py my_submission.py
 ```
 
-`submit.py` defines a Modal app with the harness *and* WikiText-103
-baked into the image, calls a single A100-40GB function with your
-file's bytes as the only argument, runs the pipeline end-to-end (NVML
-probe → train under `EnergyMeter` → 60K-char eval), and returns the
-result dict. During image build, [`bake_wikitext.py`](bake_wikitext.py)
-downloads WikiText-103 from HuggingFace and writes the raw splits to
-`/data`. Modal caches that image layer by content hash, so editing your
-submission or the harness does not re-fetch the dataset.
+`submit.py` defines a Modal app that pulls a prebuilt public image
+(`ghcr.io/ab-10/wikitext-bench`, source: [`Dockerfile`](Dockerfile))
+containing torch + nvidia-ml-py + pyarrow with the WikiText-103 raw
+splits already baked into `/data`. It calls a single A100-40GB
+function with your file's bytes as the only argument and runs the
+pipeline end-to-end (NVML probe → train under `EnergyMeter` → 60K-char
+eval), returning the result dict. Modal caches the registry digest, so
+cold start is just the one-time ~85s pull; harness / submission edits
+do not re-pull or re-fetch the dataset.
 
 After the result lands locally, `submit.py` saves the JSON to
 `submissions/` and appends a row to the [Record History](#record-history).
@@ -224,8 +225,9 @@ against unintentional cheating from coding agents.
 | `task.py`                  | task-pinned constants (`TEST_CHARS`, `INSTANCE_TYPE`, `E_MAX_JOULES`) |
 | `run_eval.py`              | CLI: trains a baseline or user submission (energy-measured), then evals |
 | `submit.py`                | end-to-end submission orchestrator: defines a Modal A100 function and runs it |
-| `bake_wikitext.py`         | Modal image-build hook that writes WikiText-103 raw splits to `/data` |
-| `fetch_data.py`            | local/manual HuggingFace WikiText-103 fetch helper (the canonical S3 URL is dead) |
+| `Dockerfile`               | builds `ghcr.io/ab-10/wikitext-bench` (torch + pyarrow + WikiText-103 baked into `/data`) — pulled by `submit.py` via `Image.from_registry` |
+| `fetch_data.py`            | downloads WikiText-103 from `gs://wikitext-103-raw-v1` to a local dir — used to stage `wikitext-103-raw-v1/` for the Dockerfile build context |
+| `bake_wikitext.py`         | parquet → `wiki.{split}.raw` helper used by `fetch_data.py`      |
 | `example_submission.py`    | reference submission file (5-gram wrapper) — copy and edit       |
 | `submission_modded_nanogpt.py` | byte-vocab port of [modded-nanogpt](https://github.com/KellerJordan/modded-nanogpt) (Muon + RoPE + ReLU²) for 1xA100-40GB |
 | `fixtures/tiny/`           | tiny committed raw splits for local CPU smoke tests              |
@@ -254,4 +256,4 @@ These block "promote out of WIP", not "ship the v0 scorer":
 
 | Date | Energy (J) | Char-acc | Config | Submission | Contributor |
 |------|-----------:|---------:|--------|------------|-------------|
-| —    |          — |        — | —      | —          | —           |
+| 2026-05-11 |      7,249 | 0.6228 | example_submission | [json](submissions/example_submission_2026-05-11.json) | @you |

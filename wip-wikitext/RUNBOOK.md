@@ -73,21 +73,28 @@ Secure.
 
 ## 2. WikiText-103 staging
 
-`submit.py` bakes WikiText-103 into the Modal image at build time via
-[`bake_wikitext.py`](bake_wikitext.py). The hook downloads the
-`Salesforce/wikitext` HuggingFace dataset and writes these files inside
-the image:
+`submit.py` does not download WikiText-103 at run time. The raw splits
+live at `/data/wiki.{train,valid,test}.raw` inside the prebuilt
+`ghcr.io/ab-10/wikitext-bench` image (see [`Dockerfile`](Dockerfile)),
+which `submit.py` pulls via `Image.from_registry(...)`. Modal caches
+the registry digest, so cold start is just the one-time pull
+(~85s end-to-end for the full 6 GB image); subsequent runs reuse the
+cached layers.
+
+To rebuild the image (only needed when bumping torch / pyarrow /
+WikiText-103 contents):
 
 ```bash
-/data/wiki.train.raw
-/data/wiki.valid.raw
-/data/wiki.test.raw
+# Stage the .raw splits from the public GCS mirror into the build
+# context — Dockerfile COPYs from this directory:
+python fetch_data.py wikitext-103-raw-v1/
+
+docker build -t ghcr.io/ab-10/wikitext-bench:latest -f Dockerfile .
+docker push ghcr.io/ab-10/wikitext-bench:latest
 ```
 
-Modal caches that data layer by content hash, so normal submission
-edits do not re-download WikiText-103. The current runner does not
-create or rely on a persistent Modal data volume. To inspect the
-image-baked files, open a shell on the same image and list `/data`.
+To inspect the image-baked files, open a shell on the same image and
+list `/data`.
 
 ## 3. Train a transformer baseline by hand
 

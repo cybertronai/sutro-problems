@@ -4,11 +4,11 @@
 What it does:
   1. Imports the user's submission file locally as a precheck (catches
      SyntaxError / missing torch / missing `train` before any cloud spend).
-  2. Defines a Modal App with an inline image (PyTorch + nvidia-ml-py +
-     datasets) and a single A100-40GB function.
-  3. The image-build hook bakes WikiText-103 raw splits into /data via
-     bake_wikitext.py. The remote function verifies NVML, writes the
-     user's submission to disk, runs run_eval, and returns the result dict.
+  2. Defines a Modal App that pulls a prebuilt public image from ghcr.io
+     containing PyTorch + nvidia-ml-py + pyarrow and the WikiText-103 raw
+     splits already baked into /data, and a single A100-40GB function.
+  3. The remote function verifies NVML, writes the user's submission to
+     disk, runs run_eval, and returns the result dict.
   4. Saves the result JSON to submissions/ and appends a row to the
      Record History table in README.md.
 
@@ -31,17 +31,16 @@ from pathlib import Path
 
 import modal
 
-import bake_wikitext  # image-build dataset hook — kept in its own module
 import task  # task-pinned constants — single source of truth
 
 HERE = Path(__file__).resolve().parent
 
 # Modal A100-40GB list price as of 2026-05: $2.10/hr.
-# A typical run is ~10 min (image cold-start + verify_nvml + WikiText-103
-# fetch on first run + ~5 min training capped by E_MAX_JOULES + ~2 min
-# eval). The dataset is baked into a Modal image layer and cached by
-# content hash, so subsequent runs that reuse that layer avoid the
-# HuggingFace download. We size the estimate for a *first* run.
+# A typical run is ~10 min (image cold-start + verify_nvml + ~5 min
+# training capped by E_MAX_JOULES + ~2 min eval). The image is the
+# prebuilt public ghcr.io artifact with torch + WikiText-103 already
+# baked in, so cold start is just the registry pull (~85s); no GCS
+# download or pip install at run time.
 EST_RUNTIME_MIN = 10
 EST_RATE_USD_PER_HR = 2.10
 EST_COST_USD = round(EST_RUNTIME_MIN * EST_RATE_USD_PER_HR / 60, 2)
@@ -89,7 +88,8 @@ _load_dotenv()
 # Harness files are added to /workspace inside the container. The user's
 # submission is *not* baked in — it's passed as bytes to the function
 # call, so we don't rebuild the image per submission. Image-level deps
-# (torch, nvidia-ml-py, datasets) are cached by Modal and reused.
+# (torch, nvidia-ml-py, pyarrow) and the WikiText-103 raw splits in /data
+# are baked into the public ghcr.io image pulled via from_registry below.
 
 HARNESS_FILES = (
     "wikitext.py",
@@ -103,32 +103,36 @@ HARNESS_FILES = (
 
 app = modal.App("wikitext-bench")
 
-# CUDA 12.4 PyTorch wheels match the driver Modal exposes on its A100
-# fleet. nvidia-ml-py is the NVML binding EnergyMeter uses; datasets is
-# how bake_wikitext pulls WikiText-103 from the HuggingFace mirror at
-# image build time.
+# Public prebuilt image:
+#   python 3.11, torch 2.5.1+cu124, nvidia-ml-py 12.560.30, pyarrow 18.1.0,
+#   /data/wiki.{train,valid,test}.raw
+#
+# Source: wip-wikitext/Dockerfile in this repo; rebuild + push via
+#   docker build -t ghcr.io/ab-10/wikitext-bench:latest -f Dockerfile .
+#   docker push ghcr.io/ab-10/wikitext-bench:latest
+#
+# We pin to :latest deliberately — submitters always pick up the
+# newest deps. Bump to a dated tag (e.g. :wkt-YYYY-MM-DD) if you need
+# reproducibility across record history.
+#
+# No add_python= : the registry image already has /usr/local/bin/python
+# in place. Passing add_python="3.11" makes Modal try `ln -s python3
+# python` and fail because the symlink already exists.
+WIKITEXT_IMAGE_REF = "ghcr.io/ab-10/wikitext-bench:latest"
+
 image = (
-    modal.Image.debian_slim(python_version="3.11")
-    .pip_install(
-        "torch==2.5.1",
-        index_url="https://download.pytorch.org/whl/cu124",
-    )
-    .pip_install(
-        "nvidia-ml-py==12.560.30",
-        "datasets==3.2.0",
-    )
-    # Bake WikiText-103 into the image. Placed above add_local_file so
-    # editing harness code does not invalidate the data layer — Modal
-    # caches each layer by content hash. Lives in bake_wikitext.py so the
-    # build container resolves the callable without importing submit.py
-    # (which pulls in task and other harness files not in this layer yet).
-    .run_function(bake_wikitext.bake)
+    modal.Image.from_registry(WIKITEXT_IMAGE_REF)
     .workdir("/workspace")
     # Modal re-imports submit.py inside the container to resolve the
     # remote function. submit.py does a top-level `import task`, so
     # /workspace (where task.py lands via add_local_file) must be on
     # sys.path before that import runs.
-    .env({"PYTHONPATH": "/workspace"})
+    #
+    # PYTHONUNBUFFERED forces line-buffered stdout/stderr for the remote
+    # function *and* any python child it spawns — without it, print()
+    # output gets batched into ~8 KB blocks and shows up only at exit,
+    # which makes `modal.enable_output()` look broken.
+    .env({"PYTHONPATH": "/workspace", "PYTHONUNBUFFERED": "1"})
 )
 for _f in HARNESS_FILES:
     image = image.add_local_file(str(HERE / _f), f"/workspace/{_f}")
@@ -154,22 +158,33 @@ def run_submission(submission_bytes: bytes, submission_name: str) -> dict:
     workspace = Path("/workspace")
     os.chdir(workspace)
 
-    # WikiText-103 is baked into /data inside the image — see bake_wikitext.
+    # WikiText-103 is baked into /data inside the prebuilt registry image
+    # (see Dockerfile + WIKITEXT_IMAGE_REF above).
 
     # NVML probe — bail before training cycles if the energy counter
     # isn't exposed on this host.
+    #
+    # Stream stdout line-by-line so probe output shows up live in the
+    # Modal log feed instead of being held until the process exits.
+    # verify_nvml.py prints its JSON summary on the last stdout line, so
+    # we remember the last non-empty line as we tee.
     print("[modal] verifying NVML energy counter ...")
-    nvml = subprocess.run(
-        [sys.executable, "verify_nvml.py"], capture_output=True, text=True
+    proc = subprocess.Popen(
+        [sys.executable, "verify_nvml.py"],
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+        bufsize=1,
     )
-    print(nvml.stdout)
-    if nvml.returncode != 0:
-        raise RuntimeError(
-            f"verify_nvml.py failed (rc={nvml.returncode}). "
-            f"stderr:\n{nvml.stderr}"
-        )
-    # verify_nvml prints a JSON summary as its final stdout line.
-    nvml_summary = json.loads(nvml.stdout.strip().splitlines()[-1])
+    last_line = ""
+    assert proc.stdout is not None
+    for line in proc.stdout:
+        print(line, end="")
+        s = line.strip()
+        if s:
+            last_line = s
+    rc = proc.wait()
+    if rc != 0:
+        raise RuntimeError(f"verify_nvml.py failed (rc={rc}).")
+    nvml_summary = json.loads(last_line)
 
     # Drop the user's submission next to the harness files. Keep the
     # original stem so run_eval.py's submission_name (== Path(...).stem)
@@ -337,7 +352,7 @@ def main() -> int:
     print(f"│  est. cost:     ~${EST_COST_USD:.2f}  (@ ${EST_RATE_USD_PER_HR:.2f}/hr)")
     print(f"╰───────────────────────────────────────────────")
 
-    if not args.yes and input("proceed? [y/N] ").strip().lower() != "y":
+    if not args.yes and input("proceed? [Y/n] ").strip().lower() not in ("", "y", "yes"):
         sys.exit("aborted")
 
     contributor = check_submission_imports(args.submission)

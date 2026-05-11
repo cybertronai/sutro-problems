@@ -1,0 +1,10 @@
+# Only the Dockerfile and wikitext-103-raw-v1/ need to go into the
+# build context. Excluding everything else keeps the context small
+# (~520 MB instead of ~520 MB + venv + checkpoints + ...) and avoids
+# busting the COPY layer cache on unrelated edits.
+*
+!Dockerfile
+!wikitext-103-raw-v1/
+!wikitext-103-raw-v1/wiki.train.raw
+!wikitext-103-raw-v1/wiki.valid.raw
+!wikitext-103-raw-v1/wiki.test.raw

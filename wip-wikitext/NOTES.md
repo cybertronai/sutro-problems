@@ -63,7 +63,7 @@ layered on later as a tier-2 leaderboard.
 
 ## Gotchas
 
-### WikiText-103 canonical S3 URL is dead — use HuggingFace
+### WikiText-103 canonical S3 URL is dead — use the GCS mirror
 
 The "canonical" URL,
 
@@ -72,21 +72,29 @@ The "canonical" URL,
 returns an S3 PermanentRedirect. The redirect target
 (`research.metamind.io.s3.amazonaws.com/...`) breaks SSL SNI because the
 S3 wildcard cert doesn't cover the dotted-bucket hostname — **both
-direct paths fail**.
+direct paths fail**. We previously fell back to the
+`datasets.load_dataset("Salesforce/wikitext", ...)` HuggingFace path,
+but that hung inside Modal's image builder.
 
-Workaround: pull from HuggingFace via the `datasets` library and write
-out `wiki.{train,valid,test}.raw`:
+Workaround: pull the parquet shards (4358 / 3760 / 1.8M-row splits,
+mirrored from the HF export) from the public GCS bucket
+`gs://wikitext-103-raw-v1` and join the `text` column with `\n`:
 
 ```python
-from datasets import load_dataset
-ds = load_dataset("Salesforce/wikitext", "wikitext-103-raw-v1")
-text = "\n".join(ds["train"]["text"])
+import io, urllib.request, pyarrow.parquet as pq
+buf = urllib.request.urlopen(
+    "https://storage.googleapis.com/wikitext-103-raw-v1/test-00000-of-00001.parquet"
+).read()
+text = "\n".join(pq.read_table(io.BytesIO(buf))["text"].to_pylist())
 ```
 
 `load_wikitext103` itself still expects the local raw files. In the
-Modal runner, [`bake_wikitext.py`](bake_wikitext.py) performs this
-fetch at image-build time and writes the files under `/data`. For local
-experiments, [`fetch_data.py`](fetch_data.py) remains a manual helper.
+Modal runner, the splits are pre-baked into `/data` of the public
+`ghcr.io/ab-10/wikitext-bench` image (see [`Dockerfile`](Dockerfile)),
+which `submit.py` pulls via `Image.from_registry(...)`.
+[`fetch_data.py`](fetch_data.py) materialises the same splits locally
+— used both for ad-hoc experiments and to stage the
+`wikitext-103-raw-v1/` directory the Dockerfile `COPY`s from.
 
 ### NVML energy counter is virtualized away on some clouds
 
@@ -202,15 +210,18 @@ without retraining.
 - `task.py` — task-pinned constants (`TEST_CHARS`, `INSTANCE_TYPE`,
   `E_MAX_JOULES`, `ACC_MIN`). Single source of truth; submitters
   cannot vary these.
-- `fetch_data.py` — local/manual HuggingFace fetch + write
-  `wiki.{split}.raw` (the canonical S3 URL is dead — see Gotchas).
-- `bake_wikitext.py` — Modal image-build hook that performs the same
-  HuggingFace fetch and writes raw splits to `/data`.
+- `fetch_data.py` — local/manual fetch from `gs://wikitext-103-raw-v1`
+  + write `wiki.{split}.raw` (the canonical S3 URL is dead — see Gotchas).
+  Wraps `bake_wikitext.bake(out_dir)`. Used to stage the
+  `wikitext-103-raw-v1/` directory the Dockerfile `COPY`s from.
+- `Dockerfile` — builds `ghcr.io/ab-10/wikitext-bench` (python:3.11-slim
+  + torch + nvidia-ml-py + pyarrow + WikiText-103 raw splits at
+  `/data`). Pushed to ghcr.io and pulled by `submit.py` via
+  `Image.from_registry`.
 - `submit.py` — end-to-end orchestrator. Defines a Modal app +
-  A100-40GB function with the harness baked into the image; the
-  user's submission file is passed as bytes per call (no per-run
-  image rebuild). WikiText-103 is baked into `/data` by
-  `bake_wikitext.py`; the remote function verifies NVML, runs
+  A100-40GB function using the prebuilt `ghcr.io/ab-10/wikitext-bench`
+  image; the user's submission file is passed as bytes per call (no
+  per-run image rebuild). The remote function verifies NVML, runs
   `run_eval.py`, and returns the result dict. `submit.py` saves the
   JSON to `submissions/` and appends one row to the Record History
   table.
@@ -257,8 +268,9 @@ without retraining.
 | `task.py`                  | Task-pinned constants (`TEST_CHARS`, `INSTANCE_TYPE`, `E_MAX_JOULES`) |
 | `run_eval.py`              | CLI: train under `EnergyMeter`, optionally checkpoint, eval      |
 | `submit.py`                | End-to-end Modal orchestrator (define app → invoke A100 fn → save result) |
-| `bake_wikitext.py`         | Modal image-build hook that writes WikiText-103 raw splits to `/data` |
-| `fetch_data.py`            | Local/manual HuggingFace WikiText-103 fetch helper               |
+| `Dockerfile`               | Builds `ghcr.io/ab-10/wikitext-bench` (torch + WikiText-103 baked into `/data`) |
+| `bake_wikitext.py`         | parquet → `wiki.{split}.raw` helper used by `fetch_data.py`      |
+| `fetch_data.py`            | Local/manual GCS WikiText-103 fetch helper                       |
 | `example_submission.py`    | Reference submission stub (wraps 5-gram baseline)                |
 | `test_wikitext.py`         | Pytest-and-stdlib-runnable tests                                 |
 | `verify_nvml.py`           | NVML energy-counter verification script                          |

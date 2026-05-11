@@ -324,8 +324,9 @@ def load_wikitext103(data_dir: Path | str, split: str = "test") -> str:
 
     Expects ``data_dir`` to contain ``wiki.train.raw``, ``wiki.valid.raw``,
     ``wiki.test.raw``. The historical ``s3.amazonaws.com/research.metamind.io``
-    URL no longer resolves; fetch via the HuggingFace mirror instead — see
-    ``RUNBOOK.md`` step 2 for the snippet that materialises these files.
+    URL no longer resolves; fetch from the public GCS mirror at
+    ``gs://wikitext-103-raw-v1`` instead — see ``RUNBOOK.md`` step 2 for the
+    snippet that materialises these files.
     """
     valid = {"train", "valid", "test"}
     if split not in valid:
@@ -334,8 +335,7 @@ def load_wikitext103(data_dir: Path | str, split: str = "test") -> str:
     if not p.exists():
         raise FileNotFoundError(
             f"WikiText-103 raw file not found: {p}\n"
-            f"Fetch via HuggingFace (`datasets.load_dataset('Salesforce/wikitext', "
-            f"'wikitext-103-raw-v1')`) and write wiki.{{train,valid,test}}.raw "
-            f"into {data_dir} — see RUNBOOK.md step 2."
+            f"Fetch from gs://wikitext-103-raw-v1 by running "
+            f"`python fetch_data.py {data_dir}` — see RUNBOOK.md step 2."
         )
     return p.read_text(encoding="utf-8")
