@@ -57,6 +57,9 @@ cheapest first).
 **`colmajor_fused_16x16.ir`**
 ![colmajor_fused_16x16](colmajor_fused_16x16.png)
 
+**`output_repacked_tail_16x16.ir`** ★ best
+![output_repacked_tail_16x16](output_repacked_tail_16x16.png)
+
 ## Auxiliary traces
 
 **`new_record_sa_cache_73602.ir`**

@@ -45,6 +45,7 @@ COMBINED = [
     "dead_input_outputs_packed_16x16.ir",
     "aliased_16x16.ir",
     "colmajor_fused_16x16.ir",
+    "output_repacked_tail_16x16.ir",
 ]
 
 
