@@ -15,7 +15,7 @@ Layout (read-count-descending → ascending address):
   addrs 295..550: B bulk       (2 reads each)
   addrs 551..806: C bulk       (1 read at exit)
 
-Run as a script to (re)write ``new_record_sa_cache_73602.ir`` and verify cost.
+Run as a script to (re)write ``sa_cache_16x16.ir`` and verify cost.
 """
 from __future__ import annotations
 
@@ -74,5 +74,5 @@ if __name__ == "__main__":
     with open(out_path, "w") as f:
         f.write(ir + "\n")
     cost = score_16x16(ir)
-    print(f"new_record_sa_cache_73602.ir  cost={cost:,}")
+    print(f"sa_cache_16x16.ir  cost={cost:,}")
     assert cost == 73_602, cost

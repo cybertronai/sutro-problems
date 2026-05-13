@@ -59,14 +59,3 @@ cheapest first).
 
 **`output_repacked_tail_16x16.ir`** — cost 68,392 ★ best
 ![output_repacked_tail_16x16](output_repacked_tail_16x16.png)
-
-## Auxiliary traces
-
-**`new_record_sa_cache_73602.ir`**
-![new_record_sa_cache_73602](new_record_sa_cache_73602.png)
-
-**`new_record_sa_cache_73858.ir`**
-![new_record_sa_cache_73858](new_record_sa_cache_73858.png)
-
-**`sa_cache_16x16.lb.ir`** — lower-bound trace
-![sa_cache_16x16.lb](sa_cache_16x16.lb.png)
