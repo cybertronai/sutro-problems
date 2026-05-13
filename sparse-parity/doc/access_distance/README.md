@@ -20,34 +20,34 @@ All medium-category submissions on one axis:
 
 ## Small
 
-**`baseline_small.ir`**
+**`ge_small.ir`** — cost 22,238
+![ge_small](ge_small.png)
+
+**`baseline_small.ir`** — cost 6,918
 ![baseline_small](baseline_small.png)
 
-**`small_pack_best.ir`**
-![small_pack_best](small_pack_best.png)
-
-**`small_pack_column_gf2.ir`**
+**`small_pack_column_gf2.ir`** — cost 2,077
 ![small_pack_column_gf2](small_pack_column_gf2.png)
 
-**`ge_small.ir`**
-![ge_small](ge_small.png)
+**`small_pack_best.ir`** — cost 1,932 ★ best
+![small_pack_best](small_pack_best.png)
 
 ## Medium
 
-**`baseline_medium.ir`**
+**`baseline_medium.ir`** — cost 816,251
 ![baseline_medium](baseline_medium.png)
 
-**`ge_medium.ir`**
+**`ge_medium.ir`** — cost 473,046
 ![ge_medium](ge_medium.png)
 
-**`ge_medium_packed.ir`**
+**`ge_medium_packed.ir`** — cost 16,084
 ![ge_medium_packed](ge_medium_packed.png)
 
-**`predpack_medium.ir`**
+**`predpack_medium.ir`** — cost 15,960
 ![predpack_medium](predpack_medium.png)
 
-**`predpack_tuned_medium.ir`**
+**`predpack_tuned_medium.ir`** — cost 15,691 ★ best
 ![predpack_tuned_medium](predpack_tuned_medium.png)
 
-**`half_packed_approx50.ir`** *(50% target)*
+**`half_packed_approx50.ir`** — cost 8,723 *(50% target)*
 ![half_packed_approx50](half_packed_approx50.png)

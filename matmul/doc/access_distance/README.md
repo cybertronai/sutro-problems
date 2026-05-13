@@ -16,48 +16,48 @@ cheapest first).
 
 ## 4×4
 
-**`baseline_4x4.ir`**
+**`baseline_4x4.ir`** — cost 1,316
 ![baseline_4x4](baseline_4x4.png)
 
-**`outer_product_4x4.ir`**
+**`outer_product_4x4.ir`** — cost 800 ★ best
 ![outer_product_4x4](outer_product_4x4.png)
 
 ## 16×16
 
-**`baseline_16x16.ir`**
+**`baseline_16x16.ir`** — cost 340,704
 ![baseline_16x16](baseline_16x16.png)
 
-**`recursive_16x16.ir`**
+**`recursive_16x16.ir`** — cost 237,456
 ![recursive_16x16](recursive_16x16.png)
 
-**`tiled_16x16.ir`**
+**`tiled_16x16.ir`** — cost 133,783
 ![tiled_16x16](tiled_16x16.png)
 
-**`tiled_16x16_opt1.ir`**
+**`tiled_16x16_opt1.ir`** — cost 110,743
 ![tiled_16x16_opt1](tiled_16x16_opt1.png)
 
-**`hierarchical_16x16.ir`**
+**`hierarchical_16x16.ir`** — cost 80,217
 ![hierarchical_16x16](hierarchical_16x16.png)
 
-**`sa_cache_16x16.ir`**
+**`sa_cache_16x16.ir`** — cost 73,602
 ![sa_cache_16x16](sa_cache_16x16.png)
 
-**`redirect_16x16.ir`**
+**`redirect_16x16.ir`** — cost 72,642
 ![redirect_16x16](redirect_16x16.png)
 
-**`sc_outputs_16x16.ir`**
+**`sc_outputs_16x16.ir`** — cost 71,724
 ![sc_outputs_16x16](sc_outputs_16x16.png)
 
-**`dead_input_outputs_packed_16x16.ir`**
+**`dead_input_outputs_packed_16x16.ir`** — cost 70,053
 ![dead_input_outputs_packed_16x16](dead_input_outputs_packed_16x16.png)
 
-**`aliased_16x16.ir`**
+**`aliased_16x16.ir`** — cost 69,697
 ![aliased_16x16](aliased_16x16.png)
 
-**`colmajor_fused_16x16.ir`**
+**`colmajor_fused_16x16.ir`** — cost 68,452
 ![colmajor_fused_16x16](colmajor_fused_16x16.png)
 
-**`output_repacked_tail_16x16.ir`** ★ best
+**`output_repacked_tail_16x16.ir`** — cost 68,392 ★ best
 ![output_repacked_tail_16x16](output_repacked_tail_16x16.png)
 
 ## Auxiliary traces
