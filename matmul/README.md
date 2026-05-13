@@ -45,6 +45,6 @@ cost = matmul.score_16x16(ir)
 | 2026-05-01 |  70,053 | [ir](submissions/dead_input_outputs_packed_16x16.ir), [report](submissions/dead_input_outputs_packed_16x16.md) | [@sjbaebae](https://github.com/sjbaebae)     | + dead-input output reuse + B packing |
 | 2026-05-06 |  69,697 | [ir](submissions/aliased_16x16.ir), [report](submissions/aliased_16x16.md)     | [@yaroslavvb](https://github.com/yaroslavvb) | C↔A address aliasing + final-add fusion       |
 | 2026-05-05 |  68,452 | [ir](submissions/colmajor_fused_16x16.ir), [report](submissions/colmajor_fused_16x16.md) | [@zh4ngx](https://github.com/zh4ngx)         | + column-major order + fused final copy-out |
-| 2026-05-13 |  68,392 | [ir](submissions/output_repacked_tail_16x16.ir), [report](submissions/output_repacked_tail_16x16.md) | Cosmin Negruseri | + liveness order + output-read-aware packing + scratch tail ★ best |
+| 2026-05-13 |  68,392 | [ir](submissions/output_repacked_tail_16x16.ir), [report](submissions/output_repacked_tail_16x16.md) | [@cosmingenneuron](https://github.com/cosmingenneuron) | + liveness order + output-read-aware packing + scratch tail ★ best |
 
 [access_distance](doc/access_distance/) — per-submission read-distance histogram + CDF for every IR above.
