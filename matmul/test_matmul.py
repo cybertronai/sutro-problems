@@ -99,6 +99,61 @@ def test_output_repacked_tail_16x16_cost_matches_record_history():
     assert matmul.score_16x16(ir) == 68_390
 
 
+def test_output_repacked_tail_live_b_16x16_cost_matches_record_history():
+    from matmul.submissions.output_repacked_tail_live_b_16x16 import (
+        _assert_submission_invariants,
+        generate_output_repacked_tail_live_b_16x16,
+    )
+
+    ir = generate_output_repacked_tail_live_b_16x16()
+    _assert_submission_invariants(ir)
+    assert matmul.score_16x16(ir) == 68_341
+
+
+def test_output_repacked_tail_current_order_live_b_16x16_cost_matches_record_history():
+    from matmul.submissions.output_repacked_tail_current_order_live_b_16x16 import (
+        _assert_submission_invariants,
+        generate_output_repacked_tail_current_order_live_b_16x16,
+    )
+
+    ir = generate_output_repacked_tail_current_order_live_b_16x16()
+    _assert_submission_invariants(ir)
+    assert matmul.score_16x16(ir) == 68_041
+
+
+def test_output_repacked_tail_five_direct_live_b_16x16_cost_matches_record_history():
+    from matmul.submissions.output_repacked_tail_five_direct_live_b_16x16 import (
+        _assert_submission_invariants,
+        generate_output_repacked_tail_five_direct_live_b_16x16,
+    )
+
+    ir = generate_output_repacked_tail_five_direct_live_b_16x16()
+    _assert_submission_invariants(ir)
+    assert matmul.score_16x16(ir) == 68_039
+
+
+def test_output_repacked_tail_value_colored_live_b_16x16_cost_matches_record_history():
+    from matmul.submissions.output_repacked_tail_value_colored_live_b_16x16 import (
+        _assert_submission_invariants,
+        generate_output_repacked_tail_value_colored_live_b_16x16,
+    )
+
+    ir = generate_output_repacked_tail_value_colored_live_b_16x16()
+    _assert_submission_invariants(ir)
+    assert matmul.score_16x16(ir) == 67_927
+
+
+def test_output_repacked_tail_deferred_value_colored_live_b_16x16_cost_matches_record_history():
+    from matmul.submissions.output_repacked_tail_deferred_value_colored_live_b_16x16 import (
+        _assert_submission_invariants,
+        generate_output_repacked_tail_deferred_value_colored_live_b_16x16,
+    )
+
+    ir = generate_output_repacked_tail_deferred_value_colored_live_b_16x16()
+    _assert_submission_invariants(ir)
+    assert matmul.score_16x16(ir) == 67_911
+
+
 # ---------------------------------------------------------------------------
 # Newline / semicolon line separators are interchangeable
 # ---------------------------------------------------------------------------
