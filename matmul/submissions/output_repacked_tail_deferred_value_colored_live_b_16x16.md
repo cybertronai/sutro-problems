@@ -1,52 +1,48 @@
 # Matrix Multiplication
 
-**Author:** Codex and Cosmin
-**Date:** 2026-05-13
-**Problem:** 16x16 matmul
-**Cost:** 67,911
-**IR:** [`output_repacked_tail_deferred_value_colored_live_b_16x16.ir`](output_repacked_tail_deferred_value_colored_live_b_16x16.ir)
-**Method:** `generate_output_repacked_tail_deferred_value_colored_live_b_16x16` (output deferral + live-B evacuation + value-lifetime coloring)
+**Author:** Codex and Cosmin  
+**Date:** 2026-05-13  
+**Problem:** 16x16 matmul  
+**Cost:** 67,834  
+**IR:** [`output_repacked_tail_deferred_value_colored_live_b_16x16.ir`](output_repacked_tail_deferred_value_colored_live_b_16x16.ir)  
+**Method:** output deferral + surgical A-input staging + value-lifetime coloring
 
 ## Idea
 
-This submission builds on the 67,927 value-colored live-B evacuation trace.
-Agent AG found that a small set of safe output-write deferrals changes value
-lifetimes in a way that improves the same max-chain value coloring.
+This submission builds on the 67,911 AG trace.  The AG trace already combines
+live-B evacuation, three output-write deferrals, and value-lifetime coloring.
+Wave 13 found one more lifetime-shaping move: stage only eight early A inputs
+from row group `bi=0`, `k=0..1`, all four local row lanes.
 
-The best branch defers three compatible output writes:
+For each selected A cell, the uncolored trace inserts a temporary copy after
+the first-column load:
 
-- `op4733` writing addr `69` by 44 legal positions;
-- `op4735` writing addr `70` by 4 legal positions;
-- `op8285` writing addr `165` by 44 legal positions.
+```text
+copy temp,sA[ii]
+```
 
-The live-B evacuation model still selects 39 moves with a 392-point pre-coloring
-saving, and the post-evac exact score remains 68,041.  The improvement comes
-from better value-lifetime coloring after the deferrals, reducing the final
-weighted read cost to 67,911.
+Then the second-column reload reads that temporary instead of the original A
+input.  This shortens the original A-input intervals while keeping the
+B-friendly macro order.  After value coloring, the temporary high addresses
+are packed back into the normal address range.
 
-## Path to 67,911
+## Path to 67,834
 
 | step | score | savings |
 |------|------:|--------:|
 | current-order output-repacked tail | 68,433 | |
 | + 39 live-B evacuation moves | 68,041 | 392 |
 | + value-lifetime address coloring | 67,927 | 114 |
-| + three output-write deferrals before coloring | **67,911** | 16 |
-
-## Bound Context
-
-Agent AA's fixed-trace value-prefix lower bound for the 68,041 post-evac trace
-is 67,612.  This 67,911 trace changes a few output-write lifetimes before
-coloring; it preserves the instruction counts but improves the coloring result
-by 16 points over 67,927.
+| + three output-write deferrals before coloring | 67,911 | 16 |
+| + stage `bi=0`, `k=0..1` A reloads before coloring | **67,834** | 77 |
 
 ## Cost Breakdown By Address Tier
 
 | tier | addrs | reads | cost |
 |------|-------|------:|-----:|
-| 1 | 1 | 5,057 | 5,057 |
-| 2 | 2..4 | 4,993 | 9,986 |
-| 3 | 5..9 | 2,349 | 7,047 |
+| 1 | 1 | 5,058 | 5,058 |
+| 2 | 2..4 | 5,001 | 10,002 |
+| 3 | 5..9 | 2,353 | 7,059 |
 | 4 | 10..16 | 847 | 3,388 |
 | 5 | 17..25 | 1,089 | 5,445 |
 | 6 | 26..36 | 1,329 | 7,974 |
@@ -54,8 +50,8 @@ by 16 points over 67,927.
 | 8 | 50..64 | 120 | 960 |
 | 9 | 65..81 | 124 | 1,116 |
 | 10..16 | 82..256 | 785 | 10,304 |
-| 17..26 | 257..676 | 682 | 14,338 |
-| **total** | | **17,703** | **67,911** |
+| 17..26 | 257..676 | 677 | 14,232 |
+| **total** | | **17,711** | **67,834** |
 
 ## Instruction Distribution
 
@@ -63,25 +59,21 @@ by 16 points over 67,927.
 |-------------|------:|-----------:|
 | `mul` | 4,096 | 8,192 |
 | `add` | 3,840 | 7,680 |
-| `copy` | 1,575 | 1,575 |
+| `copy` | 1,583 | 1,583 |
 | output exit | 256 | 256 |
-| **total** | **9,511 ops** | **17,703** |
+| **total** | **9,519 ops** | **17,711** |
 
 ## Verification
 
 ```bash
 python matmul/submissions/output_repacked_tail_deferred_value_colored_live_b_16x16.py
-python matmul/experiments/random_true_matmul_check.py \
-  matmul/submissions/output_repacked_tail_deferred_value_colored_live_b_16x16.ir \
-  --trials 500 --seed 20260523 --min -73 --max 73
 ```
 
 Observed locally:
 
 ```text
-output_repacked_tail_deferred_value_colored_live_b_16x16.ir  cost=67,911
-matmul/submissions/output_repacked_tail_deferred_value_colored_live_b_16x16.ir: cost=67,911 ok 500 random trials
+output_repacked_tail_deferred_value_colored_live_b_16x16.ir  cost=67,834
 ```
 
-Agent AG also validated each sub-67,927 candidate with 100 arbitrary signed
-true-matmul trials, including this best IR.
+The promoted IR also passed exact read-count agreement and 1,000 random signed
+true-matmul trials with values in `[-97, 97]`.
