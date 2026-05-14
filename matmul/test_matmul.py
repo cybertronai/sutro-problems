@@ -96,7 +96,7 @@ def test_output_repacked_tail_16x16_cost_matches_record_history():
 
     ir = generate_output_repacked_tail_16x16()
     _assert_submission_invariants(ir)
-    assert matmul.score_16x16(ir) == 68_392
+    assert matmul.score_16x16(ir) == 68_390
 
 
 # ---------------------------------------------------------------------------

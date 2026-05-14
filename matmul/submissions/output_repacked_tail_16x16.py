@@ -1,6 +1,6 @@
 """16x16 matmul: liveness-ordered outputs, repacked inputs, scratch tail.
 
-This is the 68,392 follow-up to ``colmajor_fused_16x16``.  It keeps the
+This is the 68,390 follow-up to ``colmajor_fused_16x16``.  It keeps the
 same 4x8 super-block arithmetic schedule and fused final copy-out, then
 changes only address/liveness choices:
 
@@ -9,7 +9,9 @@ changes only address/liveness choices:
 * pack input cells that also serve as outputs at the front of their input
   regions, because they get one extra exit read;
 * in the final block, compute local column 7 last and leave its four outputs
-  directly in sA0, sA1, TMP, and SB.
+  directly in sA0, sA1, sA2, and SB;
+* compute local column 5 immediately before that and leave row 2 directly in
+  TMP, creating a safe five-output scratch tail.
 """
 from __future__ import annotations
 
@@ -38,7 +40,9 @@ SUPERBLOCK_ORDER = (
     (3, 1),
 )
 SCRATCH_JB_IN = 7
-EXPECTED_COST = 68_392
+TMP_JB_IN = 5
+TMP_II = 2
+EXPECTED_COST = 68_390
 
 Block = tuple[int, int]
 Output = tuple[int, int]
@@ -63,12 +67,13 @@ def block_outputs(block: Block) -> list[Output]:
 
 
 def final_tail_homes() -> dict[tuple[int, int], int]:
-    """Map the final local column's four outputs into cheap scratch cells."""
+    """Map five final-block outputs into cheap scratch cells."""
     return {
         (SCRATCH_JB_IN, 0): sA(0),
         (SCRATCH_JB_IN, 1): sA(1),
-        (SCRATCH_JB_IN, 2): TMP,
+        (SCRATCH_JB_IN, 2): sA(2),
         (SCRATCH_JB_IN, 3): SB,
+        (TMP_JB_IN, TMP_II): TMP,
     }
 
 
@@ -221,8 +226,8 @@ def generate_output_repacked_tail_16x16() -> str:
         is_last_super = block == final_block
         jb_order = list(range(N_JBI))
         if is_last_super:
-            jb_order.remove(SCRATCH_JB_IN)
-            jb_order.append(SCRATCH_JB_IN)
+            jb_order = [jb for jb in jb_order if jb not in {TMP_JB_IN, SCRATCH_JB_IN}]
+            jb_order.extend([TMP_JB_IN, SCRATCH_JB_IN])
 
         for k in range(N):
             for ii in range(TII):
