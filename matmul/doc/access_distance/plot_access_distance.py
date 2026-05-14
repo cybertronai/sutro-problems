@@ -46,11 +46,6 @@ COMBINED = [
     "aliased_16x16.ir",
     "colmajor_fused_16x16.ir",
     "output_repacked_tail_16x16.ir",
-    "output_repacked_tail_live_b_16x16.ir",
-    "output_repacked_tail_current_order_live_b_16x16.ir",
-    "output_repacked_tail_five_direct_live_b_16x16.ir",
-    "output_repacked_tail_value_colored_live_b_16x16.ir",
-    "output_repacked_tail_deferred_value_colored_live_b_16x16.ir",
 ]
 
 

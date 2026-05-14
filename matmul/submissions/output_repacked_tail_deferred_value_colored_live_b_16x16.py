@@ -1,9 +1,9 @@
-"""16x16 matmul: output deferral plus value-colored live-B evacuation.
+"""16x16 matmul: output deferral plus A-staging and value coloring.
 
-This 67,911 submission starts from the current-order live-B evacuation family,
-defers three compatible output writes, then applies value-lifetime address
-coloring.  The arithmetic DAG remains ordinary 16x16 scalar matmul with the
-same instruction counts as the 67,927 value-colored submission.
+This 67,834 submission starts from the current-order live-B evacuation family,
+defers three compatible output writes, stages eight early A-input reloads, then
+applies value-lifetime address coloring.  The arithmetic DAG remains ordinary
+16x16 scalar matmul.
 
 The sibling IR file is the canonical submission artifact.  This module returns
 and validates that IR without depending on experiment-only helper modules.
@@ -14,7 +14,7 @@ from pathlib import Path
 import sys
 
 N = 16
-EXPECTED_COST = 67_911
+EXPECTED_COST = 67_834
 
 
 def generate_output_repacked_tail_deferred_value_colored_live_b_16x16() -> str:
@@ -55,7 +55,7 @@ def _assert_submission_invariants(ir: str) -> None:
 
     missing_outputs = [addr for addr in outputs if addr not in output_writes]
     assert not missing_outputs, missing_outputs
-    assert len(set(inputs) & set(outputs)) == 128
+    assert len(set(inputs) & set(outputs)) == 135
 
 
 if __name__ == "__main__":
