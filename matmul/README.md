@@ -49,6 +49,7 @@ cost = matmul.score_16x16(ir)
 | 2026-05-13 |  68,341 | [ir](submissions/output_repacked_tail_live_b_16x16.ir), [report](submissions/output_repacked_tail_live_b_16x16.md) | [@cosminscn](https://github.com/cosminscn) | + live-B evacuation after output-repacked tail |
 | 2026-05-13 |  68,041 | [ir](submissions/output_repacked_tail_current_order_live_b_16x16.ir), [report](submissions/output_repacked_tail_current_order_live_b_16x16.md) | [@cosminscn](https://github.com/cosminscn) | + current-order near-family + live-B evacuation |
 | 2026-05-13 |  68,039 | [ir](submissions/output_repacked_tail_five_direct_live_b_16x16.ir), [report](submissions/output_repacked_tail_five_direct_live_b_16x16.md) | [@cosminscn](https://github.com/cosminscn) | + five-direct tail + live-B evacuation |
-| 2026-05-13 |  67,927 | [ir](submissions/output_repacked_tail_value_colored_live_b_16x16.ir), [report](submissions/output_repacked_tail_value_colored_live_b_16x16.md) | [@cosminscn](https://github.com/cosminscn) | + value-lifetime address coloring ★ best |
+| 2026-05-13 |  67,927 | [ir](submissions/output_repacked_tail_value_colored_live_b_16x16.ir), [report](submissions/output_repacked_tail_value_colored_live_b_16x16.md) | [@cosminscn](https://github.com/cosminscn) | + value-lifetime address coloring |
+| 2026-05-13 |  67,911 | [ir](submissions/output_repacked_tail_deferred_value_colored_live_b_16x16.ir), [report](submissions/output_repacked_tail_deferred_value_colored_live_b_16x16.md) | [@cosminscn](https://github.com/cosminscn) | + output deferral + value-lifetime address coloring ★ best |
 
 [access_distance](doc/access_distance/) — per-submission read-distance histogram + CDF for every IR above.

@@ -69,5 +69,8 @@ cheapest first).
 **`output_repacked_tail_five_direct_live_b_16x16.ir`** — cost 68,039
 ![output_repacked_tail_five_direct_live_b_16x16](output_repacked_tail_five_direct_live_b_16x16.png)
 
-**`output_repacked_tail_value_colored_live_b_16x16.ir`** — cost 67,927 ★ best
+**`output_repacked_tail_value_colored_live_b_16x16.ir`** — cost 67,927
 ![output_repacked_tail_value_colored_live_b_16x16](output_repacked_tail_value_colored_live_b_16x16.png)
+
+**`output_repacked_tail_deferred_value_colored_live_b_16x16.ir`** — cost 67,911 ★ best
+![output_repacked_tail_deferred_value_colored_live_b_16x16](output_repacked_tail_deferred_value_colored_live_b_16x16.png)
