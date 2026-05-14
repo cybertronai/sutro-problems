@@ -110,6 +110,17 @@ def test_output_repacked_tail_deferred_value_colored_live_b_16x16_cost_matches_r
     assert matmul.score_16x16(ir) == 67_834
 
 
+def test_output_repacked_tail_deferred_value_colored_live_b_tiny_a_endpoint_16x16_cost_matches_record_history():
+    from matmul.submissions.output_repacked_tail_deferred_value_colored_live_b_tiny_a_endpoint_16x16 import (
+        _assert_submission_invariants,
+        generate_output_repacked_tail_deferred_value_colored_live_b_tiny_a_endpoint_16x16,
+    )
+
+    ir = generate_output_repacked_tail_deferred_value_colored_live_b_tiny_a_endpoint_16x16()
+    _assert_submission_invariants(ir)
+    assert matmul.score_16x16(ir) == 67_821
+
+
 # ---------------------------------------------------------------------------
 # Newline / semicolon line separators are interchangeable
 # ---------------------------------------------------------------------------
