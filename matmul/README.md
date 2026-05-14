@@ -46,6 +46,7 @@ cost = matmul.score_16x16(ir)
 | 2026-05-06 |  69,697 | [ir](submissions/aliased_16x16.ir), [report](submissions/aliased_16x16.md)     | [@yaroslavvb](https://github.com/yaroslavvb) | C↔A address aliasing + final-add fusion       |
 | 2026-05-05 |  68,452 | [ir](submissions/colmajor_fused_16x16.ir), [report](submissions/colmajor_fused_16x16.md) | [@zh4ngx](https://github.com/zh4ngx)         | + column-major order + fused final copy-out |
 | 2026-05-13 |  68,390 | [ir](submissions/output_repacked_tail_16x16.ir), [report](submissions/output_repacked_tail_16x16.md) | [@cosminscn](https://github.com/cosminscn) | + liveness order + output-read-aware packing + five-output scratch tail |
-| 2026-05-13 |  68,341 | [ir](submissions/output_repacked_tail_live_b_16x16.ir), [report](submissions/output_repacked_tail_live_b_16x16.md) | [@cosminscn](https://github.com/cosminscn) | + live-B evacuation after output-repacked tail ★ best |
+| 2026-05-13 |  68,341 | [ir](submissions/output_repacked_tail_live_b_16x16.ir), [report](submissions/output_repacked_tail_live_b_16x16.md) | [@cosminscn](https://github.com/cosminscn) | + live-B evacuation after output-repacked tail |
+| 2026-05-13 |  68,041 | [ir](submissions/output_repacked_tail_current_order_live_b_16x16.ir), [report](submissions/output_repacked_tail_current_order_live_b_16x16.md) | [@cosminscn](https://github.com/cosminscn) | + current-order near-family + live-B evacuation ★ best |
 
 [access_distance](doc/access_distance/) — per-submission read-distance histogram + CDF for every IR above.
