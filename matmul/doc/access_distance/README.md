@@ -57,5 +57,8 @@ cheapest first).
 **`colmajor_fused_16x16.ir`** — cost 68,452
 ![colmajor_fused_16x16](colmajor_fused_16x16.png)
 
-**`output_repacked_tail_16x16.ir`** — cost 68,390 ★ best
+**`output_repacked_tail_16x16.ir`** — cost 68,390
 ![output_repacked_tail_16x16](output_repacked_tail_16x16.png)
+
+**`output_repacked_tail_live_b_16x16.ir`** — cost 68,341 ★ best
+![output_repacked_tail_live_b_16x16](output_repacked_tail_live_b_16x16.png)

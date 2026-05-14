@@ -99,6 +99,17 @@ def test_output_repacked_tail_16x16_cost_matches_record_history():
     assert matmul.score_16x16(ir) == 68_390
 
 
+def test_output_repacked_tail_live_b_16x16_cost_matches_record_history():
+    from matmul.submissions.output_repacked_tail_live_b_16x16 import (
+        _assert_submission_invariants,
+        generate_output_repacked_tail_live_b_16x16,
+    )
+
+    ir = generate_output_repacked_tail_live_b_16x16()
+    _assert_submission_invariants(ir)
+    assert matmul.score_16x16(ir) == 68_341
+
+
 # ---------------------------------------------------------------------------
 # Newline / semicolon line separators are interchangeable
 # ---------------------------------------------------------------------------

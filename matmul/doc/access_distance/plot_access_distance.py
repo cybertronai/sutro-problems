@@ -46,6 +46,7 @@ COMBINED = [
     "aliased_16x16.ir",
     "colmajor_fused_16x16.ir",
     "output_repacked_tail_16x16.ir",
+    "output_repacked_tail_live_b_16x16.ir",
 ]
 
 
