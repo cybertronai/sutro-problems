@@ -10,8 +10,8 @@ final output reads). Save a 2-panel PNG into this directory:
                        (so you can see how much of the total cost
                         comes from the long-distance tail)
 
-Also emits a single combined CDF (`combined_cdf.png`) overlaying four
-representative 16×16 submissions on one axis.
+Also emits a single combined CDF (`combined_cdf.png`) overlaying the 16×16
+record-table submissions on one axis.
 
 Run:
     python3 matmul/doc/access_distance/plot_access_distance.py
@@ -46,6 +46,10 @@ COMBINED = [
     "aliased_16x16.ir",
     "colmajor_fused_16x16.ir",
     "output_repacked_tail_16x16.ir",
+    "output_repacked_tail_deferred_value_colored_live_b_16x16.ir",
+    "output_repacked_tail_deferred_value_colored_live_b_tiny_a_endpoint_16x16.ir",
+    "weighted_lifetime_copyelim_66707.ir",
+    "macro_b_staging_66633.ir",
 ]
 
 
@@ -131,6 +135,8 @@ def main() -> None:
     print(f"{'submission':<40}{'reads':>10}{'total_cost':>14}  out")
     print("-" * 86)
     for ir_path in sorted(SUBMISSIONS.glob("*.ir")):
+        if ir_path.name.endswith(".raw.ir"):
+            continue
         out_path = HERE / (ir_path.stem + ".png")
         total_cost = plot_one(ir_path, out_path)
         n_reads = len(collect_read_distances(ir_path.read_text()))

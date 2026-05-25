@@ -59,3 +59,15 @@ cheapest first).
 
 **`output_repacked_tail_16x16.ir`** — cost 68,390
 ![output_repacked_tail_16x16](output_repacked_tail_16x16.png)
+
+**`output_repacked_tail_deferred_value_colored_live_b_16x16.ir`** — cost 67,834
+![output_repacked_tail_deferred_value_colored_live_b_16x16](output_repacked_tail_deferred_value_colored_live_b_16x16.png)
+
+**`output_repacked_tail_deferred_value_colored_live_b_tiny_a_endpoint_16x16.ir`** — cost 67,821
+![output_repacked_tail_deferred_value_colored_live_b_tiny_a_endpoint_16x16](output_repacked_tail_deferred_value_colored_live_b_tiny_a_endpoint_16x16.png)
+
+**`weighted_lifetime_copyelim_66707.ir`** — cost 66,707
+![weighted_lifetime_copyelim_66707](weighted_lifetime_copyelim_66707.png)
+
+**`macro_b_staging_66633.ir`** — cost 66,633 ★ best
+![macro_b_staging_66633](macro_b_staging_66633.png)
