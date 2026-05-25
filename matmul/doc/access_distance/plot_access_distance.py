@@ -50,6 +50,7 @@ COMBINED = [
     "output_repacked_tail_deferred_value_colored_live_b_tiny_a_endpoint_16x16.ir",
     "weighted_lifetime_copyelim_66707.ir",
     "macro_b_staging_66633.ir",
+    "cheap_capture_66524.ir",
 ]
 
 

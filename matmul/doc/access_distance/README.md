@@ -69,5 +69,8 @@ cheapest first).
 **`weighted_lifetime_copyelim_66707.ir`** — cost 66,707
 ![weighted_lifetime_copyelim_66707](weighted_lifetime_copyelim_66707.png)
 
-**`macro_b_staging_66633.ir`** — cost 66,633 ★ best
+**`macro_b_staging_66633.ir`** — cost 66,633
 ![macro_b_staging_66633](macro_b_staging_66633.png)
+
+**`cheap_capture_66524.ir`** — cost 66,524 ★ best
+![cheap_capture_66524](cheap_capture_66524.png)

@@ -129,6 +129,14 @@ def test_macro_b_staging_66633_cost_matches_record_history():
     assert matmul.score_16x16(generate_macro_b_staging_66633()) == 66_633
 
 
+def test_cheap_capture_66524_cost_matches_record_history():
+    from matmul.submissions.cheap_capture_66524 import (
+        generate_cheap_capture_66524,
+    )
+
+    assert matmul.score_16x16(generate_cheap_capture_66524()) == 66_524
+
+
 # ---------------------------------------------------------------------------
 # Newline / semicolon line separators are interchangeable
 # ---------------------------------------------------------------------------
