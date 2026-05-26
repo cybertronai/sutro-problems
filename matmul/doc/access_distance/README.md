@@ -72,5 +72,8 @@ cheapest first).
 **`macro_b_staging_66633.ir`** — cost 66,633
 ![macro_b_staging_66633](macro_b_staging_66633.png)
 
-**`cheap_capture_66524.ir`** — cost 66,524 ★ best
+**`cheap_capture_66524.ir`** — cost 66,524
 ![cheap_capture_66524](cheap_capture_66524.png)
+
+**`motif_bundle_66400.ir`** — cost 66,400 ★ best
+![motif_bundle_66400](motif_bundle_66400.png)
