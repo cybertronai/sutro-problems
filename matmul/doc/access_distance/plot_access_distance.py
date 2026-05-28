@@ -51,6 +51,8 @@ COMBINED = [
     "weighted_lifetime_copyelim_66707.ir",
     "macro_b_staging_66633.ir",
     "cheap_capture_66524.ir",
+    "motif_bundle_66400.ir",
+    "best_66300.ir",
 ]
 
 

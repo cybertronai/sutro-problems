@@ -137,6 +137,20 @@ def test_cheap_capture_66524_cost_matches_record_history():
     assert matmul.score_16x16(generate_cheap_capture_66524()) == 66_524
 
 
+def test_motif_bundle_66400_cost_matches_record_history():
+    from matmul.submissions.motif_bundle_66400 import (
+        generate_motif_bundle_66400,
+    )
+
+    assert matmul.score_16x16(generate_motif_bundle_66400()) == 66_400
+
+
+def test_best_66300_cost_matches_record_history():
+    from matmul.submissions.best_66300 import generate_best_66300
+
+    assert matmul.score_16x16(generate_best_66300()) == 66_300
+
+
 # ---------------------------------------------------------------------------
 # Newline / semicolon line separators are interchangeable
 # ---------------------------------------------------------------------------
