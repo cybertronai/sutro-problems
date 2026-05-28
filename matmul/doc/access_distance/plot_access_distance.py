@@ -52,6 +52,7 @@ COMBINED = [
     "macro_b_staging_66633.ir",
     "cheap_capture_66524.ir",
     "motif_bundle_66400.ir",
+    "best_66300.ir",
 ]
 
 

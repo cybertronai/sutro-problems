@@ -50,6 +50,7 @@ cost = matmul.score_16x16(ir)
 | 2026-05-08 |  66,707 | [ir](submissions/weighted_lifetime_copyelim_66707.ir), [report](doc/metaskills/weighted_lifetime_hillclimb_writeup.md), [py](submissions/weighted_lifetime_copyelim_66707.py) | [@sjbaebae](https://github.com/sjbaebae)     | weighted-lifetime pressure search + copy elimination |
 | 2026-05-25 |  66,633 | [ir](submissions/macro_b_staging_66633.ir), [report](submissions/macro_b_staging_66633.md), [py](submissions/macro_b_staging_66633.py) | [@cosminscn](https://github.com/cosminscn) | macro B-staging + row-7 later-panel prestaging from addr 1 |
 | 2026-05-25 |  66,524 | [ir](submissions/cheap_capture_66524.ir), [report](submissions/cheap_capture_66524.md), [py](submissions/cheap_capture_66524.py) | [@cosminscn](https://github.com/cosminscn) | late B-block cheap capture from addr 1 + value-lifetime coloring |
-| 2026-05-26 |  66,400 | [ir](submissions/motif_bundle_66400.ir), [report](submissions/motif_bundle_66400.md), [py](submissions/motif_bundle_66400.py) | [@cosminscn](https://github.com/cosminscn) | late copy-schedule motif bundle + value-lifetime coloring ★ best |
+| 2026-05-26 |  66,400 | [ir](submissions/motif_bundle_66400.ir), [report](submissions/motif_bundle_66400.md), [py](submissions/motif_bundle_66400.py) | [@cosminscn](https://github.com/cosminscn) | late copy-schedule motif bundle + value-lifetime coloring |
+| 2026-05-28 |  66,300 | [ir](submissions/best_66300.ir), [report](submissions/best_66300.md), [py](submissions/best_66300.py) | [@cosminscn](https://github.com/cosminscn) | Claude-assisted simulated annealing over a leaderboard physical-address IR ★ best |
 
 [access_distance](doc/access_distance/) — read-distance histograms for the plotted submission set.
