@@ -130,7 +130,7 @@ Times are per-IR scoring on the final 32-repetition suite (7,040 instances, 225,
 
 ## Scaled, n=32 — where enumeration dies
 
-5 hidden bits, 32 total bits, 18 train / 256 test, **250,000-instruction cap** — [scaled_sparse_parity.py](scaled_sparse_parity.py), tested by [test_scaled_sparse_parity.py](test_scaled_sparse_parity.py). Full write-up: **[benchmark report](https://cybertronai.github.io/sutro-problems/)** (GitHub Pages).
+5 hidden bits, 32 total bits, 18 train / 256 test, **250,000-instruction cap** — [scaled_sparse_parity.py](scaled_sparse_parity.py), tested by [test_scaled_sparse_parity.py](test_scaled_sparse_parity.py). Full write-up: **[benchmark report](https://cybertronai.github.io/sutro-problems/docs/)** (GitHub Pages).
 
 At this size brute force is priced out by the instruction cap rather than by energy: try-each-candidate over C(32,5) = 201,376 secrets needs ~26M instructions (a capped circuit checks ≤ 1,797 candidates, η ≤ 0.009), and full null-space enumeration needs 2¹⁴ Gray-code steps that also exceed the cap. The intended solution family is polynomial: GF(2) Gaussian elimination and its randomized restarts (information-set decoding). The reference circuit `generate_isd(T, f)` runs T branchless GE restarts on rotating 18-column information sets, accepts a solution only if it has weight k and reproduces every training label (unique identifiability then guarantees it *is* the secret), and mask-predicts the first f test rows.
 
