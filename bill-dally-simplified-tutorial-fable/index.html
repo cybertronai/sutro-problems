@@ -85,7 +85,7 @@
   }
   .step-title { font-family: "Fraunces", Georgia, serif; font-size: 23px; font-weight: 600; }
   .step-count { font-family: var(--mono); font-size: 13px; color: var(--ink-soft); }
-  .step-desc { color: var(--ink-soft); font-size: 15.5px; margin: 6px 0 4px; min-height: 3.2em; max-width: 100%; }
+  .step-desc { color: var(--ink-soft); font-size: 15.5px; margin: 6px 0 4px; min-height: 1.7em; max-width: 100%; }
   .step-desc strong { color: var(--accent); }
 
   .controls {
@@ -410,28 +410,28 @@ const S = 72;                    // px per grid unit
   const regs = (a, b, c, hot) => { setReg(0, a, hot === 0); setReg(1, b, hot === 1); setReg(2, c, hot === 2); };
   const STEPS = [
     { title: "The setup", cost: 0,
-      desc: `The processor wants to compute 1 + 7. The 1 and the 7 sit out in the memory grid; the faint dots are empty cells. Every transfer goes through the teal intake point, and distances are counted from there. All three registers are empty.`,
+      desc: `Compute 1 + 7. Distances are measured from the intake point.`,
       apply() { clearPath(); highlight(null); regs(null, null, null); showEight(false); } },
     { title: "Fetch the 1", cost: 0,
-      desc: `The 1 travels down its column, then across to the intake: ${steps(CELLS[0].y)} down + ${steps(Math.abs(CELLS[0].x))} across — distance ${D1}.`,
+      desc: `Fetch 1, distance = ${D1}.`,
       apply() { highlight("one"); regs(null, null, null); showEight(false); drawPath("one", "load"); } },
     { title: "1 is in a register", cost: D1, ledger: 0,
-      desc: `The processor now holds a copy of the 1 in its first register. We pay its Manhattan distance: +${D1}.`,
+      desc: `1 in register. Total: ${D1}.`,
       apply() { clearPath(); highlight(null); regs(1, null, null, 0); showEight(false); } },
     { title: "Fetch the 7", cost: D1,
-      desc: `Fetch 7: straight down the middle column — distance ${D7}.`,
+      desc: `Fetch 7, distance = ${D7}.`,
       apply() { highlight("seven"); regs(1, null, null); showEight(false); drawPath("seven", "load"); } },
     { title: "7 is in a register", cost: D1 + D7, ledger: 1,
-      desc: `Both operands are now local. Running total: ${D1} + ${D7} = ${D1 + D7}.`,
+      desc: `7 in register. Total: ${D1} + ${D7} = ${D1 + D7}.`,
       apply() { clearPath(); highlight(null); regs(1, 7, null, 1); showEight(false); } },
     { title: "Add — free!", cost: D1 + D7, ledger: 2,
-      desc: `The processor computes 1 + 7 = 8 and puts the result in the third register. Arithmetic between registers costs nothing — the meter doesn't move.`,
+      desc: `1 + 7 = 8, free.`,
       apply() { clearPath(); highlight(null); regs(1, 7, 8, 2); showEight(false); } },
     { title: "Store the 8", cost: D1 + D7,
       desc: `Store 8, distance = ${D8}.`,
       apply() { highlight(null); regs(1, 7, 8); showEight(false); drawPath("eight", "store"); setTimeout(() => { showEight(true); highlight("eight"); }, 680); } },
     { title: `Done — total cost ${D1 + D7 + D8}`, cost: D1 + D7 + D8, ledger: 3,
-      desc: `The 8 now lives in memory. Final bill: ${D1} (fetch 1) + ${D7} (fetch 7) + 0 (add) + ${D8} (store 8) = ${D1 + D7 + D8} units, every one of them data movement.`,
+      desc: `Total: ${D1} + ${D7} + 0 + ${D8} = ${D1 + D7 + D8}.`,
       apply() { clearPath(); highlight("eight"); regs(1, 7, 8); showEight(true); } },
   ];
 
