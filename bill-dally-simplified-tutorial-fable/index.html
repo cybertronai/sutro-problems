@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Simplified Dally Model</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --card: #ffffff;
+    --ink: #1f2430;
+    --ink-soft: #5b6472;
+    --line: #e6e0d6;
+    --accent: #c2410c;        /* processor / cost */
+    --accent-soft: #fff1e8;
+    --ring1: #d64545;
+    --ring2: #e8912d;
+    --ring3: #3d9a50;
+    --ring4: #3b76c4;
+    --wire: #d8d2c6;
+    --path: #c2410c;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 880px; margin: 0 auto; padding: 0 24px 96px; }
+
+  header { padding: 72px 0 20px; }
+  .kicker {
+    font-family: var(--mono); font-size: 13px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--accent); font-weight: 600;
+  }
+  h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: clamp(38px, 6vw, 56px);
+    font-weight: 700; line-height: 1.08; margin: 10px 0 16px;
+  }
+  .lede { font-size: 20px; color: var(--ink-soft); max-width: 640px; }
+  .lede a { color: var(--accent); }
+
+  h2 {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: 30px; font-weight: 600; margin: 64px 0 14px;
+  }
+  p { margin: 14px 0; max-width: 680px; }
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+  code { font-family: var(--mono); font-size: .88em; background: #f1ede5; padding: 2px 6px; border-radius: 5px; }
+
+  .rules { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin: 26px 0 8px; }
+  @media (max-width: 640px) { .rules { grid-template-columns: 1fr; } }
+  .rule {
+    background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+    padding: 18px 18px 16px; box-shadow: 0 1px 2px rgba(31,36,48,.04);
+  }
+  .rule .tag {
+    font-family: var(--mono); font-size: 12px; font-weight: 600;
+    letter-spacing: .08em; text-transform: uppercase; display: inline-block;
+    padding: 3px 9px; border-radius: 999px; margin-bottom: 10px;
+  }
+  .rule.paid .tag { background: var(--accent-soft); color: var(--accent); }
+  .rule.free .tag { background: #e9f6ec; color: #23703a; }
+  .rule p { font-size: 15px; color: var(--ink-soft); margin: 0; }
+  .rule strong { color: var(--ink); }
+
+  figure {
+    background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+    padding: 22px; margin: 28px 0; box-shadow: 0 1px 3px rgba(31,36,48,.05);
+  }
+  figure svg { display: block; width: 100%; height: auto; }
+  figcaption { font-size: 14.5px; color: var(--ink-soft); margin-top: 12px; text-align: center; }
+  figcaption code { font-size: .92em; }
+
+  /* ---- walkthrough player ---- */
+  .player { padding: 0; overflow: hidden; }
+  .player-top { padding: 22px 22px 6px; }
+  .stepbar {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; flex-wrap: wrap;
+  }
+  .step-title { font-family: "Fraunces", Georgia, serif; font-size: 23px; font-weight: 600; }
+  .step-count { font-family: var(--mono); font-size: 13px; color: var(--ink-soft); }
+  .step-desc { color: var(--ink-soft); font-size: 15.5px; margin: 6px 0 4px; min-height: 3.2em; max-width: 100%; }
+  .step-desc strong { color: var(--accent); }
+
+  .controls {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 22px 20px; border-top: 1px solid var(--line);
+    background: #fdfcf9; flex-wrap: wrap;
+  }
+  button.nav {
+    font: 600 15px "Inter", sans-serif; color: var(--ink);
+    background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 9px 18px; cursor: pointer; transition: all .15s;
+  }
+  button.nav:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  button.nav:disabled { opacity: .35; cursor: default; }
+  button.nav.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  button.nav.primary:hover:not(:disabled) { background: #a83809; color: #fff; }
+  .dots { display: flex; gap: 7px; margin-left: auto; }
+  .dot {
+    width: 9px; height: 9px; border-radius: 50%; background: var(--line);
+    border: none; padding: 0; cursor: pointer; transition: all .2s;
+  }
+  .dot.on { background: var(--accent); transform: scale(1.25); }
+  .kbd-hint { font-size: 12.5px; color: var(--ink-soft); width: 100%; }
+  kbd {
+    font-family: var(--mono); font-size: 11px; background: var(--card);
+    border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; padding: 1px 6px;
+  }
+
+  .ledger {
+    font-family: var(--mono); font-size: 13.5px;
+  }
+  .ledger table { border-collapse: collapse; width: 100%; }
+  .ledger th, .ledger td { text-align: left; padding: 7px 12px; border-bottom: 1px solid var(--line); }
+  .ledger th {
+    font-family: "Inter", sans-serif; font-size: 12px; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--ink-soft); font-weight: 600;
+  }
+  .ledger td.num { text-align: right; }
+  .ledger tr.total td { border-bottom: none; font-weight: 600; }
+  .ledger tr.total td.num { color: var(--accent); }
+  .ledger tr.pending { opacity: .32; }
+  .ledger .free-note { color: #23703a; }
+
+  .aside {
+    border-left: 3px solid var(--accent); background: var(--accent-soft);
+    padding: 14px 20px; border-radius: 0 12px 12px 0; margin: 26px 0;
+    font-size: 15.5px; max-width: 680px;
+  }
+  .aside p { margin: 6px 0; max-width: none; }
+
+  footer {
+    margin-top: 80px; padding-top: 24px; border-top: 1px solid var(--line);
+    font-size: 14.5px; color: var(--ink-soft);
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">A visual tutorial</div>
+  <h1>The Simplified Dally&nbsp;Model</h1>
+  <p class="lede">
+    Arithmetic is essentially free. Moving data is what costs energy.
+    Bill Dally (<a href="https://cacm.acm.org/opinion/on-the-model-of-computation-point/">On the Model of Computation</a>, CACM 2022)
+    proposed pricing algorithms by their data movement on a Manhattan grid —
+    here is the simplest possible version of that idea, one add at a time.
+  </p>
+</header>
+
+<h2>The setup</h2>
+<p>
+  A single processor sits at the origin. Memory is a 2D grid of cells in the
+  upper half-plane around it, packed ring by ring and numbered
+  <code>1, 2, 3, …</code> spiraling outward. Cell <code>i</code> sits at
+  Manhattan distance <code>⌈√i⌉</code> from the processor.
+</p>
+
+<div class="rules">
+  <div class="rule paid">
+    <span class="tag">Priced</span>
+    <p><strong>Reads.</strong> Fetching a value from cell <code>i</code> costs its Manhattan distance from the processor.</p>
+  </div>
+  <div class="rule paid">
+    <span class="tag">Priced</span>
+    <p><strong>Writes.</strong> Storing a value back to cell <code>i</code> costs the same Manhattan distance.</p>
+  </div>
+  <div class="rule free">
+    <span class="tag">Free</span>
+    <p><strong>Arithmetic.</strong> Once operands are in registers, computing on them costs nothing.</p>
+  </div>
+</div>
+
+<p>
+  When we draw a transfer, the wire always routes
+  <strong>horizontally first, then vertically</strong> — the length of that
+  L-shaped path <em>is</em> the Manhattan distance, so the picture and the
+  price always agree.
+</p>
+
+<figure>
+  <div id="grid-figure"></div>
+  <figcaption>
+    The memory arena: cells <code>1–16</code> colored by ring.
+    Ring <code>k</code> holds cells <code>(k−1)²+1 … k²</code>, all at cost <code>k</code>.
+  </figcaption>
+</figure>
+
+<h2>Worked example: 1&nbsp;+&nbsp;7</h2>
+<p>
+  Think of the grid as holding <em>potential numbers</em>: the value
+  <code>n</code> lives in cell <code>n</code>. To add two numbers the
+  processor must fetch each operand into a register, add them for free,
+  and pay again to store the result back to memory. Step through it:
+</p>
+
+<figure class="player">
+  <div class="player-top">
+    <div class="stepbar">
+      <div class="step-title" id="step-title"></div>
+      <div class="step-count" id="step-count"></div>
+    </div>
+    <p class="step-desc" id="step-desc"></p>
+    <div id="walk-figure"></div>
+  </div>
+  <div class="controls">
+    <button class="nav" id="btn-prev">← Back</button>
+    <button class="nav primary" id="btn-next">Next →</button>
+    <div class="dots" id="dots"></div>
+    <div class="kbd-hint">Tip: use <kbd>←</kbd> <kbd>→</kbd> to step, <kbd>r</kbd> to restart.</div>
+  </div>
+</figure>
+
+<h2>The bill</h2>
+<div class="ledger" id="ledger"></div>
+
+<div class="aside">
+  <p>
+    <strong>Why it matters:</strong> the add itself was free, yet the
+    computation cost 7 units — every unit was data movement. Scale this
+    intuition up and it explains why real hardware spends most of its energy
+    on wires, caches and DRAM rather than on ALUs, and why good algorithms
+    are the ones that keep their operands close.
+  </p>
+</div>
+
+<footer>
+  <p>
+    Companion tutorial to
+    <a href="https://github.com/cybertronai/simplified-dally-model">cybertronai/simplified-dally-model</a>
+    (which prices reads only; this page walks the stricter read-and-write variant).
+    Diagrams are generated in the browser — view source to see the layout math.
+  </p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+/* ---------------------------------------------------------------- *
+ *  Layout: upper-half spiral, identical to the reference repo.     *
+ *  Cell i sits on ring k = ceil(sqrt(i)) at Manhattan distance k.  *
+ * ---------------------------------------------------------------- */
+function cellPos(i) {
+  const k = Math.ceil(Math.sqrt(i));
+  const idx = i - ((k - 1) ** 2 + 1);
+  const x = (k % 2 === 1) ? -(k - 1) + idx : (k - 1) - idx;
+  return { x, y: k - Math.abs(x), k };
+}
+const RING = ["", "var(--ring1)", "var(--ring2)", "var(--ring3)", "var(--ring4)"];
+
+/* ---- SVG helpers (world coords: origin bottom-center, y up) ---- */
+const S = 58;                       // px per grid unit
+function makeSvg(nCells, opts = {}) {
+  const cells = [];
+  let maxX = 0, maxY = 0;
+  for (let i = 1; i <= nCells; i++) {
+    const p = cellPos(i);
+    cells.push({ i, ...p });
+    maxX = Math.max(maxX, Math.abs(p.x));
+    maxY = Math.max(maxY, p.y);
+  }
+  const padL = 60, padR = 60, padT = 44, padB = opts.padB ?? 96;
+  const W = (2 * maxX) * S + padL + padR;
+  const H = maxY * S + padT + padB;
+  const px = (x) => padL + (x + maxX) * S;
+  const py = (y) => padT + (maxY - y) * S;
+
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("font-family", getComputedStyle(document.body).getPropertyValue("--mono"));
+
+  const el = (name, attrs, parent = svg) => {
+    const e = document.createElementNS(ns, name);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    parent.appendChild(e);
+    return e;
+  };
+
+  // faint dotted lattice
+  for (let gx = -maxX; gx <= maxX; gx++)
+    el("line", { x1: px(gx), y1: py(0), x2: px(gx), y2: py(maxY), stroke: "#eee8dd", "stroke-dasharray": "1.5 5" });
+  for (let gy = 0; gy <= maxY; gy++)
+    el("line", { x1: px(-maxX), y1: py(gy), x2: px(maxX), y2: py(gy), stroke: "#eee8dd", "stroke-dasharray": "1.5 5" });
+
+  // H-tree wires: vertical spine + one horizontal branch per row
+  el("line", { x1: px(0), y1: py(0), x2: px(0), y2: py(maxY), stroke: "var(--wire)", "stroke-width": 5, "stroke-linecap": "round" });
+  const rows = {};
+  cells.forEach(c => { (rows[c.y] ??= []).push(c.x); });
+  for (const [y, xs] of Object.entries(rows)) {
+    el("line", { x1: px(Math.min(...xs)), y1: py(+y), x2: px(Math.max(...xs)), y2: py(+y),
+                 stroke: "var(--wire)", "stroke-width": 5, "stroke-linecap": "round" });
+  }
+
+  // layer for animated transfer paths (under cells, over wires)
+  const pathLayer = el("g", {});
+
+  // memory cells
+  const cellEls = {};
+  for (const c of cells) {
+    const g = el("g", { class: "cell" });
+    const circ = el("circle", { cx: px(c.x), cy: py(c.y), r: 15.5, fill: RING[c.k],
+                                stroke: "#fff", "stroke-width": 2.5 }, g);
+    circ.setAttribute("filter", "drop-shadow(0 1px 1.5px rgba(31,36,48,.25))");
+    el("text", { x: px(c.x), y: py(c.y) + 4.5, "text-anchor": "middle",
+                 "font-size": 12.5, "font-weight": 600, fill: "#fff" }, g).textContent = c.i;
+    cellEls[c.i] = { g, circ, c };
+  }
+
+  // processor
+  const proc = el("g", {});
+  const pw = opts.registers ? 120 : 108, ph = opts.registers ? 62 : 40;
+  el("rect", { x: px(0) - pw / 2, y: py(0) - 14, width: pw, height: ph, rx: 12,
+               fill: "#2b2f3a", stroke: "#1f2430", "stroke-width": 1.5,
+               filter: "drop-shadow(0 2px 4px rgba(31,36,48,.3))" }, proc);
+  el("text", { x: px(0), y: py(0) + (opts.registers ? 3 : 11), "text-anchor": "middle",
+               "font-size": 11, "letter-spacing": "2", fill: "#9aa3b2",
+               "font-family": "Inter, sans-serif", "font-weight": 600 }, proc)
+    .textContent = "PROCESSOR";
+
+  // register slots
+  const regEls = [];
+  if (opts.registers) {
+    for (let r = 0; r < 2; r++) {
+      const rx = px(0) - 52 + r * 56, ry = py(0) + 12;
+      const rg = el("g", {}, proc);
+      el("rect", { x: rx, y: ry, width: 48, height: 28, rx: 7,
+                   fill: "#1a1e27", stroke: "#3b4150", "stroke-width": 1.2 }, rg);
+      const label = el("text", { x: rx + 24, y: ry + 19, "text-anchor": "middle",
+                                 "font-size": 14, "font-weight": 600, fill: "#565e6e" }, rg);
+      label.textContent = "–";
+      regEls.push({ rg, label, box: rg.firstChild });
+    }
+  }
+
+  return { svg, el, px, py, pathLayer, cellEls, regEls, W, H };
+}
+
+/* =================== Figure 1: the static arena =================== */
+(() => {
+  const f = makeSvg(16, { padB: 70 });
+  document.getElementById("grid-figure").appendChild(f.svg);
+  // ring legend
+  const lg = f.el("g", {});
+  const gap = 82, lx0 = (f.W - (3 * gap + 58)) / 2;
+  ["k=1", "k=2", "k=3", "k=4"].forEach((t, j) => {
+    const lx = lx0 + j * gap, ly = f.H - 22;
+    f.el("circle", { cx: lx, cy: ly, r: 7.5, fill: RING[j + 1] }, lg);
+    f.el("text", { x: lx + 13, y: ly + 4.5, "font-size": 13, fill: "var(--ink-soft)" }, lg)
+      .textContent = t;
+  });
+})();
+
+/* =================== Figure 2: the walkthrough ==================== */
+(() => {
+  const f = makeSvg(16, { registers: true, padB: 118 });
+  document.getElementById("walk-figure").appendChild(f.svg);
+
+  const px = f.px, py = f.py;
+
+  // L-shaped route processor↔cell: horizontal first, then vertical.
+  function routeD(i) {
+    const c = cellPos(i);
+    return `M ${px(0)} ${py(0)} L ${px(c.x)} ${py(0)} L ${px(c.x)} ${py(c.y)}`;
+  }
+  function drawPath(i, dir) {              // dir: "load" | "store"
+    f.pathLayer.replaceChildren();
+    const d = routeD(i);
+    const halo = document.createElementNS(f.svg.namespaceURI, "path");
+    halo.setAttribute("d", d);
+    Object.entries({ fill: "none", stroke: "var(--path)", "stroke-width": 10,
+                     "stroke-linecap": "round", "stroke-linejoin": "round", opacity: .18 })
+      .forEach(([k, v]) => halo.setAttribute(k, v));
+    f.pathLayer.appendChild(halo);
+
+    const p = document.createElementNS(f.svg.namespaceURI, "path");
+    p.setAttribute("d", d);
+    Object.entries({ fill: "none", stroke: "var(--path)", "stroke-width": 3.5,
+                     "stroke-linecap": "round", "stroke-linejoin": "round" })
+      .forEach(([k, v]) => p.setAttribute(k, v));
+    f.pathLayer.appendChild(p);
+    const len = p.getTotalLength();
+    p.style.strokeDasharray = len;
+    p.style.strokeDashoffset = dir === "load" ? -len : len;  // draw from the moving end
+    p.getBoundingClientRect();
+    p.style.transition = "stroke-dashoffset .7s ease";
+    p.style.strokeDashoffset = 0;
+
+    // traveling packet
+    const dot = document.createElementNS(f.svg.namespaceURI, "circle");
+    dot.setAttribute("r", 7); dot.setAttribute("fill", "var(--path)");
+    dot.setAttribute("stroke", "#fff"); dot.setAttribute("stroke-width", 2);
+    f.pathLayer.appendChild(dot);
+    const t0 = performance.now(), dur = 700;
+    (function tick(now) {
+      const t = Math.min(1, (now - t0) / dur);
+      const e = t < .5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+      const at = dir === "load" ? (1 - e) * len : e * len;
+      const pt = p.getPointAtLength(at);
+      dot.setAttribute("cx", pt.x); dot.setAttribute("cy", pt.y);
+      if (t < 1) requestAnimationFrame(tick); else dot.remove();
+    })(t0);
+  }
+  const clearPath = () => f.pathLayer.replaceChildren();
+
+  function setReg(r, val, hot) {
+    const { label, box } = f.regEls[r];
+    label.textContent = val ?? "–";
+    label.setAttribute("fill", val == null ? "#565e6e" : (hot ? "#ffb185" : "#e8ecf3"));
+    box.setAttribute("stroke", hot ? "var(--path)" : "#3b4150");
+    box.setAttribute("stroke-width", hot ? 2 : 1.2);
+  }
+  function highlightCell(i, on) {
+    for (const { circ } of Object.values(f.cellEls)) {
+      circ.setAttribute("stroke", "#fff"); circ.setAttribute("stroke-width", 2.5); circ.setAttribute("r", 15.5);
+    }
+    if (on && i) {
+      const { circ } = f.cellEls[i];
+      circ.setAttribute("stroke", "var(--path)"); circ.setAttribute("stroke-width", 3.5); circ.setAttribute("r", 18);
+    }
+  }
+  function setCellValue(i, v) {   // used when storing the result into cell 8
+    const { g, c } = f.cellEls[i];
+    g.querySelector("text").textContent = v;
+  }
+
+  // cost badge under the processor
+  const badge = f.el("g", {});
+  f.el("rect", { x: px(0) - 92, y: f.H - 46, width: 184, height: 34, rx: 17,
+                 fill: "var(--accent-soft)", stroke: "var(--accent)", "stroke-width": 1.2 }, badge);
+  const badgeText = f.el("text", { x: px(0), y: f.H - 24, "text-anchor": "middle",
+                                   "font-size": 14, "font-weight": 600, fill: "var(--accent)" }, badge);
+  const setCost = (c) => { badgeText.textContent = `total cost: ${c}`; };
+
+  /* ---- the storyboard ---- */
+  const STEPS = [
+    { title: "The setup", cost: 0,
+      desc: "The processor wants to compute 1 + 7. Both operands live out in memory: value 1 in cell 1 (distance 1), value 7 in cell 7 (distance 3). Registers are empty.",
+      apply() { clearPath(); highlightCell(null); setReg(0, null); setReg(1, null); } },
+    { title: "Load 1", cost: 0,
+      desc: "Fetch the 1 from cell 1. The wire runs horizontally first, then vertically — here that's straight up one hop, so this read will cost 1.",
+      apply() { highlightCell(1, true); setReg(0, null); setReg(1, null); drawPath(1, "load"); } },
+    { title: "1 is in a register", cost: 1, ledger: 0,
+      desc: "The processor now holds a copy of 1 in its first register. We pay the Manhattan distance: +1.",
+      apply() { clearPath(); highlightCell(1, false); setReg(0, 1, true); setReg(1, null); } },
+    { title: "Load 7", cost: 1,
+      desc: "Next, fetch the 7 from cell 7 — three hops up the spine. This read will cost 3.",
+      apply() { highlightCell(7, true); setReg(0, 1); setReg(1, null); drawPath(7, "load"); } },
+    { title: "7 is in a register", cost: 4, ledger: 1,
+      desc: "Both operands are now local. Running total: 1 + 3 = 4.",
+      apply() { clearPath(); highlightCell(7, false); setReg(0, 1); setReg(1, 7, true); } },
+    { title: "Add — free!", cost: 4, ledger: 2,
+      desc: "The processor computes 1 + 7 = 8. Arithmetic between registers costs nothing — the meter doesn't move.",
+      apply() { clearPath(); highlightCell(null); setReg(0, 8, true); setReg(1, 7); } },
+    { title: "Store the result", cost: 4,
+      desc: "The result 8 must go back to main memory — cell 8, one hop right and two up. In this variant writes are priced too, so this store will cost 3.",
+      apply() { highlightCell(8, true); setReg(0, 8); setReg(1, 7); drawPath(8, "store"); } },
+    { title: "Done — total cost 7", cost: 7, ledger: 3,
+      desc: "The 8 is safely in cell 8. Final bill: 1 (load) + 3 (load) + 0 (add) + 3 (store) = 7 units, every one of them data movement.",
+      apply() { clearPath(); highlightCell(8, true); setReg(0, 8); setReg(1, 7); } },
+  ];
+
+  /* ---- ledger table ---- */
+  const LEDGER = [
+    ["load",  "1 from cell 1", "⌈√1⌉ = 1", "1"],
+    ["load",  "7 from cell 7", "⌈√7⌉ = 3", "3"],
+    ["add",   "1 + 7 → 8 (in registers)", "free", "0"],
+    ["store", "8 to cell 8",  "⌈√8⌉ = 3", "3"],
+  ];
+  const ledgerDiv = document.getElementById("ledger");
+  function renderLedger(upto) {
+    let rows = LEDGER.map((r, j) => `
+      <tr class="${j <= upto ? "" : "pending"}">
+        <td>${r[0]}</td><td>${r[1]}</td>
+        <td class="${r[2] === "free" ? "free-note" : ""}">${r[2]}</td>
+        <td class="num">${r[3]}</td>
+      </tr>`).join("");
+    const total = LEDGER.slice(0, upto + 1).reduce((s, r) => s + +r[3], 0);
+    ledgerDiv.innerHTML = `<table>
+      <tr><th>op</th><th>what moved</th><th>distance</th><th>cost</th></tr>
+      ${rows}
+      <tr class="total"><td></td><td>total so far</td><td></td><td class="num">${total}</td></tr>
+    </table>`;
+  }
+
+  /* ---- player chrome ---- */
+  const titleEl = document.getElementById("step-title");
+  const descEl  = document.getElementById("step-desc");
+  const countEl = document.getElementById("step-count");
+  const prevBtn = document.getElementById("btn-prev");
+  const nextBtn = document.getElementById("btn-next");
+  const dotsEl  = document.getElementById("dots");
+  STEPS.forEach((_, j) => {
+    const d = document.createElement("button");
+    d.className = "dot"; d.setAttribute("aria-label", `step ${j + 1}`);
+    d.onclick = () => go(j);
+    dotsEl.appendChild(d);
+  });
+
+  let cur = -1;
+  let maxLedger = -1;
+  function go(j) {
+    if (j < 0 || j >= STEPS.length) return;
+    cur = j;
+    const s = STEPS[j];
+    s.apply();
+    titleEl.textContent = s.title;
+    descEl.innerHTML = s.desc;
+    countEl.textContent = `step ${j + 1} / ${STEPS.length}`;
+    setCost(s.cost);
+    maxLedger = s.ledger ?? (j === 0 ? -1 : maxLedger);
+    if (j === 0) maxLedger = -1;
+    renderLedger(maxLedger);
+    prevBtn.disabled = j === 0;
+    nextBtn.textContent = j === STEPS.length - 1 ? "Restart ↺" : "Next →";
+    [...dotsEl.children].forEach((d, k) => d.classList.toggle("on", k === j));
+  }
+  prevBtn.onclick = () => go(cur - 1);
+  nextBtn.onclick = () => go(cur === STEPS.length - 1 ? 0 : cur + 1);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "ArrowRight") { nextBtn.click(); }
+    else if (e.key === "ArrowLeft") { prevBtn.click(); }
+    else if (e.key === "r") { go(0); }
+  });
+  go(0);
+})();
+</script>
+</body>
+</html>
