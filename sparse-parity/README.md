@@ -83,4 +83,49 @@ Same instance shape as Medium 100%, but scored with `score_medium_approx50` — 
 | -          | -:     | -:     | -                                                                                           | -                                            | -                                                                          |
 | 2026-05-09 | 8,723  | 5.2 ms | [ir](submissions/half_packed_approx50.ir), [report](submissions/half_packed_approx50.md), [py](submissions/half_packed_approx50.py) | [@yaroslavvb](https://github.com/yaroslavvb) | packed-column candidate which only labels first 32 test examples   |
 
-[access_distance](doc/access_distance/) — per-submission read-distance histogram + CDF for every IR above.
+## Approximate, accuracy vs energy
+
+3 hidden bits, 12 total bits, 8 train examples, 32 test — [approx_sparse_parity.py](approx_sparse_parity.py), tested by [test_approx_sparse_parity.py](test_approx_sparse_parity.py).
+
+Instead of demanding 100% recovery, a submission picks a point on an accuracy-vs-energy curve: the scorer measures aggregate test accuracy over a deterministic suite and reports the IR's static read cost. Submissions are ranked on the Pareto frontier E\*(target) — the least energy achieving each accuracy target.
+
+![Accuracy vs energy curve](doc/approx_accuracy_vs_energy.png)
+
+Regenerate with `python3 generate_graph.py` (~2 s on an M-series laptop; needs numpy + matplotlib). The two plotted baseline families come from `generate_approx_baseline(q, f)` (try-each-candidate, searching only the first `q` of 220 candidates and computing only the first `f` of 32 outputs) and `generate_mask_baseline(q, f)` (same decode, but predictions read a 12-bit secret mask instead of re-scanning candidates, so an exact answer costs 444k reads instead of 2.2M).
+
+### Why n=12, k=3, 8 train, 32 test
+
+- C(12,3) = 220 and log₂220 ≈ 7.8, so 8 training labels sit almost exactly at the information-theoretic threshold — and 220 < 256 means a candidate's identity fits an 8-bit packed signature (n=12 is the largest 3-sparse size where it does).
+- With 8 train rows < 12 bits, GF(2) linear algebra alone can't solve the task: a random interpolant scores ~53% and minimum-support Gaussian elimination ~64% (η ≈ 0.28), so everything past the lowest target requires sparse search. At n=8 plain GE reaches 100% and sparsity does no work.
+- The naive candidate-enumeration baseline is 36.7k IR instructions — comfortably inside the 100k instruction cap; n=16 brushes the cap (93.5k) and k=4+ exceeds it.
+- 32 test rows keep decoding and prediction energy comparable for optimized solvers, so partial decoding and partial prediction both matter to the frontier.
+
+### Scoring
+
+- **Deterministic, stratified suite.** Every one of the 220 secrets × R repetitions (8 dev, 32 final, 128 = full-cube audit where every 12-bit test row appears exactly once per secret). Instances derive from SHA-256 of (suite version, key, secret, repetition) — same suite every run, so repeated scoring is bit-identical.
+- **Unique identifiability.** Training sets are rejection-sampled until exactly one candidate matches, so 100% accuracy is always attainable and the benchmark measures approximation quality, not dataset ambiguity.
+- **Exactly balanced tests.** Test rows come in bitwise-complement pairs split across repetition pairs; since k is odd their labels differ, so any constant guess scores exactly 50%.
+- **Aggregate accuracy, no per-instance thresholds**, reported raw and as normalized advantage η = 2·acc − 1 (0 = chance, 1 = perfect).
+- **Public key for development, private key for adjudication.** The public suite is fully precomputable (labels included), so a submission tuned against it can mine roughly +0.03–0.05 of spurious measured advantage near a threshold. Rankings close to a target should be confirmed by re-scoring with a held-out `suite_key` (`score_approx(ir, t, suite_key=...)`) and/or the exhaustive full-cube audit (`evaluate(ir, full_cube=True)`).
+
+```python
+import approx_sparse_parity as ap
+
+ir = ap.generate_mask_baseline()         # exact two-phase baseline
+cost = ap.score_approx_t90(ir)           # → 444,389 (η = 1.0 ≥ 0.9)
+
+ir = ap.generate_mask_baseline(110, 32)  # search half the candidates
+ap.evaluate(ir)  # EvalResult(cost=222255, raw_accuracy=0.75, advantage=0.5, ...)
+```
+
+| Date       | Target η | Cost      | Time   | Submission | Contributors | Description |
+| -          | -:       | -:        | -:     | -          | -            | -           |
+| 2026-08-26 | 1.00     | 2,209,461 | 150 ms | [ir](submissions/approx_baseline_full.ir), [py](approx_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_approx_baseline()` (try-each-candidate) |
+| 2026-08-26 | 1.00     |   444,389 | 43 ms  | [ir](submissions/mask_baseline_full.ir), [py](approx_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_mask_baseline()` ★ best |
+| 2026-08-26 | ≥ 0.90   |   397,838 | 42 ms  | [py](approx_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_mask_baseline(198, 32)` |
+| 2026-08-26 | ≥ 0.50   |   222,255 | 27 ms  | [py](approx_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_mask_baseline(110, 32)` |
+| 2026-08-26 | ≥ 0.25   |   122,523 | 16 ms  | [py](approx_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_mask_baseline(55, 32)` |
+
+Times are per-IR scoring on the final 32-repetition suite (7,040 instances, 225,280 labels) after its one-time ~0.4 s build.
+
+[access_distance](doc/access_distance/) — per-submission read-distance histogram + CDF for every exact-recovery (Small/Medium) IR above.
