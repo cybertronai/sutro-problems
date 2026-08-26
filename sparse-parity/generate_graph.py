@@ -219,13 +219,15 @@ def frontier_table(series: List[Series], chance: Tuple[int, float]) -> str:
         knobs = Q_SWEEP if knob == "q" else F_SWEEP
         for (cost, acc), k in zip(s.points, knobs):
             labeled.append((cost, acc, f"{short}, {knob}={k}"))
-    front_costs = {c for c, _ in pareto([(c, a) for c, a, _ in labeled])}
+    front = set(pareto([(c, a) for c, a, _ in labeled]))
     lines = [
         "| Energy (reads) | Accuracy | Advantage | Cheapest strategy |",
         "| -: | -: | -: | - |",
     ]
+    seen = set()
     for cost, acc, label in sorted(labeled):
-        if cost in front_costs:
+        if (cost, acc) in front and (cost, acc) not in seen:
+            seen.add((cost, acc))
             lines.append(
                 f"| {cost:,} | {acc:.1%} | {2 * acc - 1:.3f} | {label} |"
             )

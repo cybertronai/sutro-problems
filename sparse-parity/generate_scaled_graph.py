@@ -208,13 +208,15 @@ def frontier_table(series: List[Series]) -> str:
     ):
         for (cost, acc), kn in zip(s.points, knobs):
             labeled.append((cost, acc, fmt.format(kn)))
-    front_costs = {c for c, _ in pareto([(c, a) for c, a, _ in labeled])}
+    front = set(pareto([(c, a) for c, a, _ in labeled]))
     lines = [
         "| Energy (reads) | Accuracy | Advantage | Cheapest strategy |",
         "| -: | -: | -: | - |",
     ]
+    seen = set()
     for cost, acc, label in sorted(labeled):
-        if cost in front_costs:
+        if (cost, acc) in front and (cost, acc) not in seen:
+            seen.add((cost, acc))
             lines.append(f"| {cost:,} | {acc:.2%} | {2*acc-1:.3f} | {label} |")
     return "\n".join(lines)
 

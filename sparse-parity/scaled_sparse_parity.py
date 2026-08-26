@@ -10,8 +10,9 @@ Design targets (see docs/ report for the full derivation):
   n - m_train = 14, so under the 250,000-instruction cap BOTH brute-force
   families die: try-each-candidate needs ~26M instructions (a capped
   circuit can check <1% of candidates) and full solution-space
-  (null-space) enumeration needs ~2^14 Gray-code steps at ~50-100
-  instructions each.  Polynomial algorithms -- Gaussian elimination and
+  (null-space) enumeration needs ~2^14 Gray-code steps at ~65 measured
+  instructions each (~1.1M total, ~4x the cap).  Polynomial algorithms
+  -- Gaussian elimination and
   its randomized information-set-decoding (ISD) restarts -- become the
   intended solution family.
 * m_train=18 is just above the identifiability threshold
@@ -62,7 +63,10 @@ from approx_sparse_parity import EvalResult
 # --------------------------------------------------------------------------
 
 SCALED32 = Spec(n_bits=32, k_secret=5, m_train=18, m_test=256)
-OP_CAP = 250_000            # per-tier instruction cap (part of the contract)
+# Per-tier instruction cap (part of the contract).  Matching
+# sparse_parity._compile_ir, the cap counts every line of the IR text --
+# the input-address and output-address lines included.
+OP_CAP = 250_000
 
 DEV_SUITE_KEY = "scaled-dev"
 DEV_SECRETS, DEV_REPS = 128, 8        # 1,024 instances
@@ -161,16 +165,25 @@ def _scaled_suite_cached(
 def scaled_suite(
     *,
     spec: Spec = SCALED32,
-    n_secrets: int = DEV_SECRETS,
-    repetitions: int = DEV_REPS,
+    n_secrets: int | None = None,
+    repetitions: int | None = None,
     suite_key: str | None = DEV_SUITE_KEY,
 ):
     """Sampled-secret evaluation suite.  ``suite_key=None`` draws a fresh
     hidden key from SystemRandom (final/adjudication mode: unminable,
-    non-reproducible); a string key gives the cached deterministic dev
-    suite."""
-    if suite_key is None:
-        suite_key = "fresh-" + _secrets.token_hex(16)
+    non-reproducible) and defaults to the larger FINAL_SECRETS sample;
+    a string key gives the cached deterministic dev suite at DEV_SECRETS.
+    Explicit ``n_secrets``/``repetitions`` override either default."""
+    final = suite_key is None
+    if n_secrets is None:
+        n_secrets = FINAL_SECRETS if final else DEV_SECRETS
+    if repetitions is None:
+        repetitions = FINAL_REPS if final else DEV_REPS
+    if final:
+        # fresh hidden key: build outside the cache (the key is discarded,
+        # so a cached entry would be unreachable and only evict dev suites)
+        key = "fresh-" + _secrets.token_hex(16)
+        return _scaled_suite_cached.__wrapped__(spec, n_secrets, repetitions, key)
     return _scaled_suite_cached(spec, n_secrets, repetitions, suite_key)
 
 
@@ -178,8 +191,8 @@ def evaluate_scaled(
     ir: str,
     *,
     spec: Spec = SCALED32,
-    n_secrets: int = DEV_SECRETS,
-    repetitions: int = DEV_REPS,
+    n_secrets: int | None = None,
+    repetitions: int | None = None,
     suite_key: str | None = DEV_SUITE_KEY,
     engine: str = "vector",
 ) -> EvalResult:
@@ -187,8 +200,9 @@ def evaluate_scaled(
 
     Aggregates accuracy over all sampled secrets, repetitions and test
     rows; returns the IR's static read cost alongside.  Development
-    defaults to the deterministic dev suite; pass ``suite_key=None`` for
-    an adjudication run on fresh hidden randomness.
+    defaults to the deterministic dev suite (DEV_SECRETS x DEV_REPS);
+    ``suite_key=None`` runs adjudication on fresh hidden randomness at
+    the larger FINAL_SECRETS x FINAL_REPS sample.
     """
     inputs, y_test, _ = scaled_suite(
         spec=spec, n_secrets=n_secrets, repetitions=repetitions,

@@ -185,8 +185,9 @@ total. A capped circuit checks at most 1,797 candidates (≤0.9%), giving
 expensive (top-left of the graph).</li>
 <li><b>Solution-space (null-space) enumeration</b> — Gray-coding through all
 2<sup>14</sup> solutions of the underdetermined system and keeping the
-minimum-weight one — needs ~50–100 instructions per step, ≈1M total: also
-dead. (This family is easy to underestimate; see pitfall 4.)</li>
+minimum-weight one — measures ~65 instructions per step as a real in-ISA
+circuit, ≈1.1M total: also dead. (This family is easy to underestimate; see
+pitfall 4.)</li>
 </ul>
 <p>What remains is the polynomial family — this instance of the problem
 <em>is</em> syndrome decoding of a random linear code, so the natural scalable
@@ -245,10 +246,13 @@ public suites are for development; rankings near a threshold must be confirmed
 on a held-out suite key or fresh hidden randomness
 (<code>evaluate_scaled(ir, suite_key=None)</code> draws from SystemRandom).</li>
 <li class="pitfall"><b>Sampled secrets must be fresh or hidden.</b> The scaled
-tier samples 128–256 of the 201,376 secrets. If that sample were published
-and fixed, a ~5,000-instruction circuit could enumerate just those secrets and
-score perfectly — silently resurrecting the brute force the tier exists to
-kill. This is the sharpest cheating vector introduced by scaling.</li>
+tier samples 128–256 of the 201,376 secrets. The dev suite's sample is
+derivable from its public key, and a ~33,000-instruction circuit (13% of the
+cap; the 256-output prediction phase alone has a ≥8,192-instruction floor)
+that enumerates just those 128 secrets scores a perfect η&nbsp;=&nbsp;1.0 on
+the dev suite — Pareto-dominating the honest frontier — while measuring
+exactly 0.0 on a fresh key. This is the sharpest cheating vector introduced
+by scaling; it is why adjudication uses fresh hidden secrets.</li>
 <li class="pitfall"><b>Output truncation must be priced, not banned — via the
 decode/predict energy balance.</b> "Compute f of the outputs, guess the rest"
 is a legitimate strategy; complement pairing makes its accuracy exactly linear
@@ -265,10 +269,14 @@ chosen at n=32 specifically so the full 2<sup>14</sup> scan exceeds the cap.
 Any future tier must check <em>both</em> exponentials against its cap.</li>
 <li class="pitfall"><b>The instruction cap is part of the contract.</b> Energy
 alone cannot kill brute force — enumeration would still populate the curve,
-just expensively. The cap defines the compute class; it sits in the wide gap
-between polynomial decoders (~10⁵ ops) and both enumerations (≥10⁶·⁵). Raising
-it is a benchmark-version change, not a tuning knob. (The evaluator also
-bounds working memory, closing a multi-GB allocation vector.)</li>
+just expensively. The cap defines the compute class, and its margins should be
+stated per family: the full null-space scan needs ≈1.1M instructions (a real
+in-ISA Gray-code scan measures ~65 per step — about 4× the cap) and candidate
+enumeration ≈26M (about 100× the cap), while the T=6 reference circuit uses
+94% of the cap. The scan-side margin is the thin one — a cap of ~1M would
+silently re-admit it. Raising the cap is a benchmark-version change, not a
+tuning knob. (The evaluator also bounds working memory, closing a multi-GB
+allocation vector.)</li>
 <li class="pitfall"><b>Accepted noise, quantified.</b> With sampled secrets and
 fresh randomness, measured accuracy on the scaled dev suite varies by up to
 ±4pp across suite keys (deterministic information sets interact with
