@@ -149,13 +149,19 @@ _UNARY_OPS = {
 }
 
 
-def _compile_ir(ir: str) -> Tuple[Callable[[List[int]], List[int]], int, int]:
+def _compile_ir(
+    ir: str, max_instructions: int = 100_000
+) -> Tuple[Callable[[List[int]], List[int]], int, int]:
     text = ir.replace(";", "\n")
     lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
 
-    # Protect grader against DoS (Denial of Service) via bloated IR files
-    if len(lines) > 100_000:
-        raise ValueError("IR exceeds maximum allowed length (100,000 instructions)")
+    # Protect grader against DoS (Denial of Service) via bloated IR files.
+    # The cap is per-benchmark: 100k for the classic instances; scaled tiers
+    # pass their own (it is part of each tier's contract).
+    if len(lines) > max_instructions:
+        raise ValueError(
+            f"IR exceeds maximum allowed length ({max_instructions:,} instructions)"
+        )
     if len(lines) < 2:
         raise ValueError("IR needs at least an input line and an output line")
 

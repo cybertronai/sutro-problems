@@ -128,4 +128,20 @@ ap.evaluate(ir)  # EvalResult(cost=222255, raw_accuracy=0.75, advantage=0.5, ...
 
 Times are per-IR scoring on the final 32-repetition suite (7,040 instances, 225,280 labels) after its one-time ~0.4 s build.
 
+## Scaled, n=32 — where enumeration dies
+
+5 hidden bits, 32 total bits, 18 train / 256 test, **250,000-instruction cap** — [scaled_sparse_parity.py](scaled_sparse_parity.py), tested by [test_scaled_sparse_parity.py](test_scaled_sparse_parity.py). Full write-up: **[benchmark report](https://cybertronai.github.io/sutro-problems/)** (GitHub Pages).
+
+At this size brute force is priced out by the instruction cap rather than by energy: try-each-candidate over C(32,5) = 201,376 secrets needs ~26M instructions (a capped circuit checks ≤ 1,797 candidates, η ≤ 0.009), and full null-space enumeration needs 2¹⁴ Gray-code steps that also exceed the cap. The intended solution family is polynomial: GF(2) Gaussian elimination and its randomized restarts (information-set decoding). The reference circuit `generate_isd(T, f)` runs T branchless GE restarts on rotating 18-column information sets, accepts a solution only if it has weight k and reproduces every training label (unique identifiability then guarantees it *is* the secret), and mask-predicts the first f test rows.
+
+![Scaled energy vs accuracy](doc/scaled32_energy_vs_accuracy.png)
+
+Regenerate with `python3 generate_scaled_graph.py` (~15 s). Scoring is joint train+test (one IR, one energy number) and aggregate. The suite samples 128 secrets × 8 repetitions (dev, deterministic key `scaled-dev`, cached) or 256 × 8 with a fresh hidden `SystemRandom` key per run (final: `evaluate_scaled(ir, suite_key=None)`, unminable, ±1–3pp run noise). m_test = 256 was set from the measured decode/predict energy split (P ≈ 4,400/output vs D ≈ 1.5M per restart) so the test side carries 11–43% of the energy across the frontier.
+
+| Date       | T restarts | Ops     | Cost       | Advantage η | Description |
+| -          | -:         | -:      | -:         | -:          | -           |
+| 2026-08-26 | 1          | 52,926  | 2,641,072  | 0.018       | `generate_isd(1)` |
+| 2026-08-26 | 3          | 125,902 | 5,657,464  | 0.064       | `generate_isd(3)` |
+| 2026-08-26 | 6          | 235,366 | 10,181,932 | 0.147       | `generate_isd(6)` ([ir](submissions/isd6_scaled32.ir)) ★ frontier |
+
 [access_distance](doc/access_distance/) — per-submission read-distance histogram + CDF for every exact-recovery (Small/Medium) IR above.

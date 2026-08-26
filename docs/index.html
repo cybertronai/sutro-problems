@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sparse Parity: an Accuracy–Energy Benchmark</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #fcfcfb; --plane: #f9f9f7; --ink: #0b0b0b; --ink2: #52514e;
+    --muted: #898781; --grid: #e1e0d9; --line: #c3c2b7;
+    --accent: #2a78d6; --code-bg: #f2f1ed;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a19; --plane: #0d0d0d; --ink: #ffffff; --ink2: #c3c2b7;
+      --muted: #898781; --grid: #2c2c2a; --line: #383835;
+      --accent: #3987e5; --code-bg: #242422;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.65 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 50rem; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+  h1 { font-size: 1.9rem; line-height: 1.25; margin: 0 0 .4rem; }
+  .sub { color: var(--ink2); margin: 0 0 2rem; }
+  h2 { font-size: 1.35rem; margin: 2.8rem 0 .7rem; padding-top: .6rem;
+       border-top: 1px solid var(--grid); }
+  h3 { font-size: 1.05rem; margin: 1.6rem 0 .4rem; }
+  p, li { color: var(--ink); }
+  .note { color: var(--ink2); font-size: .92rem; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .88em;
+    background: var(--code-bg); border-radius: 4px;
+  }
+  code { padding: .1em .35em; }
+  pre { padding: .8rem 1rem; overflow-x: auto; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+  figure { margin: 1.4rem 0; }
+  figure img { width: 100%; height: auto; border: 1px solid var(--grid);
+               border-radius: 6px; background: #fcfcfb; }
+  figcaption { color: var(--muted); font-size: .85rem; margin-top: .45rem; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0;
+          font-size: .92rem; font-variant-numeric: tabular-nums; }
+  th { text-align: left; color: var(--ink2); font-weight: 600;
+       border-bottom: 1px solid var(--line); padding: .35rem .6rem .35rem 0; }
+  td { border-bottom: 1px solid var(--grid); padding: .35rem .6rem .35rem 0;
+       vertical-align: top; }
+  td.num, th.num { text-align: right; }
+  .toc { background: var(--plane); border: 1px solid var(--grid);
+         border-radius: 8px; padding: .9rem 1.2rem; font-size: .92rem; }
+  .toc a { display: inline-block; margin-right: 1.1rem; }
+  .pitfall { margin-bottom: 1.1rem; }
+  .pitfall b { display: block; }
+  footer { margin-top: 3.5rem; padding-top: 1rem; border-top: 1px solid var(--grid);
+           color: var(--muted); font-size: .85rem; }
+  var { font-style: italic; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Sparse parity: an accuracy–energy benchmark</h1>
+<p class="sub">Two graded tiers of the
+<a href="https://github.com/cybertronai/sutro-problems/tree/main/sparse-parity">sutro-problems sparse-parity task</a>
+— what the curves mean, the algorithms behind them, and the honest list of pitfalls.
+August 26, 2026.</p>
+
+<nav class="toc">
+<a href="#problem">The problem</a>
+<a href="#pareto">The Pareto curve</a>
+<a href="#tier1">Tier&nbsp;1: n=12</a>
+<a href="#tier2">Tier&nbsp;2: n=32</a>
+<a href="#pitfalls">Pitfalls</a>
+<a href="#reproduce">Reproduce</a>
+</nav>
+
+<h2 id="problem">The problem</h2>
+<p>Each instance hides a secret set of <var>k</var> of <var>n</var> bit
+positions. A row's label is the XOR (parity) of the bits at those positions.
+A submission is a <em>straight-line program</em> in the v3 instruction set of the
+<a href="https://github.com/cybertronai/simplified-dally-model">simplified Dally model</a>
+(8-bit values, no loops, no branches, no data-dependent addressing). In one
+invocation it receives <var>m<sub>train</sub></var> labeled rows and
+<var>m<sub>test</sub></var> unlabeled rows, and must output all
+<var>m<sub>test</sub></var> predicted labels.</p>
+<p><b>Energy</b> is the program's static read cost: every operand read of
+address <var>a</var> costs ⌈√<var>a</var>⌉ (a Manhattan-distance proxy —
+far memory is expensive). <b>Scoring is joint</b>: one program, one energy
+number covering training-decode and test-prediction together, so there is no
+phase interface to game. Accuracy is aggregated over the whole suite (never
+thresholded per instance) and reported as the
+<b>normalized advantage η&nbsp;=&nbsp;2·accuracy&nbsp;−&nbsp;1</b>
+(0&nbsp;=&nbsp;coin-flipping, 1&nbsp;=&nbsp;perfect), which is meaningful
+because test rows come in bitwise-complement pairs: with odd <var>k</var> a row
+and its complement carry opposite labels, so any constant guess scores exactly
+50%.</p>
+<p>Training sets are rejection-sampled until <b>exactly one</b> candidate
+secret explains all the labels ("unique identifiability"). That keeps 100%
+accuracy always attainable — the benchmark measures approximation quality,
+not dataset ambiguity — and it gives verified decoders a powerful guarantee
+used throughout: <em>any</em> weight-<var>k</var> solution consistent with the
+training rows is <em>the</em> secret.</p>
+
+<table>
+<tr><th></th><th class="num">n</th><th class="num">k</th>
+    <th class="num">m<sub>train</sub></th><th class="num">m<sub>test</sub></th>
+    <th class="num">candidates C(n,k)</th><th class="num">instruction cap</th></tr>
+<tr><td>Tier 1 — approximate</td><td class="num">12</td><td class="num">3</td>
+    <td class="num">8</td><td class="num">32</td><td class="num">220</td>
+    <td class="num">100,000</td></tr>
+<tr><td>Tier 2 — scaled</td><td class="num">32</td><td class="num">5</td>
+    <td class="num">18</td><td class="num">256</td><td class="num">201,376</td>
+    <td class="num">250,000</td></tr>
+</table>
+
+<h2 id="pareto">How to read the curves: the Pareto frontier</h2>
+<p>Every submitted circuit is one point: its measured accuracy and its energy.
+An algorithm <em>family</em> with a knob (how many candidates to check, how
+many restarts to run, how many outputs to compute) traces a curve of such
+points. The <b>Pareto frontier</b> is the lower envelope over everything
+submitted:</p>
+<pre><code>E*(A) = min { energy(P) :  P is a submitted program with accuracy(P) ≥ A }</code></pre>
+<p>Read it as a cost function: pick a target accuracy on the x-axis, go up to
+the gray step line — that is the least energy any known program needs to hit
+that target. It only steps <em>up</em> as the target rises. A point above the
+frontier is dominated (something cheaper achieves the same accuracy); a new
+algorithm "wins" by pushing some stretch of the frontier down or to the
+right. The benchmark's object of study is the shape of this envelope — in
+particular where it bends when brute force stops being affordable.</p>
+
+<h2 id="tier1">Tier 1 (n=12): the approximate benchmark</h2>
+<figure>
+<img src="approx_accuracy_vs_energy.png"
+     alt="Energy required vs accuracy for the n=12 tier: mask decoder frontier from 52.5% at ~50k reads to 100% at 444k reads; try-each-candidate 5x more expensive; output truncation dominated.">
+<figcaption>n=12, k=3, 8 train / 32 test. Deterministic public suite: all 220
+secrets × 8 repetitions. The baselines' accuracy here is <em>exact</em> —
+identical under every suite key.</figcaption>
+</figure>
+
+<h3>Algorithm: try-each-candidate (blue and orange)</h3>
+<p><b>Decode:</b> for each candidate triple T among the first <var>q</var> (of
+220, in fixed order), compare the parity of columns T against all 8 training
+labels, producing an indicator <code>ind_T</code>. By unique identifiability,
+exactly one candidate matches — so decoding succeeds iff the secret is among
+the <var>q</var> examined. <b>Predict:</b> each of the first <var>f</var> test
+rows is labeled <code>OR over T of (ind_T AND parity_T(x))</code>; the
+remaining outputs default to 0 (exactly 50% right). The two knobs give exactly
+η&nbsp;=&nbsp;(q/220)·(f/32): the blue curve sweeps <var>q</var>, the orange
+curve sweeps <var>f</var> — and orange is visibly the worse deal because it
+pays the full 220-candidate decode even at chance-level accuracy.</p>
+
+<h3>Algorithm: mask decoder (green — owns the frontier)</h3>
+<p>Same decode phase, but the <var>q</var> one-hot indicators are compressed
+once into 12 mask bits, <code>mask_c = OR of ind_T over candidates T
+containing column c</code> — the mask <em>is</em> the recovered secret. Each
+prediction is then <code>XOR_c (mask_c AND x_c)</code>: 12 ANDs and 11 XORs
+per output, independent of <var>q</var>. Same accuracy formula, ~5× less
+energy (exact recovery at 444,389 reads instead of 2,209,461), because
+prediction no longer re-scans candidates per output.</p>
+
+<table>
+<tr><th class="num">Energy (reads)</th><th class="num">Accuracy</th>
+    <th class="num">η</th><th>Cheapest strategy</th></tr>
+<tr><td class="num">137</td><td class="num">50.0%</td><td class="num">0.00</td><td>constant guess</td></tr>
+<tr><td class="num">122,523</td><td class="num">62.5%</td><td class="num">0.25</td><td>mask decoder, q=55</td></tr>
+<tr><td class="num">222,255</td><td class="num">75.0%</td><td class="num">0.50</td><td>mask decoder, q=110</td></tr>
+<tr><td class="num">397,838</td><td class="num">95.0%</td><td class="num">0.90</td><td>mask decoder, q=198</td></tr>
+<tr><td class="num">444,389</td><td class="num">100.0%</td><td class="num">1.00</td><td>mask decoder, q=220</td></tr>
+</table>
+
+<h2 id="tier2">Tier 2 (n=32): where enumeration dies</h2>
+<p>At n=32, k=5 the candidate count jumps to C(32,5)&nbsp;=&nbsp;201,376 and
+the linear system's null space has 2<sup>n−m</sup>&nbsp;=&nbsp;2<sup>14</sup>
+solutions. Under the tier's 250,000-instruction cap <em>both</em> brute-force
+families are priced out:</p>
+<ul>
+<li><b>Candidate enumeration</b> needs ≈130 instructions per candidate — ~26M
+total. A capped circuit checks at most 1,797 candidates (≤0.9%), giving
+η&nbsp;≤&nbsp;0.009 at 14–40M reads: pinned to the floor <em>and</em>
+expensive (top-left of the graph).</li>
+<li><b>Solution-space (null-space) enumeration</b> — Gray-coding through all
+2<sup>14</sup> solutions of the underdetermined system and keeping the
+minimum-weight one — needs ~50–100 instructions per step, ≈1M total: also
+dead. (This family is easy to underestimate; see pitfall 4.)</li>
+</ul>
+<p>What remains is the polynomial family — this instance of the problem
+<em>is</em> syndrome decoding of a random linear code, so the natural scalable
+algorithm is <b>information-set decoding</b>.</p>
+
+<h3>Algorithm: ISD restarts (Prange) — the reference circuit</h3>
+<p>One restart: pick an "information set" of m=18 of the 32 columns; copy
+those training columns plus the labels into an 18×19 augmented matrix; run
+branchless GF(2) Gaussian elimination (pivoting is done with
+<code>cmp</code>/<code>select</code> chains since the ISA has no branches);
+read out the zero-free-variable solution; <b>accept it only if</b> it has
+weight exactly k <em>and</em> reproduces every training label. Unique
+identifiability turns that acceptance test into a proof: an accepted solution
+is the secret. T restarts use rotating column subsets and OR their accepted
+solutions into a 32-bit mask; prediction is the O(n) mask predictor. Each
+restart succeeds when the secret happens to lie inside its information set —
+idealized probability ∏<sub>i&lt;5</sub>(18−i)/(32−i)&nbsp;≈&nbsp;4.25%,
+measured ≈1.8% (rank-deficient subsets lose cases; see pitfall 7). The
+circuit is all-or-nothing by construction: on every suite instance its output
+is either exactly correct or exactly all-zeros — never garbage.</p>
+
+<figure>
+<img src="scaled32_energy_vs_accuracy.png"
+     alt="Energy required vs accuracy for the n=32 tier: ISD restart frontier from 50.9% at 2.6M reads to 57.4% at 10.2M reads; capped enumeration pinned near 50% at 14-40M reads; faint replicas show suite noise.">
+<figcaption>n=32, k=5, 18 train / 256 test, 250k-instruction cap. Dev suite:
+128 sampled secrets × 8 repetitions. Faint blue replicas: the same ISD sweep
+under two other suite keys — the sampling noise you buy by giving up
+determinism (±2–4pp here; the final suite doubles the secret sample).</figcaption>
+</figure>
+
+<table>
+<tr><th class="num">T restarts</th><th class="num">Ops</th>
+    <th class="num">Energy (reads)</th><th class="num">Accuracy</th><th class="num">η</th></tr>
+<tr><td class="num">1</td><td class="num">52,926</td><td class="num">2,641,072</td><td class="num">50.9%</td><td class="num">0.018</td></tr>
+<tr><td class="num">3</td><td class="num">125,902</td><td class="num">5,657,464</td><td class="num">53.2%</td><td class="num">0.064</td></tr>
+<tr><td class="num">6</td><td class="num">235,366</td><td class="num">10,181,932</td><td class="num">57.4%</td><td class="num">0.147</td></tr>
+</table>
+
+<p>Everything above η&nbsp;≈&nbsp;0.15 is currently <b>open</b>: candidates
+include packed GE (byte-packing historically bought 5–15× in this repo, which
+buys more restarts under the cap), partial null-space scans grafted onto a
+restart, and Stern-style collision decoding re-expressed without hashing.
+The m<sub>test</sub>&nbsp;=&nbsp;256 choice came from the measured energy
+split of this reference circuit — prediction costs ≈4,400 reads per output vs
+≈1.5M per decode restart, so the test side carries 11–43% of total energy
+across the frontier: both knobs stay relevant, neither dominates.</p>
+
+<h2 id="pitfalls">Pitfalls in the scoring and benchmark design</h2>
+<ol>
+<li class="pitfall"><b>The public suite is minable — never adjudicate on it.</b>
+An adversarial review demonstrated a working exploit on the n=12 tier: a
+submission that decodes only 50 candidates and falls back to per-output input
+bits mined from the published suite passed the η≥0.25 scorer at lower cost
+than the honest entry, while its true advantage was 0.223. Deterministic
+public suites are for development; rankings near a threshold must be confirmed
+on a held-out suite key or fresh hidden randomness
+(<code>evaluate_scaled(ir, suite_key=None)</code> draws from SystemRandom).</li>
+<li class="pitfall"><b>Sampled secrets must be fresh or hidden.</b> The scaled
+tier samples 128–256 of the 201,376 secrets. If that sample were published
+and fixed, a ~5,000-instruction circuit could enumerate just those secrets and
+score perfectly — silently resurrecting the brute force the tier exists to
+kill. This is the sharpest cheating vector introduced by scaling.</li>
+<li class="pitfall"><b>Output truncation must be priced, not banned — via the
+decode/predict energy balance.</b> "Compute f of the outputs, guess the rest"
+is a legitimate strategy; complement pairing makes its accuracy exactly linear
+in f. The danger is imbalance: if prediction dominates energy the whole
+leaderboard becomes output-truncation variants (an early n=8 target suffered
+exactly this); if decode dominates, the output knob is irrelevant. Set
+m<sub>test</sub> ≈ D/P of the reference decoder and re-derive it per tier.</li>
+<li class="pitfall"><b>Candidate enumeration is not the only brute force.</b>
+The solution space of the linear system has 2<sup>n−m<sub>train</sub></sup>
+elements, and identifiability makes any weight-k element the secret. At an
+earlier prototype size (n=24, m=17, gap 7) a min-weight scan over all 2⁷
+solutions reached η≈0.91 almost for free. m<sub>train</sub>=18 (not 20) was
+chosen at n=32 specifically so the full 2<sup>14</sup> scan exceeds the cap.
+Any future tier must check <em>both</em> exponentials against its cap.</li>
+<li class="pitfall"><b>The instruction cap is part of the contract.</b> Energy
+alone cannot kill brute force — enumeration would still populate the curve,
+just expensively. The cap defines the compute class; it sits in the wide gap
+between polynomial decoders (~10⁵ ops) and both enumerations (≥10⁶·⁵). Raising
+it is a benchmark-version change, not a tuning knob. (The evaluator also
+bounds working memory, closing a multi-GB allocation vector.)</li>
+<li class="pitfall"><b>Accepted noise, quantified.</b> With sampled secrets and
+fresh randomness, measured accuracy on the scaled dev suite varies by up to
+±4pp across suite keys (deterministic information sets interact with
+<em>which</em> secrets get sampled). Energy is static and exact — only the
+accuracy coordinate is noisy. Near-threshold comparisons should average ≥3
+fresh runs; the final suite's 2× secret sample cuts the spread by ~√2.</li>
+<li class="pitfall"><b>Idealized analysis overstates decoders.</b> The
+textbook ISD bound (4.25%/restart) assumes full-rank information sets, but a
+random 18×18 GF(2) block is full-rank only ~29% of the time; even counting
+the partial-rank recoveries, the measured rate is 1.8%/restart. Benchmarks should
+publish measured curves, not analytic promises. The same lesson cut the other
+way at n=12: "linear algebra caps at ~53%" was wrong — min-support Gaussian
+elimination reaches 64% (η≈0.28), which recalibrated which targets are
+"interesting".</li>
+<li class="pitfall"><b>Complement pairing needs odd k.</b> The exact-50%
+guarantee for constant guesses relies on labels flipping under bitwise
+complement, which holds only for odd k (both tiers use k=3, k=5). An even-k
+tier needs a different balancing scheme (e.g. full-cube partitions).</li>
+<li class="pitfall"><b>No data-dependent addressing cuts both ways.</b>
+Submitted circuits cannot hash or index, so meet-in-the-middle attacks cannot
+be expressed — which is why the cap arithmetic above holds. But the
+<em>generator</em> is ordinary Python: identifiability checking uses packed
+signatures over all 201,376 candidates in milliseconds. Never assume
+suite-construction tricks are available to submissions, or vice versa.</li>
+</ol>
+
+<h2 id="reproduce">Reproduce</h2>
+<pre><code>git clone https://github.com/cybertronai/sutro-problems
+cd sutro-problems/sparse-parity        # needs python3 + numpy + matplotlib
+
+python3 generate_graph.py              # tier-1 curve, ~2 s
+python3 generate_scaled_graph.py       # tier-2 curve, ~15 s
+python3 scaled_sparse_parity.py        # ISD reference: ops/cost/advantage
+python3 -m pytest test_approx_sparse_parity.py test_scaled_sparse_parity.py
+</code></pre>
+<p class="note">Dev evaluations run in seconds on an Apple-silicon laptop
+(suites are cached after first build); a fresh-randomness adjudication run of
+one circuit — suite generation included — stays under a minute.</p>
+
+<footer>
+<a href="https://github.com/cybertronai/sutro-problems">cybertronai/sutro-problems</a>
+· report generated 2026-08-26 with
+<a href="https://claude.com/claude-code">Claude Code</a>.
+</footer>
+
+</main>
+</body>
+</html>

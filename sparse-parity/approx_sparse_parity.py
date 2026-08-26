@@ -248,11 +248,13 @@ def _wrap8(v: np.ndarray) -> np.ndarray:
     return ((v & 0xFF) ^ 0x80) - 0x80
 
 
-def _compile_vector(ir: str) -> Tuple[Callable[[np.ndarray], np.ndarray], int, int]:
+def _compile_vector(
+    ir: str, max_instructions: int = 100_000
+) -> Tuple[Callable[[np.ndarray], np.ndarray], int, int]:
     """Compile IR into a batched executor: (n_instances, n_inputs) int16 ->
     (n_instances, n_outputs) int16.  Validation and the static read cost are
     delegated to ``sparse_parity._compile_ir`` so both engines agree."""
-    _, static_cost, n_inputs = sparse_parity._compile_ir(ir)
+    _, static_cost, n_inputs = sparse_parity._compile_ir(ir, max_instructions)
 
     text = ir.replace(";", "\n")
     lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
