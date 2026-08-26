@@ -19,6 +19,7 @@
     --cell: #2b2f3a;
     --lattice: #ddd6ca;
     --path: #c2410c;
+    --intake: #0d9488;
     --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   }
   * { box-sizing: border-box; margin: 0; }
@@ -156,11 +157,13 @@
 <h2>The setup</h2>
 <p>
   A single processor sits at the bottom. Above it is a 2D grid of memory
-  cells that can hold numbers. Moving a number between the processor and a
-  cell costs the <strong>Manhattan distance</strong> — count the steps
-  going <strong>horizontally first, then vertically</strong>. That L-shaped
-  path is exactly what the diagrams draw, so the picture and the price
-  always agree.
+  cells that can hold numbers. Every number enters and leaves the processor
+  through its <strong style="color:var(--intake)">intake point</strong> —
+  the teal dot sitting on the grid — and moving a number between the intake
+  point and a cell costs the <strong>Manhattan distance</strong> between
+  them: the number travels <strong>vertically first, then
+  horizontally</strong>. That L-shaped path is exactly what the diagrams
+  draw, so the picture and the price always agree.
 </p>
 
 <div class="rules">
@@ -209,7 +212,7 @@
 <div class="aside">
   <p>
     <strong>Why it matters:</strong> the add itself was free, yet the
-    computation cost 10 units — every unit was data movement. Scale this
+    computation cost 9 units — every unit was data movement. Scale this
     intuition up and it explains why real hardware spends most of its energy
     on wires, caches and DRAM rather than on ALUs, and why good algorithms
     are the ones that keep their operands close.
@@ -236,15 +239,16 @@
 const CELLS = [
   { id: "one",   value: 1, x: -1, y: 3 },
   { id: "seven", value: 7, x:  0, y: 3 },
-  { id: "eight", value: 8, x:  1, y: 2 },
+  { id: "eight", value: 8, x:  1, y: 1 },
 ];
-const dist = (c) => Math.abs(c.x) + Math.abs(c.y);   // Manhattan
+const dist = (c) => Math.abs(c.x) + Math.abs(c.y);   // Manhattan, from the intake point at (0,0)
+const steps = (n) => `${n} step${n === 1 ? "" : "s"}`;
 
 const GRID_X = 2, GRID_Y = 3;    // lattice extents: x in [-2,2], y in [1,GRID_Y]
 const S = 72;                    // px per grid unit
 
 (() => {
-  const padL = 60, padR = 60, padT = 40, padB = 130;
+  const padL = 60, padR = 60, padT = 40, padB = 180;
   const W = 2 * GRID_X * S + padL + padR;
   const H = GRID_Y * S + padT + padB;
   const px = (x) => padL + (x + GRID_X) * S;
@@ -288,26 +292,39 @@ const S = 72;                    // px per grid unit
     cellEls[c.id] = { circ, c };
   }
 
-  // processor with two register slots
+  // intake point: the spot on the grid that every transfer connects to,
+  // and the point all Manhattan distances are measured from
+  const IN_X = px(0), IN_Y = py(0);
+  el("line", { x1: IN_X, y1: IN_Y, x2: IN_X, y2: IN_Y + 36, stroke: "#2b2f3a",
+               "stroke-width": 5, "stroke-linecap": "round" });
+  // processor box hangs below the intake, with three register slots
   const proc = el("g", {});
-  el("rect", { x: px(0) - 60, y: py(0) - 14, width: 120, height: 62, rx: 12,
+  const bw = 184, bh = 66, by = IN_Y + 36;
+  el("rect", { x: IN_X - bw / 2, y: by, width: bw, height: bh, rx: 12,
                fill: "#2b2f3a", stroke: "#1f2430", "stroke-width": 1.5,
                filter: "drop-shadow(0 2px 4px rgba(31,36,48,.3))" }, proc);
-  el("text", { x: px(0), y: py(0) + 3, "text-anchor": "middle",
+  el("text", { x: IN_X, y: by + 20, "text-anchor": "middle",
                "font-size": 11, "letter-spacing": "2", fill: "#9aa3b2",
                "font-family": "Inter, sans-serif", "font-weight": 600 }, proc)
     .textContent = "PROCESSOR";
   const regEls = [];
-  for (let r = 0; r < 2; r++) {
-    const rx = px(0) - 52 + r * 56, ry = py(0) + 12;
+  for (let r = 0; r < 3; r++) {
+    const rx = IN_X - 84 + r * 58, ry = by + 28;
     const rg = el("g", {}, proc);
-    const box = el("rect", { x: rx, y: ry, width: 48, height: 28, rx: 7,
+    const box = el("rect", { x: rx, y: ry, width: 52, height: 28, rx: 7,
                              fill: "#1a1e27", stroke: "#3b4150", "stroke-width": 1.2 }, rg);
-    const label = el("text", { x: rx + 24, y: ry + 19, "text-anchor": "middle",
+    const label = el("text", { x: rx + 26, y: ry + 19, "text-anchor": "middle",
                                "font-size": 14, "font-weight": 600, fill: "#565e6e" }, rg);
     label.textContent = "–";
     regEls.push({ label, box });
   }
+  // the intake dot itself, drawn last so it sits on top of the stem
+  el("circle", { cx: IN_X, cy: IN_Y, r: 10, fill: "var(--intake)",
+                 stroke: "#fff", "stroke-width": 2.5,
+                 filter: "drop-shadow(0 1px 2px rgba(31,36,48,.35))" });
+  el("text", { x: IN_X + 17, y: IN_Y + 24, "font-size": 12.5, "font-weight": 600,
+               fill: "var(--intake)", "font-family": "Inter, sans-serif" })
+    .textContent = "intake";
 
   // cost badge under the processor
   const badge = el("g", {});
@@ -318,13 +335,17 @@ const S = 72;                    // px per grid unit
   const setCost = (c) => { badgeText.textContent = `total cost: ${c}`; };
 
   /* ---- drawing helpers ---- */
-  // L-shaped route processor↔cell: horizontally first, then vertically.
-  function routeD(c) {
-    return `M ${px(0)} ${py(0)} L ${px(c.x)} ${py(0)} L ${px(c.x)} ${py(c.y)}`;
+  // L-shaped routes: the data always moves vertically first, then
+  // horizontally. A load runs down the cell's column, then across to the
+  // intake; a store runs up from the intake, then across to the cell.
+  function routeD(c, dir) {
+    return dir === "store"
+      ? `M ${px(0)} ${py(0)} L ${px(0)} ${py(c.y)} L ${px(c.x)} ${py(c.y)}`
+      : `M ${px(0)} ${py(0)} L ${px(c.x)} ${py(0)} L ${px(c.x)} ${py(c.y)}`;
   }
   function drawPath(id, dir) {             // dir: "load" | "store"
     pathLayer.replaceChildren();
-    const d = routeD(cellEls[id].c);
+    const d = routeD(cellEls[id].c, dir);
     const mk = (attrs) => {
       const p = document.createElementNS(ns, "path");
       p.setAttribute("d", d);
@@ -386,31 +407,32 @@ const S = 72;                    // px per grid unit
 
   /* ---- the storyboard ---- */
   const D1 = dist(CELLS[0]), D7 = dist(CELLS[1]), D8 = dist(CELLS[2]);
+  const regs = (a, b, c, hot) => { setReg(0, a, hot === 0); setReg(1, b, hot === 1); setReg(2, c, hot === 2); };
   const STEPS = [
     { title: "The setup", cost: 0,
-      desc: `The processor wants to compute 1 + 7. The 1 and the 7 sit out in the memory grid; the faint dots are empty cells. Registers are empty.`,
-      apply() { clearPath(); highlight(null); setReg(0, null); setReg(1, null); showEight(false); } },
+      desc: `The processor wants to compute 1 + 7. The 1 and the 7 sit out in the memory grid; the faint dots are empty cells. Every transfer goes through the teal intake point, and distances are counted from there. All three registers are empty.`,
+      apply() { clearPath(); highlight(null); regs(null, null, null); showEight(false); } },
     { title: "Fetch the 1", cost: 0,
-      desc: `The 1 travels to the processor along the L-shaped wire: ${Math.abs(CELLS[0].x)} step across, ${CELLS[0].y} steps up — Manhattan distance ${D1}. This read costs ${D1}.`,
-      apply() { highlight("one"); setReg(0, null); setReg(1, null); showEight(false); drawPath("one", "load"); } },
+      desc: `The 1 travels down its column, then across to the intake: ${steps(CELLS[0].y)} down + ${steps(Math.abs(CELLS[0].x))} across — distance ${D1}.`,
+      apply() { highlight("one"); regs(null, null, null); showEight(false); drawPath("one", "load"); } },
     { title: "1 is in a register", cost: D1, ledger: 0,
-      desc: `The processor now holds a copy of the 1 in a register. We pay its Manhattan distance: +${D1}.`,
-      apply() { clearPath(); highlight(null); setReg(0, 1, true); setReg(1, null); showEight(false); } },
+      desc: `The processor now holds a copy of the 1 in its first register. We pay its Manhattan distance: +${D1}.`,
+      apply() { clearPath(); highlight(null); regs(1, null, null, 0); showEight(false); } },
     { title: "Fetch the 7", cost: D1,
-      desc: `Next, the 7 — straight along the middle column, ${D7} steps. This read costs ${D7}.`,
-      apply() { highlight("seven"); setReg(0, 1); setReg(1, null); showEight(false); drawPath("seven", "load"); } },
+      desc: `Fetch 7: straight down the middle column — distance ${D7}.`,
+      apply() { highlight("seven"); regs(1, null, null); showEight(false); drawPath("seven", "load"); } },
     { title: "7 is in a register", cost: D1 + D7, ledger: 1,
       desc: `Both operands are now local. Running total: ${D1} + ${D7} = ${D1 + D7}.`,
-      apply() { clearPath(); highlight(null); setReg(0, 1); setReg(1, 7, true); showEight(false); } },
+      apply() { clearPath(); highlight(null); regs(1, 7, null, 1); showEight(false); } },
     { title: "Add — free!", cost: D1 + D7, ledger: 2,
-      desc: `The processor computes 1 + 7 = 8. Arithmetic between registers costs nothing — the meter doesn't move.`,
-      apply() { clearPath(); highlight(null); setReg(0, 8, true); setReg(1, 7); showEight(false); } },
+      desc: `The processor computes 1 + 7 = 8 and puts the result in the third register. Arithmetic between registers costs nothing — the meter doesn't move.`,
+      apply() { clearPath(); highlight(null); regs(1, 7, 8, 2); showEight(false); } },
     { title: "Store the 8", cost: D1 + D7,
-      desc: `The result must go back to main memory: ${Math.abs(CELLS[2].x)} step across, ${CELLS[2].y} steps up. Writes are priced too, so this store will cost ${D8}.`,
-      apply() { highlight(null); setReg(0, 8); setReg(1, 7); showEight(false); drawPath("eight", "store"); setTimeout(() => { showEight(true); highlight("eight"); }, 680); } },
+      desc: `Store 8, distance = ${D8}.`,
+      apply() { highlight(null); regs(1, 7, 8); showEight(false); drawPath("eight", "store"); setTimeout(() => { showEight(true); highlight("eight"); }, 680); } },
     { title: `Done — total cost ${D1 + D7 + D8}`, cost: D1 + D7 + D8, ledger: 3,
       desc: `The 8 now lives in memory. Final bill: ${D1} (fetch 1) + ${D7} (fetch 7) + 0 (add) + ${D8} (store 8) = ${D1 + D7 + D8} units, every one of them data movement.`,
-      apply() { clearPath(); highlight("eight"); setReg(0, 8); setReg(1, 7); showEight(true); } },
+      apply() { clearPath(); highlight("eight"); regs(1, 7, 8); showEight(true); } },
   ];
 
   /* ---- ledger table ---- */
