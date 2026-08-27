@@ -68,7 +68,6 @@
             color: var(--ink-soft); min-height: 2.5em; }
   .irline .op { color: var(--ink); font-weight: 600; }
   .irline .now { color: #fff; background: var(--accent); border-radius: 4px; padding: 1px 5px; font-weight: 600; }
-  .irline .held { color: var(--ink); background: #ece8de; border-radius: 4px; padding: 1px 5px; }
   .irline .plus { color: var(--accent); font-weight: 600; }
   .irline .dim { opacity: .6; }
 
@@ -87,7 +86,6 @@
   .cellv.band { background: #ece8de; }
   .cellv.hot { color: #fff; font-weight: 600; }
   .cellv.hotA { background: var(--rA); } .cellv.hotB { background: var(--rB); } .cellv.hotC { background: var(--rC); }
-  .cellv.held { border-color: var(--ink-soft); color: var(--ink); font-weight: 600; }
   .cellv.target { border-color: var(--accent); color: var(--ink); font-weight: 600; }
   .cellv.done { color: var(--ink); }
   .cellv.empty { color: #c3bcb0; }
@@ -97,6 +95,7 @@
   .tmpchip .box { min-width: 54px; text-align: center; padding: 3px 8px; border-radius: 6px;
                   background: #f4f1ea; border: 1.5px solid transparent; color: var(--ink); }
   .tmpchip .box.hot { background: var(--rT); color: #fff; font-weight: 600; }
+  .tmpchip .box.target { border-color: var(--ink-soft); border-style: dashed; }
   .verdict { text-align: center; font-family: var(--mono); font-size: 12.5px;
              margin-top: 10px; color: #23703a; opacity: 0; transition: opacity .3s; }
   .verdict.show { opacity: 1; }
@@ -428,7 +427,6 @@ function render() {
   const st = simulate(cur);
   const e = cur > 0 ? EV[cur - 1] : null;
   const inc = e ? dist(e.addr) : 0;
-  const other = e && e.op !== "exit" ? (e.slot === 0 ? e.s2 : e.s1) : null;
 
   const maxRead = Math.max(1, ...Object.values(st.readCost));
   legendEl.hidden = heat; heatLegendEl.hidden = !heat;
@@ -438,14 +436,14 @@ function render() {
     heatLegendEl.textContent = `fill = cumulative access cost · hottest ${top} @${topA}`;
   }
   for (let a = 1; a <= 49; a++) {
-    const c = cellEl[a], on = e && e.addr === a, held = e && e.slot === 1 && other === a;
-    const isDest = e && e.write && e.dest === a;
+    const c = cellEl[a], on = e && e.addr === a;
+    const isDest = e && e.write && e.dest === a && !on;
     c.setAttribute("fill", heat ? heatFill(a, st, maxRead) : RCOL[region(a)]);
-    c.setAttribute("opacity", heat ? 1 : (on ? 1 : (held ? .8 : (st.readCost[a] ? .55 : .32))));
+    c.setAttribute("opacity", heat ? 1 : (on ? 1 : (st.readCost[a] ? .55 : .32)));
     c.setAttribute("r", on ? 15.5 : 13);
-    c.setAttribute("stroke", on ? RCOL[region(a)] : (held ? "var(--ink-soft)" : (isDest ? "var(--ink)" : "#fff")));
-    c.setAttribute("stroke-width", on ? 3 : (held ? 2 : 2));
-    c.setAttribute("stroke-dasharray", isDest && !on ? "3 3" : "none");
+    c.setAttribute("stroke", on ? RCOL[region(a)] : (isDest ? "var(--ink-soft)" : "#fff"));
+    c.setAttribute("stroke-width", 2 + (on ? 1 : 0));
+    c.setAttribute("stroke-dasharray", isDest ? "3 3" : "none");
   }
   wireLayer.replaceChildren();
   if (e) drawWire(e.addr, RCOL[region(e.addr)], playing ? stepMs : 200);
@@ -462,9 +460,11 @@ function render() {
   if (e) {
     const mark = (arr, n, cls) => { if (n != null) arr[n].classList.add(...cls); };
     if (e.op === "mul") {
-      mark(cellsA, e.i * N + e.k, e.addr === e.s1 ? ["hot", "hotA"] : ["held"]);
-      if (e.slot === 1) mark(cellsB, e.k * N + e.j, ["hot", "hotB"]);
-      mark(cellsC, e.i * N + e.j, ["target"]);
+      if (e.slot === 0) mark(cellsA, e.i * N + e.k, ["hot", "hotA"]);
+      else {
+        mark(cellsB, e.k * N + e.j, ["hot", "hotB"]);
+        if (e.dest !== TMP) mark(cellsC, e.i * N + e.j, ["target"]);
+      }
     } else if (e.op === "add") {
       mark(cellsC, e.i * N + e.j, e.slot === 0 ? ["hot", "hotC"] : ["target"]);
     } else {
@@ -473,7 +473,8 @@ function render() {
   }
   const tv = st.mem[TMP];
   tmpBox.textContent = tv === undefined ? "·" : tv;
-  tmpBox.className = "box" + (e && (e.addr === TMP || (e.write && e.dest === TMP)) ? " hot" : "");
+  tmpBox.className = "box" + (e && e.addr === TMP ? " hot"
+                     : (e && e.write && e.dest === TMP ? " target" : ""));
 
   costEl.textContent = st.cost.toLocaleString("en-US");
   for (const [key] of BARS) {
@@ -487,7 +488,7 @@ function render() {
     let head;
     if (e.op === "exit") head = `<span class="op">exit</span> <span class="now">${e.s1}</span>`;
     else {
-      const o1 = e.slot === 0 ? `<span class="now">${e.s1}</span>` : `<span class="held">${e.s1}</span>`;
+      const o1 = e.slot === 0 ? `<span class="now">${e.s1}</span>` : `<span class="dim">${e.s1}</span>`;
       const o2 = e.slot === 1 ? `<span class="now">${e.s2}</span>` : `<span class="dim">${e.s2}</span>`;
       head = `<span class="op">${e.op}</span> ${e.dest},${o1},${o2}`;
     }
@@ -520,10 +521,11 @@ function tick(now) {
   requestAnimationFrame(tick);
 }
 playBtn.onclick = () => { if (cur >= NEV) { cur = 0; render(); } setPlaying(!playing); };
-document.getElementById("stepf").onclick = () => { setPlaying(false); if (cur < NEV) { cur++; render(); } };
-document.getElementById("stepb").onclick = () => { setPlaying(false); if (cur > 0) { cur--; render(); } };
-document.getElementById("reset").onclick = () => { setPlaying(false); cur = 0; render(); };
-rangeEl.oninput = () => { setPlaying(false); cur = +rangeEl.value; render(); };
+// position first, then refresh the button label from the new position
+document.getElementById("stepf").onclick = () => { if (cur < NEV) cur++; setPlaying(false); render(); };
+document.getElementById("stepb").onclick = () => { if (cur > 0) cur--; setPlaying(false); render(); };
+document.getElementById("reset").onclick = () => { cur = 0; setPlaying(false); render(); };
+rangeEl.oninput = () => { cur = +rangeEl.value; setPlaying(false); render(); };
 
 const SPEEDS = [["0.5×", 180], ["1×", 90], ["3×", 28], ["max", 5]];
 const speedsEl = document.getElementById("speeds");
