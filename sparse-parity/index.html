@@ -79,14 +79,12 @@
   }
   #b20:checked ~ #p20, #b40:checked ~ #p40, #b60:checked ~ #p60,
   #b80:checked ~ #p80, #b100:checked ~ #p100 { display: block; }
-  .note { color: var(--muted); font-size: .85rem; margin: .7rem 0 0; }
   .hero { font-size: 2.1rem; font-weight: 650; line-height: 1.2;
           letter-spacing: -.01em; }
   .hero .unit { font-size: 1rem; font-weight: 400; color: var(--muted);
                 margin-left: .25rem; }
   .what { margin: .5rem 0 .2rem; }
-  .meta, .alt { color: var(--ink2); font-size: .92rem; margin: .2rem 0; }
-  .alt { color: var(--muted); }
+  .meta { color: var(--ink2); font-size: .92rem; margin: .2rem 0; }
   .method { margin: .9rem 0 1.1rem; }
   .method b { color: var(--ink); }
   details { margin: 1.8rem 0; border: 1px solid var(--grid); border-radius: 8px;
@@ -285,41 +283,36 @@ mask.</p>
 <label for="b100">100%</label>
 </div>
 <section class="panel" id="p20">
-<div class="hero">12.0M<span class="unit">reads</span></div>
-<p class="what"><b>ISD restarts</b> — <code>generate_isd_mask(8)</code></p>
-<p class="meta">22.5% recovered · 291,958 instructions</p>
-<p class="alt">Gray scan: 17.3M reads at 24.9% (<code>generate_scan(127)</code>).</p>
+<div class="hero">12,042,480<span class="unit">cost</span></div>
+<p class="what"><code>generate_isd_mask(8)</code> (ISD restarts)</p>
+<p class="meta"><a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">py</a>
+· <a href="https://github.com/yaroslavvb">@yaroslavvb</a> · 2026-08-27</p>
 </section>
 <section class="panel" id="p40">
-<div class="hero">17.9M<span class="unit">reads</span></div>
-<p class="what"><b>Gray scan</b> — <code>generate_scan(511)</code></p>
-<p class="meta">42.2% recovered · 249,096 instructions</p>
-<p class="alt">ISD restarts are dominated here: 36.2% at 48.2M reads by T&nbsp;=&nbsp;32.</p>
+<div class="hero">17,945,660<span class="unit">cost</span></div>
+<p class="what"><code>generate_scan(511)</code> (Gray scan)</p>
+<p class="meta"><a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">py</a>
+· <a href="https://github.com/yaroslavvb">@yaroslavvb</a> · 2026-08-27</p>
 </section>
 <section class="panel" id="p60">
-<div class="hero">23.7M<span class="unit">reads</span></div>
-<p class="what"><b>Gray scan</b> — <code>generate_scan(4095)</code></p>
-<p class="meta">74.2% recovered · 593,160 instructions</p>
-<p class="alt">Only the Gray scan reaches this band under the 2M-instruction cap.</p>
+<div class="hero">23,676,539<span class="unit">cost</span></div>
+<p class="what"><code>generate_scan(4095)</code> (Gray scan)</p>
+<p class="meta"><a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">py</a>
+· <a href="https://github.com/yaroslavvb">@yaroslavvb</a> · 2026-08-27</p>
 </section>
 <section class="panel" id="p80">
-<div class="hero">30.2M<span class="unit">reads</span></div>
-<p class="what"><b>Gray scan</b> — <code>generate_scan(8191)</code></p>
-<p class="meta">86.7% recovered · 986,376 instructions</p>
-<p class="alt">Only the Gray scan reaches this band under the 2M-instruction cap.</p>
+<div class="hero">30,226,172<span class="unit">cost</span></div>
+<p class="what"><code>generate_scan(8191)</code> (Gray scan)</p>
+<p class="meta"><a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">py</a>
+· <a href="https://github.com/yaroslavvb">@yaroslavvb</a> · 2026-08-27</p>
 </section>
 <section class="panel" id="p100">
-<div class="hero">43.3M<span class="unit">reads</span></div>
-<p class="what"><b>Gray scan</b> — <code>generate_scan(16383)</code>, the full
-null-space walk
-(<a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/submissions/scan_full_mask32.ir">ir</a>)</p>
-<p class="meta">100.0% recovered · 1,772,808 instructions</p>
-<p class="alt">The only known family that reaches 100%.</p>
+<div class="hero">43,325,468<span class="unit">cost</span></div>
+<p class="what"><code>generate_scan(16383)</code> (Gray scan)</p>
+<p class="meta"><a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/submissions/scan_full_mask32.ir">ir</a>
+· <a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">py</a>
+· <a href="https://github.com/yaroslavvb">@yaroslavvb</a> · 2026-08-27</p>
 </section>
-<p class="note">Lowest-energy known solution per band, measured on the
-deterministic 1,024-instance dev suite
-(<a href="doc/mask32_bands.json">full sweep data</a>); adjudication re-scores
-on a fresh hidden suite.</p>
 </div>
 
 <figure>
@@ -346,7 +339,7 @@ full walk reaches 100%.
 →</a></p>
 
 <details>
-<summary>Making a submission</summary>
+<summary>For agents' eyes only</summary>
 <ul>
 <li>A submission is one straight-line program (an <b>IR</b>) in the v3
 instruction set: 8-bit cells, no loops, no branches, no data-dependent

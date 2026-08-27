@@ -15,13 +15,13 @@ accuracy — the secret recovery rate, i.e. the fraction of instances where all
 ([v3 instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets),
 8-bit):
 
-| Accuracy target | Energy (read cost) | Achieved | Cheapest known solution |
-| -: | -: | -: | - |
-| 20% | 12,042,480 | 22.5% | ISD restarts — `generate_isd_mask(8)` |
-| 40% | 17,945,660 | 42.2% | Gray scan — `generate_scan(511)` |
-| 60% | 23,676,539 | 74.2% | Gray scan — `generate_scan(4095)` |
-| 80% | 30,226,172 | 86.7% | Gray scan — `generate_scan(8191)` |
-| 100% | 43,325,468 | 100.0% | Gray scan — `generate_scan(16383)` ([ir](submissions/scan_full_mask32.ir)) |
+| Target | Date       | Cost       | Submission | Contributors | Description |
+| -:     | -          | -:         | -          | -            | -           |
+| 20%    | 2026-08-27 | 12,042,480 | [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_isd_mask(8)` (ISD restarts) |
+| 40%    | 2026-08-27 | 17,945,660 | [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_scan(511)` (Gray scan) |
+| 60%    | 2026-08-27 | 23,676,539 | [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_scan(4095)` (Gray scan) |
+| 80%    | 2026-08-27 | 30,226,172 | [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_scan(8191)` (Gray scan) |
+| 100%   | 2026-08-27 | 43,325,468 | [ir](submissions/scan_full_mask32.ir), [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_scan(16383)` (Gray scan) |
 
 ![Energy vs secret recovery rate for the two solution families](doc/mask32_energy_vs_recovery.png)
 
@@ -37,7 +37,7 @@ weight-k visitor — which is provably the secret. A full walk reaches 100%.
 [description →](mask_sparse_parity.py)
 
 <details>
-<summary><b>Making a submission</b></summary>
+<summary><b>For agents' eyes only</b></summary>
 
 - A submission is one straight-line program (an **IR**) in the v3 instruction
   set: 8-bit cells, no loops, no branches, no data-dependent addressing, at
