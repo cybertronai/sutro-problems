@@ -65,7 +65,7 @@
 <main>
 
 <h1>Sparse parity: an accuracy–energy benchmark</h1>
-<p class="sub">Two graded tiers of the
+<p class="sub">Three graded tiers of the
 <a href="https://github.com/cybertronai/sutro-problems/tree/main/sparse-parity">sutro-problems sparse-parity task</a>
 — what the curves mean, the algorithms behind them, and the honest list of pitfalls.
 August 26, 2026.</p>
@@ -74,7 +74,9 @@ August 26, 2026.</p>
 <a href="#problem">The problem</a>
 <a href="#pareto">The Pareto curve</a>
 <a href="#tier1">Tier&nbsp;1: n=12</a>
-<a href="#tier2">Tier&nbsp;2: n=32</a>
+<a href="#tier2">Tier&nbsp;2: n=32 joint</a>
+<a href="#tier3">Tier&nbsp;3: mask (current)</a>
+<a href="#whysobig">Why 10⁶ instructions</a>
 <a href="#pitfalls">Pitfalls</a>
 <a href="#reproduce">Reproduce</a>
 </nav>
@@ -113,9 +115,12 @@ training rows is <em>the</em> secret.</p>
 <tr><td>Tier 1 — approximate</td><td class="num">12</td><td class="num">3</td>
     <td class="num">8</td><td class="num">32</td><td class="num">220</td>
     <td class="num">100,000</td></tr>
-<tr><td>Tier 2 — scaled</td><td class="num">32</td><td class="num">5</td>
+<tr><td>Tier 2 — scaled joint (superseded)</td><td class="num">32</td><td class="num">5</td>
     <td class="num">18</td><td class="num">256</td><td class="num">201,376</td>
     <td class="num">250,000</td></tr>
+<tr><td>Tier 3 — mask recovery (current)</td><td class="num">32</td><td class="num">5</td>
+    <td class="num">18</td><td class="num">—</td><td class="num">201,376</td>
+    <td class="num">2,000,000</td></tr>
 </table>
 
 <h2 id="pareto">How to read the curves: the Pareto frontier</h2>
@@ -173,7 +178,10 @@ prediction no longer re-scans candidates per output.</p>
 <tr><td class="num">444,389</td><td class="num">100.0%</td><td class="num">1.00</td><td>mask decoder, q=220</td></tr>
 </table>
 
-<h2 id="tier2">Tier 2 (n=32): where enumeration dies</h2>
+<h2 id="tier2">Tier 2 (n=32, joint): where enumeration dies</h2>
+<p class="note"><b>Status: superseded by Tier 3 below</b> (which drops the
+test set and raises the cap); kept because its measurements motivate both
+changes.</p>
 <p>At n=32, k=5 the candidate count jumps to C(32,5)&nbsp;=&nbsp;201,376 and
 the linear system's null space has 2<sup>n−m</sup>&nbsp;=&nbsp;2<sup>14</sup>
 solutions. Under the tier's 250,000-instruction cap <em>both</em> brute-force
@@ -234,6 +242,83 @@ The m<sub>test</sub>&nbsp;=&nbsp;256 choice came from the measured energy
 split of this reference circuit — prediction costs ≈4,400 reads per output vs
 ≈1.5M per decode restart, so the test side carries 11–43% of total energy
 across the frontier: both knobs stay relevant, neither dominates.</p>
+
+<h2 id="tier3">Tier 3 (n=32, mask recovery): the current tier</h2>
+<p>Two changes relative to Tier 2, both motivated by its measurements.
+<b>The test set is dropped.</b> Sparse parity makes it provably redundant: a
+circuit that has not identified the secret predicts test rows at exactly 50%
+(any strict-subset parity is uncorrelated with the true one), so joint test
+accuracy was always (1&nbsp;+&nbsp;recovery)/2 — and every measured Tier-2
+circuit was empirically all-or-nothing. The submission now outputs the secret
+itself: 32 mask cells, scored by <b>exact match</b> (well-defined because
+training sets are uniquely identifiable). The accuracy axis becomes the
+<b>secret recovery rate</b>; the chance floor drops from 50% to
+1/C(n,k)&nbsp;≈&nbsp;5·10⁻⁶; complement pairing is no longer needed (so even
+k would be legal); and there is nowhere to offload work — a fixed standard
+evaluator can label rows from a recovered mask at ~4,400 reads/row, a
+constant that cannot change rankings. <b>The cap rises to 2,000,000</b> so
+that a known family reaches 100% recovery.</p>
+
+<h3>Algorithm: GE + null-space Gray scan — reaches 100%</h3>
+<p>Full-width branchless GF(2) elimination, then extraction of the
+null-space basis (dimension n&nbsp;−&nbsp;m&nbsp;=&nbsp;14 w.h.p.), then a
+Gray-code walk through the solution space
+w&nbsp;=&nbsp;s₀&nbsp;⊕&nbsp;Σ&nbsp;aⱼ·bⱼ, capturing any weight-k visitor —
+every visited w solves the training system, so identifiability makes a
+weight-k visitor <em>the</em> secret. The step knob <var>s</var> sweeps the
+curve: s=0 is min-support GE (6.1% recovery), s=2¹⁴−1 visits the whole
+space (measured <b>100.0%</b> at 1.77M instructions / 43.3M reads). The
+curve is concave because the secret's Gray coefficients are low-weight
+(≈2.2 of 14 ones on average), so the walk tends to visit it early —
+s=4,095 already recovers 74%.</p>
+
+<figure>
+<img src="mask32_energy_vs_recovery.png"
+     alt="Energy vs secret recovery rate for the mask tier: ISD restarts cheapest below ~25% recovery, the Gray-scan family owns the frontier up to 100% at 43.3M reads, capped enumeration recovers at most 8% at dominated energy.">
+<figcaption>n=32, k=5, 18 train, no test set, 2M-instruction cap. Dev suite:
+128 sampled secrets × 8 reps; faint replicas: two other suite keys (spread
+≤5.5pp). ISD restarts own the frontier below ~25% recovery; the scan owns
+the rest; enumeration (≤15,000 of 201,376 candidates fit the cap) is
+dominated everywhere.</figcaption>
+</figure>
+
+<table>
+<tr><th class="num">Energy (reads)</th><th class="num">Recovery</th>
+    <th class="num">Ops</th><th>Cheapest strategy</th></tr>
+<tr><td class="num">1,505,862</td><td class="num">5.8%</td><td class="num">36,542</td><td>ISD, T=1</td></tr>
+<tr><td class="num">12,042,480</td><td class="num">22.5%</td><td class="num">291,958</td><td>ISD, T=8</td></tr>
+<tr><td class="num">23,676,539</td><td class="num">74.2%</td><td class="num">593,160</td><td>scan, s=4,095</td></tr>
+<tr><td class="num">43,325,468</td><td class="num">100.0%</td><td class="num">1,772,808</td><td>scan, s=16,383 ★</td></tr>
+</table>
+
+<p>Cap margins at 2M: the full scan uses 89% of the cap; packed candidate
+enumeration needs ≈4.2M ops (2.1× over — the thin margin to watch), naive
+≈26M (13×). Under the cap, enumeration tops out at ≤8% recovery for 35M
+reads: dominated everywhere, even with the raised budget. Headroom for
+submissions: byte-packing the scan state (~65 ops/step instead of 96) and
+packing GE both shift the frontier left several-fold.</p>
+
+<h2 id="whysobig">Why do these circuits need 10⁵–10⁶ instructions?</h2>
+<p>Because the instruction set is <b>straight-line</b> — the count is not
+algorithmic work, it is algorithmic work × unrolling × branchless overhead:</p>
+<ul>
+<li><b>No loops.</b> Every iteration is emitted as its own instructions. The
+looped form of Gaussian elimination is ~10 lines; unrolled over 32 columns ×
+18 rows × 33 matrix entries it is ~10⁵ instructions. The Gray scan is
+literally the same ~96-instruction step pasted 16,383 times.</li>
+<li><b>No branches.</b> Every data-dependent decision becomes arithmetic
+over all possibilities via <code>cmp</code>/<code>select</code>: "pick the
+first unused row with a 1" costs 7 instructions per candidate row instead of
+one branch; "capture w if its weight is k" costs a full 32-cell conditional
+copy every step.</li>
+<li><b>No indirect addressing.</b> Reading M[pivot_row, c] where pivot_row
+is data takes an 18-way cmp/select chain (~36 instructions per read); the
+null-space basis extraction is ~38k instructions mostly for this reason.
+This same restriction is what makes hash-based meet-in-the-middle attacks
+inexpressible — the benchmark's brute-force arithmetic depends on it.</li>
+</ul>
+<p>Rule of thumb observed across the reference circuits: straight-line
+instruction count ≈ (RAM-model operation count) × 2–7.</p>
 
 <h2 id="pitfalls">Pitfalls in the scoring and benchmark design</h2>
 <ol>
@@ -309,8 +394,9 @@ cd sutro-problems/sparse-parity        # needs python3 + numpy + matplotlib
 
 python3 generate_graph.py              # tier-1 curve, ~2 s
 python3 generate_scaled_graph.py       # tier-2 curve, ~15 s
-python3 scaled_sparse_parity.py        # ISD reference: ops/cost/advantage
-python3 -m pytest test_approx_sparse_parity.py test_scaled_sparse_parity.py
+python3 generate_mask_graph.py         # tier-3 curve, ~40 s
+python3 mask_sparse_parity.py          # scan/ISD/enum reference measurements
+python3 -m pytest test_approx_sparse_parity.py test_scaled_sparse_parity.py test_mask_sparse_parity.py
 </code></pre>
 <p class="note">Dev evaluations run in seconds on an Apple-silicon laptop
 (suites are cached after first build); a fresh-randomness adjudication run of

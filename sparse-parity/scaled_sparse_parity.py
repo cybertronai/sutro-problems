@@ -107,6 +107,11 @@ def _unique_ksparse(X: np.ndarray, y: np.ndarray, cand: np.ndarray) -> bool:
 
 
 def _sample_secrets(spec: Spec, n_secrets: int, rng: Random) -> List[Tuple[int, ...]]:
+    n_possible = math.comb(spec.n_bits, spec.k_secret)
+    if n_secrets > n_possible:
+        raise ValueError(
+            f"cannot sample {n_secrets} distinct secrets; C(n,k)={n_possible}"
+        )
     seen, out = set(), []
     while len(out) < n_secrets:
         s = tuple(sorted(rng.sample(range(spec.n_bits), spec.k_secret)))
@@ -256,6 +261,8 @@ def generate_isd(
     n_outputs: int | None = None,
     *,
     spec: Spec = SCALED32,
+    mask_output: bool = False,
+    op_cap: int = OP_CAP,
 ) -> str:
     """T-restart information-set-decoding circuit.
 
@@ -268,6 +275,11 @@ def generate_isd(
     solutions OR into a full-width secret mask; the first ``n_outputs``
     test rows are labeled by the O(n) mask predictor, the rest default
     to 0 (exactly 50% under complement pairing).
+
+    With ``mask_output=True`` the circuit targets the test-set-free mask
+    task instead: inputs are X_train and y_train only, the outputs are
+    the n_bits mask cells themselves, and no prediction phase is
+    emitted.
     """
     n, m, k, m_test = spec.n_bits, spec.m_train, spec.k_secret, spec.m_test
     f = m_test if n_outputs is None else n_outputs
@@ -315,12 +327,14 @@ def generate_isd(
     y_tr_at = lambda i: y_tr_base + i
     X_te_at = lambda j, c: X_te_base + j * n + c
 
-    inputs = (
-        [X_tr_at(i, c) for i in range(m) for c in range(n)]
-        + [y_tr_at(i) for i in range(m)]
-        + [X_te_at(j, c) for j in range(m_test) for c in range(n)]
-    )
-    outputs = [pred_at(j) for j in range(m_test)]
+    inputs = [X_tr_at(i, c) for i in range(m) for c in range(n)] + [
+        y_tr_at(i) for i in range(m)
+    ]
+    if mask_output:
+        outputs = [s_at(c) for c in range(n)]
+    else:
+        inputs += [X_te_at(j, c) for j in range(m_test) for c in range(n)]
+        outputs = [pred_at(j) for j in range(m_test)]
     lines = [",".join(map(str, inputs))]
     emit = lambda s: lines.append(s)
 
@@ -396,22 +410,23 @@ def generate_isd(
             emit(f"and {a_tmp},{ok},{s_sub_at(j)}")
             emit(f"or {s_at(c)},{a_tmp}")
 
-    # ---- mask predictor on the first f rows -----------------------------
-    for j in range(m_test):
-        if j >= f:
-            emit(f"set {pred_at(j)},0")
-            continue
-        emit(f"and {acc},{s_at(0)},{X_te_at(j, 0)}")
-        for c in range(1, n):
-            emit(f"and {a_tmp},{s_at(c)},{X_te_at(j, c)}")
-            emit(f"xor {acc},{a_tmp}")
-        emit(f"copy {pred_at(j)},{acc}")
+    # ---- mask predictor on the first f rows (joint task only) -----------
+    if not mask_output:
+        for j in range(m_test):
+            if j >= f:
+                emit(f"set {pred_at(j)},0")
+                continue
+            emit(f"and {acc},{s_at(0)},{X_te_at(j, 0)}")
+            for c in range(1, n):
+                emit(f"and {a_tmp},{s_at(c)},{X_te_at(j, c)}")
+                emit(f"xor {acc},{a_tmp}")
+            emit(f"copy {pred_at(j)},{acc}")
 
     lines.append(",".join(map(str, outputs)))
     ir = "\n".join(lines)
-    if len(lines) > OP_CAP:
+    if len(lines) > op_cap:
         raise ValueError(
-            f"generated ISD IR has {len(lines) - 2:,} ops, over the {OP_CAP:,} cap"
+            f"generated ISD IR has {len(lines) - 2:,} ops, over the {op_cap:,} cap"
         )
     return ir
 

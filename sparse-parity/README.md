@@ -128,9 +128,30 @@ ap.evaluate(ir)  # EvalResult(cost=222255, raw_accuracy=0.75, advantage=0.5, ...
 
 Times are per-IR scoring on the final 32-repetition suite (7,040 instances, 225,280 labels) after its one-time ~0.4 s build.
 
-## Scaled, n=32 — where enumeration dies
+## Mask recovery, n=32 — current main tier
 
-5 hidden bits, 32 total bits, 18 train / 256 test, **250,000-instruction cap** — [scaled_sparse_parity.py](scaled_sparse_parity.py), tested by [test_scaled_sparse_parity.py](test_scaled_sparse_parity.py). Full write-up: **[benchmark report](https://cybertronai.github.io/sutro-problems/docs/)** (GitHub Pages).
+5 hidden bits, 32 total bits, 18 train, **no test set**, **2,000,000-instruction cap** — [mask_sparse_parity.py](mask_sparse_parity.py), tested by [test_mask_sparse_parity.py](test_mask_sparse_parity.py). Full write-up: **[benchmark report](https://cybertronai.github.io/sutro-problems/docs/)** (GitHub Pages).
+
+The submission outputs the secret itself: 32 mask cells, scored by exact match against the hidden k-subset (well-defined because training sets are uniquely identifiable). For sparse parity the dropped test set is provably redundant — a circuit that hasn't identified the secret predicts at exactly 50%, so joint test accuracy was always (1 + recovery)/2 — and a fixed standard evaluator can label rows from a recovered mask for a rank-irrelevant constant (~4.4k reads/row). The accuracy axis is now the **secret recovery rate**, with a chance floor of 1/C(n,k) ≈ 0.
+
+The cap is 2M (up from the joint tier's 250k) so that a known family reaches 100%: `generate_scan(s)` runs full-width branchless GF(2) Gaussian elimination, extracts the null-space basis (dimension 14), and Gray-walks `s` of the 2¹⁴ solutions capturing any weight-k visitor — which identifiability guarantees is the secret. Sweeping s traces the whole curve; `generate_isd_mask(T)` (restarts) is cheapest at low recovery; capped enumeration (≤15,000 of 201,376 candidates, ~4.2M ops needed even packed) recovers ≤ 8% at dominated energy.
+
+![Mask energy vs recovery](doc/mask32_energy_vs_recovery.png)
+
+Regenerate with `python3 generate_mask_graph.py` (~40 s). Dev scoring uses the deterministic `mask-dev` suite (128 sampled secrets × 8 reps, cached); adjudication uses `evaluate_mask(ir, suite_key=None)` — 256 × 8 fresh hidden instances, ~20 s per run.
+
+| Date       | Energy (reads) | Recovery | Ops       | Description |
+| -          | -:             | -:       | -:        | -           |
+| 2026-08-26 | 1,505,862      | 5.8%     | 36,542    | `generate_isd_mask(1)` |
+| 2026-08-26 | 12,042,480     | 22.5%    | 291,958   | `generate_isd_mask(8)` |
+| 2026-08-26 | 23,676,539     | 74.2%    | 593,160   | `generate_scan(4095)` |
+| 2026-08-26 | 43,325,468     | 100.0%   | 1,772,808 | `generate_scan()` ([ir](submissions/scan_full_mask32.ir)) ★ frontier |
+
+Instruction counts are large because the ISA is straight-line: loops are fully unrolled (the 2¹⁴-step scan is literally emitted 16,383 times), branches become cmp/select chains, and data-dependent reads become select chains over all possibilities — a ten-line looped GE compiles to ~10⁵ instructions.
+
+## Scaled joint, n=32 — superseded by the mask tier
+
+5 hidden bits, 32 total bits, 18 train / 256 test, **250,000-instruction cap** — [scaled_sparse_parity.py](scaled_sparse_parity.py), tested by [test_scaled_sparse_parity.py](test_scaled_sparse_parity.py). Kept for reference; the mask tier above replaces it as the main benchmark.
 
 At this size brute force is priced out by the instruction cap rather than by energy: try-each-candidate over C(32,5) = 201,376 secrets needs ~26M instructions (a capped circuit checks ≤ 1,797 candidates, η ≤ 0.009), and full null-space enumeration needs 2¹⁴ Gray-code steps that also exceed the cap. The intended solution family is polynomial: GF(2) Gaussian elimination and its randomized restarts (information-set decoding). The reference circuit `generate_isd(T, f)` runs T branchless GE restarts on rotating 18-column information sets, accepts a solution only if it has weight k and reproduces every training label (unique identifiability then guarantees it *is* the secret), and mask-predicts the first f test rows.
 
