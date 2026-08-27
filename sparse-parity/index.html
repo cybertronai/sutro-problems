@@ -67,7 +67,17 @@
   .tabbar label:hover { color: var(--accent); }
   .tabs input:focus-visible ~ .tabbar { outline: 2px solid var(--accent);
                                         outline-offset: 2px; }
-  .panel { display: none; padding: 1.1rem .15rem .2rem; }
+  .panel { display: none; padding: .4rem 0 .2rem; overflow-x: auto; }
+  .panel table { border-collapse: collapse; width: 100%; margin: .4rem 0 0;
+                 font-size: .88rem; font-variant-numeric: tabular-nums; }
+  .panel th { text-align: left; color: var(--ink2); font-weight: 600;
+              border-bottom: 1px solid var(--line);
+              padding: .3rem .6rem .3rem 0; }
+  .panel td { border-bottom: 1px solid var(--grid);
+              padding: .3rem .6rem .3rem 0; vertical-align: top;
+              white-space: nowrap; }
+  .panel td:last-child { white-space: normal; }
+  .panel td.num, .panel th.num { text-align: right; }
   #b20:checked ~ .tabbar label[for="b20"],
   #b40:checked ~ .tabbar label[for="b40"],
   #b60:checked ~ .tabbar label[for="b60"],
@@ -79,14 +89,6 @@
   }
   #b20:checked ~ #p20, #b40:checked ~ #p40, #b60:checked ~ #p60,
   #b80:checked ~ #p80, #b100:checked ~ #p100 { display: block; }
-  .hero { font-size: 2.1rem; font-weight: 650; line-height: 1.2;
-          letter-spacing: -.01em; }
-  .hero .unit { font-size: 1rem; font-weight: 400; color: var(--muted);
-                margin-left: .25rem; }
-  .what { margin: .5rem 0 .2rem; }
-  .meta { color: var(--ink2); font-size: .92rem; margin: .2rem 0; }
-  .method { margin: .9rem 0 1.1rem; }
-  .method b { color: var(--ink); }
   details { margin: 1.8rem 0; border: 1px solid var(--grid); border-radius: 8px;
             padding: .7rem 1.1rem; background: var(--plane); }
   summary { cursor: pointer; color: var(--ink2); font-weight: 600; }
@@ -283,35 +285,65 @@ mask.</p>
 <label for="b100">100%</label>
 </div>
 <section class="panel" id="p20">
-<div class="hero">12,042,480<span class="unit">cost</span></div>
-<p class="what"><code>generate_isd_mask(8)</code> (ISD restarts)</p>
-<p class="meta"><a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">py</a>
-· <a href="https://github.com/yaroslavvb">@yaroslavvb</a> · 2026-08-27</p>
+<table>
+<tr><th>Date</th><th class="num">Cost</th><th>Submission</th><th>Contributors</th><th>Description</th></tr>
+<tr><td>2026-08-27</td><td class="num">17,331,683</td>
+<td><a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/submissions/scan127_mask32.md">report</a>, <a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">py</a></td>
+<td><a href="https://github.com/yaroslavvb">@yaroslavvb</a></td>
+<td><code>generate_scan(127)</code> (Gray scan)</td></tr>
+<tr><td>2026-08-26</td><td class="num">12,042,480</td>
+<td><a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/submissions/isd8_mask32.ir">ir</a>, <a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/submissions/isd8_mask32.md">report</a>, <a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">py</a></td>
+<td><a href="https://github.com/yaroslavvb">@yaroslavvb</a></td>
+<td><code>generate_isd_mask(8)</code> (ISD restarts) ★ best</td></tr>
+</table>
 </section>
 <section class="panel" id="p40">
-<div class="hero">17,945,660<span class="unit">cost</span></div>
-<p class="what"><code>generate_scan(511)</code> (Gray scan)</p>
-<p class="meta"><a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">py</a>
-· <a href="https://github.com/yaroslavvb">@yaroslavvb</a> · 2026-08-27</p>
+<table>
+<tr><th>Date</th><th class="num">Cost</th><th>Submission</th><th>Contributors</th><th>Description</th></tr>
+<tr><td>2026-08-27</td><td class="num">18,764,343</td>
+<td><a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/submissions/scan1023_mask32.md">report</a>, <a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">py</a></td>
+<td><a href="https://github.com/yaroslavvb">@yaroslavvb</a></td>
+<td><code>generate_scan(1023)</code> (Gray scan)</td></tr>
+<tr><td>2026-08-27</td><td class="num">17,945,660</td>
+<td><a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/submissions/scan511_mask32.ir">ir</a>, <a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/submissions/scan511_mask32.md">report</a>, <a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">py</a></td>
+<td><a href="https://github.com/yaroslavvb">@yaroslavvb</a></td>
+<td><code>generate_scan(511)</code> (Gray scan) ★ best</td></tr>
+</table>
 </section>
 <section class="panel" id="p60">
-<div class="hero">23,676,539<span class="unit">cost</span></div>
-<p class="what"><code>generate_scan(4095)</code> (Gray scan)</p>
-<p class="meta"><a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">py</a>
-· <a href="https://github.com/yaroslavvb">@yaroslavvb</a> · 2026-08-27</p>
+<table>
+<tr><th>Date</th><th class="num">Cost</th><th>Submission</th><th>Contributors</th><th>Description</th></tr>
+<tr><td>2026-08-27</td><td class="num">26,951,367</td>
+<td><a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/submissions/scan6143_mask32.md">report</a>, <a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">py</a></td>
+<td><a href="https://github.com/yaroslavvb">@yaroslavvb</a></td>
+<td><code>generate_scan(6143)</code> (Gray scan)</td></tr>
+<tr><td>2026-08-26</td><td class="num">23,676,539</td>
+<td><a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/submissions/scan4095_mask32.ir">ir</a>, <a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/submissions/scan4095_mask32.md">report</a>, <a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">py</a></td>
+<td><a href="https://github.com/yaroslavvb">@yaroslavvb</a></td>
+<td><code>generate_scan(4095)</code> (Gray scan) ★ best</td></tr>
+</table>
 </section>
 <section class="panel" id="p80">
-<div class="hero">30,226,172<span class="unit">cost</span></div>
-<p class="what"><code>generate_scan(8191)</code> (Gray scan)</p>
-<p class="meta"><a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">py</a>
-· <a href="https://github.com/yaroslavvb">@yaroslavvb</a> · 2026-08-27</p>
+<table>
+<tr><th>Date</th><th class="num">Cost</th><th>Submission</th><th>Contributors</th><th>Description</th></tr>
+<tr><td>2026-08-27</td><td class="num">33,501,030</td>
+<td><a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/submissions/scan10239_mask32.md">report</a>, <a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">py</a></td>
+<td><a href="https://github.com/yaroslavvb">@yaroslavvb</a></td>
+<td><code>generate_scan(10239)</code> (Gray scan)</td></tr>
+<tr><td>2026-08-27</td><td class="num">30,226,172</td>
+<td><a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/submissions/scan8191_mask32.ir">ir</a>, <a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/submissions/scan8191_mask32.md">report</a>, <a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">py</a></td>
+<td><a href="https://github.com/yaroslavvb">@yaroslavvb</a></td>
+<td><code>generate_scan(8191)</code> (Gray scan) ★ best</td></tr>
+</table>
 </section>
 <section class="panel" id="p100">
-<div class="hero">43,325,468<span class="unit">cost</span></div>
-<p class="what"><code>generate_scan(16383)</code> (Gray scan)</p>
-<p class="meta"><a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/submissions/scan_full_mask32.ir">ir</a>
-· <a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">py</a>
-· <a href="https://github.com/yaroslavvb">@yaroslavvb</a> · 2026-08-27</p>
+<table>
+<tr><th>Date</th><th class="num">Cost</th><th>Submission</th><th>Contributors</th><th>Description</th></tr>
+<tr><td>2026-08-26</td><td class="num">43,325,468</td>
+<td><a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/submissions/scan_full_mask32.ir">ir</a>, <a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/submissions/scan_full_mask32.md">report</a>, <a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">py</a></td>
+<td><a href="https://github.com/yaroslavvb">@yaroslavvb</a></td>
+<td><code>generate_scan(16383)</code> (Gray scan, full walk) ★ best</td></tr>
+</table>
 </section>
 </div>
 
@@ -321,22 +353,6 @@ mask.</p>
 <figcaption>Measured energy vs recovery for the two known families; dots mark
 reference settings.</figcaption>
 </figure>
-
-<h2>The two methods</h2>
-
-<p class="method"><b>ISD restarts</b> — repeated cheap Gaussian eliminations
-over GF(2), each on a different rotating 18-column subset of the 32 positions,
-keeping a solution only if it has weight <var>k</var> and reproduces every
-parity (information-set decoding). The cheapest known way to buy low recovery.
-<a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/scaled_sparse_parity.py">algorithm
-→</a></p>
-
-<p class="method"><b>Gray scan</b> — one full-width Gaussian elimination over
-GF(2), then a Gray-code walk through the null space of the training system,
-capturing any weight-<var>k</var> visitor — which is provably the secret. A
-full walk reaches 100%.
-<a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">description
-→</a></p>
 
 <details>
 <summary>For agents' eyes only</summary>

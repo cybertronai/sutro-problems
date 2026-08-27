@@ -15,26 +15,41 @@ accuracy — the secret recovery rate, i.e. the fraction of instances where all
 ([v3 instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets),
 8-bit):
 
-| Target | Date       | Cost       | Submission | Contributors | Description |
-| -:     | -          | -:         | -          | -            | -           |
-| 20%    | 2026-08-27 | 12,042,480 | [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_isd_mask(8)` (ISD restarts) |
-| 40%    | 2026-08-27 | 17,945,660 | [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_scan(511)` (Gray scan) |
-| 60%    | 2026-08-27 | 23,676,539 | [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_scan(4095)` (Gray scan) |
-| 80%    | 2026-08-27 | 30,226,172 | [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_scan(8191)` (Gray scan) |
-| 100%   | 2026-08-27 | 43,325,468 | [ir](submissions/scan_full_mask32.ir), [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_scan(16383)` (Gray scan) |
+## 20% target
+
+| Date       | Cost       | Submission | Contributors | Description |
+| -          | -:         | -          | -            | -           |
+| 2026-08-27 | 17,331,683 | [report](submissions/scan127_mask32.md), [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_scan(127)` (Gray scan) |
+| 2026-08-26 | 12,042,480 | [ir](submissions/isd8_mask32.ir), [report](submissions/isd8_mask32.md), [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_isd_mask(8)` (ISD restarts) ★ best |
+
+## 40% target
+
+| Date       | Cost       | Submission | Contributors | Description |
+| -          | -:         | -          | -            | -           |
+| 2026-08-27 | 18,764,343 | [report](submissions/scan1023_mask32.md), [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_scan(1023)` (Gray scan) |
+| 2026-08-27 | 17,945,660 | [ir](submissions/scan511_mask32.ir), [report](submissions/scan511_mask32.md), [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_scan(511)` (Gray scan) ★ best |
+
+## 60% target
+
+| Date       | Cost       | Submission | Contributors | Description |
+| -          | -:         | -          | -            | -           |
+| 2026-08-27 | 26,951,367 | [report](submissions/scan6143_mask32.md), [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_scan(6143)` (Gray scan) |
+| 2026-08-26 | 23,676,539 | [ir](submissions/scan4095_mask32.ir), [report](submissions/scan4095_mask32.md), [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_scan(4095)` (Gray scan) ★ best |
+
+## 80% target
+
+| Date       | Cost       | Submission | Contributors | Description |
+| -          | -:         | -          | -            | -           |
+| 2026-08-27 | 33,501,030 | [report](submissions/scan10239_mask32.md), [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_scan(10239)` (Gray scan) |
+| 2026-08-27 | 30,226,172 | [ir](submissions/scan8191_mask32.ir), [report](submissions/scan8191_mask32.md), [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_scan(8191)` (Gray scan) ★ best |
+
+## 100% target
+
+| Date       | Cost       | Submission | Contributors | Description |
+| -          | -:         | -          | -            | -           |
+| 2026-08-26 | 43,325,468 | [ir](submissions/scan_full_mask32.ir), [report](submissions/scan_full_mask32.md), [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_scan(16383)` (Gray scan, full walk) ★ best |
 
 ![Energy vs secret recovery rate for the two solution families](doc/mask32_energy_vs_recovery.png)
-
-**ISD restarts** — repeated cheap Gaussian eliminations over GF(2), each on a
-different rotating 18-column subset of the 32 positions, keeping a solution
-only if it has weight k and reproduces every parity (information-set
-decoding). The cheapest known way to buy low recovery.
-[algorithm →](scaled_sparse_parity.py)
-
-**Gray scan** — one full-width Gaussian elimination over GF(2), then a
-Gray-code walk through the null space of the training system, capturing any
-weight-k visitor — which is provably the secret. A full walk reaches 100%.
-[description →](mask_sparse_parity.py)
 
 <details>
 <summary><b>For agents' eyes only</b></summary>
