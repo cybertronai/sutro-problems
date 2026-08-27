@@ -24,6 +24,8 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator, FuncFormatter, NullLocator
 
 import approx_sparse_parity as ap
+import mask_sparse_parity as mp
+import scaled_sparse_parity as sp
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT_PNG = os.path.join(HERE, "doc", "approx_accuracy_vs_energy.png")
@@ -39,10 +41,13 @@ INK_2 = "#52514e"
 MUTED = "#898781"
 GRID = "#e1e0d9"
 BASELINE = "#c3c2b7"
-SERIES = {"blue": "#2a78d6", "orange": "#eb6834", "aqua": "#1baf7a"}
+SERIES = {"blue": "#2a78d6", "orange": "#eb6834", "aqua": "#1baf7a",
+          "yellow": "#eda100"}
 
 Q_SWEEP = [11, 22, 44, 66, 88, 110, 132, 154, 176, 198, 220]
-F_SWEEP = [2, 4, 8, 12, 16, 20, 24, 28, 32]
+T_SWEEP = [1, 2, 4, 8, 12]      # ISD restarts (12 distinct subsets at n=12)
+S_SWEEP = [0, 3, 7, 15]         # Gray-scan steps (2^(n-m) = 16 solutions)
+OP_CAP = 100_000
 
 
 @dataclass
@@ -60,6 +65,11 @@ def _sweep(gen: Callable[[int, int], str], knobs) -> List[Tuple[int, float]]:
     return pts
 
 
+def _eval_ir(ir: str) -> Tuple[int, float]:
+    res = ap.evaluate(ir, repetitions=REPETITIONS)
+    return res.cost, res.raw_accuracy
+
+
 def collect() -> Tuple[List[Series], Tuple[int, float]]:
     naive, mask = ap.generate_approx_baseline, ap.generate_mask_baseline
     series = [
@@ -69,14 +79,22 @@ def collect() -> Tuple[List[Series], Tuple[int, float]]:
             _sweep(naive, [(q, 32) for q in Q_SWEEP]),
         ),
         Series(
-            "try-each-candidate — compute fewer outputs",
+            "ISD — Gaussian-elimination restarts (T = 1…12)",
             SERIES["orange"],
-            _sweep(naive, [(220, f) for f in F_SWEEP]),
+            [_eval_ir(sp.generate_isd(T, spec=ap.APPROX, op_cap=OP_CAP))
+             for T in T_SWEEP],
         ),
         Series(
             "mask decoder — search fewer candidates",
             SERIES["aqua"],
             _sweep(mask, [(q, 32) for q in Q_SWEEP]),
+        ),
+        Series(
+            "GE + null-space Gray scan (s = 0…15)",
+            SERIES["yellow"],
+            [_eval_ir(mp.generate_scan(sv, spec=ap.APPROX, joint=True,
+                                       op_cap=OP_CAP))
+             for sv in S_SWEEP],
         ),
     ]
     res = ap.evaluate(naive(0, 0), repetitions=REPETITIONS)
@@ -142,17 +160,24 @@ def plot(series: List[Series]) -> None:
     def _round_cost(v: float) -> str:
         return f"{v/1e6:.1f}M" if v >= 1e6 else f"{v/1e3:.0f}k"
 
-    # Selective direct labels at the exact-recovery endpoints.
-    for s, name, dy in (
-        (series[0], "try-each-candidate", 14),
-        (series[2], "mask decoder", 14),
+    # Selective direct labels at the (near-)exact endpoints.
+    for s, name, xy, ha, va in (
+        (series[0], "try-each-candidate", (-8, 14), "right", "top"),
+        (series[2], "mask decoder", (2, -12), "right", "top"),
     ):
         cost, acc = s.points[-1]
         ax.annotate(
-            f"{name}\nexact @ {_round_cost(cost)} reads", (acc, cost),
-            xytext=(-8, dy), textcoords="offset points",
-            ha="right", va="top", fontsize=8.5, color=INK_2,
+            f"{name}\nexact @ {_round_cost(cost)} reads",
+            (acc, cost), xytext=xy, textcoords="offset points",
+            ha=ha, va=va, fontsize=8.5, color=INK_2,
         )
+    # scan: label the flat stretch (fixed GE cost, near-free sweep)
+    cost1, acc1 = series[3].points[1]
+    ax.annotate(
+        f"GE + Gray scan: flat @ {_round_cost(cost1)} reads, 99% at s=15",
+        (acc1, cost1), xytext=(-4, 8), textcoords="offset points",
+        ha="left", va="bottom", fontsize=8.5, color=INK_2,
+    )
 
     ax.set_yscale("log")
     ax.set_xlim(0.5, 1.02)
@@ -213,10 +238,9 @@ def plot(series: List[Series]) -> None:
 
 def frontier_table(series: List[Series], chance: Tuple[int, float]) -> str:
     labeled = [(chance[0], chance[1], "constant guess")]
-    for s in series:
+    sweeps = [("q", Q_SWEEP), ("T", T_SWEEP), ("q", Q_SWEEP), ("s", S_SWEEP)]
+    for s, (knob, knobs) in zip(series, sweeps):
         short = s.label.split(" — ")[0]
-        knob = "q" if "candidates" in s.label else "f"
-        knobs = Q_SWEEP if knob == "q" else F_SWEEP
         for (cost, acc), k in zip(s.points, knobs):
             labeled.append((cost, acc, f"{short}, {knob}={k}"))
     front = set(pareto([(c, a) for c, a, _ in labeled]))

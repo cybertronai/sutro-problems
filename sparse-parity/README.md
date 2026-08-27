@@ -91,7 +91,7 @@ Instead of demanding 100% recovery, a submission picks a point on an accuracy-vs
 
 ![Accuracy vs energy curve](doc/approx_accuracy_vs_energy.png)
 
-Regenerate with `python3 generate_graph.py` (~2 s on an M-series laptop; needs numpy + matplotlib). The two plotted baseline families come from `generate_approx_baseline(q, f)` (try-each-candidate, searching only the first `q` of 220 candidates and computing only the first `f` of 32 outputs) and `generate_mask_baseline(q, f)` (same decode, but predictions read a 12-bit secret mask instead of re-scanning candidates, so an exact answer costs 444k reads instead of 2.2M).
+Regenerate with `python3 generate_graph.py` (~2 s on an M-series laptop; needs numpy + matplotlib). Four families are plotted, all swept on decode-side knobs only — the output-truncation curve was dropped as uniformly dominated (and inconsistent with the mask-recovery direction of the newer tiers): `generate_approx_baseline(q, 32)` (try-each-candidate over the first `q` of 220 candidates), `generate_mask_baseline(q, 32)` (same decode, predictions via a 12-bit secret mask — exact at 444k reads instead of 2.2M), plus the scalable families from the larger tiers run at this size: `generate_isd(T, spec=APPROX)` (ISD Gaussian-elimination restarts) and `generate_scan(s, spec=APPROX, joint=True)` (GE + null-space Gray scan — a nearly flat line at ~480k reads sweeping 65→99%, since 2⁴ = 16 solutions cover the whole null space at n=12). At this size enumeration still owns the frontier; the n=32 graphs show the regime flip.
 
 ### Why n=12, k=3, 8 train, 32 test
 

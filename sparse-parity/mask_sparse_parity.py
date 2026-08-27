@@ -263,7 +263,11 @@ def generate_enum_mask(
 
 
 def generate_scan(
-    n_steps: int | None = None, *, spec: Spec = MASK32
+    n_steps: int | None = None,
+    *,
+    spec: Spec = MASK32,
+    joint: bool = False,
+    op_cap: int = OP_CAP,
 ) -> str:
     """GE + null-space Gray scan: the family that reaches 100%.
 
@@ -291,6 +295,11 @@ def generate_scan(
     49%, s=4,095 -> 74% (median capture step ~1,100 of 16,383).
     n_steps = 2^G - 1 visits the entire solution space -> ~100%
     (rank-deficient training draws, ~2^-14 of instances, may still miss).
+
+    With ``joint=True`` the circuit targets a joint train+test tier
+    instead (``spec.m_test`` > 0): it additionally reads X_test and
+    outputs all m_test labels via the O(n) mask predictor over the
+    captured secret -- no output truncation.
     """
     n, m, k = spec.n_bits, spec.m_train, spec.k_secret
     G = n - m                       # null-space dimension w.h.p.
@@ -327,6 +336,13 @@ def generate_scan(
     a_tmp = alloc(1); b_tmp = alloc(1)
     X_tr_base = alloc(n * m)
     y_tr_base = alloc(m)
+    if joint:
+        if spec.m_test <= 0:
+            raise ValueError("joint=True requires spec.m_test > 0")
+        pred_base = alloc(spec.m_test)
+        X_te_base = alloc(n * spec.m_test)
+        pred_at = lambda j: pred_base + j
+        X_te_at = lambda j, c: X_te_base + j * n + c
 
     w_at    = lambda c: w_base + c
     out_at  = lambda c: out_base + c
@@ -346,6 +362,10 @@ def generate_scan(
     inputs = [X_at(i, c) for i in range(m) for c in range(n)] + [
         y_at(i) for i in range(m)
     ]
+    if joint:
+        inputs += [
+            X_te_at(j, c) for j in range(spec.m_test) for c in range(n)
+        ]
     lines = [",".join(map(str, inputs))]
     emit = lines.append
 
@@ -447,11 +467,21 @@ def generate_scan(
             emit(f"xor {w_at(c)},{FB_at(j, c)}")
         capture()
 
-    lines.append(",".join(str(out_at(c)) for c in range(n)))
+    if joint:
+        # ---- joint mode: label every test row from the captured mask ----
+        for j in range(spec.m_test):
+            emit(f"and {WSUM},{out_at(0)},{X_te_at(j, 0)}")
+            for c in range(1, n):
+                emit(f"and {a_tmp},{out_at(c)},{X_te_at(j, c)}")
+                emit(f"xor {WSUM},{a_tmp}")
+            emit(f"copy {pred_at(j)},{WSUM}")
+        lines.append(",".join(str(pred_at(j)) for j in range(spec.m_test)))
+    else:
+        lines.append(",".join(str(out_at(c)) for c in range(n)))
     ir = "\n".join(lines)
-    if len(lines) > OP_CAP:
+    if len(lines) > op_cap:
         raise ValueError(
-            f"scan IR has {len(lines) - 2:,} ops, over the {OP_CAP:,} cap"
+            f"scan IR has {len(lines) - 2:,} ops, over the {op_cap:,} cap"
         )
     return ir
 

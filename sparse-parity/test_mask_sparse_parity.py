@@ -103,6 +103,18 @@ def test_scan_all_or_nothing():
     assert 0 < int(exact.sum()) < len(masks)
 
 
+def test_scan_joint_mode_on_tier1_spec():
+    """joint=True targets the joint train+test task: near-exact at full
+    scan, and per-instance all-or-nothing."""
+    ir = mp.generate_scan(spec=ap.APPROX, joint=True, op_cap=100_000)
+    res = ap.evaluate(ir, repetitions=2)
+    assert res.advantage >= 0.95
+    run, _, _ = ap._compile_vector(ir)
+    inputs, y, _ = ap.suite(repetitions=2)
+    out = run(inputs)
+    assert bool(((out == y).all(axis=1) | (out == 0).all(axis=1)).all())
+
+
 # ---------------------------------------------------------------------------
 # Other families + scoring
 # ---------------------------------------------------------------------------

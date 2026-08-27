@@ -141,32 +141,44 @@ particular where it bends when brute force stops being affordable.</p>
 <h2 id="tier1">Tier 1 (n=12): the approximate benchmark</h2>
 <figure>
 <img src="approx_accuracy_vs_energy.png"
-     alt="Energy required vs accuracy for the n=12 tier: mask decoder frontier from 52.5% at ~50k reads to 100% at 444k reads; try-each-candidate 5x more expensive; output truncation dominated.">
+     alt="Energy required vs accuracy for the n=12 tier: mask decoder frontier from 52.5% at ~50k reads to 100% at 444k reads; try-each-candidate 5x more expensive; ISD restarts close but bending up; GE + Gray scan a flat line at ~480k reads.">
 <figcaption>n=12, k=3, 8 train / 32 test. Deterministic public suite: all 220
-secrets × 8 repetitions. The baselines' accuracy here is <em>exact</em> —
-identical under every suite key.</figcaption>
+secrets × 8 repetitions. The enumeration baselines' accuracy here is
+<em>exact</em> — identical under every suite key. (The output-truncation
+curve that used to appear here was dropped: uniformly dominated, and
+inconsistent with the mask-recovery direction of Tier 3.)</figcaption>
 </figure>
 
-<h3>Algorithm: try-each-candidate (blue and orange)</h3>
+<h3>Algorithm: try-each-candidate (blue)</h3>
 <p><b>Decode:</b> for each candidate triple T among the first <var>q</var> (of
 220, in fixed order), compare the parity of columns T against all 8 training
 labels, producing an indicator <code>ind_T</code>. By unique identifiability,
 exactly one candidate matches — so decoding succeeds iff the secret is among
-the <var>q</var> examined. <b>Predict:</b> each of the first <var>f</var> test
-rows is labeled <code>OR over T of (ind_T AND parity_T(x))</code>; the
-remaining outputs default to 0 (exactly 50% right). The two knobs give exactly
-η&nbsp;=&nbsp;(q/220)·(f/32): the blue curve sweeps <var>q</var>, the orange
-curve sweeps <var>f</var> — and orange is visibly the worse deal because it
-pays the full 220-candidate decode even at chance-level accuracy.</p>
+the <var>q</var> examined. <b>Predict:</b> each test row is labeled
+<code>OR over T of (ind_T AND parity_T(x))</code>, so prediction re-scans all
+<var>q</var> candidates per output — the source of this family's 5× energy
+handicap. Advantage is exactly η&nbsp;=&nbsp;q/220.</p>
 
-<h3>Algorithm: mask decoder (green — owns the frontier)</h3>
+<h3>Algorithm: mask decoder (green — owns the frontier at this size)</h3>
 <p>Same decode phase, but the <var>q</var> one-hot indicators are compressed
 once into 12 mask bits, <code>mask_c = OR of ind_T over candidates T
 containing column c</code> — the mask <em>is</em> the recovered secret. Each
 prediction is then <code>XOR_c (mask_c AND x_c)</code>: 12 ANDs and 11 XORs
 per output, independent of <var>q</var>. Same accuracy formula, ~5× less
-energy (exact recovery at 444,389 reads instead of 2,209,461), because
-prediction no longer re-scans candidates per output.</p>
+energy (exact recovery at 444,389 reads instead of 2,209,461).</p>
+
+<h3>The scalable families at this size (orange, yellow)</h3>
+<p>The same two polynomial algorithms that own the n=32 tiers are plotted
+here for comparison. <b>ISD restarts</b> (orange) track the mask decoder
+closely up to ~75% and then bend away (diminishing returns as rotated
+information sets start overlapping — only 12 distinct subsets exist at
+n=12). The <b>GE + null-space Gray scan</b> (yellow) is a nearly horizontal
+line: it pays a fixed ~477k-read Gaussian-elimination-plus-basis cost, after
+which sweeping all 2⁴&nbsp;=&nbsp;16 null-space solutions is almost free —
+65% → 99% accuracy for ~1% more energy. At n=12 both sit above the
+enumeration frontier: with only 220 candidates, brute force is still the
+best buy. The n=32 graphs below show exactly this ordering inverting — the
+benchmark's central phenomenon.</p>
 
 <table>
 <tr><th class="num">Energy (reads)</th><th class="num">Accuracy</th>
