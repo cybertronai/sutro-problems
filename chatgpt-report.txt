@@ -1,0 +1,655 @@
+
+Thought for 9m 9s
+Answer now
+Stopped thinking
+
+I found the current sparse-parity setup. Right now it has a Small 100% case with n=3, k=2, train=4, test=32, and a Medium 100% case with n=8, k=3, train=8, test=64; the current best medium submission is around 2.7 ms, so your “milliseconds” goal is realistic at these sizes.
+
+The main thing I would change for your new version: do not use raw 5%–95% binary accuracy. For parity, a wrong candidate gives about 50% test accuracy, so raw 5% is not a meaningful lower target. I would define:
+
+$$ \text{normalized accuracy} = 2\cdot \text{raw accuracy} - 1 $$
+
+So:
+
+normalized target	raw accuracy target
+5%	52.5%
+25%	62.5%
+50%	75%
+80%	90%
+90%	95%
+95%	97.5%
+
+That makes “5% to 95%” mean “5% to 95% of the way from random guessing to perfect.”
+
+Recommended benchmark ladder
+
+I would use equal train and test sizes, m_train = m_test = m, and make the main leaderboard these:
+
+tier	n	k	candidates C(n,k)	recommended m values	purpose
+sanity	3	2	3	4	keep a tiny compatibility/correctness case
+tiny	8	3	56	4, 6, 8	close to current medium, but equal train/test
+small	10	3	120	5, 7, 9	nice fast sample-complexity transition
+main	12	3	220	6, 8, 10	probably the best default benchmark set
+hard-fast	16	3	560	8, 10, 12	still likely milliseconds, but less toy-like
+stretch	13	4	715	8, 10, 12	introduces k=4 while staying under the current 100k-ish IR scale
+
+My default would be:
+
+main benchmark:
+  (n=8,  k=3, m=4/6/8)
+  (n=12, k=3, m=6/8/10)
+  (n=16, k=3, m=8/10/12)
+
+optional hard:
+  (n=13, k=4, m=8/10/12)
+
+I would not go much above C(n,k) ≈ 1000 if the benchmark must stay in milliseconds and if you want naive or semi-naive submissions to compile and score quickly. Your current scorer has a 100,000-instruction guard, and a naive candidate-enumeration IR grows roughly like:
+
+$$ \binom{n}{k}\,m\,(2k+3) $$
+
+So (n=13,k=4,m=12) is already near the upper edge; (n=16,k=4,m≈12) is more like a stretch benchmark that would require better packing or a raised instruction cap. The current repo’s medium case already shows that optimized packed approaches can beat the naive baseline by a large margin.
+
+Why those m values?
+
+For sparse parity, the number of possible hidden subsets is:
+
+$$ N = \binom{n}{k} $$
+
+Each random training example cuts the set of wrong candidate parities by about half. So the critical sample scale is:
+
+$$ m \approx \log_2 \binom{n}{k} $$
+
+Then you choose m slightly below, near, or above that transition.
+
+A rough rule:
+
+target	choose m around
+low-but-above-chance	log2(C(n,k)) - 3 or -4
+medium	log2(C(n,k)) - 1
+high	log2(C(n,k)) + 1
+very high / near-perfect	log2(C(n,k)) + 2 or +3
+unique recovery with high probability	log2(C(n,k)) + 4 or more
+
+That is why the ladder above uses patterns like:
+
+n=8,  k=3: C=56,  log2 C ≈ 5.8  → m = 4, 6, 8
+n=12, k=3: C=220, log2 C ≈ 7.8  → m = 6, 8, 10
+n=16, k=3: C=560, log2 C ≈ 9.1  → m = 8, 10, 12
+n=13, k=4: C=715, log2 C ≈ 9.5  → m = 8, 10, 12
+
+Those give you a clean transition from underdetermined to mostly solved without making the programs huge.
+
+Scoring change I strongly recommend
+
+Your current generate() appears to keep drawing training sets until exactly one k-subset matches the labels. That is good for a 100% recovery challenge, but it is bad for a sample-complexity benchmark, because it conditions away the hard/ambiguous cases.
+
+For the new benchmark, I would split the modes:
+
+Mode A: natural approximate benchmark
+
+Generate random train/test examples without requiring unique identifiability.
+
+Then score aggregate normalized accuracy:
+
+raw_acc = total_correct / total_test_labels
+norm_acc = max(0.0, 2 * raw_acc - 1)
+pass if norm_acc >= target
+
+This gives meaningful targets like:
+
+target_05  → raw accuracy ≥ 52.5%
+target_25  → raw accuracy ≥ 62.5%
+target_50  → raw accuracy ≥ 75.0%
+target_80  → raw accuracy ≥ 90.0%
+target_90  → raw accuracy ≥ 95.0%
+target_95  → raw accuracy ≥ 97.5%
+Mode B: exact recovery benchmark
+
+Keep the current “unique identifiable training set” condition, and require 100% test accuracy. This is closer to the existing Small/Medium 100% setup.
+
+I would avoid mixing these two modes. Conditioning on identifiability and then asking for approximate accuracy will make m less meaningful.
+
+Avoid per-instance thresholds for low accuracy
+
+The current approximate medium scorer requires at least 50% per hidden seed, and the listed approximate submission labels only the first 32 of 64 test examples. That kind of threshold can incentivize “partial labeling” tricks rather than better sparse-parity inference.
+
+For the new version, I would use aggregate accuracy across all hidden seeds and test rows, not “must pass 55% on every instance.” With m_test = m, small instances have very coarse test accuracy increments; for example, m=8 only moves in 12.5% steps per instance. Aggregating over, say, 16 or 32 hidden instances fixes that while staying fast.
+
+Concrete proposal
+
+I would ship the benchmark as:
+
+SPECS = [
+    # sanity
+    (3, 2, 4),
+
+    # k=3 sample-complexity ladder
+    (8, 3, 4), (8, 3, 6), (8, 3, 8),
+    (12, 3, 6), (12, 3, 8), (12, 3, 10),
+    (16, 3, 8), (16, 3, 10), (16, 3, 12),
+
+    # optional k=4 stretch
+    (13, 4, 8), (13, 4, 10), (13, 4, 12),
+]
+
+And targets:
+
+TARGETS = {
+    "t05": 0.05,   # raw 52.5%
+    "t25": 0.25,   # raw 62.5%
+    "t50": 0.50,   # raw 75%
+    "t80": 0.80,   # raw 90%
+    "t90": 0.90,   # raw 95%
+    "t95": 0.95,   # raw 97.5%
+}
+
+For the public leaderboard, I would probably not show every target for every spec. I would show a compact frontier:
+
+tiny:      n=8,  k=3, m=4/6/8,    targets 25/50/90
+main:      n=12, k=3, m=6/8/10,   targets 25/50/90
+hard-fast: n=16, k=3, m=8/10/12,  targets 25/50/90
+stretch:   n=13, k=4, m=8/10/12,  targets 25/50/90
+
+That gives you a good benchmark shape: small enough to run in milliseconds, large enough that clever memory layout/packing matters, and graded enough that you can see partial progress instead of only all-or-nothing exact recovery.
+
+Sources
+Tue, Jun 2 at 6:33 PM
+Student evaluation issues.
+
+When I'm computing sparse parity accuracy, I may want to do it for several different inputs, maybe randomly sampled. You tell me how many. I'm interested in knowing if it's feasible for each of those sizes if it's feasible to iterate all of them. Give me some sample suggestions of how many to evaluate for full final ranking so the evaluation can be more intense. I'm curious about the feasibility of trying it for all examples. Maybe give me some estimates of if I want my variation to be within 0.1%, how many examples do I need to sample in order to make my accuracy target within 0.1% with 99% probability? I'm going to be sampling. I have a learner which claims to be 42.5% efficient. I want to be able to verify it within the 0.1% range with 99% probability. For those sizes give me a breakdown of the sample sizes I will need and let's see how long it will take to evaluate. 
+Thought for 8m 37s
+Answer now
+
+I would not try to exhaustively iterate all training examples** except for the tiny sanity case.** For final ranking, I would use randomized, stratified evaluation: sample many independent training matrices, evaluate all hidden secrets for each sampled training matrix, and average the score over those tasks.
+
+Your current repo’s medium benchmark is n=8, k=3, 8 train / 64 test; the README reports medium submissions from 26 ms for try-each-candidate down to 2.7 ms for the best packed submission, so I’ll use those as rough timing anchors. The current generator also conditions on the training set being uniquely identifiable, which is fine for exact recovery, but I would avoid that conditioning for an approximate-efficiency benchmark.
+
+My recommendation
+
+For the main benchmark, use something like:
+
+public/dev eval:      1k–10k sampled task inputs per size
+leaderboard eval:     50k–250k sampled task inputs per size
+final/tie-break eval: 1M–2M sampled task inputs per size
+
+If you really want to verify a 42.5% normalized-efficiency claim to within ±0.1 percentage points with 99% probability, you are in the ~2 million independent task inputs per size regime when m_test is small.
+
+That is heavy, but plausible for final ranking of top submissions. It is too much for every quick iteration.
+
+Exhaustive feasibility
+
+There are several different “all examples” notions:
+
+What to exhaust	Feasible?	Comment
+all hidden secrets C(n,k)	yes	At your sizes this is only 56–715 secrets.
+all single test rows 2^n for one trained task	mostly yes	Up to 2^16 = 65,536 rows; feasible as analysis, maybe not as normal IR output.
+all secrets × all single test rows	maybe	Up to 36.7M labels for (16,3), feasible offline, not ideal inside every submitted program.
+all training matrices 2^(n*m)	no	Already impossible at (n=8,m=4): 2^32 training matrices.
+all train/test matrices	absolutely no	Explodes as 2^(2nm).
+
+For the sizes we discussed:
+
+size	C(n,k) secrets	all test rows 2^n	secrets × all rows	all training matrices
+n=3,k=2,m=4	3	8	24	2^12, feasible
+n=8,k=3,m=4/6/8	56	256	14,336	2^32 / 2^48 / 2^64, not feasible
+n=12,k=3,m=6/8/10	220	4,096	901,120	2^72 / 2^96 / 2^120, not feasible
+n=16,k=3,m=8/10/12	560	65,536	36,700,160	2^128 / 2^160 / 2^192, not feasible
+n=13,k=4,m=8/10/12	715	8,192	5,857,280	2^104 / 2^130 / 2^156, not feasible
+
+So: exhaust secrets, maybe exhaust test rows for diagnostics, but sample training inputs.
+
+Statistical sample size for 42.5% efficiency
+
+I am interpreting “42.5% efficient” as the normalized score:
+
+$$ e = 2\cdot \text{raw accuracy} - 1 $$
+
+So:
+
+$$ e = 0.425 $$
+
+corresponds to raw accuracy:
+
+$$ p = \frac{1+e}{2} = 0.7125 $$
+
+If test-label samples were IID Bernoulli trials, the lower-bound sample size for estimating normalized efficiency within
+
+$$ \pm 0.001 $$
+
+with 99% confidence would be:
+
+$$ N \approx \frac{z_{0.995}^2 \cdot p(1-p)}{(0.001/2)^2} \approx 5.44\text{ million test-label evaluations} $$
+
+That is the optimistic label-level number.
+
+But sparse parity has a stronger task-level correlation: for a given training set, the learner often either recovers the secret or does not. If it recovers, test accuracy is 100%; if it chooses a wrong parity, random test-row accuracy is about 50%. So for equal train/test size m, a better approximation is:
+
+$$ \operatorname{Var}(Z) \approx q(1-q) + \frac{1-q}{m} $$
+
+where:
+
+$$ q = 0.425 $$
+
+and Z is the normalized score of one whole task input.
+
+That gives these sample sizes for ±0.1 percentage points normalized efficiency, 99% two-sided:
+
+m_test	task inputs needed	test-labels scored	time at 2.7 ms/input	time at 26 ms/input
+4	2.58M	10.3M	1.9 h	18.6 h
+6	2.26M	13.5M	1.7 h	16.3 h
+8	2.10M	16.8M	1.6 h	15.2 h
+10	2.00M	20.0M	1.5 h	14.5 h
+12	1.94M	23.3M	1.45 h	14.0 h
+
+So the surprising answer is: using more test rows helps, but not dramatically, because most of the uncertainty is whether the learner recovers the hidden parity on that training draw.
+
+If you can evaluate exact recovery directly, or effectively test all rows, the lower limit is about:
+
+1.62M independent task inputs
+
+for ±0.1 percentage points normalized efficiency at 99% confidence.
+
+If instead you meant raw accuracy within ±0.1 percentage points, not normalized efficiency, divide the task counts above by about four. For example, at m=8, raw ±0.1 pp needs about 525k task inputs, while normalized ±0.1 pp needs about 2.10M task inputs.
+
+Practical final-ranking schedule
+
+I would use this:
+
+evaluation level	task inputs per size	approximate 99% half-width, normalized, around 42.5%, m≈8–12	use
+smoke	1k	±4.4–4.6 pp	catch broken submissions
+public/dev	10k	±1.4 pp	fast iteration
+leaderboard	50k	±0.62–0.65 pp	meaningful ranking
+strong leaderboard	100k	±0.44–0.46 pp	good default
+final	250k	±0.28–0.29 pp	robust final ranking
+tie-break	1M	±0.14–0.15 pp	close top submissions
+audit	~2M	±0.10 pp	verify 42.5% within 0.1 pp
+
+At the current best-reported medium speed of about 2.7 ms/input, 100k task inputs is roughly 4.5 minutes per size; 250k is about 11 minutes per size; 2M is about 90 minutes per size. At the slower 26 ms/input baseline, multiply those by about 9.6.
+
+Best sampling design
+
+For each (n,k,m) size, I would do:
+
+for many sampled X_train matrices:
+    for every hidden secret S in combinations(n,k):
+        generate y_train from S
+        evaluate learner
+        sample or generate test rows
+        score normalized accuracy
+
+This is better than sampling secrets randomly, because all your C(n,k) values are small:
+
+size	secrets	training matrices needed for ~100k tasks
+n=8,k=3	56	~1,786 sampled training matrices
+n=12,k=3	220	~455 sampled training matrices
+n=16,k=3	560	~179 sampled training matrices
+n=13,k=4	715	~140 sampled training matrices
+
+For 250k tasks, multiply those training-matrix counts by 2.5. This gives much lower variance across secrets and makes the evaluation harder to game.
+
+What I would actually ship
+
+For each benchmark size:
+
+Public eval:
+  10k tasks, all secrets stratified, fixed public seed.
+
+Leaderboard eval:
+  100k tasks, all secrets stratified, private seed.
+
+Final ranking:
+  250k tasks per size.
+  If two submissions are within ~0.3 percentage points, rerun those only at 1M–2M tasks.
+
+I would not make ±0.1 pp verification the normal leaderboard requirement. It is statistically expensive. I would use it only as a tie-break/audit mode for the top few submissions.
+
+Sources
+Today 1:25 PM
+
+Now we analyze this. I want a benchmark which is 1) very fast to run, like seconds on an m5. 2) is fairly deterministic 3) allows me to plot a curve of accuracy versus energy which is more or less robust against runs and interesting . In other words, I have some accuracy target for the fraction of outputs that need to be correct, and I have some approximate algorithm that optimizes it and gives me the result. I'm interested in figuring out the appropriate values of:
+
+number of hidden bits
+number of total bits
+training examples
+testing examples
+Recommended main benchmark
+$$ \boxed{ n=12,\qquad k=3,\qquad m_{\text{train}}=8,\qquad m_{\text{test}}=32 } $$
+
+Then stabilize the score by evaluating all \(\binom{12}{3}=220\) hidden parities over multiple deterministic training instances.
+
+Parameter	Choice	Reason
+Total bits \(n\)	12	Large enough that generic linear interpolation is weak, but still extremely fast
+Hidden bits \(k\)	3	First genuinely interesting sparse case; candidate sharing and pair-XOR reuse matter
+Training examples	8	Almost exactly the information-theoretic threshold, and fits in one 8-bit packed word
+Test examples per invocation	32	Keeps decoding and prediction energy approximately balanced
+Training repetitions per secret	8 dev / 32 final / 128 audit	Controls statistical stability without changing the energy problem
+
+I would not retain the earlier requirement that training and test sizes be equal. They play unrelated roles:
+
+\(m_{\text{train}}\) controls identifiability and decoding difficulty.
+\(m_{\text{test}}\) controls the fixed-cost-versus-per-output energy tradeoff.
+Repeated benchmark instances, rather than a huge test set inside one instance, should provide statistical stability.
+Why \(n=12,\;k=3,\;m_{\text{train}}=8\) is unusually clean
+
+There are
+
+$$ N_{\text{secret}}=\binom{12}{3}=220 $$
+
+possible hidden parities, requiring
+
+$$ \log_2 220 \approx 7.78 $$
+
+bits to identify. Therefore eight binary training labels are almost exactly the minimum plausible amount of information.
+
+There is also a useful boundary:
+
+$$ \binom{12}{3}=220 < 256, \qquad \binom{13}{3}=286 > 256. $$
+
+Thus \(n=12\) is the largest three-sparse problem whose candidate identity can, in principle, fit into an 8-bit training signature. That lines up perfectly with the benchmark’s 8-bit instruction model.
+
+The current packed solver packs eight training labels and each eight-entry training column into one byte, then checks candidate triples using pair-XOR reuse. Nine training examples would cross a real algorithmic boundary: the same method would require multiple packed words.
+
+Why not \(n=8\)?
+
+The current medium problem has
+
+$$ n=8,\quad k=3,\quad m_{\text{train}}=8,\quad m_{\text{test}}=64. $$
+
+Because \(m_{\text{train}}=n\), an ordinary GF(2) linear solver can often reconstruct the entire parity vector without making important use of sparsity. Indeed, the repository already has a Gaussian-elimination baseline for this reason. The sparse structure is not doing enough work.
+
+For \(n=12,m=8\), a full-rank training matrix spans only
+
+$$ \frac{2^8}{2^{12}}=\frac1{16} $$
+
+of the test-input space. A generic linear interpolator can determine labels exactly on that \(1/16\), but outside the span it can only guess. Its expected raw accuracy is therefore approximately
+
+$$ \frac1{16}\cdot1+\frac{15}{16}\cdot\frac12 = \frac{17}{32} = 53.125\%. $$
+
+That gives a useful progression:
+
+$$ 50\% \quad\text{trivial guessing} $$ $$ 53.1\% \quad\text{generic linear interpolation} $$ $$ \text{intermediate values} \quad\text{partial sparse decoding} $$ $$ 100\% \quad\text{complete sparse recovery}. $$
+
+That is a much more informative curve than the current \(n=m=8\) setup.
+
+Keep the unique-identifiability condition
+
+For \(220\) candidates and eight random training examples, a particular false candidate matches all labels with probability \(2^{-8}\). The expected number of false matching candidates is approximately
+
+$$ \lambda=\frac{219}{256}\approx0.855. $$
+
+A Poisson approximation gives
+
+$$ P(\text{unique})\approx e^{-0.855}\approx42.5\%. $$
+
+Thus rejection sampling takes only about
+
+$$ \frac1{0.425}\approx2.35 $$
+
+draws on average. This happens while creating the evaluation suite, not during submission execution.
+
+The current generator already rejects training sets until exactly one \(k\)-subset matches. I would preserve this.
+
+Without conditioning on uniqueness, the maximum attainable score becomes partly an information-theoretic property of the sampled dataset. For these parameters, selecting an arbitrary consistent candidate would produce only about 83–84% expected raw accuracy. That would prevent a clean curve extending through 90–100% and would conflate:
+
+insufficient information in the dataset, and
+approximation quality of the submitted algorithm.
+
+For this benchmark, the second is what you want to measure.
+
+Why only 32 test examples per invocation?
+
+A large test set looks attractive statistically, but it changes what is being optimized.
+
+Suppose the learner spends energy \(D\) decoding the secret and \(P\) producing every test prediction. An approximate program can:
+
+search only a fraction \(r\) of candidate secrets;
+compute only a fraction \(f\) of test outputs;
+use a default guess for everything else.
+
+With balanced labels, the normalized advantage over random guessing is approximately
+
+$$ \eta = 2a-1 \approx r f, $$
+
+where \(a\) is raw accuracy. Energy is approximately
+
+$$ E(r,f)\approx E_0+rD+fP. $$
+
+If \(P\gg D\), the obvious strategy is:
+
+decode the secret completely;
+calculate only enough outputs to meet the threshold;
+guess the rest.
+
+That produces a mostly trivial linear frontier. The current half-output submission illustrates exactly this strategy: it decodes fully, computes 32 of 64 outputs, defaults the rest to zero, and obtains roughly 75% expected accuracy.
+
+Using a direct parameterized version of the current tuned packed solver, I get these approximate sizes:
+
+Test examples	IR operations	Estimated static read cost	Decoder cost	Prediction/output cost
+32	2,208	17,427	8,758	8,669
+64	2,976	30,582	8,814	21,768
+128	4,512	64,348	7,755	56,593
+256	7,584	157,801	8,433	149,368
+
+These are calculated extrapolations from the existing packed pair-XOR generator, not committed leaderboard measurements. The current implementation and opcode structure support that scaling calculation.
+
+At 32 test examples, \(D\approx P\). Then the simple constrained optimum has approximately
+
+$$ r\approx f\approx\sqrt{\eta}. $$
+
+The algorithm must trade off better learning and more predictions throughout the curve. Neither side dominates.
+
+At 128 or 256 test examples, prediction energy overwhelmingly dominates, so much of the leaderboard would likely consist of different ways of truncating the output loop.
+
+What the baseline curve would look like
+
+Because there are 220 candidate secrets, a simple approximate decoder that examines only \(q\) candidates recovers a fraction
+
+$$ r=\frac{q}{220} $$
+
+of the secrets when secrets are evaluated exhaustively. If it predicts zero when it fails, its aggregate raw accuracy is approximately
+
+$$ a(q)=\frac12+\frac12\frac{q}{220}. $$
+
+Some representative targets are:
+
+Raw accuracy	Normalized advantage \(\eta=2a-1\)	Candidate-only baseline \(q\)	Balanced search/output baseline \(r=f=\sqrt{\eta}\)
+55%	0.10	22 candidates	31.6% of candidates and outputs
+65%	0.30	66	54.8%
+75%	0.50	110	70.7%
+85%	0.70	154	83.7%
+95%	0.90	198	94.9%
+
+This gives you at least three qualitatively different families of Pareto points:
+
+Partial decoding: search fewer candidate parities.
+Partial prediction: calculate fewer test outputs.
+Joint approximation: partially decode and partially predict.
+
+More sophisticated algorithms can then improve on this elementary frontier using candidate ordering, early rejection, partial training signatures, shared XORs, hashing, or adaptive prediction.
+
+For the earlier “42.5% efficient” example, defining efficiency as normalized advantage gives
+
+$$ \eta=0.425 \quad\Longleftrightarrow\quad a=71.25\%\text{ raw accuracy}. $$
+
+The candidate-only baseline would inspect approximately
+
+$$ 0.425\cdot220\approx94 $$
+
+candidate triples. The balanced baseline would use roughly
+
+$$ \sqrt{0.425}\approx65.2\% $$
+
+of both the decoding and prediction work.
+
+The fifth parameter: evaluation repetitions
+
+The four dataset dimensions are insufficient by themselves. You also need the number of independent benchmark instances.
+
+I recommend evaluating every hidden secret, rather than sampling hidden secrets:
+
+$$ \binom{12}{3}=220. $$
+
+Then use several training/test instances for each secret.
+
+Evaluation level	Repetitions per secret	Total invocations	Total labels	Purpose
+Smoke	1	220	7,040	Correctness check
+Development	8	1,760	56,320	Interactive iteration
+Final leaderboard	32	7,040	225,280	Stable ordinary ranking
+Strong final	64	14,080	450,560	Close comparisons
+Full audit	128	28,160	901,120	Every possible 12-bit test row per secret
+
+Why 128 for the audit?
+
+$$ 128\cdot32=4096=2^{12}. $$
+
+You can partition the entire 12-bit Boolean cube into 128 blocks of 32 test rows. Thus the audit evaluates:
+
+every one of the 220 hidden parities;
+every one of the 4,096 possible test inputs;
+901,120 total labels.
+
+That is genuinely exhaustive over hidden secrets and test inputs. Only the training matrices remain sampled; exhaustively enumerating those would require considering \(2^{96}\) possible \(8\times12\) binary matrices and is not feasible or necessary.
+
+Constructing a deterministic test suite
+
+For each secret \(S\):
+
+Derive a deterministic secret-specific permutation of the integers \(0,\ldots,4095\).
+Interpret each integer as one 12-bit test row.
+Split the permutation into blocks of 32.
+Associate each block with a deterministic, independently generated, uniquely identifying training set.
+
+For the ordinary 32-repetition final suite, use 1,024 distinct test rows per secret. To make the trivial baseline exactly 50%, select 512 complement pairs
+
+$$ x,\quad x\oplus(1,1,\ldots,1). $$
+
+Because \(k=3\) is odd,
+
+$$ y(x\oplus \mathbf 1)=y(x)\oplus1. $$
+
+Therefore every complement pair has exactly one zero and one one. Put the two members in different invocations so a submitted program cannot cheaply exploit the pairing inside a single instance.
+
+For the 128-repetition audit, use the entire Boolean cube. Then every nonzero parity is exactly balanced, and any fixed incorrect parity agrees with the true parity on exactly half the inputs.
+
+Determinism versus secrecy
+
+The current scorer chooses fresh canonical seeds using secrets.SystemRandom() and applies the accuracy threshold separately to every hidden instance. That is good for unpredictability, but not for deterministic leaderboard comparisons.
+
+Use two fixed suites instead:
+
+Public deterministic suite: committed seed/key for development.
+Private deterministic suite: fixed server-side key, identical for every submission within a benchmark version.
+
+Derive each instance from something such as
+
+SHA256(
+    benchmark_version
+    || suite_key
+    || secret_subset
+    || repetition_index
+)
+
+The private key prevents hardcoding. Keeping it fixed prevents two submissions from being ranked on different random draws.
+
+Do not regenerate the final suite on every scoring run.
+
+Score aggregate accuracy, not per-instance thresholds
+
+The current approximate scorer requires the threshold on every individual seed. With only 64 outputs, this creates coarse thresholds and makes a single unlucky task reject an otherwise better algorithm.
+
+Instead compute
+
+$$ a= \frac{\text{total correct outputs over all secrets and repetitions}} {220\,R\,32}. $$
+
+Then return or record
+
+$$ (\text{static energy cost},a). $$
+
+For a target \(A\), a program qualifies when
+
+$$ a\ge A. $$
+
+The plot should show the lower envelope
+
+$$ E^\star(A) = \min_{\text{submission}:a\ge A} E. $$
+
+I would plot raw accuracy on one axis label and normalized advantage on a secondary label:
+
+$$ \eta=2a-1. $$
+
+Thus:
+
+50% raw \(=0\%\) advantage;
+75% raw \(=50\%\) advantage;
+95% raw \(=90\%\) advantage.
+
+This removes the misleading appearance that 5% raw accuracy is a useful target for a balanced binary problem.
+
+Expected wall-clock time
+
+The repository reports approximately 2.7 ms for the best current packed medium submission, where the scorer runs eight hidden instances. The current IR has 1,522 operations; the proposed \(12/3/8/32\) packed baseline has approximately 2,208.
+
+A linear extrapolation gives:
+
+Suite	Approximate optimized scoring time
+8 repetitions per secret	around 1 second
+32 repetitions per secret	around 3–5 seconds
+64 repetitions per secret	around 7–10 seconds
+128/full-cube audit	around 14–20 seconds
+
+These are extrapolations rather than M5 measurements. Generation should be precomputed or represented by compact deterministic seeds; otherwise Python list construction can become a substantial part of the measurement.
+
+The measured energy does not multiply by the number of evaluation invocations—the evaluator compiles once, calculates the static cost once, and executes many hidden inputs only to establish accuracy. This is the same overall structure as the present scorer.
+
+How stable is it?
+
+Treating each secret/training instance pessimistically as a correlated success-or-failure observation, the approximate worst-case 99% raw-accuracy half-width is
+
+$$ \frac{0.644}{\sqrt{220R}}. $$
+Repetitions \(R\)	Approximate 99% suite-to-suite half-width
+8	±1.54 percentage points
+32	±0.77 points
+64	±0.54 points
+128	±0.38 points
+
+Exhaustive secret stratification and balanced/no-replacement test rows should usually make actual variation smaller.
+
+This does not statistically certify performance to ±0.1 percentage points over an unlimited population of random training matrices. That would still require hundreds of thousands to millions of independent training tasks. Instead, this design gives:
+
+exactly repeatable rankings;
+no hidden-secret sampling noise;
+negligible or zero test-input sampling noise;
+enough independent training instances to make the shape of the curve stable;
+evaluation in seconds rather than hours.
+
+For diagnostics, divide the \(R=32\) suite into eight folds, each containing all 220 secrets and four repetitions. Plot the eight fold curves faintly behind the aggregate curve. A method whose apparent improvement comes from a few lucky training matrices will immediately show large fold variation.
+
+Final specification
+MAIN = Spec(
+    n_bits=12,
+    k_secret=3,
+    m_train=8,
+    m_test=32,
+)
+
+N_SECRETS = 220
+
+DEV_REPETITIONS = 8
+FINAL_REPETITIONS = 32
+STRONG_FINAL_REPETITIONS = 64
+FULL_AUDIT_REPETITIONS = 128
+
+Generation and scoring rules:
+
+1. Enumerate all 220 three-bit secrets.
+2. Generate a fixed number of deterministic training instances per secret.
+3. Reject a training instance unless the secret is uniquely identifiable.
+4. Use 32 test outputs per invocation.
+5. Use complement-balanced, nonrepeating test rows.
+6. Aggregate correctness globally—not per seed.
+7. Report both raw accuracy and normalized advantage.
+8. Rank by the energy/accuracy Pareto frontier.
+
+The practical fallback is \(m_{\text{test}}=64\), preserving the current output count and making output-fraction steps finer. But 32 is the better research benchmark: it keeps the exact decoder and prediction phases nearly equal in estimated energy, making the accuracy–energy frontier substantially less trivial.
+
+The separately uploaded memory/cache note concerns ByteDMD allocation and caching semantics rather than sparse-parity dataset sizing, so it was not used for these parameter calculations.

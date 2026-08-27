@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Simplified Dally Model — Visual Interactive Tutorial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --font-serif: "Fraunces", Georgia, serif;
+    --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+    --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    /* Light Theme (Warm Luminescent Paper) */
+    --bg: #fbf9f5;
+    --bg-card: #ffffff;
+    --bg-card-subtle: #f6f3ec;
+    --bg-card-hover: #f0ebe0;
+    --border: #e8e2d5;
+    --border-light: #f0ebe1;
+    --text-main: #1c1f26;
+    --text-muted: #5c6475;
+    --text-faint: #8f9aa9;
+
+    /* Brand & Architectural Accents */
+    --accent: #4338ca;        /* Royal Indigo */
+    --accent-light: #eef2ff;
+    --accent-glow: rgba(67, 56, 202, 0.18);
+    
+    --energy-cost: #ea580c;   /* Fiery Coral for Wires & Energy */
+    --energy-cost-light: #fff7ed;
+    --energy-cost-glow: rgba(234, 88, 12, 0.28);
+    
+    --free-green: #059669;    /* Emerald for Free Compute */
+    --free-green-light: #ecfdf5;
+    --free-green-glow: rgba(5, 150, 105, 0.25);
+
+    /* Ring Colors (Harmonious Spectrum) */
+    --ring-1: #059669; /* Emerald */
+    --ring-2: #d97706; /* Amber */
+    --ring-3: #e11d48; /* Rose */
+    --ring-4: #7c3aed; /* Violet */
+    --ring-5: #0284c7; /* Sky */
+
+    /* Wires & Hardware Grid */
+    --wire-grid: #e2dcd0;
+    --wire-active: #ea580c;
+    --processor-bg: #1e2433;
+    --processor-border: #333d52;
+    --processor-text: #e2e8f0;
+    --reg-bg: #0f131a;
+    --reg-border: #2d3748;
+
+    --shadow-sm: 0 1px 3px rgba(28, 31, 38, 0.05);
+    --shadow-md: 0 4px 14px rgba(28, 31, 38, 0.07);
+    --shadow-lg: 0 10px 30px rgba(28, 31, 38, 0.10);
+    --shadow-glow: 0 0 25px var(--energy-cost-glow);
+  }
+
+  [data-theme="dark"] {
+    --bg: #0b0e14;
+    --bg-card: #131722;
+    --bg-card-subtle: #1a2030;
+    --bg-card-hover: #222a3f;
+    --border: #252d42;
+    --border-light: #1e2436;
+    --text-main: #f1f5f9;
+    --text-muted: #94a3b8;
+    --text-faint: #64748b;
+
+    --accent: #818cf8;
+    --accent-light: #1e1b4b;
+    --accent-glow: rgba(129, 140, 248, 0.25);
+    
+    --energy-cost: #fb923c;
+    --energy-cost-light: #431407;
+    --energy-cost-glow: rgba(251, 146, 60, 0.35);
+    
+    --free-green: #34d399;
+    --free-green-light: #064e3b;
+    --free-green-glow: rgba(52, 211, 153, 0.3);
+
+    --ring-1: #10b981;
+    --ring-2: #f59e0b;
+    --ring-3: #f43f5e;
+    --ring-4: #a855f7;
+    --ring-5: #38bdf8;
+
+    --wire-grid: #232c40;
+    --wire-active: #fb923c;
+    --processor-bg: #0f131c;
+    --processor-border: #3b4764;
+    --processor-text: #f8fafc;
+    --reg-bg: #07090e;
+    --reg-border: #2c3852;
+
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 14px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.5);
+    --shadow-glow: 0 0 30px var(--energy-cost-glow);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    font-size: 17px;
+    line-height: 1.7;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Micro Grid Background Accent */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background-image: radial-gradient(var(--border) 1px, transparent 1px);
+    background-size: 28px 28px;
+    opacity: 0.45;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .container {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 0 24px 120px;
+  }
+
+  /* Top Navigation / Status Bar */
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 0;
+    border-bottom: 1px solid var(--border-light);
+    margin-bottom: 48px;
+  }
+
+  .badge-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: var(--accent-light);
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--accent-glow);
+  }
+
+  .theme-toggle-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: 8px 14px;
+    border-radius: 12px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+  }
+  .theme-toggle-btn:hover {
+    color: var(--text-main);
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  /* Header Section */
+  header {
+    margin-bottom: 56px;
+  }
+  .kicker {
+    font-family: var(--font-mono);
+    font-size: 13.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--energy-cost);
+    margin-bottom: 12px;
+  }
+  h1 {
+    font-family: var(--font-serif);
+    font-size: clamp(38px, 5.5vw, 58px);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--text-main);
+    margin-bottom: 20px;
+  }
+  .lede {
+    font-size: 21px;
+    line-height: 1.55;
+    color: var(--text-muted);
+    max-width: 760px;
+  }
+  .lede strong {
+    color: var(--text-main);
+  }
+
+  h2 {
+    font-family: var(--font-serif);
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 64px 0 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  h2 .sec-num {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--energy-cost);
+    background: var(--energy-cost-light);
+    padding: 3px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--energy-cost-glow);
+  }
+  h3 {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 600;
+    margin: 28px 0 12px;
+  }
+  p {
+    margin: 16px 0;
+    color: var(--text-muted);
+  }
+  p strong {
+    color: var(--text-main);
+  }
+  a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 3px;
+    transition: color 0.15s;
+  }
+  a:hover {
+    color: var(--energy-cost);
+  }
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: var(--bg-card-subtle);
+    padding: 2px 7px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    color: var(--text-main);
+  }
+
+  /* Physical Intuition Callout */
+  .callout-quote {
+    background: linear-gradient(135deg, var(--bg-card), var(--bg-card-subtle));
+    border: 1px solid var(--border);
+    border-left: 5px solid var(--accent);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin: 36px 0;
+    box-shadow: var(--shadow-md);
+    position: relative;
+  }
+  .callout-quote p {
+    font-family: var(--font-serif);
+    font-size: 21px;
+    line-height: 1.5;
+    font-style: italic;
+    color: var(--text-main);
+    margin: 0 0 12px;
+  }
+  .callout-quote .author {
+    font-family: var(--font-sans);
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  /* Energy Comparison Bars */
+  .energy-scale-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 26px;
+    margin: 32px 0;
+    box-shadow: var(--shadow-sm);
+  }
+  .scale-title {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 20px;
+  }
+  .scale-item {
+    display: grid;
+    grid-template-columns: 180px 1fr 100px;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 14px;
+    font-size: 14.5px;
+  }
+  @media (max-width: 640px) {
+    .scale-item { grid-template-columns: 1fr; gap: 6px; }
+  }
+  .scale-label {
+    font-weight: 600;
+    color: var(--text-main);
+  }
+  .scale-bar-track {
+    background: var(--bg-card-subtle);
+    height: 14px;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid var(--border-light);
+  }
+  .scale-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .scale-val {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 600;
+    text-align: right;
+    color: var(--text-muted);
+  }
+
+  /* 3 Rule Cards Grid */
+  .rules-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+    margin: 32px 0;
+  }
+  @media (max-width: 780px) {
+    .rules-grid { grid-template-columns: 1fr; }
+  }
+  .rule-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .rule-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+  }
+  .rule-tag-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .rule-tag {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 8px;
+  }
+  .rule-tag.paid {
+    background: var(--energy-cost-light);
+    color: var(--energy-cost);
+    border: 1px solid var(--energy-cost-glow);
+  }
+  .rule-tag.free {
+    background: var(--free-green-light);
+    color: var(--free-green);
+    border: 1px solid var(--free-green-glow);
+  }
+  .rule-title {
+    font-family: var(--font-serif);
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: var(--text-main);
+  }
+  .rule-desc {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  /* Interactive Canvas / Figure Container */
+  .interactive-figure {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 24px;
+    margin: 36px 0;
+    box-shadow: var(--shadow-md);
+    position: relative;
+  }
+  .figure-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .figure-title {
+    font-family: var(--font-serif);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+  .figure-badge {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--text-faint);
+  }
+
+  /* SVG Graphics Engine styling */
+  .svg-container {
+    width: 100%;
+    overflow: visible;
+    display: flex;
+    justify-content: center;
+  }
+  .svg-container svg {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    user-select: none;
+  }
+
+  /* Cell node interactions in SVG */
+  .cell-node {
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .cell-node:hover circle.base-circle {
+    filter: drop-shadow(0 0 10px var(--accent-glow));
+    stroke-width: 3.5px;
+  }
+
+  /* Interactive Storyboard Player */
+  .storyboard-player {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    margin: 40px 0;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+  }
+  .player-stage {
+    padding: 28px 28px 10px;
+  }
+  .step-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .step-label {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--energy-cost);
+  }
+  .step-progress-text {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-faint);
+  }
+  .step-title {
+    font-family: var(--font-serif);
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 8px;
+  }
+  .step-explanation {
+    font-size: 16.5px;
+    line-height: 1.6;
+    color: var(--text-muted);
+    min-height: 54px;
+    margin-bottom: 16px;
+  }
+  .step-explanation strong {
+    color: var(--text-main);
+  }
+  .step-explanation .highlight-cost {
+    color: var(--energy-cost);
+    font-weight: 700;
+  }
+  .step-explanation .highlight-free {
+    color: var(--free-green);
+    font-weight: 700;
+  }
+
+  /* Player HUD & Controls */
+  .player-controls-bar {
+    background: var(--bg-card-subtle);
+    border-top: 1px solid var(--border);
+    padding: 18px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .nav-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .btn {
+    font-family: var(--font-sans);
+    font-size: 14.5px;
+    font-weight: 600;
+    padding: 9px 18px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--text-main);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-sm);
+  }
+  .btn:hover:not(:disabled) {
+    border-color: var(--energy-cost);
+    color: var(--energy-cost);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+  }
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+  .btn.primary {
+    background: var(--energy-cost);
+    border-color: var(--energy-cost);
+    color: #ffffff;
+  }
+  .btn.primary:hover:not(:disabled) {
+    background: #c2410c;
+    border-color: #c2410c;
+    color: #ffffff;
+  }
+
+  .step-dots {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .step-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  .step-dot.active {
+    background: var(--energy-cost);
+    transform: scale(1.4);
+  }
+  .step-dot.completed {
+    background: var(--accent);
+  }
+
+  .kbd-shortcuts {
+    font-size: 12.5px;
+    color: var(--text-faint);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+  }
+  kbd {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-bottom: 2px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 6px;
+    color: var(--text-main);
+  }
+
+  /* Live Financial Ledger */
+  .ledger-section {
+    margin: 48px 0;
+  }
+  .ledger-table-wrap {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  table.ledger-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    text-align: left;
+  }
+  table.ledger-table th {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    background: var(--bg-card-subtle);
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  table.ledger-table td {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-light);
+    color: var(--text-main);
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+  table.ledger-table tr.active-row td {
+    background: var(--energy-cost-light);
+    font-weight: 600;
+  }
+  table.ledger-table tr.pending-row td {
+    opacity: 0.38;
+  }
+  table.ledger-table tr.total-row td {
+    font-weight: 700;
+    font-size: 16px;
+    background: var(--bg-card-subtle);
+    border-top: 2px solid var(--border);
+    border-bottom: none;
+  }
+  table.ledger-table td.cost-num {
+    text-align: right;
+    font-weight: 600;
+  }
+  table.ledger-table td.cost-num.zero {
+    color: var(--free-green);
+  }
+  table.ledger-table td.cost-num.paid {
+    color: var(--energy-cost);
+  }
+
+  /* Energy Breakdown Pie/Bar Infographic */
+  .energy-ratio-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 24px;
+    margin: 24px 0;
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow-sm);
+  }
+  .ratio-meter {
+    flex: 1;
+    min-width: 260px;
+  }
+  .ratio-meter-track {
+    height: 24px;
+    border-radius: 12px;
+    background: var(--free-green);
+    overflow: hidden;
+    display: flex;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+  }
+  .ratio-meter-fill-wire {
+    background: linear-gradient(90deg, #ea580c, #f97316);
+    height: 100%;
+    transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .ratio-legend {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+  }
+
+  /* Interactive Sandbox / Custom Calculator */
+  .sandbox-panel {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 32px;
+    margin: 48px 0;
+    box-shadow: var(--shadow-md);
+  }
+  .sandbox-controls {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin: 24px 0;
+    align-items: end;
+  }
+  .input-field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .input-field-group label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+  }
+  .input-select, .input-text {
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 600;
+    padding: 10px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--bg-card-subtle);
+    color: var(--text-main);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .input-select:focus, .input-text:focus {
+    border-color: var(--energy-cost);
+  }
+
+  /* Live HUD on Simulator */
+  .live-hud {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+  .hud-badge {
+    background: var(--bg-card-subtle);
+    border: 1px solid var(--border);
+    padding: 8px 16px;
+    border-radius: 12px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .hud-badge strong {
+    font-size: 15px;
+  }
+  .hud-badge.energy-badge strong {
+    color: var(--energy-cost);
+  }
+
+  /* Footer */
+  footer {
+    margin-top: 96px;
+    padding-top: 36px;
+    border-top: 1px solid var(--border);
+    font-size: 14.5px;
+    color: var(--text-muted);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  footer a {
+    color: var(--accent);
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Top Status & Theme Bar -->
+  <div class="top-bar">
+    <div class="badge-tag">
+      <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--accent);"></span>
+      Interactive Computer Architecture
+    </div>
+    <button class="theme-toggle-btn" id="theme-toggle" aria-label="Toggle light and dark mode">
+      <span id="theme-icon">🌙</span> <span id="theme-text">Dark Mode</span>
+    </button>
+  </div>
+
+  <!-- Hero Header -->
+  <header>
+    <div class="kicker">An Explorable Visual Essay</div>
+    <h1>The Simplified Dally&nbsp;Model</h1>
+    <p class="lede">
+      In modern computing hardware, <strong>arithmetic is virtually free</strong>.
+      <strong>Moving data is what costs energy and time.</strong>
+      In his landmark 2022 CACM viewpoint, Stanford &amp; NVIDIA Chief Scientist Bill Dally
+      proposed pricing algorithms by their physical data movement on a Manhattan grid.
+      Here is an interactive, step-by-step exploration of how the model works.
+    </p>
+  </header>
+
+  <!-- Physical Reality Callout -->
+  <div class="callout-quote">
+    <p>
+      &ldquo;Arithmetic has become essentially free. A 64-bit floating-point add takes about 100&thinsp;fJ,
+      while reading two operands from a local memory and writing back the result takes 10&thinsp;pJ &mdash;
+      100&times; more energy than the computation itself.&rdquo;
+    </p>
+    <div class="author">&mdash; William J. Dally, <a href="https://cacm.acm.org/opinion/on-the-model-of-computation-point/" target="_blank" rel="noopener">On the Model of Computation</a> (Communications of the ACM, May 2022)</div>
+  </div>
+
+  <!-- Silicon Energy Scale Visualizer -->
+  <div class="energy-scale-card">
+    <div class="scale-title">Where does the energy actually go in a chip?</div>
+    <div class="scale-item">
+      <div class="scale-label">64-bit FP Addition</div>
+      <div class="scale-bar-track"><div class="scale-bar-fill" style="width: 1%; background: var(--free-green);"></div></div>
+      <div class="scale-val">0.1 pJ</div>
+    </div>
+    <div class="scale-item">
+      <div class="scale-label">Register File Access</div>
+      <div class="scale-bar-track"><div class="scale-bar-fill" style="width: 4%; background: #3b82f6;"></div></div>
+      <div class="scale-val">1.0 pJ</div>
+    </div>
+    <div class="scale-item">
+      <div class="scale-label">SRAM Cache (8 KB)</div>
+      <div class="scale-bar-track"><div class="scale-bar-fill" style="width: 15%; background: var(--ring-2);"></div></div>
+      <div class="scale-val">5.0 pJ</div>
+    </div>
+    <div class="scale-item">
+      <div class="scale-label">Cross-Chip Wire (10 mm)</div>
+      <div class="scale-bar-track"><div class="scale-bar-fill" style="width: 65%; background: var(--energy-cost);"></div></div>
+      <div class="scale-val">100.0 pJ</div>
+    </div>
+    <div class="scale-item">
+      <div class="scale-label">Off-Chip DRAM Read</div>
+      <div class="scale-bar-track"><div class="scale-bar-fill" style="width: 100%; background: #dc2626;"></div></div>
+      <div class="scale-val">1,000 pJ</div>
+    </div>
+  </div>
+
+  <!-- Section 1: The Geometry of Memory -->
+  <h2><span class="sec-num">01</span> The 2D Memory Arena &amp; Geometric Rules</h2>
+  <p>
+    In the simplified Dally model, a single processor sits at the origin <code>(0, 0)</code>.
+    Memory cells are laid out in the <strong>2D upper half-plane</strong> (<code>y &ge; 1</code>),
+    concentric ring by ring, spiraling outward.
+  </p>
+  <p>
+    A memory cell with linear address <code>addr</code> sits on ring <code>k = &lceil;&radic;addr&rceil;</code>
+    at Manhattan distance <code>|x| + y = k</code> from the processor.
+  </p>
+
+  <!-- 3 Rule Cards -->
+  <div class="rules-grid">
+    <div class="rule-card">
+      <div class="rule-tag-row">
+        <span class="rule-tag paid">Priced</span>
+        <code style="font-size:12px;">cost = &lceil;&radic;i&rceil;</code>
+      </div>
+      <div class="rule-title">1. Reads are Priced</div>
+      <p class="rule-desc">
+        Fetching a value from memory cell <code>i</code> costs exactly its Manhattan distance
+        from the processor: <code>|x| + y</code>.
+      </p>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-tag-row">
+        <span class="rule-tag paid">Priced</span>
+        <code style="font-size:12px;">cost = &lceil;&radic;i&rceil;</code>
+      </div>
+      <div class="rule-title">2. Writes are Priced</div>
+      <p class="rule-desc">
+        Writing a computed result back to cell <code>i</code> incurs the identical Manhattan distance cost
+        for transmitting data across wires.
+      </p>
+    </div>
+
+    <div class="rule-card">
+      <div class="rule-tag-row">
+        <span class="rule-tag free">Free</span>
+        <code style="font-size:12px;">cost = 0</code>
+      </div>
+      <div class="rule-title">3. Arithmetic is Free</div>
+      <p class="rule-desc">
+        Once operands are latched into local processor registers, computing (add, sub, mul)
+        costs <strong>zero energy units</strong>.
+      </p>
+    </div>
+  </div>
+
+  <!-- Wiring Rule Callout -->
+  <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:16px; padding:20px 24px; margin:24px 0; display:flex; align-items:center; gap:16px;">
+    <div style="font-size:28px;">📐</div>
+    <div>
+      <strong>The Routing Invariant:</strong>
+      Transfers always travel <strong style="color:var(--energy-cost);">horizontally first along the baseline, then vertically up</strong>
+      to the target cell (<code>(0,0) &rarr; (x, 0) &rarr; (x, y)</code>).
+      Because this L-shaped wire has length <code>|x| + y</code>, the drawn path length <em>always exactly equals</em> the billed energy cost!
+    </div>
+  </div>
+
+  <!-- Interactive Grid Explorer -->
+  <div class="interactive-figure">
+    <div class="figure-header">
+      <div class="figure-title">Interactive Memory Grid Explorer</div>
+      <div class="figure-badge">Hover or click any cell to test wire routing</div>
+    </div>
+    <div class="svg-container" id="grid-explorer-svg"></div>
+    <div class="live-hud" id="grid-hud">
+      <div class="hud-badge">Selected: <strong id="hud-cell-id">Cell 1</strong></div>
+      <div class="hud-badge">Coordinates: <strong id="hud-coords">(0, 1)</strong></div>
+      <div class="hud-badge">Ring: <strong id="hud-ring">k = 1</strong></div>
+      <div class="hud-badge energy-badge">Manhattan Cost: <strong id="hud-cost">1 unit</strong></div>
+      <div class="hud-badge">Formula: <strong id="hud-formula">&lceil;&radic;1&rceil; = 1</strong></div>
+    </div>
+  </div>
+
+  <!-- Section 2: Step-by-Step Walkthrough (Adding 1 + 7) -->
+  <h2><span class="sec-num">02</span> Worked Example: Computing 1 + 7 = 8</h2>
+  <p>
+    Let's walk through the exact problem from first principles.
+    In the initial state, memory holds <em>potential numbers</em>: value <code>1</code> lives in cell <code>1</code>
+    (distance 1), value <code>7</code> lives in cell <code>7</code> (distance 3), and we wish to compute
+    their sum and store it into cell <code>8</code> (distance 3).
+  </p>
+
+  <!-- Interactive Storyboard Player -->
+  <div class="storyboard-player">
+    <div class="player-stage">
+      <div class="step-header">
+        <div class="step-label" id="player-step-kicker">Step 1 of 8</div>
+        <div class="step-progress-text" id="player-progress-badge">Phase: Initial State</div>
+      </div>
+      <div class="step-title" id="player-step-title">Initial Setup</div>
+      <div class="step-explanation" id="player-step-desc">
+        The processor registers are empty. Operands <code>1</code> and <code>7</code> are out in memory.
+      </div>
+      
+      <!-- Animated Walkthrough SVG -->
+      <div class="svg-container" id="walkthrough-svg"></div>
+    </div>
+
+    <!-- Player Controls Bar -->
+    <div class="player-controls-bar">
+      <div class="nav-btn-group">
+        <button class="btn" id="btn-prev" aria-label="Previous step">
+          <span>&larr;</span> Back
+        </button>
+        <button class="btn primary" id="btn-next" aria-label="Next step">
+          Next <span>&rarr;</span>
+        </button>
+        <button class="btn" id="btn-autoplay" aria-label="Toggle Auto-play">
+          <span id="autoplay-icon">▶</span> <span id="autoplay-text">Auto Play</span>
+        </button>
+      </div>
+
+      <div class="step-dots" id="player-dots"></div>
+
+      <div class="kbd-shortcuts">
+        Tip: use <kbd>&larr;</kbd> <kbd>&rarr;</kbd> to step, <kbd>Space</kbd> to play/pause, <kbd>R</kbd> to restart.
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 3: The Energy Ledger -->
+  <h2><span class="sec-num">03</span> The Energy Bill &amp; Accounting</h2>
+  <p>
+    Here is the itemized energy receipt for computing <code>1 + 7 = 8</code>.
+    Notice how the meter only ticks during data movement &mdash; the addition itself is free.
+  </p>
+
+  <div class="ledger-section">
+    <div class="ledger-table-wrap">
+      <table class="ledger-table" id="ledger-table">
+        <thead>
+          <tr>
+            <th>Operation</th>
+            <th>Data Transferred</th>
+            <th>Routing Path</th>
+            <th>Manhattan Distance</th>
+            <th style="text-align:right;">Energy Cost</th>
+          </tr>
+        </thead>
+        <tbody id="ledger-body">
+          <!-- Populated by JavaScript -->
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Energy Ratio Infographic -->
+    <div class="energy-ratio-card">
+      <div style="font-weight:700; font-size:15px; color:var(--text-main);">
+        Final Energy Distribution:
+      </div>
+      <div class="ratio-meter">
+        <div class="ratio-meter-track">
+          <div class="ratio-meter-fill-wire" id="ratio-fill" style="width: 100%;"></div>
+        </div>
+        <div class="ratio-legend">
+          <span style="color:var(--energy-cost); font-weight:600;">Data Movement: <span id="ratio-wire-pct">100%</span> (7 units)</span>
+          <span style="color:var(--free-green); font-weight:600;">ALU Computation: <span id="ratio-alu-pct">0%</span> (0 units)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 4: Interactive Custom Expression Sandbox -->
+  <h2><span class="sec-num">04</span> Interactive Architecture Sandbox</h2>
+  <p>
+    Test any custom expression! Pick two source cells and a destination cell to simulate
+    the exact wire routing, register latching, and total Dally energy cost in real time:
+  </p>
+
+  <div class="sandbox-panel">
+    <div class="sandbox-controls">
+      <div class="input-field-group">
+        <label>Operand A (Source Cell)</label>
+        <select class="input-select" id="sb-src1">
+          <!-- 1 to 16 options -->
+        </select>
+      </div>
+      <div class="input-field-group">
+        <label>Operator</label>
+        <select class="input-select" id="sb-op">
+          <option value="add">Add (+)</option>
+          <option value="sub">Subtract (&minus;)</option>
+          <option value="mul">Multiply (&times;)</option>
+        </select>
+      </div>
+      <div class="input-field-group">
+        <label>Operand B (Source Cell)</label>
+        <select class="input-select" id="sb-src2">
+          <!-- 1 to 16 options -->
+        </select>
+      </div>
+      <div class="input-field-group">
+        <label>Destination (Store Cell)</label>
+        <select class="input-select" id="sb-dest">
+          <!-- 1 to 16 options -->
+        </select>
+      </div>
+      <div class="input-field-group">
+        <button class="btn primary" id="sb-run-btn" style="height:44px; justify-content:center;">
+          ⚡ Simulate Program
+        </button>
+      </div>
+    </div>
+
+    <!-- Sandbox Simulation Visualizer SVG -->
+    <div class="svg-container" id="sandbox-svg"></div>
+
+    <div class="live-hud" style="margin-top:20px;">
+      <div class="hud-badge">Instruction: <strong id="sb-ir-code">add mem[8], mem[1], mem[7]</strong></div>
+      <div class="hud-badge">Status: <strong id="sb-status">Ready</strong></div>
+      <div class="hud-badge energy-badge">Total Cost: <strong id="sb-total-cost">7 units</strong></div>
+    </div>
+  </div>
+
+  <!-- Section 5: Why It Matters for Algorithms -->
+  <h2><span class="sec-num">05</span> Why This Changes Algorithm Design</h2>
+  <p>
+    In classical RAM models (such as $O(1)$ uniform memory access), matrix multiplication $C = A \times B$
+    is analyzed purely by counting arithmetic operations ($2N^3$ FLOPs).
+    Under the Dally model, however, reading un-cached matrices from memory distance $O(N)$ dominates everything.
+  </p>
+
+  <div class="rules-grid" style="margin-top:24px;">
+    <div class="rule-card">
+      <div class="rule-title">Spatial Locality</div>
+      <p class="rule-desc">
+        Data residing in ring 1 costs 1 unit to access; data in ring 10 costs 10 units.
+        Packing frequently used variables close to the processor yields exponential energy savings.
+      </p>
+    </div>
+    <div class="rule-card">
+      <div class="rule-title">Scratchpad Tiling</div>
+      <p class="rule-desc">
+        Copying a distant value once to a nearby scratchpad register allows multiple cheap re-reads,
+        drastically outperforming naive memory streaming.
+      </p>
+    </div>
+    <div class="rule-card">
+      <div class="rule-title">Systolic &amp; TPU Arrays</div>
+      <p class="rule-desc">
+        Passing operands directly from one neighbor ALU to the next (distance = 1) is why
+        modern AI accelerators (TPUs, Tensor Cores) achieve orders of magnitude better energy efficiency.
+      </p>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div>
+      <strong>Companion Tutorial</strong> to the
+      <a href="https://github.com/cybertronai/simplified-dally-model" target="_blank" rel="noopener">cybertronai/simplified-dally-model</a> benchmark suite.
+    </div>
+    <div>
+      Diagrams rendered with pure programmatic JavaScript &amp; SVG.
+    </div>
+  </footer>
+</div>
+
+<!-- ==================================================================== -->
+<!-- JAVASCRIPT ENGINE                                                    -->
+<!-- ==================================================================== -->
+<script>
+"use strict";
+
+/* ----------------------------------------------------------------------
+ * 1. Geometry & Dally Model Math
+ * ---------------------------------------------------------------------- */
+
+/**
+ * Calculates (x, y) and ring k for memory cell index i.
+ * Origin is at (0, 0). Upper half-plane (y >= 1).
+ * k = ceil(sqrt(i)).
+ * Manhattan distance = |x| + y = k.
+ */
+function getCellInfo(i) {
+  const k = Math.ceil(Math.sqrt(i));
+  const ringStart = (k - 1) ** 2 + 1;
+  const idx = i - ringStart;
+  // Alternating serpentine direction per ring for clean layout
+  const x = (k % 2 === 1) ? -(k - 1) + idx : (k - 1) - idx;
+  const y = k - Math.abs(x);
+  return {
+    i,
+    k,
+    x,
+    y,
+    manhattan: Math.abs(x) + y,
+    ringStart,
+    ringEnd: k ** 2
+  };
+}
+
+const RING_COLORS = [
+  "",
+  "var(--ring-1)",
+  "var(--ring-2)",
+  "var(--ring-3)",
+  "var(--ring-4)",
+  "var(--ring-5)"
+];
+
+/* ----------------------------------------------------------------------
+ * 2. Theme Toggle
+ * ---------------------------------------------------------------------- */
+const themeToggleBtn = document.getElementById("theme-toggle");
+const themeIcon = document.getElementById("theme-icon");
+const themeText = document.getElementById("theme-text");
+
+function initTheme() {
+  const savedTheme = localStorage.getItem("dally_theme") ||
+    (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  document.documentElement.setAttribute("data-theme", savedTheme);
+  updateThemeBtn(savedTheme);
+}
+
+function updateThemeBtn(theme) {
+  if (theme === "dark") {
+    themeIcon.textContent = "☀️";
+    themeText.textContent = "Light Mode";
+  } else {
+    themeIcon.textContent = "🌙";
+    themeText.textContent = "Dark Mode";
+  }
+}
+
+themeToggleBtn.addEventListener("click", () => {
+  const curTheme = document.documentElement.getAttribute("data-theme") || "light";
+  const newTheme = curTheme === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", newTheme);
+  localStorage.setItem("dally_theme", newTheme);
+  updateThemeBtn(newTheme);
+});
+initTheme();
+
+/* ----------------------------------------------------------------------
+ * 3. SVG Diagram Renderer Factory
+ * ---------------------------------------------------------------------- */
+const GRID_SCALE = 62; // Pixels per grid unit
+
+function createSvgArena(containerId, maxCells = 16, options = {}) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = "";
+
+  const cells = [];
+  let maxX = 0, maxY = 0;
+  for (let i = 1; i <= maxCells; i++) {
+    const c = getCellInfo(i);
+    cells.push(c);
+    maxX = Math.max(maxX, Math.abs(c.x));
+    maxY = Math.max(maxY, c.y);
+  }
+
+  const padX = options.padX ?? 70;
+  const padTop = options.padTop ?? 50;
+  const padBottom = options.padBottom ?? (options.showProcessor ? 110 : 60);
+
+  const W = (2 * maxX) * GRID_SCALE + padX * 2;
+  const H = maxY * GRID_SCALE + padTop + padBottom;
+
+  const toPxX = (x) => padX + (x + maxX) * GRID_SCALE;
+  const toPxY = (y) => padTop + (maxY - y) * GRID_SCALE;
+
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.setAttribute("width", "100%");
+  svg.setAttribute("height", "100%");
+
+  // Helper to create SVG elements
+  const createEl = (tag, attrs = {}, parent = svg) => {
+    const el = document.createElementNS(ns, tag);
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+    parent.appendChild(el);
+    return el;
+  };
+
+  // 1. Dotted Lattice Grid
+  const gridLayer = createEl("g", { class: "grid-layer" });
+  for (let gx = -maxX; gx <= maxX; gx++) {
+    createEl("line", {
+      x1: toPxX(gx), y1: toPxY(0),
+      x2: toPxX(gx), y2: toPxY(maxY),
+      stroke: "var(--wire-grid)",
+      "stroke-dasharray": "2 5",
+      "stroke-width": 1.5
+    }, gridLayer);
+  }
+  for (let gy = 0; gy <= maxY; gy++) {
+    createEl("line", {
+      x1: toPxX(-maxX), y1: toPxY(gy),
+      x2: toPxX(maxX), y2: toPxY(gy),
+      stroke: "var(--wire-grid)",
+      "stroke-dasharray": "2 5",
+      "stroke-width": 1.5
+    }, gridLayer);
+  }
+
+  // 2. Physical Wires (Spine + Horizontal Branches)
+  const wireLayer = createEl("g", { class: "wire-layer" });
+  // Vertical Central Spine
+  createEl("line", {
+    x1: toPxX(0), y1: toPxY(0),
+    x2: toPxX(0), y2: toPxY(maxY),
+    stroke: "var(--border)",
+    "stroke-width": 5,
+    "stroke-linecap": "round"
+  }, wireLayer);
+
+  // Horizontal Baseline Wire at y = 0
+  createEl("line", {
+    x1: toPxX(-maxX), y1: toPxY(0),
+    x2: toPxX(maxX), y2: toPxY(0),
+    stroke: "var(--border)",
+    "stroke-width": 4,
+    "stroke-linecap": "round"
+  }, wireLayer);
+
+  // Horizontal row branches
+  const rowMap = {};
+  cells.forEach(c => { (rowMap[c.y] ??= []).push(c.x); });
+  for (const [yStr, xs] of Object.entries(rowMap)) {
+    const y = +yStr;
+    createEl("line", {
+      x1: toPxX(Math.min(...xs)), y1: toPxY(y),
+      x2: toPxX(Math.max(...xs)), y2: toPxY(y),
+      stroke: "var(--border)",
+      "stroke-width": 4,
+      "stroke-linecap": "round"
+    }, wireLayer);
+  }
+
+  // 3. Layer for Active Animated Transfer Path (under cells)
+  const activePathLayer = createEl("g", { class: "active-path-layer" });
+
+  // 4. Memory Cell Nodes
+  const cellLayer = createEl("g", { class: "cell-layer" });
+  const cellMap = {};
+
+  cells.forEach(c => {
+    const g = createEl("g", { class: "cell-node", "data-id": c.i }, cellLayer);
+    const cx = toPxX(c.x);
+    const cy = toPxY(c.y);
+
+    // Outer ring glow/halo
+    const halo = createEl("circle", {
+      cx, cy, r: 21,
+      fill: "none",
+      stroke: RING_COLORS[c.k],
+      "stroke-width": 0,
+      opacity: 0.35
+    }, g);
+
+    // Base circle
+    const baseCirc = createEl("circle", {
+      cx, cy, r: 17,
+      fill: RING_COLORS[c.k],
+      stroke: "#ffffff",
+      "stroke-width": 2.5,
+      class: "base-circle"
+    }, g);
+
+    // Text Label
+    const txt = createEl("text", {
+      x: cx, y: cy + 5,
+      "text-anchor": "middle",
+      "font-family": "var(--font-mono)",
+      "font-size": 13,
+      "font-weight": 700,
+      fill: "#ffffff"
+    }, g);
+    txt.textContent = c.i;
+
+    cellMap[c.i] = { g, baseCirc, halo, txt, c, cx, cy };
+  });
+
+  // 5. Processor & Registers (Optional)
+  let procGroup = null;
+  const regMap = [];
+  let aluBadge = null;
+
+  if (options.showProcessor) {
+    procGroup = createEl("g", { class: "processor-group" });
+    const pw = 220, ph = 78;
+    const px = toPxX(0) - pw / 2;
+    const py = toPxY(0) - 10;
+
+    // Processor Chassis Box
+    createEl("rect", {
+      x: px, y: py,
+      width: pw, height: ph,
+      rx: 16,
+      fill: "var(--processor-bg)",
+      stroke: "var(--processor-border)",
+      "stroke-width": 2,
+      filter: "drop-shadow(0 4px 10px rgba(0,0,0,0.25))"
+    }, procGroup);
+
+    // Processor Header
+    createEl("text", {
+      x: toPxX(0), y: py + 18,
+      "text-anchor": "middle",
+      "font-family": "var(--font-mono)",
+      "font-size": 11,
+      "font-weight": 700,
+      "letter-spacing": "2.5",
+      fill: "var(--text-faint)"
+    }, procGroup).textContent = "PROCESSOR CORE (0,0)";
+
+    // Register Bank (R0, R1, R2)
+    const numRegs = 3;
+    const rw = 58, rh = 38;
+    const totalRegsW = numRegs * rw + (numRegs - 1) * 8;
+    const startRx = toPxX(0) - totalRegsW / 2;
+
+    for (let r = 0; r < numRegs; r++) {
+      const rx = startRx + r * (rw + 8);
+      const ry = py + 28;
+      const rg = createEl("g", { class: `reg-slot reg-${r}` }, procGroup);
+
+      const rBox = createEl("rect", {
+        x: rx, y: ry,
+        width: rw, height: rh,
+        rx: 9,
+        fill: "var(--reg-bg)",
+        stroke: "var(--reg-border)",
+        "stroke-width": 1.5
+      }, rg);
+
+      const rTag = createEl("text", {
+        x: rx + 6, y: ry + 12,
+        "font-family": "var(--font-mono)",
+        "font-size": 9,
+        "font-weight": 600,
+        fill: "var(--text-faint)"
+      }, rg);
+      rTag.textContent = `R${r}`;
+
+      const rVal = createEl("text", {
+        x: rx + rw / 2, y: ry + 25,
+        "text-anchor": "middle",
+        "font-family": "var(--font-mono)",
+        "font-size": 15,
+        "font-weight": 700,
+        fill: "var(--text-faint)"
+      }, rg);
+      rVal.textContent = "—";
+
+      regMap.push({ rg, rBox, rVal, rx, ry });
+    }
+  }
+
+  container.appendChild(svg);
+
+  // Path routing string: ALWAYS horizontal first (along y=0), then vertical up to cell!
+  const getRouteD = (cellId) => {
+    const c = getCellInfo(cellId);
+    const originX = toPxX(0);
+    const originY = toPxY(0);
+    const targetX = toPxX(c.x);
+    const targetY = toPxY(c.y);
+    return `M ${originX} ${originY} L ${targetX} ${originY} L ${targetX} ${targetY}`;
+  };
+
+  // Draw animated wire path
+  const animateTransfer = (cellId, direction = "load", onComplete) => {
+    activePathLayer.replaceChildren();
+    const d = getRouteD(cellId);
+
+    // Glowing Halo Path
+    const haloPath = createEl("path", {
+      d,
+      fill: "none",
+      stroke: "var(--energy-cost)",
+      "stroke-width": 12,
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round",
+      opacity: 0.22
+    }, activePathLayer);
+
+    // Core Bright Wire Path
+    const corePath = createEl("path", {
+      d,
+      fill: "none",
+      stroke: "var(--energy-cost)",
+      "stroke-width": 4,
+      "stroke-linecap": "round",
+      "stroke-linejoin": "round"
+    }, activePathLayer);
+
+    const length = corePath.getTotalLength();
+    corePath.style.strokeDasharray = length;
+    corePath.style.strokeDashoffset = direction === "load" ? -length : length;
+    corePath.getBoundingClientRect(); // force reflow
+    corePath.style.transition = "stroke-dashoffset 0.65s cubic-bezier(0.22, 1, 0.36, 1)";
+    corePath.style.strokeDashoffset = "0";
+
+    // Traveling glowing energy packet (particle)
+    const particle = createEl("circle", {
+      r: 7.5,
+      fill: "var(--energy-cost)",
+      stroke: "#ffffff",
+      "stroke-width": 2.5,
+      filter: "drop-shadow(0 0 6px var(--energy-cost))"
+    }, activePathLayer);
+
+    const startTime = performance.now();
+    const duration = 650;
+
+    function frame(now) {
+      const progress = Math.min(1, (now - startTime) / duration);
+      const ease = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+      const atLen = direction === "load" ? (1 - ease) * length : ease * length;
+      const pt = corePath.getPointAtLength(atLen);
+      particle.setAttribute("cx", pt.x);
+      particle.setAttribute("cy", pt.y);
+
+      if (progress < 1) {
+        requestAnimationFrame(frame);
+      } else {
+        particle.remove();
+        if (onComplete) onComplete();
+      }
+    }
+    requestAnimationFrame(frame);
+  };
+
+  const clearPath = () => {
+    activePathLayer.replaceChildren();
+  };
+
+  return {
+    svg,
+    createEl,
+    toPxX,
+    toPxY,
+    cellMap,
+    regMap,
+    procGroup,
+    animateTransfer,
+    clearPath,
+    W,
+    H
+  };
+}
+
+/* ----------------------------------------------------------------------
+ * 4. Interactive Figure 1: Memory Arena Grid Explorer
+ * ---------------------------------------------------------------------- */
+const arena = createSvgArena("grid-explorer-svg", 16, { showProcessor: false, padBottom: 50 });
+
+const hudCellId = document.getElementById("hud-cell-id");
+const hudCoords = document.getElementById("hud-coords");
+const hudRing = document.getElementById("hud-ring");
+const hudCost = document.getElementById("hud-cost");
+const hudFormula = document.getElementById("hud-formula");
+
+function selectGridCell(cellId) {
+  const info = getCellInfo(cellId);
+  hudCellId.textContent = `Cell ${info.i}`;
+  hudCoords.textContent = `(x: ${info.x}, y: ${info.y})`;
+  hudRing.textContent = `k = ${info.k}`;
+  hudCost.textContent = `${info.manhattan} ${info.manhattan === 1 ? 'unit' : 'units'}`;
+  hudFormula.textContent = `⌈√${info.i}⌉ = ${info.k} (|${info.x}| + ${info.y} = ${info.manhattan})`;
+
+  // Highlight selected cell
+  Object.values(arena.cellMap).forEach(({ baseCirc, halo }) => {
+    baseCirc.setAttribute("stroke-width", "2.5");
+    halo.setAttribute("stroke-width", "0");
+  });
+
+  const selected = arena.cellMap[cellId];
+  if (selected) {
+    selected.baseCirc.setAttribute("stroke-width", "4");
+    selected.halo.setAttribute("stroke-width", "5");
+  }
+
+  // Trigger transfer animation on grid
+  arena.animateTransfer(cellId, "load");
+}
+
+// Bind clicks & hover to cell nodes in arena
+Object.entries(arena.cellMap).forEach(([id, item]) => {
+  item.g.addEventListener("click", () => selectGridCell(+id));
+  item.g.addEventListener("mouseenter", () => {
+    item.halo.setAttribute("stroke-width", "3");
+  });
+  item.g.addEventListener("mouseleave", () => {
+    if (hudCellId.textContent !== `Cell ${id}`) {
+      item.halo.setAttribute("stroke-width", "0");
+    }
+  });
+});
+selectGridCell(1);
+
+/* ----------------------------------------------------------------------
+ * 5. Interactive Figure 2: Storyboard Walkthrough (1 + 7 = 8)
+ * ---------------------------------------------------------------------- */
+const walkSvg = createSvgArena("walkthrough-svg", 16, { showProcessor: true, padBottom: 110 });
+
+const STEPS_DATA = [
+  {
+    phase: "Phase 1: Initial State",
+    title: "1. The Initial Memory State",
+    desc: "The processor wants to compute <code>1 + 7 = 8</code>. Operands live in memory: value <strong>1</strong> in Cell 1 (dist 1), value <strong>7</strong> in Cell 7 (dist 3). All registers are empty. Running cost: <strong class='highlight-cost'>0 units</strong>.",
+    cost: 0,
+    activeCell: null,
+    regValues: [null, null, null],
+    action: () => {
+      walkSvg.clearPath();
+      setHighlightCell(null);
+      setRegisters([null, null, null]);
+    }
+  },
+  {
+    phase: "Phase 2: Load First Operand",
+    title: "2. Fetching Operand 1 from Cell 1",
+    desc: "The processor issues a load instruction for Cell 1. The wire routes horizontally to <code>x=0</code>, then vertically 1 unit up. This read incurs a Manhattan distance cost of <strong class='highlight-cost'>+1 unit</strong>.",
+    cost: 1,
+    activeCell: 1,
+    regValues: [null, null, null],
+    action: () => {
+      setHighlightCell(1);
+      setRegisters([null, null, null]);
+      walkSvg.animateTransfer(1, "load");
+    }
+  },
+  {
+    phase: "Phase 3: Latch Register R0",
+    title: "3. Value 1 Latched in Register R0",
+    desc: "The first operand <code>1</code> is now safely stored inside local register <strong>R0</strong>. The processor has paid 1 energy unit for wire transit. Running total: <strong class='highlight-cost'>1 unit</strong>.",
+    cost: 1,
+    activeCell: 1,
+    regValues: [1, null, null],
+    action: () => {
+      walkSvg.clearPath();
+      setHighlightCell(1, false);
+      setRegisters([1, null, null], 0);
+    }
+  },
+  {
+    phase: "Phase 4: Load Second Operand",
+    title: "4. Fetching Operand 7 from Cell 7",
+    desc: "Next, the processor loads the second operand from Cell 7 (sitting 3 hops up at <code>(0, 3)</code>). Wire transit distance is 3 hops. This read adds <strong class='highlight-cost'>+3 units</strong> to the bill.",
+    cost: 4,
+    activeCell: 7,
+    regValues: [1, null, null],
+    action: () => {
+      setHighlightCell(7);
+      setRegisters([1, null, null]);
+      walkSvg.animateTransfer(7, "load");
+    }
+  },
+  {
+    phase: "Phase 5: Latch Register R1",
+    title: "5. Both Operands Local (R0=1, R1=7)",
+    desc: "Both operands are now sitting in fast local registers! Running wire cost so far: <code>1 (load 1) + 3 (load 7) = </code><strong class='highlight-cost'>4 units</strong>.",
+    cost: 4,
+    activeCell: 7,
+    regValues: [1, 7, null],
+    action: () => {
+      walkSvg.clearPath();
+      setHighlightCell(7, false);
+      setRegisters([1, 7, null], 1);
+    }
+  },
+  {
+    phase: "Phase 6: Free Arithmetic",
+    title: "6. ALU Adds 1 + 7 = 8 (FREE!)",
+    desc: "The Arithmetic Logic Unit executes <code>1 + 7 = 8</code> and places the result in register <strong>R2</strong>. In the Dally model, register ALU math is <strong class='highlight-free'>100% FREE (0 energy units)</strong>!",
+    cost: 4,
+    activeCell: null,
+    regValues: [1, 7, 8],
+    action: () => {
+      walkSvg.clearPath();
+      setHighlightCell(null);
+      setRegisters([1, 7, 8], 2);
+    }
+  },
+  {
+    phase: "Phase 7: Store to Memory",
+    title: "7. Storing Result 8 into Cell 8",
+    desc: "The result <code>8</code> must be written back to memory at Cell 8 (at <code>(1, 2)</code>). In this symmetric model, writes are priced identically to reads: <code>|1| + 2 = </code><strong class='highlight-cost'>+3 units</strong>.",
+    cost: 7,
+    activeCell: 8,
+    regValues: [1, 7, 8],
+    action: () => {
+      setHighlightCell(8);
+      setRegisters([1, 7, 8]);
+      walkSvg.animateTransfer(8, "store");
+    }
+  },
+  {
+    phase: "Phase 8: Computation Complete",
+    title: "8. Complete — Total Bill: 7 Energy Units",
+    desc: "The value 8 is safely stored in Cell 8. Final Bill: <code>1 (read) + 3 (read) + 0 (add) + 3 (write) = </code><strong class='highlight-cost'>7 energy units</strong>. Every single unit was spent on moving data across silicon wires!",
+    cost: 7,
+    activeCell: 8,
+    regValues: [1, 7, 8],
+    action: () => {
+      walkSvg.clearPath();
+      setHighlightCell(8, true);
+      setRegisters([1, 7, 8]);
+    }
+  }
+];
+
+function setHighlightCell(cellId, glow = true) {
+  Object.values(walkSvg.cellMap).forEach(({ baseCirc, halo }) => {
+    baseCirc.setAttribute("stroke-width", "2.5");
+    halo.setAttribute("stroke-width", "0");
+  });
+  if (cellId && walkSvg.cellMap[cellId]) {
+    walkSvg.cellMap[cellId].baseCirc.setAttribute("stroke-width", "4");
+    if (glow) {
+      walkSvg.cellMap[cellId].halo.setAttribute("stroke-width", "6");
+    }
+  }
+}
+
+function setRegisters(vals, activeIndex = -1) {
+  vals.forEach((v, idx) => {
+    const reg = walkSvg.regMap[idx];
+    if (!reg) return;
+    reg.rVal.textContent = v !== null ? v : "—";
+    const isActive = idx === activeIndex;
+    reg.rBox.setAttribute("stroke", isActive ? "var(--energy-cost)" : "var(--reg-border)");
+    reg.rBox.setAttribute("stroke-width", isActive ? "2.5" : "1.5");
+    reg.rVal.setAttribute("fill", v !== null ? (isActive ? "var(--energy-cost)" : "var(--processor-text)") : "var(--text-faint)");
+  });
+}
+
+// Storyboard UI bindings
+const stepKickerEl = document.getElementById("player-step-kicker");
+const progressBadgeEl = document.getElementById("player-progress-badge");
+const stepTitleEl = document.getElementById("player-step-title");
+const stepDescEl = document.getElementById("player-step-desc");
+const prevBtn = document.getElementById("btn-prev");
+const nextBtn = document.getElementById("btn-next");
+const autoplayBtn = document.getElementById("btn-autoplay");
+const autoplayIcon = document.getElementById("autoplay-icon");
+const autoplayText = document.getElementById("autoplay-text");
+const dotsContainer = document.getElementById("player-dots");
+
+let currentStep = 0;
+let isAutoPlaying = false;
+let autoPlayTimer = null;
+
+// Initialize dot buttons
+STEPS_DATA.forEach((_, idx) => {
+  const dot = document.createElement("button");
+  dot.className = "step-dot";
+  dot.setAttribute("aria-label", `Jump to step ${idx + 1}`);
+  dot.addEventListener("click", () => goToStep(idx));
+  dotsContainer.appendChild(dot);
+});
+
+function goToStep(stepIdx) {
+  if (stepIdx < 0 || stepIdx >= STEPS_DATA.length) return;
+  currentStep = stepIdx;
+  const s = STEPS_DATA[currentStep];
+
+  stepKickerEl.textContent = `Step ${currentStep + 1} of ${STEPS_DATA.length}`;
+  progressBadgeEl.textContent = s.phase;
+  stepTitleEl.textContent = s.title;
+  stepDescEl.innerHTML = s.desc;
+
+  // Update dots
+  const dots = dotsContainer.querySelectorAll(".step-dot");
+  dots.forEach((d, i) => {
+    d.classList.toggle("active", i === currentStep);
+    d.classList.toggle("completed", i < currentStep);
+  });
+
+  // Buttons state
+  prevBtn.disabled = currentStep === 0;
+  nextBtn.textContent = currentStep === STEPS_DATA.length - 1 ? "Restart ↺" : "Next →";
+
+  // Execute step visual action
+  s.action();
+
+  // Sync Ledger & Ratio
+  updateLedger(currentStep);
+}
+
+prevBtn.addEventListener("click", () => {
+  stopAutoPlay();
+  goToStep(currentStep - 1);
+});
+
+nextBtn.addEventListener("click", () => {
+  stopAutoPlay();
+  if (currentStep === STEPS_DATA.length - 1) {
+    goToStep(0);
+  } else {
+    goToStep(currentStep + 1);
+  }
+});
+
+function toggleAutoPlay() {
+  if (isAutoPlaying) {
+    stopAutoPlay();
+  } else {
+    startAutoPlay();
+  }
+}
+
+function startAutoPlay() {
+  isAutoPlaying = true;
+  autoplayIcon.textContent = "⏸";
+  autoplayText.textContent = "Pause";
+  if (currentStep === STEPS_DATA.length - 1) goToStep(0);
+
+  autoPlayTimer = setInterval(() => {
+    if (currentStep < STEPS_DATA.length - 1) {
+      goToStep(currentStep + 1);
+    } else {
+      stopAutoPlay();
+    }
+  }, 2200);
+}
+
+function stopAutoPlay() {
+  isAutoPlaying = false;
+  autoplayIcon.textContent = "▶";
+  autoplayText.textContent = "Auto Play";
+  if (autoPlayTimer) clearInterval(autoPlayTimer);
+}
+
+autoplayBtn.addEventListener("click", toggleAutoPlay);
+
+// Keyboard controls
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "SELECT" || e.target.tagName === "INPUT") return;
+  if (e.key === "ArrowRight") {
+    stopAutoPlay();
+    nextBtn.click();
+  } else if (e.key === "ArrowLeft") {
+    stopAutoPlay();
+    prevBtn.click();
+  } else if (e.key === " ") {
+    e.preventDefault();
+    toggleAutoPlay();
+  } else if (e.key.toLowerCase() === "r") {
+    stopAutoPlay();
+    goToStep(0);
+  }
+});
+
+/* ----------------------------------------------------------------------
+ * 6. Financial Ledger Table & Energy Breakdown
+ * ---------------------------------------------------------------------- */
+const LEDGER_ROWS = [
+  { op: "LOAD mem[1]", data: "Operand 1 from Cell 1", route: "(0,0) → (0,1)", dist: "⌈√1⌉ = 1", cost: 1, stepReq: 2 },
+  { op: "LOAD mem[7]", data: "Operand 7 from Cell 7", route: "(0,0) → (0,3)", dist: "⌈√7⌉ = 3", cost: 3, stepReq: 4 },
+  { op: "ADD R0, R1",  data: "Compute 1 + 7 → R2",    route: "Inside Core ALU", dist: "Local ALU", cost: 0, stepReq: 5 },
+  { op: "STORE mem[8]", data: "Store Result 8 to Cell 8", route: "(0,0) → (1,0) → (1,2)", dist: "⌈√8⌉ = 3", cost: 3, stepReq: 7 }
+];
+
+const ledgerBody = document.getElementById("ledger-body");
+const ratioFill = document.getElementById("ratio-fill");
+const ratioWirePct = document.getElementById("ratio-wire-pct");
+const ratioAluPct = document.getElementById("ratio-alu-pct");
+
+function updateLedger(stepIdx) {
+  let html = "";
+  let totalCost = 0;
+  let wireCost = 0;
+  let aluCost = 0;
+
+  LEDGER_ROWS.forEach((row, i) => {
+    const isDone = stepIdx >= row.stepReq;
+    const isCurrent = (stepIdx === row.stepReq || (stepIdx === row.stepReq - 1));
+    const rowClass = isDone ? (isCurrent ? "active-row" : "") : "pending-row";
+
+    if (isDone) {
+      totalCost += row.cost;
+      if (row.cost > 0) wireCost += row.cost;
+      else aluCost += 1; // operation count
+    }
+
+    html += `
+      <tr class="${rowClass}">
+        <td><code>${row.op}</code></td>
+        <td>${row.data}</td>
+        <td><code>${row.route}</code></td>
+        <td>${row.dist}</td>
+        <td class="cost-num ${row.cost === 0 ? 'zero' : 'paid'}">
+          ${isDone ? (row.cost === 0 ? '+0 (FREE)' : `+${row.cost}`) : '—'}
+        </td>
+      </tr>
+    `;
+  });
+
+  html += `
+    <tr class="total-row">
+      <td colspan="4">Total Energy Cost (Cumulative)</td>
+      <td class="cost-num paid" style="font-size:17px;">${totalCost} units</td>
+    </tr>
+  `;
+
+  ledgerBody.innerHTML = html;
+
+  // Energy distribution percentage
+  if (totalCost > 0) {
+    ratioFill.style.width = "100%";
+    ratioWirePct.textContent = "100%";
+    ratioAluPct.textContent = "0%";
+  } else {
+    ratioFill.style.width = "0%";
+    ratioWirePct.textContent = "0%";
+    ratioAluPct.textContent = "0%";
+  }
+}
+
+goToStep(0);
+
+/* ----------------------------------------------------------------------
+ * 7. Section 4: Custom Architecture Sandbox
+ * ---------------------------------------------------------------------- */
+const sbSvg = createSvgArena("sandbox-svg", 16, { showProcessor: true, padBottom: 100 });
+
+const sbSrc1 = document.getElementById("sb-src1");
+const sbSrc2 = document.getElementById("sb-src2");
+const sbDest = document.getElementById("sb-dest");
+const sbOp   = document.getElementById("sb-op");
+const sbRunBtn = document.getElementById("sb-run-btn");
+const sbIrCode = document.getElementById("sb-ir-code");
+const sbStatus = document.getElementById("sb-status");
+const sbTotalCost = document.getElementById("sb-total-cost");
+
+// Populate select options
+for (let i = 1; i <= 16; i++) {
+  const opt1 = new Option(`Cell ${i} (dist ${Math.ceil(Math.sqrt(i))})`, i);
+  const opt2 = new Option(`Cell ${i} (dist ${Math.ceil(Math.sqrt(i))})`, i);
+  const opt3 = new Option(`Cell ${i} (dist ${Math.ceil(Math.sqrt(i))})`, i);
+  sbSrc1.add(opt1);
+  sbSrc2.add(opt2);
+  sbDest.add(opt3);
+}
+
+// Defaults
+sbSrc1.value = 1;
+sbSrc2.value = 7;
+sbDest.value = 8;
+
+function updateSandboxIR() {
+  const s1 = sbSrc1.value;
+  const s2 = sbSrc2.value;
+  const d = sbDest.value;
+  const op = sbOp.value;
+  sbIrCode.textContent = `${op} mem[${d}], mem[${s1}], mem[${s2}]`;
+}
+
+sbSrc1.addEventListener("change", updateSandboxIR);
+sbSrc2.addEventListener("change", updateSandboxIR);
+sbDest.addEventListener("change", updateSandboxIR);
+sbOp.addEventListener("change", updateSandboxIR);
+
+let sbBusy = false;
+
+sbRunBtn.addEventListener("click", () => {
+  if (sbBusy) return;
+  sbBusy = true;
+  sbRunBtn.disabled = true;
+
+  const s1 = +sbSrc1.value;
+  const s2 = +sbSrc2.value;
+  const dest = +sbDest.value;
+  const op = sbOp.value;
+
+  const cost1 = Math.ceil(Math.sqrt(s1));
+  const cost2 = Math.ceil(Math.sqrt(s2));
+  const costDest = Math.ceil(Math.sqrt(dest));
+  const total = cost1 + cost2 + costDest;
+
+  sbTotalCost.textContent = `${total} units`;
+
+  // Step 1: Load Operand 1
+  sbStatus.textContent = `Loading Operand 1 from Cell ${s1}... (+${cost1})`;
+  setSandboxRegisters([null, null, null]);
+  sbSvg.animateTransfer(s1, "load", () => {
+    setSandboxRegisters([s1, null, null], 0);
+
+    // Step 2: Load Operand 2
+    setTimeout(() => {
+      sbStatus.textContent = `Loading Operand 2 from Cell ${s2}... (+${cost2})`;
+      sbSvg.animateTransfer(s2, "load", () => {
+        setSandboxRegisters([s1, s2, null], 1);
+
+        // Step 3: Compute in ALU (FREE)
+        setTimeout(() => {
+          let res = 0;
+          if (op === "add") res = s1 + s2;
+          else if (op === "sub") res = s1 - s2;
+          else if (op === "mul") res = s1 * s2;
+
+          sbStatus.textContent = `Computing ${op} in ALU: ${s1} and ${s2} → ${res} (FREE: +0)`;
+          setSandboxRegisters([s1, s2, res], 2);
+
+          // Step 4: Store to Destination Cell
+          setTimeout(() => {
+            sbStatus.textContent = `Storing Result ${res} into Cell ${dest}... (+${costDest})`;
+            sbSvg.animateTransfer(dest, "store", () => {
+              sbStatus.textContent = `Complete! Total cost: ${total} units (${cost1} + ${cost2} + 0 + ${costDest})`;
+              sbBusy = false;
+              sbRunBtn.disabled = false;
+            });
+          }, 700);
+        }, 600);
+      });
+    }, 500);
+  });
+});
+
+function setSandboxRegisters(vals, activeIndex = -1) {
+  vals.forEach((v, idx) => {
+    const reg = sbSvg.regMap[idx];
+    if (!reg) return;
+    reg.rVal.textContent = v !== null ? v : "—";
+    const isActive = idx === activeIndex;
+    reg.rBox.setAttribute("stroke", isActive ? "var(--energy-cost)" : "var(--reg-border)");
+    reg.rBox.setAttribute("stroke-width", isActive ? "2.5" : "1.5");
+    reg.rVal.setAttribute("fill", v !== null ? (isActive ? "var(--energy-cost)" : "var(--processor-text)") : "var(--text-faint)");
+  });
+}
+
+updateSandboxIR();
+</script>
+</body>
+</html>
