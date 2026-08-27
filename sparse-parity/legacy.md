@@ -1,5 +1,7 @@
 # Sparse parity (legacy)
 
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+
 > Archived full write-up: every tier, leaderboard, and scoring detail. The
 > current, minimal task page is **[here](./)**.
 
