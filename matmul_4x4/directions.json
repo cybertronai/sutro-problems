@@ -1,0 +1,40 @@
+{
+  "record": 784,
+  "record_file": null,
+  "lanes": [
+    {
+      "id": 0,
+      "status": "idle",
+      "direction_id": "inner-product-cached",
+      "started_at": 1780163240
+    }
+  ],
+  "improvement_history": [
+    {
+      "ts": 1780163205.8943844,
+      "cost": 800
+    },
+    {
+      "ts": 1780163275.9286866,
+      "cost": 784
+    }
+  ],
+  "directions": [
+    {
+      "id": "outer-product-4x4",
+      "name": "Outer-product Matmul 4x4",
+      "status": "done",
+      "best_score": 800,
+      "summary": "Loop order (k, i, j) with sA in a single cell at address 1 and sB at addresses 3..6",
+      "prompt": "Implement the outer product loop order (k, i, j) for a 4x4 matrix multiplication. Lay out memory such that the single-cell cache sA is at address 1, the temporary variable is at address 2, sB is at addresses 3..6, C is at addresses 7..22, A bulk is at 23..38, and B bulk is at 39..54. For each k, copy B[k, j] to sB[j]. Then for each i, copy A[i, k] to sA, and for each j, perform the multiplication, accumulating into C[i, j]."
+    },
+    {
+      "id": "inner-product-cached",
+      "name": "Inner-product Cached Matmul 4x4",
+      "status": "done",
+      "best_score": 784,
+      "summary": "Loop order (i, j, k) with cached rows of A at low addresses",
+      "prompt": "Implement the inner product loop order (i, j, k) for a 4x4 matrix multiplication. Try caching a row of A in low addresses before multiplying. Lay out memory to minimize average Manhattan distance for hot variables."
+    }
+  ]
+}
