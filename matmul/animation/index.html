@@ -9,18 +9,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --paper: #faf7f2;
-    --card: #ffffff;
-    --ink: #1f2430;
-    --ink-soft: #5b6472;
-    --line: #e6e0d6;
-    --accent: #c2410c;
-    --accent-soft: #fff1e8;
-    --rA: #2563eb;
-    --rB: #0d9488;
-    --rC: #9333ea;
-    --rT: #ca8a04;
-    --rX: #64748b;
+    --paper: #faf7f2; --card: #ffffff; --ink: #1f2430; --ink-soft: #5b6472;
+    --line: #e6e0d6; --accent: #c2410c; --accent-soft: #fff1e8;
+    --rA: #2563eb; --rB: #0d9488; --rC: #9333ea; --rT: #ca8a04; --rX: #64748b;
     --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   }
   * { box-sizing: border-box; margin: 0; }
@@ -30,17 +21,11 @@
     font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased;
   }
   .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 90px; }
-
   header { padding: 64px 0 8px; }
-  .kicker {
-    font-family: var(--mono); font-size: 12.5px; letter-spacing: .14em;
-    text-transform: uppercase; color: var(--accent); font-weight: 600;
-  }
-  h1 {
-    font-family: "Fraunces", Georgia, serif;
-    font-size: clamp(36px, 5.4vw, 52px); font-weight: 700;
-    line-height: 1.08; margin: 8px 0 14px;
-  }
+  .kicker { font-family: var(--mono); font-size: 12.5px; letter-spacing: .14em;
+            text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  h1 { font-family: "Fraunces", Georgia, serif; font-size: clamp(36px, 5.4vw, 52px);
+       font-weight: 700; line-height: 1.08; margin: 8px 0 14px; }
   .lede { font-size: 19px; color: var(--ink-soft); max-width: 700px; }
   .lede a { color: var(--accent); }
   h2 { font-family: "Fraunces", Georgia, serif; font-size: 27px; font-weight: 600; margin: 56px 0 12px; }
@@ -49,135 +34,122 @@
   code, .m { font-family: var(--mono); font-size: .9em; }
 
   .facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 4px; }
-  .fact {
-    font-family: var(--mono); font-size: 13px; color: var(--ink-soft);
-    background: var(--card); border: 1px solid var(--line);
-    border-radius: 999px; padding: 5px 14px;
-  }
+  .fact { font-family: var(--mono); font-size: 13px; color: var(--ink-soft);
+          background: var(--card); border: 1px solid var(--line);
+          border-radius: 999px; padding: 5px 14px; }
   .fact b { color: var(--ink); font-weight: 600; }
 
-  /* ---------- stage ---------- */
-  .stage {
-    background: var(--card); border: 1px solid var(--line); border-radius: 18px;
-    margin: 22px 0 0; box-shadow: 0 1px 3px rgba(31,36,48,.05); overflow: hidden;
-  }
-  .bar {
-    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-    padding: 14px 18px; border-bottom: 1px solid var(--line); background: #fdfcf9;
-  }
-  button.btn {
-    font: 600 14px "Inter", sans-serif; color: var(--ink); background: var(--card);
-    border: 1px solid var(--line); border-radius: 9px; padding: 7px 13px;
-    cursor: pointer; transition: all .13s; white-space: nowrap;
-  }
+  .stage { background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+           margin: 22px 0 0; box-shadow: 0 1px 3px rgba(31,36,48,.05); overflow: hidden; }
+  .bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+         padding: 14px 18px; border-bottom: 1px solid var(--line); background: #fdfcf9; }
+  button.btn { font: 600 14px "Inter", sans-serif; color: var(--ink); background: var(--card);
+               border: 1px solid var(--line); border-radius: 9px; padding: 7px 13px;
+               cursor: pointer; transition: all .13s; white-space: nowrap; }
   button.btn:hover { border-color: var(--accent); color: var(--accent); }
   button.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; min-width: 92px; }
   button.btn.primary:hover { background: #a83809; color: #fff; }
   button.btn.on { background: var(--ink); border-color: var(--ink); color: #fff; }
-  .speeds { display: flex; gap: 4px; margin-left: 2px; }
+  .speeds { display: flex; gap: 4px; }
   .speeds button { padding: 7px 10px; font-family: var(--mono); font-size: 13px; }
   .spacer { flex: 1 1 auto; }
 
   .scrub { display: flex; align-items: center; gap: 14px; padding: 12px 18px 4px; }
-  input[type=range] {
-    -webkit-appearance: none; appearance: none; flex: 1;
-    height: 4px; border-radius: 2px; background: var(--line); outline: none;
-  }
-  input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none; width: 15px; height: 15px; border-radius: 50%;
-    background: var(--accent); cursor: pointer; border: 2px solid #fff;
-    box-shadow: 0 1px 3px rgba(31,36,48,.3);
-  }
-  input[type=range]::-moz-range-thumb {
-    width: 15px; height: 15px; border-radius: 50%; background: var(--accent);
-    cursor: pointer; border: 2px solid #fff;
-  }
+  input[type=range] { -webkit-appearance: none; appearance: none; flex: 1;
+                      height: 4px; border-radius: 2px; background: var(--line); outline: none; }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 15px; height: 15px;
+    border-radius: 50%; background: var(--accent); cursor: pointer; border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(31,36,48,.3); }
+  input[type=range]::-moz-range-thumb { width: 15px; height: 15px; border-radius: 50%;
+    background: var(--accent); cursor: pointer; border: 2px solid #fff; }
   .stepno { font-family: var(--mono); font-size: 13px; color: var(--ink-soft); white-space: nowrap; }
 
-  .irline {
-    font-family: var(--mono); font-size: 14px; padding: 6px 18px 14px;
-    color: var(--ink-soft); min-height: 2.5em;
-  }
+  .irline { font-family: var(--mono); font-size: 14px; padding: 6px 18px 14px;
+            color: var(--ink-soft); min-height: 2.5em; }
   .irline .op { color: var(--ink); font-weight: 600; }
+  .irline .now { color: #fff; background: var(--accent); border-radius: 4px; padding: 1px 5px; font-weight: 600; }
+  .irline .held { color: var(--ink); background: #ece8de; border-radius: 4px; padding: 1px 5px; }
   .irline .plus { color: var(--accent); font-weight: 600; }
   .irline .dim { opacity: .6; }
 
-  .panes {
-    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: 10px; padding: 4px 18px 10px; align-items: start;
-  }
+  .panes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+           gap: 10px; padding: 4px 18px 10px; align-items: start; }
   @media (max-width: 940px) { .panes { grid-template-columns: 1fr; } }
 
-  /* ---------- matrices ---------- */
   .mats { display: flex; align-items: center; justify-content: center; gap: 7px; flex-wrap: wrap; padding-top: 6px; }
   .mat { display: flex; flex-direction: column; align-items: center; gap: 6px; }
   .mat .name { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); letter-spacing: .06em; }
   .grid4 { display: grid; grid-template-columns: repeat(4, 33px); grid-auto-rows: 28px; gap: 2.5px; }
-  .cellv {
-    display: flex; align-items: center; justify-content: center;
-    font-family: var(--mono); font-size: 12.5px; border-radius: 6px;
-    background: #f4f1ea; color: var(--ink-soft); transition: background .12s, color .12s;
-    border: 1.5px solid transparent;
-  }
+  .cellv { display: flex; align-items: center; justify-content: center;
+           font-family: var(--mono); font-size: 12.5px; border-radius: 6px;
+           background: #f4f1ea; color: var(--ink-soft); transition: background .1s, color .1s;
+           border: 1.5px solid transparent; }
   .cellv.band { background: #ece8de; }
   .cellv.hot { color: #fff; font-weight: 600; }
-  .cellv.hotA { background: var(--rA); }
-  .cellv.hotB { background: var(--rB); }
-  .cellv.hotC { background: var(--rC); }
+  .cellv.hotA { background: var(--rA); } .cellv.hotB { background: var(--rB); } .cellv.hotC { background: var(--rC); }
+  .cellv.held { border-color: var(--ink-soft); color: var(--ink); font-weight: 600; }
   .cellv.target { border-color: var(--accent); color: var(--ink); font-weight: 600; }
   .cellv.done { color: var(--ink); }
   .cellv.empty { color: #c3bcb0; }
   .sym { font-family: var(--mono); font-size: 17px; color: var(--ink-soft); padding-top: 16px; }
-  .tmpchip {
-    display: flex; align-items: center; gap: 7px; justify-content: center;
-    font-family: var(--mono); font-size: 12.5px; color: var(--ink-soft); margin-top: 12px;
-  }
-  .tmpchip .box {
-    min-width: 54px; text-align: center; padding: 3px 8px; border-radius: 6px;
-    background: #f4f1ea; border: 1.5px solid transparent; color: var(--ink);
-  }
+  .tmpchip { display: flex; align-items: center; gap: 7px; justify-content: center;
+             font-family: var(--mono); font-size: 12.5px; color: var(--ink-soft); margin-top: 12px; }
+  .tmpchip .box { min-width: 54px; text-align: center; padding: 3px 8px; border-radius: 6px;
+                  background: #f4f1ea; border: 1.5px solid transparent; color: var(--ink); }
   .tmpchip .box.hot { background: var(--rT); color: #fff; font-weight: 600; }
-  .verdict {
-    text-align: center; font-family: var(--mono); font-size: 12.5px;
-    margin-top: 10px; color: #23703a; opacity: 0; transition: opacity .3s;
-  }
+  .verdict { text-align: center; font-family: var(--mono); font-size: 12.5px;
+             margin-top: 10px; color: #23703a; opacity: 0; transition: opacity .3s; }
   .verdict.show { opacity: 1; }
 
-  /* ---------- arena ---------- */
   .arena svg { display: block; width: 100%; height: auto; }
-  .legend {
-    display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center;
-    font-family: var(--mono); font-size: 11.5px; color: var(--ink-soft); padding: 2px 0 6px;
-  }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center;
+            font-family: var(--mono); font-size: 11.5px; color: var(--ink-soft); padding: 2px 0 6px; }
   .legend[hidden] { display: none; }
   .legend span { display: inline-flex; align-items: center; gap: 5px; }
   .legend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
 
-  /* ---------- meter ---------- */
   .meter { border-top: 1px solid var(--line); background: #fdfcf9; padding: 16px 18px 18px; }
   .total { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-  .total .num {
-    font-family: var(--mono); font-size: 34px; font-weight: 600; color: var(--accent);
-    font-variant-numeric: tabular-nums;
-  }
+  .total .num { font-family: var(--mono); font-size: 34px; font-weight: 600; color: var(--accent);
+                font-variant-numeric: tabular-nums; }
   .total .lbl { font-size: 14px; color: var(--ink-soft); }
-  .total .delta {
-    font-family: var(--mono); font-size: 13px; color: var(--accent);
-    background: var(--accent-soft); border-radius: 999px; padding: 2px 10px; opacity: 0;
-    transition: opacity .15s;
-  }
+  .total .delta { font-family: var(--mono); font-size: 13px; color: var(--accent);
+                  background: var(--accent-soft); border-radius: 999px; padding: 2px 10px;
+                  opacity: 0; transition: opacity .15s; }
   .total .delta.show { opacity: 1; }
-  .bars { margin-top: 12px; display: grid; grid-template-columns: auto 1fr auto; gap: 5px 10px; align-items: center; }
-  .bars .k { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); }
+  .bhead { font-family: var(--mono); font-size: 11.5px; letter-spacing: .1em; text-transform: uppercase;
+           color: var(--ink-soft); margin: 14px 0 6px; }
+  .bars { display: grid; grid-template-columns: auto 1fr auto; gap: 5px 10px; align-items: center; }
+  .bars .k { font-family: var(--mono); font-size: 12.5px; color: var(--ink-soft); }
   .bars .track { height: 9px; background: #efeae1; border-radius: 5px; overflow: hidden; }
-  .bars .fill { height: 100%; width: 0; border-radius: 5px; transition: width .12s linear; }
+  .bars .fill { height: 100%; width: 0; border-radius: 5px; transition: width .1s linear; }
   .bars .v { font-family: var(--mono); font-size: 12px; color: var(--ink); font-variant-numeric: tabular-nums; }
 
   table.lay { border-collapse: collapse; font-family: var(--mono); font-size: 13.5px; margin-top: 6px; }
   table.lay td { padding: 4px 18px 4px 0; border-bottom: 1px solid var(--line); }
   table.lay td:first-child { color: var(--ink-soft); }
 
-  footer { margin-top: 64px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-soft); }
+  /* ---------- algorithm tabs ---------- */
+  .tabs { display: flex; gap: 6px; flex-wrap: wrap; margin: 18px 0 0; }
+  .tab { font: 500 14px "Inter", sans-serif; color: var(--ink-soft); background: var(--card);
+         border: 1px solid var(--line); border-radius: 9px 9px 0 0; border-bottom-color: transparent;
+         padding: 8px 14px; cursor: pointer; }
+  .tab:hover { color: var(--accent); }
+  .tab.on { color: var(--ink); font-weight: 600; background: var(--card);
+            box-shadow: inset 0 2px 0 var(--accent); }
+  .panel { background: var(--card); border: 1px solid var(--line); border-radius: 0 14px 14px 14px;
+           padding: 16px 18px 18px; margin-top: -1px; }
+  .chartbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .chartbar .kind { display: flex; gap: 4px; }
+  .chartbar .kind button { font-family: var(--mono); font-size: 12.5px; padding: 6px 11px; }
+  .stats { display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: var(--mono);
+           font-size: 12.5px; color: var(--ink-soft); margin-bottom: 10px; }
+  .stats b { color: var(--ink); font-weight: 600; }
+  canvas.plot { display: block; width: 100%; height: auto; }
+  .cap { font-family: var(--mono); font-size: 11.5px; color: var(--ink-soft); margin-top: 8px; }
+
+  footer { margin-top: 64px; padding-top: 22px; border-top: 1px solid var(--line);
+           font-size: 14px; color: var(--ink-soft); }
 </style>
 </head>
 <body>
@@ -187,15 +159,15 @@
   <div class="kicker">sutro-problems · matmul</div>
   <h1>Naive 4×4 Matmul</h1>
   <p class="lede">
-    The baseline triple loop, executed one instruction at a time under the
+    The baseline triple loop, executed one memory access per clock under the
     <a href="https://github.com/cybertronai/simplified-dally-model">simplified Dally model</a>:
-    a read from address <span class="m">a</span> costs <span class="m">⌈√a⌉</span>; writes and arithmetic are free.
+    an access to address <span class="m">a</span> costs <span class="m">⌈√a⌉</span>; writes and arithmetic are free.
   </p>
   <div class="facts">
     <span class="fact">112 instructions</span>
     <span class="fact">64 <b>mul</b> · 48 <b>add</b></span>
-    <span class="fact">16 exit reads</span>
-    <span class="fact">total <b>1,316</b></span>
+    <span class="fact">240 cycles</span>
+    <span class="fact">cost <b>1,316</b></span>
     <span class="fact">best known <b>800</b></span>
   </div>
 </header>
@@ -212,8 +184,8 @@
   </div>
 
   <div class="scrub">
-    <input type="range" id="range" min="0" max="128" value="0" step="1">
-    <div class="stepno" id="stepno">0 / 128</div>
+    <input type="range" id="range" min="0" max="240" value="0" step="1">
+    <div class="stepno" id="stepno">0 / 240</div>
   </div>
   <div class="irline" id="irline"></div>
 
@@ -239,19 +211,19 @@
   <div class="meter">
     <div class="total">
       <span class="num" id="costnum">0</span>
-      <span class="lbl">read cost</span>
+      <span class="lbl">total cost</span>
       <span class="delta" id="delta"></span>
     </div>
+    <div class="bhead">access cost</div>
     <div class="bars" id="bars"></div>
   </div>
 </figure>
 
 <h2>Layout</h2>
 <p>
-  Addresses are assigned by the baseline generator; the cell at linear index
-  <span class="m">a</span> sits at Manhattan distance <span class="m">⌈√a⌉</span> from the core,
-  so ring <span class="m">k</span> holds <span class="m">2k−1</span> cells and the whole
-  program fits in seven rings.
+  The cell at linear index <span class="m">a</span> sits at Manhattan distance
+  <span class="m">⌈√a⌉</span> from the core, so ring <span class="m">k</span> holds
+  <span class="m">2k−1</span> cells and the whole program fits in seven rings.
 </p>
 <table class="lay">
   <tr><td>A row-major</td><td>1 – 16</td><td>d = 1 – 4</td></tr>
@@ -260,21 +232,40 @@
   <tr><td>tmp</td><td>49</td><td>d = 7</td></tr>
 </table>
 
+<h2>Locality across algorithms</h2>
+<p>
+  Each program is generated and simulated in-page, then plotted per access.
+  <b>Reuse distance</b> is the number of distinct addresses touched since that address was
+  last used — the LRU stack depth, and the thing a scratchpad has to hold to avoid a
+  re-fetch. <b>Access cost</b> is the priced quantity, <span class="m">⌈√a⌉</span>.
+</p>
+
+<div class="tabs" id="tabs"></div>
+<div class="panel">
+  <div class="chartbar">
+    <div class="kind" id="kind"></div>
+    <div class="spacer"></div>
+  </div>
+  <div class="stats" id="stats"></div>
+  <canvas class="plot" id="plot" width="1900" height="620"></canvas>
+  <div class="cap" id="cap"></div>
+</div>
+
 <h2>Where the energy goes</h2>
 <p>
-  Two thirds of the bill is scratch traffic. Every one of the 48 accumulate steps
-  re-reads <span class="m">C[i,j]</span> at distance 6–7 and <span class="m">tmp</span> at
-  distance 7, so <span class="m">tmp</span> alone (336) costs more than every read of A (200).
-  The 800-cost record removes it by restructuring the loop as outer products and
-  keeping the accumulator in cheap addresses.
+  Two thirds of the naive bill is scratch traffic. Every one of the 48 accumulate steps
+  reads <span class="m">C[i,j]</span> at distance 6–7 and <span class="m">tmp</span> at
+  distance 7, so <span class="m">tmp</span> alone (336) costs more than every access to A
+  (200). The 800-cost record restructures the loop as outer products, keeping the
+  accumulator and the broadcast operand in the cheapest addresses.
 </p>
 
 <footer>
   <p>
-    Runs the IR emitted by <span class="m">generate_baseline_4x4()</span> in
-    <a href="https://github.com/cybertronai/sutro-problems/tree/main/matmul">cybertronai/sutro-problems/matmul</a>;
-    cost is computed in-page by the same rule as the scorer and totals 1,316.
-    Layout math and animation are plain JavaScript — view source.
+    Runs the IR from <span class="m">generate_baseline_4x4()</span> in
+    <a href="https://github.com/cybertronai/sutro-problems/tree/main/matmul">cybertronai/sutro-problems/matmul</a>.
+    All four algorithms reproduce their leaderboard costs (1,316 · 800 · 340,704 · 133,783).
+    Layout math, simulator and plots are plain JavaScript — view source.
   </p>
 </footer>
 
@@ -282,7 +273,7 @@
 
 <script>
 "use strict";
-/* ---------------- cost model ---------------- */
+/* ================= cost model ================= */
 function isqrt(x) { let r = Math.floor(Math.sqrt(x)); while (r * r > x) r--; while ((r + 1) * (r + 1) <= x) r++; return r; }
 const dist = (a) => isqrt(a - 1) + 1;                 // ⌈√a⌉
 function pos(a) {                                     // upper-half spiral
@@ -291,7 +282,7 @@ function pos(a) {                                     // upper-half spiral
   return { x, y: k - Math.abs(x), k };
 }
 
-/* ---------------- program ---------------- */
+/* ================= naive 4x4 program ================= */
 const N = 4;
 const A_at = (i, j) => 1 + i * N + j;
 const B_at = (i, j) => 1 + N * N + i * N + j;
@@ -302,65 +293,60 @@ const Bv = (i, j) => i + 2 * j + 3;
 const region = (a) => a <= 16 ? "A" : a <= 32 ? "B" : a <= 48 ? "C" : "T";
 const RCOL = { A: "var(--rA)", B: "var(--rB)", C: "var(--rC)", T: "var(--rT)" };
 
-// Event stream, mirroring generate_baseline_4x4().
+// One event = one clock cycle = one memory access. A two-operand instruction
+// therefore takes two cycles; the write lands on the second.
 const EV = [];
+function emit(op, dest, s1, s2, ctx) {
+  EV.push(Object.assign({ op, dest, s1, s2, addr: s1, slot: 0, write: false }, ctx));
+  EV.push(Object.assign({ op, dest, s1, s2, addr: s2, slot: 1, write: true }, ctx));
+}
 for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
-  EV.push({ op: "mul", dest: C_at(i, j), srcs: [A_at(i, 0), B_at(0, j)], i, j, k: 0 });
+  emit("mul", C_at(i, j), A_at(i, 0), B_at(0, j), { i, j, k: 0 });
   for (let k = 1; k < N; k++) {
-    EV.push({ op: "mul", dest: TMP, srcs: [A_at(i, k), B_at(k, j)], i, j, k });
-    EV.push({ op: "add", dest: C_at(i, j), srcs: [C_at(i, j), TMP], i, j, k });
+    emit("mul", TMP, A_at(i, k), B_at(k, j), { i, j, k });
+    emit("add", C_at(i, j), C_at(i, j), TMP, { i, j, k });
   }
 }
 for (let i = 0; i < N; i++) for (let j = 0; j < N; j++)
-  EV.push({ op: "exit", dest: null, srcs: [C_at(i, j)], i, j });
-const NEV = EV.length;                                 // 128
+  EV.push({ op: "exit", dest: null, s1: C_at(i, j), s2: null, addr: C_at(i, j), slot: 0, write: false, i, j });
+const NEV = EV.length;                                 // 240
 
 const EXPECT = [];
 for (let i = 0; i < N; i++) { const r = []; for (let j = 0; j < N; j++) { let s = 0; for (let k = 0; k < N; k++) s += Av(i, k) * Bv(k, j); r.push(s); } EXPECT.push(r); }
 
-/* ---------------- simulate to step n ---------------- */
 function simulate(n) {
   const mem = {};
   for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) { mem[A_at(i, j)] = Av(i, j); mem[B_at(i, j)] = Bv(i, j); }
-  const by = { A: 0, B: 0, C: 0, T: 0, X: 0 };
-  const readCost = {};
+  const by = { A: 0, B: 0, C: 0, T: 0, X: 0 }, readCost = {};
   let cost = 0;
   for (let s = 0; s < n; s++) {
-    const e = EV[s];
-    for (const a of e.srcs) {
-      const c = dist(a);
-      cost += c;
-      by[e.op === "exit" ? "X" : region(a)] += c;
-      readCost[a] = (readCost[a] || 0) + c;
-    }
-    if (e.op === "mul") mem[e.dest] = mem[e.srcs[0]] * mem[e.srcs[1]];
-    else if (e.op === "add") mem[e.dest] = mem[e.srcs[0]] + mem[e.srcs[1]];
+    const e = EV[s], c = dist(e.addr);
+    cost += c;
+    by[e.op === "exit" ? "X" : region(e.addr)] += c;
+    readCost[e.addr] = (readCost[e.addr] || 0) + c;
+    if (e.write) mem[e.dest] = e.op === "mul" ? mem[e.s1] * mem[e.s2] : mem[e.s1] + mem[e.s2];
   }
   return { mem, cost, by, readCost };
 }
 
-/* ---------------- matrices ---------------- */
+/* ================= matrices ================= */
 const matsEl = document.getElementById("mats");
 const cellsA = [], cellsB = [], cellsC = [];
 function buildMat(name, store) {
   const w = document.createElement("div"); w.className = "mat";
   const nm = document.createElement("div"); nm.className = "name"; nm.textContent = name; w.appendChild(nm);
   const g = document.createElement("div"); g.className = "grid4";
-  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
-    const c = document.createElement("div"); c.className = "cellv";
-    g.appendChild(c); store.push(c);
-  }
+  for (let i = 0; i < N * N; i++) { const c = document.createElement("div"); c.className = "cellv"; g.appendChild(c); store.push(c); }
   w.appendChild(g); matsEl.appendChild(w);
 }
 function sym(t) { const s = document.createElement("div"); s.className = "sym"; s.textContent = t; matsEl.appendChild(s); }
 buildMat("A", cellsA); sym("×"); buildMat("B", cellsB); sym("="); buildMat("C", cellsC);
 for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
-  cellsA[i * N + j].textContent = Av(i, j);
-  cellsB[i * N + j].textContent = Bv(i, j);
+  cellsA[i * N + j].textContent = Av(i, j); cellsB[i * N + j].textContent = Bv(i, j);
 }
 const tmpBox = document.getElementById("tmpbox");
 
-/* ---------------- arena ---------------- */
+/* ================= arena ================= */
 const S = 40, MAXX = 6, MAXY = 7;
 const padL = 54, padR = 54, padT = 26, padB = 104;
 const W = 2 * MAXX * S + padL + padR, H = MAXY * S + padT + padB;
@@ -371,7 +357,6 @@ svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
 document.getElementById("arena").appendChild(svg);
 const mk = (n, at, p = svg) => { const e = document.createElementNS(ns, n); for (const k in at) e.setAttribute(k, at[k]); p.appendChild(e); return e; };
 
-// faint distance rings (|x|+|y| = k tents)
 for (let k = 1; k <= MAXY; k++)
   mk("path", { d: `M ${PX(-k)} ${PY(0)} L ${PX(0)} ${PY(k)} L ${PX(k)} ${PY(0)}`, fill: "none", stroke: "#e3dcd0", "stroke-width": 1 });
 for (let k = 1; k <= MAXY; k++)
@@ -379,26 +364,24 @@ for (let k = 1; k <= MAXY; k++)
                fill: "#b7b0a3", "font-family": "var(--mono)" }).textContent = k;
 
 const wireLayer = mk("g", {});
-const cellG = {}, cellEl = {};
+const cellEl = {}, cellG = {};
 for (let a = 1; a <= 49; a++) {
   const p = pos(a);
-  const c = mk("circle", { cx: PX(p.x), cy: PY(p.y), r: 13, fill: RCOL[region(a)],
-                           stroke: "#fff", "stroke-width": 2, opacity: .42 });
-  cellEl[a] = c; cellG[a] = p;
+  cellEl[a] = mk("circle", { cx: PX(p.x), cy: PY(p.y), r: 13, fill: RCOL[region(a)],
+                             stroke: "#fff", "stroke-width": 2, opacity: .42 });
+  cellG[a] = p;
 }
 for (const a of [1, 17, 33, 49]) {
   const p = pos(a);
   mk("text", { x: PX(p.x), y: PY(p.y) - 19, "text-anchor": "middle", "font-size": 10.5,
                fill: "var(--ink-soft)", "font-family": "var(--mono)" }).textContent = a;
 }
-// core
 mk("line", { x1: PX(0), y1: PY(0), x2: PX(0), y2: PY(0) + 30, stroke: "#2b2f3a", "stroke-width": 4, "stroke-linecap": "round" });
 mk("rect", { x: PX(0) - 58, y: PY(0) + 30, width: 116, height: 34, rx: 10, fill: "#2b2f3a" });
 mk("text", { x: PX(0), y: PY(0) + 52, "text-anchor": "middle", "font-size": 11, "letter-spacing": "1.6",
              fill: "#9aa3b2", "font-family": "Inter, sans-serif", "font-weight": 600 }).textContent = "CORE";
 mk("circle", { cx: PX(0), cy: PY(0), r: 8, fill: "#2b2f3a", stroke: "#fff", "stroke-width": 2.5 });
 
-// data flows vertically first, then horizontally, into the core
 function drawWire(a, color, dur) {
   const p = cellG[a];
   const d = `M ${PX(p.x)} ${PY(p.y)} L ${PX(p.x)} ${PY(0)} L ${PX(0)} ${PY(0)}`;
@@ -415,10 +398,9 @@ function drawWire(a, color, dur) {
   }
 }
 
-/* ---------------- breakdown bars ---------------- */
-const BARS = [["A", "A reads", "var(--rA)"], ["B", "B reads", "var(--rB)"],
-              ["C", "C reads", "var(--rC)"], ["T", "tmp reads", "var(--rT)"],
-              ["X", "exit reads", "var(--rX)"]];
+/* ================= breakdown ================= */
+const BARS = [["A", "A", "var(--rA)"], ["B", "B", "var(--rB)"], ["C", "C", "var(--rC)"],
+              ["T", "tmp", "var(--rT)"], ["X", "result", "var(--rX)"]];
 const barsEl = document.getElementById("bars"), fills = {}, vals = {};
 for (const [key, label, col] of BARS) {
   const k = document.createElement("div"); k.className = "k"; k.textContent = label;
@@ -429,73 +411,70 @@ for (const [key, label, col] of BARS) {
 }
 const BAR_MAX = 360;
 
-/* ---------------- render ---------------- */
+/* ================= render ================= */
 const irEl = document.getElementById("irline"), costEl = document.getElementById("costnum");
 const deltaEl = document.getElementById("delta"), stepnoEl = document.getElementById("stepno");
 const rangeEl = document.getElementById("range"), verdictEl = document.getElementById("verdict");
 const legendEl = document.getElementById("legend"), heatLegendEl = document.getElementById("heatlegend");
-let cur = 0, heat = false, stepMs = 110, playing = false;
+let cur = 0, heat = false, stepMs = 90, playing = false;
 
 function heatFill(a, st, max) {
   const v = (st.readCost[a] || 0) / (max || 1);
-  const c0 = [247, 241, 232], c1 = [179, 64, 10];
-  const m = Math.pow(v, .42);
+  const c0 = [247, 241, 232], c1 = [179, 64, 10], m = Math.pow(v, .42);
   return `rgb(${c0.map((c, n) => Math.round(c + (c1[n] - c) * m)).join(",")})`;
 }
 
 function render() {
   const st = simulate(cur);
   const e = cur > 0 ? EV[cur - 1] : null;
-  const prevCost = cur > 0 ? simulate(cur - 1).cost : 0;
+  const inc = e ? dist(e.addr) : 0;
+  const other = e && e.op !== "exit" ? (e.slot === 0 ? e.s2 : e.s1) : null;
 
-  // --- arena cells ---
   const maxRead = Math.max(1, ...Object.values(st.readCost));
   legendEl.hidden = heat; heatLegendEl.hidden = !heat;
   if (heat) {
     let top = 1, topA = 49;
     for (const a in st.readCost) if (st.readCost[a] > top) { top = st.readCost[a]; topA = +a; }
-    heatLegendEl.textContent = `fill = cumulative read cost · hottest ${top} @${topA}`;
+    heatLegendEl.textContent = `fill = cumulative access cost · hottest ${top} @${topA}`;
   }
-  const active = new Set(e ? e.srcs : []);
   for (let a = 1; a <= 49; a++) {
-    const c = cellEl[a], on = active.has(a), isDest = e && e.dest === a;
+    const c = cellEl[a], on = e && e.addr === a, held = e && e.slot === 1 && other === a;
+    const isDest = e && e.write && e.dest === a;
     c.setAttribute("fill", heat ? heatFill(a, st, maxRead) : RCOL[region(a)]);
-    c.setAttribute("opacity", heat ? 1 : (on ? 1 : (st.readCost[a] ? .58 : .34)));
+    c.setAttribute("opacity", heat ? 1 : (on ? 1 : (held ? .8 : (st.readCost[a] ? .55 : .32))));
     c.setAttribute("r", on ? 15.5 : 13);
-    c.setAttribute("stroke", on ? RCOL[region(a)] : (isDest ? "var(--ink)" : "#fff"));
-    c.setAttribute("stroke-width", on ? 3 : (isDest ? 2 : 2));
+    c.setAttribute("stroke", on ? RCOL[region(a)] : (held ? "var(--ink-soft)" : (isDest ? "var(--ink)" : "#fff")));
+    c.setAttribute("stroke-width", on ? 3 : (held ? 2 : 2));
     c.setAttribute("stroke-dasharray", isDest && !on ? "3 3" : "none");
   }
   wireLayer.replaceChildren();
-  if (e) for (const a of e.srcs) drawWire(a, RCOL[region(a)], playing ? stepMs : 200);
+  if (e) drawWire(e.addr, RCOL[region(e.addr)], playing ? stepMs : 200);
 
-  // --- matrices ---
   for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
     const idx = i * N + j;
-    const ca = cellsA[idx], cb = cellsB[idx], cc = cellsC[idx];
-    ca.className = "cellv"; cb.className = "cellv"; cc.className = "cellv";
-    if (e && e.op !== "exit") { if (i === e.i) ca.classList.add("band"); if (j === e.j) cb.classList.add("band"); }
+    cellsA[idx].className = "cellv"; cellsB[idx].className = "cellv"; cellsC[idx].className = "cellv";
+    if (e && e.op !== "exit") { if (i === e.i) cellsA[idx].classList.add("band"); if (j === e.j) cellsB[idx].classList.add("band"); }
     const v = st.mem[C_at(i, j)];
-    cc.textContent = v === undefined ? "·" : v;
-    if (v === undefined) cc.classList.add("empty");
-    else if (cur >= 7 * idx + 7) cc.classList.add("done");
+    cellsC[idx].textContent = v === undefined ? "·" : v;
+    if (v === undefined) cellsC[idx].classList.add("empty");
+    else if (cur >= 14 * idx + 14) cellsC[idx].classList.add("done");
   }
   if (e) {
+    const mark = (arr, n, cls) => { if (n != null) arr[n].classList.add(...cls); };
     if (e.op === "mul") {
-      cellsA[e.i * N + e.k].classList.add("hot", "hotA");
-      cellsB[e.k * N + e.j].classList.add("hot", "hotB");
-      cellsC[e.i * N + e.j].classList.add("target");
+      mark(cellsA, e.i * N + e.k, e.addr === e.s1 ? ["hot", "hotA"] : ["held"]);
+      if (e.slot === 1) mark(cellsB, e.k * N + e.j, ["hot", "hotB"]);
+      mark(cellsC, e.i * N + e.j, ["target"]);
     } else if (e.op === "add") {
-      cellsC[e.i * N + e.j].classList.add("hot", "hotC");
+      mark(cellsC, e.i * N + e.j, e.slot === 0 ? ["hot", "hotC"] : ["target"]);
     } else {
-      cellsC[e.i * N + e.j].classList.add("hot", "hotC");
+      mark(cellsC, e.i * N + e.j, ["hot", "hotC"]);
     }
   }
   const tv = st.mem[TMP];
   tmpBox.textContent = tv === undefined ? "·" : tv;
-  tmpBox.className = "box" + (e && (e.dest === TMP || e.srcs.includes(TMP)) ? " hot" : "");
+  tmpBox.className = "box" + (e && (e.addr === TMP || (e.write && e.dest === TMP)) ? " hot" : "");
 
-  // --- readouts ---
   costEl.textContent = st.cost.toLocaleString("en-US");
   for (const [key] of BARS) {
     fills[key].style.width = (100 * Math.min(1, st.by[key] / BAR_MAX)) + "%";
@@ -505,30 +484,32 @@ function render() {
   rangeEl.value = cur;
 
   if (e) {
-    const inc = st.cost - prevCost;
-    const rd = e.srcs.map(a => `d(${a})=${dist(a)}`).join(" + ");
-    const head = e.op === "exit"
-      ? `<span class="op">exit</span> ${e.srcs[0]}`
-      : `<span class="op">${e.op}</span> ${e.dest},${e.srcs.join(",")}`;
-    const tag = e.op === "exit" ? `read C[${e.i},${e.j}]`
-              : `C[${e.i},${e.j}] ${e.op === "mul" ? (e.k === 0 ? "= A·B" : "tmp = A·B") : "+= tmp"}`;
-    irEl.innerHTML = `${head} &nbsp;<span class="dim">${rd}</span> &nbsp;<span class="plus">+${inc}</span> &nbsp;<span class="dim">${tag}</span>`;
+    let head;
+    if (e.op === "exit") head = `<span class="op">exit</span> <span class="now">${e.s1}</span>`;
+    else {
+      const o1 = e.slot === 0 ? `<span class="now">${e.s1}</span>` : `<span class="held">${e.s1}</span>`;
+      const o2 = e.slot === 1 ? `<span class="now">${e.s2}</span>` : `<span class="dim">${e.s2}</span>`;
+      head = `<span class="op">${e.op}</span> ${e.dest},${o1},${o2}`;
+    }
+    const tag = e.op === "exit" ? `result C[${e.i},${e.j}]`
+              : (e.write ? `write ${e.dest} (free)` : `cycle 1 of 2`);
+    irEl.innerHTML = `${head} &nbsp;<span class="dim">d(${e.addr})=${inc}</span> &nbsp;<span class="plus">+${inc}</span> &nbsp;<span class="dim">${tag}</span>`;
     deltaEl.textContent = `+${inc}`; deltaEl.classList.add("show");
   } else {
-    irEl.innerHTML = `<span class="dim">inputs placed free · A@1–16, B@17–32 · press Play</span>`;
+    irEl.innerHTML = `<span class="dim">inputs placed free · A@1–16, B@17–32 · one access per clock · press Play</span>`;
     deltaEl.classList.remove("show");
   }
   verdictEl.classList.toggle("show", cur === NEV);
 }
 
-/* ---------------- controls ---------------- */
+/* ================= controls ================= */
 const playBtn = document.getElementById("play");
+let last = 0, acc = 0;
 function setPlaying(p) {
   playing = p && cur < NEV;
   playBtn.textContent = playing ? "❚❚ Pause" : (cur >= NEV ? "↺ Replay" : "▶ Play");
-  if (playing) { last = performance.now(); requestAnimationFrame(tick); }
+  if (playing) { last = performance.now(); acc = 0; requestAnimationFrame(tick); }
 }
-let last = 0, acc = 0;
 function tick(now) {
   if (!playing) return;
   acc += now - last; last = now;
@@ -544,7 +525,7 @@ document.getElementById("stepb").onclick = () => { setPlaying(false); if (cur > 
 document.getElementById("reset").onclick = () => { setPlaying(false); cur = 0; render(); };
 rangeEl.oninput = () => { setPlaying(false); cur = +rangeEl.value; render(); };
 
-const SPEEDS = [["0.5×", 220], ["1×", 110], ["3×", 34], ["max", 6]];
+const SPEEDS = [["0.5×", 180], ["1×", 90], ["3×", 28], ["max", 5]];
 const speedsEl = document.getElementById("speeds");
 SPEEDS.forEach(([label, ms]) => {
   const b = document.createElement("button");
@@ -554,20 +535,204 @@ SPEEDS.forEach(([label, ms]) => {
 });
 const heatBtn = document.getElementById("heat");
 heatBtn.onclick = () => { heat = !heat; heatBtn.classList.toggle("on", heat); render(); };
-
 document.addEventListener("keydown", (ev) => {
+  if (ev.target.tagName === "INPUT") return;
   if (ev.key === " ") { ev.preventDefault(); playBtn.click(); }
   else if (ev.key === "ArrowRight") { ev.preventDefault(); document.getElementById("stepf").click(); }
   else if (ev.key === "ArrowLeft") { ev.preventDefault(); document.getElementById("stepb").click(); }
-  else if (ev.key === "r") { document.getElementById("reset").click(); }
+  else if (ev.key === "r") document.getElementById("reset").click();
 });
 
-// sanity: the animation must reproduce the scorer's numbers
 const FIN = simulate(NEV);
-const okC = EXPECT.every((row, i) => row.every((v, j) => FIN.mem[C_at(i, j)] === v));
-if (!okC || FIN.cost !== 1316) console.error("model mismatch", FIN.cost, okC);
-
+if (FIN.cost !== 1316 || !EXPECT.every((r, i) => r.every((v, j) => FIN.mem[C_at(i, j)] === v)))
+  console.error("model mismatch", FIN.cost);
 render();
+
+/* ================================================================
+   Algorithm comparison — generic IR simulation + locality plots
+   ================================================================ */
+const OUTER_4X4_IR = "23,24,25,26,27,28,29,30,31,32,33,34,35,36,37,38,39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54;copy 3,39;copy 4,40;copy 5,41;copy 6,42;copy 1,23;mul 7,1,3;mul 8,1,4;mul 9,1,5;mul 10,1,6;copy 1,27;mul 11,1,3;mul 12,1,4;mul 13,1,5;mul 14,1,6;copy 1,31;mul 15,1,3;mul 16,1,4;mul 17,1,5;mul 18,1,6;copy 1,35;mul 19,1,3;mul 20,1,4;mul 21,1,5;mul 22,1,6;copy 3,43;copy 4,44;copy 5,45;copy 6,46;copy 1,24;mul 2,1,3;add 7,2;mul 2,1,4;add 8,2;mul 2,1,5;add 9,2;mul 2,1,6;add 10,2;copy 1,28;mul 2,1,3;add 11,2;mul 2,1,4;add 12,2;mul 2,1,5;add 13,2;mul 2,1,6;add 14,2;copy 1,32;mul 2,1,3;add 15,2;mul 2,1,4;add 16,2;mul 2,1,5;add 17,2;mul 2,1,6;add 18,2;copy 1,36;mul 2,1,3;add 19,2;mul 2,1,4;add 20,2;mul 2,1,5;add 21,2;mul 2,1,6;add 22,2;copy 3,47;copy 4,48;copy 5,49;copy 6,50;copy 1,25;mul 2,1,3;add 7,2;mul 2,1,4;add 8,2;mul 2,1,5;add 9,2;mul 2,1,6;add 10,2;copy 1,29;mul 2,1,3;add 11,2;mul 2,1,4;add 12,2;mul 2,1,5;add 13,2;mul 2,1,6;add 14,2;copy 1,33;mul 2,1,3;add 15,2;mul 2,1,4;add 16,2;mul 2,1,5;add 17,2;mul 2,1,6;add 18,2;copy 1,37;mul 2,1,3;add 19,2;mul 2,1,4;add 20,2;mul 2,1,5;add 21,2;mul 2,1,6;add 22,2;copy 3,51;copy 4,52;copy 5,53;copy 6,54;copy 1,26;mul 2,1,3;add 7,2;mul 2,1,4;add 8,2;mul 2,1,5;add 9,2;mul 2,1,6;add 10,2;copy 1,30;mul 2,1,3;add 11,2;mul 2,1,4;add 12,2;mul 2,1,5;add 13,2;mul 2,1,6;add 14,2;copy 1,34;mul 2,1,3;add 15,2;mul 2,1,4;add 16,2;mul 2,1,5;add 17,2;mul 2,1,6;add 18,2;copy 1,38;mul 2,1,3;add 19,2;mul 2,1,4;add 20,2;mul 2,1,5;add 21,2;mul 2,1,6;add 22,2;7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22";
+
+function baselineIR(n) {                     // generate_baseline_4x4 / _16x16
+  const A = (i, j) => 1 + i * n + j, B = (i, j) => 1 + n * n + i * n + j;
+  const C = (i, j) => 1 + 2 * n * n + i * n + j, t = 3 * n * n + 1;
+  const ins = [], outs = [], L = [];
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) ins.push(A(i, j));
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) ins.push(B(i, j));
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) outs.push(C(i, j));
+  L.push(ins.join(","));
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+    L.push(`mul ${C(i, j)},${A(i, 0)},${B(0, j)}`);
+    for (let k = 1; k < n; k++) { L.push(`mul ${t},${A(i, k)},${B(k, j)}`); L.push(`add ${C(i, j)},${t}`); }
+  }
+  L.push(outs.join(","));
+  return L.join("\n");
+}
+function tiledIR() {                          // generate_tiled_16x16
+  const n = 16, T = 4;
+  const sA = (a, b) => 1 + a * T + b, sB = (a, b) => 1 + T * T + a * T + b, sC = (a, b) => 1 + 2 * T * T + a * T + b;
+  const t = 3 * T * T + 1, Ab = t + 1, Bb = Ab + n * n, Cb = Bb + n * n;
+  const A = (i, j) => Ab + i * n + j, B = (i, j) => Bb + i * n + j, C = (i, j) => Cb + i * n + j;
+  const ins = [], outs = [], L = [];
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) ins.push(A(i, j));
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) ins.push(B(i, j));
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) outs.push(C(i, j));
+  L.push(ins.join(","));
+  const nb = n / T;
+  for (let bi = 0; bi < nb; bi++) for (let bj = 0; bj < nb; bj++) {
+    for (let bk = 0; bk < nb; bk++) {
+      for (let ii = 0; ii < T; ii++) for (let kk = 0; kk < T; kk++) L.push(`copy ${sA(ii, kk)},${A(bi * T + ii, bk * T + kk)}`);
+      for (let kk = 0; kk < T; kk++) for (let jj = 0; jj < T; jj++) L.push(`copy ${sB(kk, jj)},${B(bk * T + kk, bj * T + jj)}`);
+      for (let ii = 0; ii < T; ii++) for (let jj = 0; jj < T; jj++) for (let kk = 0; kk < T; kk++) {
+        L.push(`mul ${t},${sA(ii, kk)},${sB(kk, jj)}`);
+        L.push(bk === 0 && kk === 0 ? `copy ${sC(ii, jj)},${t}` : `add ${sC(ii, jj)},${t}`);
+      }
+    }
+    for (let ii = 0; ii < T; ii++) for (let jj = 0; jj < T; jj++) L.push(`copy ${C(bi * T + ii, bj * T + jj)},${sC(ii, jj)}`);
+  }
+  L.push(outs.join(","));
+  return L.join("\n");
+}
+
+// Flatten an IR into its ordered access stream (one entry per priced read).
+function accesses(ir) {
+  const lines = ir.replace(/;/g, "\n").split("\n").map(s => s.trim()).filter(Boolean);
+  const out = [], last = lines[lines.length - 1];
+  for (let li = 1; li < lines.length - 1; li++) {
+    const ln = lines[li], sp = ln.indexOf(" ");
+    const head = ln.slice(0, sp), o = ln.slice(sp + 1).split(",").map(Number);
+    if (head === "copy") out.push(o[1]);
+    else if (o.length === 3) { out.push(o[1]); out.push(o[2]); }
+    else { out.push(o[0]); out.push(o[1]); }
+  }
+  for (const a of last.split(",").map(Number)) out.push(a);
+  return { list: out, nInstr: lines.length - 2, nOut: last.split(",").length };
+}
+// LRU stack distance; -1 marks a first (cold) touch.
+function reuseDistances(list) {
+  const stack = [], out = new Int32Array(list.length);
+  for (let i = 0; i < list.length; i++) {
+    const a = list[i], at = stack.indexOf(a);
+    out[i] = at < 0 ? -1 : at;
+    if (at >= 0) stack.splice(at, 1);
+    stack.unshift(a);
+  }
+  return out;
+}
+
+const ALGOS = [
+  { key: "naive4", name: "Naive 4×4", ir: () => baselineIR(4), cost: 1316 },
+  { key: "outer4", name: "Outer product 4×4", ir: () => OUTER_4X4_IR, cost: 800 },
+  { key: "naive16", name: "Naive 16×16", ir: () => baselineIR(16), cost: 340704 },
+  { key: "tiled16", name: "Tiled 16×16", ir: () => tiledIR(), cost: 133783 },
+];
+const cache = {};
+function analyze(a) {
+  if (cache[a.key]) return cache[a.key];
+  const { list, nInstr, nOut } = accesses(a.ir());
+  const rd = reuseDistances(list);
+  const cost = list.reduce((s, x) => s + dist(x), 0);
+  let maxRD = 0, cold = 0, sumRD = 0, nWarm = 0;
+  for (const v of rd) { if (v < 0) cold++; else { maxRD = Math.max(maxRD, v); sumRD += v; nWarm++; } }
+  return (cache[a.key] = { list, rd, cost, nInstr, nOut, maxRD, cold,
+                           meanRD: nWarm ? sumRD / nWarm : 0,
+                           distinct: new Set(list).size, expected: a.cost });
+}
+
+const cv = document.getElementById("plot"), ctx2 = cv.getContext("2d");
+const CSSV = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function plot(a, kind) {
+  const d = analyze(a);
+  const w = cv.width, h = cv.height, L = 140, R = 76, T = 46, B = 78;
+  ctx2.clearRect(0, 0, w, h);
+  ctx2.fillStyle = "#ffffff"; ctx2.fillRect(0, 0, w, h);
+  const ys = kind === "reuse" ? d.rd : d.list.map(dist);
+  let dmax = 0; for (const v of ys) if (v > dmax) dmax = v;
+  dmax = Math.max(1, dmax);
+  const nx = d.list.length;
+  const niceStep = (max, target) => {
+    const raw = max / target, mag = Math.pow(10, Math.floor(Math.log10(raw))), n = raw / mag;
+    return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 5 ? 5 : 10) * mag;
+  };
+  const ystep = niceStep(dmax, 5), ymax = Math.ceil(dmax / ystep) * ystep;
+  const xstep = niceStep(nx, 5), xmax = Math.ceil(nx / xstep) * xstep;
+  const X = (i) => L + (i / xmax) * (w - L - R);
+  const Y = (v) => h - B - (v / ymax) * (h - T - B);
+
+  // grid + axes
+  ctx2.lineWidth = 1.5;
+  ctx2.font = "25px ui-monospace, monospace";
+  ctx2.textAlign = "right"; ctx2.textBaseline = "middle";
+  for (let v = 0; v <= ymax + 1e-9; v += ystep) {
+    const y = Y(v);
+    ctx2.strokeStyle = "#eae4d9"; ctx2.beginPath(); ctx2.moveTo(L, y); ctx2.lineTo(w - R, y); ctx2.stroke();
+    ctx2.fillStyle = "#5b6472"; ctx2.fillText(Math.round(v).toLocaleString("en-US"), L - 12, y);
+  }
+  ctx2.textAlign = "center"; ctx2.textBaseline = "top";
+  for (let v = 0; v <= xmax + 1e-9; v += xstep) {
+    const x = X(v);
+    ctx2.strokeStyle = "#f2ede4"; ctx2.beginPath(); ctx2.moveTo(x, T); ctx2.lineTo(x, h - B); ctx2.stroke();
+    ctx2.fillStyle = "#5b6472"; ctx2.fillText(v.toLocaleString("en-US"), x, h - B + 12);
+  }
+  ctx2.strokeStyle = "#c9c2b5"; ctx2.lineWidth = 2;
+  ctx2.beginPath(); ctx2.moveTo(L, T); ctx2.lineTo(L, h - B); ctx2.lineTo(w - R, h - B); ctx2.stroke();
+
+  // points
+  const col = kind === "reuse" ? "rgba(124,58,237,0.55)" : "rgba(194,65,12,0.5)";
+  ctx2.fillStyle = col;
+  const r = nx > 6000 ? 1.6 : (nx > 800 ? 2.4 : 3.4);
+  for (let i = 0; i < nx; i++) {
+    const v = ys[i];
+    if (kind === "reuse" && v < 0) continue;
+    ctx2.beginPath(); ctx2.arc(X(i), Y(v), r, 0, 6.284); ctx2.fill();
+  }
+  if (kind === "reuse" && d.cold) {                       // cold touches on the baseline
+    ctx2.fillStyle = "rgba(13,148,136,0.55)";
+    for (let i = 0; i < nx; i++) if (d.rd[i] < 0) { ctx2.beginPath(); ctx2.arc(X(i), h - B, r, 0, 6.284); ctx2.fill(); }
+  }
+
+  // labels
+  ctx2.fillStyle = "#1f2430"; ctx2.font = "600 30px Inter, sans-serif";
+  ctx2.textAlign = "left"; ctx2.textBaseline = "alphabetic";
+  ctx2.fillText(kind === "reuse"
+    ? `${a.name} — reuse distance per access (max = ${d.maxRD.toLocaleString("en-US")})`
+    : `${a.name} — access cost ⌈√a⌉ per access (max = ${ymax})`, L, 28);
+  ctx2.save();
+  ctx2.translate(34, (h - T - B) / 2 + T); ctx2.rotate(-Math.PI / 2);
+  ctx2.fillStyle = "#5b6472"; ctx2.font = "25px Inter, sans-serif"; ctx2.textAlign = "center";
+  ctx2.fillText(kind === "reuse" ? "reuse distance (LRU depth)" : "cost ⌈√a⌉", 0, 0);
+  ctx2.restore();
+  ctx2.textAlign = "center";
+  ctx2.fillText("access index (time)", L + (w - L - R) / 2, h - 16);
+
+  const N2 = (v) => v.toLocaleString("en-US");
+  document.getElementById("stats").innerHTML = [
+    ["cost", N2(d.cost)], ["cycles", N2(d.list.length)], ["instructions", N2(d.nInstr)],
+    ["distinct addresses", N2(d.distinct)], ["max reuse distance", N2(d.maxRD)],
+    ["mean reuse distance", d.meanRD.toFixed(1)],
+  ].map(([k, v]) => `<span>${k} <b>${v}</b></span>`).join("");
+  document.getElementById("cap").textContent = kind === "reuse"
+    ? `${d.cold} cold touches drawn on the baseline. A scratchpad of ${d.maxRD} cells would capture every reuse.`
+    : `Mean cost per access ${(d.cost / d.list.length).toFixed(2)}; total ${d.cost.toLocaleString("en-US")}.`;
+  if (d.cost !== d.expected) console.error("cost mismatch", a.key, d.cost, d.expected);
+}
+
+let curAlgo = ALGOS[0], curKind = "reuse";
+const tabsEl = document.getElementById("tabs");
+ALGOS.forEach((a) => {
+  const b = document.createElement("button");
+  b.className = "tab" + (a === curAlgo ? " on" : ""); b.textContent = a.name;
+  b.onclick = () => { curAlgo = a; [...tabsEl.children].forEach(c => c.classList.remove("on")); b.classList.add("on"); plot(curAlgo, curKind); };
+  tabsEl.appendChild(b);
+});
+const kindEl = document.getElementById("kind");
+[["reuse", "reuse distance"], ["cost", "access cost"]].forEach(([k, label]) => {
+  const b = document.createElement("button");
+  b.className = "btn" + (k === curKind ? " on" : ""); b.textContent = label;
+  b.onclick = () => { curKind = k; [...kindEl.children].forEach(c => c.classList.remove("on")); b.classList.add("on"); plot(curAlgo, curKind); };
+  kindEl.appendChild(b);
+});
+plot(curAlgo, curKind);
 </script>
 </body>
 </html>
