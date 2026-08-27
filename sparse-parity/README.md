@@ -140,12 +140,14 @@ The cap is 2M (up from the joint tier's 250k) so that a known family reaches 100
 
 Regenerate with `python3 generate_mask_graph.py` (~40 s). Dev scoring uses the deterministic `mask-dev` suite (128 sampled secrets × 8 reps, cached); adjudication uses `evaluate_mask(ir, suite_key=None)` — 256 × 8 fresh hidden instances, ~20 s per run.
 
-| Date       | Energy (reads) | Recovery | Ops       | Description |
-| -          | -:             | -:       | -:        | -           |
-| 2026-08-26 | 1,505,862      | 5.8%     | 36,542    | `generate_isd_mask(1)` |
-| 2026-08-26 | 12,042,480     | 22.5%    | 291,958   | `generate_isd_mask(8)` |
-| 2026-08-26 | 23,676,539     | 74.2%    | 593,160   | `generate_scan(4095)` |
-| 2026-08-26 | 43,325,468     | 100.0%   | 1,772,808 | `generate_scan()` ([ir](submissions/scan_full_mask32.ir)) ★ frontier |
+| Date       | Energy (reads) | Recovery | Ops       | Score time | Description |
+| -          | -:             | -:       | -:        | -:         | -           |
+| 2026-08-26 | 1,505,862      | 5.8%     | 36,542    | 0.09 s     | `generate_isd_mask(1)` |
+| 2026-08-26 | 12,042,480     | 22.5%    | 291,958   | 0.70 s     | `generate_isd_mask(8)` |
+| 2026-08-26 | 23,676,539     | 74.2%    | 593,160   | 1.46 s     | `generate_scan(4095)` |
+| 2026-08-26 | 43,325,468     | 100.0%   | 1,772,808 | 4.38 s     | `generate_scan()` ([ir](submissions/scan_full_mask32.ir)) ★ frontier |
+
+Score time is one circuit against the 1,024-instance dev suite after its 1.7 s build; a full adjudication run on a fresh hidden 2,048-instance suite measures 8.2 s for the largest circuit.
 
 Instruction counts are large because the ISA is straight-line: loops are fully unrolled (the 2¹⁴-step scan is literally emitted 16,383 times), branches become cmp/select chains, and data-dependent reads become select chains over all possibilities — a ten-line looped GE compiles to ~10⁵ instructions.
 
@@ -159,10 +161,27 @@ At this size brute force is priced out by the instruction cap rather than by ene
 
 Regenerate with `python3 generate_scaled_graph.py` (~15 s). Scoring is joint train+test (one IR, one energy number) and aggregate. The suite samples 128 secrets × 8 repetitions (dev, deterministic key `scaled-dev`, cached) or 256 × 8 with a fresh hidden `SystemRandom` key per run (final: `evaluate_scaled(ir, suite_key=None)`, unminable, ±1–3pp run noise). m_test = 256 was set from the measured decode/predict energy split (P ≈ 4,400/output vs D ≈ 1.5M per restart) so the test side carries 11–43% of the energy across the frontier.
 
-| Date       | T restarts | Ops     | Cost       | Advantage η | Description |
-| -          | -:         | -:      | -:         | -:          | -           |
-| 2026-08-26 | 1          | 52,926  | 2,641,072  | 0.018       | `generate_isd(1)` |
-| 2026-08-26 | 3          | 125,902 | 5,657,464  | 0.064       | `generate_isd(3)` |
-| 2026-08-26 | 6          | 235,366 | 10,181,932 | 0.147       | `generate_isd(6)` ([ir](submissions/isd6_scaled32.ir)) ★ frontier |
+| Date       | T restarts | Ops     | Cost       | Advantage η | Score time | Description |
+| -          | -:         | -:      | -:         | -:          | -:         | -           |
+| 2026-08-26 | 1          | 52,926  | 2,641,072  | 0.018       | 0.14 s     | `generate_isd(1)` |
+| 2026-08-26 | 3          | 125,902 | 5,657,464  | 0.064       | 0.32 s     | `generate_isd(3)` |
+| 2026-08-26 | 6          | 235,366 | 10,181,932 | 0.147       | 0.57 s     | `generate_isd(6)` ([ir](submissions/isd6_scaled32.ir)) ★ frontier |
+
+Score time is one circuit against the 1,024-instance dev suite after its 1.8 s build. The tier tops out at η = 0.147: nothing under the 250k cap reaches the upper 85% of the curve, which is why the mask tier raises it.
+
+## Run times
+
+Measured on an Apple-silicon laptop, each command in a fresh process. Regenerating everything — all three curves plus the full test suite — takes about 65 s.
+
+| command | time |
+| - | -: |
+| `python3 generate_graph.py` (tier-1 curve) | 2.0 s |
+| `python3 generate_scaled_graph.py` (tier-2 curve) | 15.7 s |
+| `python3 generate_mask_graph.py` (mask-tier curve) | 44.4 s |
+| `python3 scaled_sparse_parity.py` (tier-2 references) | 2.9 s |
+| `python3 mask_sparse_parity.py` (mask-tier references) | 14.3 s |
+| `python3 -m pytest` (all 40 tests) | 3.0 s |
+
+Suite generation runs once per distinct key and is then cached: 0.09 s for tier 1 (1,760 instances), 1.7 s for a 1,024-instance dev suite and 3.4 s for a 2,048-instance final suite at n=32. Scoring is dominated by per-instruction dispatch, not suite size — `score seconds ≈ instructions × 1–2.5 µs` — so doubling the suite is nearly free while doubling circuit size doubles the time. Details in the [report's run-times section](https://cybertronai.github.io/sutro-problems/docs/#timing).
 
 [access_distance](doc/access_distance/) — per-submission read-distance histogram + CDF for every exact-recovery (Small/Medium) IR above.
