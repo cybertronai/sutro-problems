@@ -11,4 +11,4 @@ To add a new problem, create a new directory and add a `README.md` at its root.
 ## Problems
 
 - [`matmul/`](matmul/) — 4x4 and 16x16 matmul
-- [`sparse-parity/`](sparse-parity/) — joint train+test sparse parity task
+- [`sparse-parity/`](sparse-parity/) — approximate sparse parity: recover the k secret bit positions at the lowest energy

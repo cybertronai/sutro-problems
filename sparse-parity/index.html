@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sparse parity</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #fcfcfb; --plane: #f9f9f7; --ink: #0b0b0b; --ink2: #52514e;
+    --muted: #898781; --grid: #e1e0d9; --line: #c3c2b7;
+    --accent: #2a78d6; --code-bg: #f2f1ed;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a19; --plane: #0d0d0d; --ink: #ffffff; --ink2: #c3c2b7;
+      --muted: #898781; --grid: #2c2c2a; --line: #383835;
+      --accent: #3987e5; --code-bg: #242422;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 16px/1.65 system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+  main { max-width: 44rem; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+  h1 { font-size: 1.9rem; line-height: 1.25; margin: 0 0 .4rem; }
+  .sub { color: var(--ink2); margin: 0 0 1.6rem; }
+  h2 { font-size: 1.2rem; margin: 2.4rem 0 .6rem; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .88em;
+    background: var(--code-bg); border-radius: 4px;
+  }
+  code { padding: .1em .35em; }
+  pre { padding: .8rem 1rem; overflow-x: auto; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+  figure { margin: 1.6rem 0; }
+  figure img { width: 100%; height: auto; border: 1px solid var(--grid);
+               border-radius: 6px; background: #fcfcfb; }
+  figcaption { color: var(--muted); font-size: .85rem; margin-top: .45rem; }
+  .taskviz svg { width: 100%; height: auto; display: block; }
+  .taskviz .band { fill: var(--accent); fill-opacity: .14; }
+  .taskviz .c1 { fill: var(--ink2); }
+  .taskviz .c0 { fill: var(--code-bg); }
+  .taskviz .sc1 { fill: var(--accent); }
+  .taskviz .sc0 { fill: var(--accent); fill-opacity: .22; }
+  .taskviz .m1 { fill: var(--accent); }
+  .taskviz .m0 { fill: var(--code-bg); }
+  .taskviz .lbl { fill: var(--muted); font-size: 11px; }
+  .taskviz .par { fill: var(--ink); font-size: 12px; font-weight: 600; }
+  .taskviz .dots { fill: var(--muted); font-size: 14px; }
+
+  .tabs { margin: 1.8rem 0 2.2rem; position: relative; }
+  .tabs > input { position: absolute; opacity: 0; pointer-events: none; }
+  .tabbar { display: flex; gap: .2rem; border-bottom: 1px solid var(--line);
+            flex-wrap: wrap; }
+  .tabbar .cap { color: var(--muted); font-size: .9rem; align-self: center;
+                 margin-right: .6rem; }
+  .tabbar label {
+    padding: .3rem .85rem; cursor: pointer; color: var(--ink2);
+    border: 1px solid transparent;
+    border-radius: 8px 8px 0 0; font-size: .95rem;
+    font-variant-numeric: tabular-nums;
+  }
+  .tabbar label:hover { color: var(--accent); }
+  .tabs input:focus-visible ~ .tabbar { outline: 2px solid var(--accent);
+                                        outline-offset: 2px; }
+  .panel { display: none; padding: 1.1rem .15rem .2rem; }
+  #b20:checked ~ .tabbar label[for="b20"],
+  #b40:checked ~ .tabbar label[for="b40"],
+  #b60:checked ~ .tabbar label[for="b60"],
+  #b80:checked ~ .tabbar label[for="b80"],
+  #b100:checked ~ .tabbar label[for="b100"] {
+    color: var(--ink); font-weight: 600; background: var(--bg);
+    border-color: var(--line); border-bottom-color: var(--bg);
+    margin-bottom: -1px;
+  }
+  #b20:checked ~ #p20, #b40:checked ~ #p40, #b60:checked ~ #p60,
+  #b80:checked ~ #p80, #b100:checked ~ #p100 { display: block; }
+  .note { color: var(--muted); font-size: .85rem; margin: .7rem 0 0; }
+  .hero { font-size: 2.1rem; font-weight: 650; line-height: 1.2;
+          letter-spacing: -.01em; }
+  .hero .unit { font-size: 1rem; font-weight: 400; color: var(--muted);
+                margin-left: .25rem; }
+  .what { margin: .5rem 0 .2rem; }
+  .meta, .alt { color: var(--ink2); font-size: .92rem; margin: .2rem 0; }
+  .alt { color: var(--muted); }
+  .method { margin: .9rem 0 1.1rem; }
+  .method b { color: var(--ink); }
+  details { margin: 1.8rem 0; border: 1px solid var(--grid); border-radius: 8px;
+            padding: .7rem 1.1rem; background: var(--plane); }
+  summary { cursor: pointer; color: var(--ink2); font-weight: 600; }
+  details[open] summary { margin-bottom: .5rem; }
+  details ul { margin: .5rem 0; padding-left: 1.2rem; }
+  details li { margin: .3rem 0; }
+  footer { margin-top: 3.2rem; padding-top: 1rem; border-top: 1px solid var(--grid);
+           color: var(--muted); font-size: .88rem; }
+  footer a { margin-right: .35rem; }
+  var { font-style: italic; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Sparse parity</h1>
+<p class="sub">The <var>k</var>-parity of a bit string is the sum mod 2 of its
+<var>k</var> secret bits.</p>
+
+<figure class="taskviz">
+<svg viewBox="0 0 580 148" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Three of eighteen 32-bit strings with the five secret positions highlighted; each label is the parity of the secret bits; below, the 32-cell secret mask to output.">
+<rect class="band" x="256.5" y="26" width="16" height="61" rx="3"/>
+<rect class="band" x="334.0" y="26" width="16" height="61" rx="3"/>
+<rect class="band" x="365.0" y="26" width="16" height="61" rx="3"/>
+<rect class="band" x="396.0" y="26" width="16" height="61" rx="3"/>
+<rect class="band" x="458.0" y="26" width="16" height="61" rx="3"/>
+<text class="lbl" x="10" y="18">n = 32 bits &#215; m = 18 strings &#8212; dark cell = 1</text>
+<text class="lbl" x="514" y="18">parity</text>
+<rect class="c1" x="10.0" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="25.5" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="41.0" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="56.5" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="72.0" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="87.5" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="103.0" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="118.5" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="134.0" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="149.5" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="165.0" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="180.5" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="196.0" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="211.5" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="227.0" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="242.5" y="30" width="13" height="13" rx="2.5"/>
+<rect class="sc1" x="258.0" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="273.5" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="289.0" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="304.5" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="320.0" y="30" width="13" height="13" rx="2.5"/>
+<rect class="sc0" x="335.5" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="351.0" y="30" width="13" height="13" rx="2.5"/>
+<rect class="sc1" x="366.5" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="382.0" y="30" width="13" height="13" rx="2.5"/>
+<rect class="sc0" x="397.5" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="413.0" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="428.5" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="444.0" y="30" width="13" height="13" rx="2.5"/>
+<rect class="sc1" x="459.5" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="475.0" y="30" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="490.5" y="30" width="13" height="13" rx="2.5"/>
+<text class="par" x="528" y="40.5">1</text>
+<rect class="c0" x="10.0" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="25.5" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="41.0" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="56.5" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="72.0" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="87.5" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="103.0" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="118.5" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="134.0" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="149.5" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="165.0" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="180.5" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="196.0" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="211.5" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="227.0" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="242.5" y="50" width="13" height="13" rx="2.5"/>
+<rect class="sc0" x="258.0" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="273.5" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="289.0" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="304.5" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="320.0" y="50" width="13" height="13" rx="2.5"/>
+<rect class="sc1" x="335.5" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="351.0" y="50" width="13" height="13" rx="2.5"/>
+<rect class="sc1" x="366.5" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="382.0" y="50" width="13" height="13" rx="2.5"/>
+<rect class="sc1" x="397.5" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="413.0" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="428.5" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="444.0" y="50" width="13" height="13" rx="2.5"/>
+<rect class="sc0" x="459.5" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="475.0" y="50" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="490.5" y="50" width="13" height="13" rx="2.5"/>
+<text class="par" x="528" y="60.5">1</text>
+<rect class="c1" x="10.0" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="25.5" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="41.0" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="56.5" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="72.0" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="87.5" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="103.0" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="118.5" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="134.0" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="149.5" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="165.0" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="180.5" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="196.0" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="211.5" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="227.0" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="242.5" y="70" width="13" height="13" rx="2.5"/>
+<rect class="sc0" x="258.0" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="273.5" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="289.0" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="304.5" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="320.0" y="70" width="13" height="13" rx="2.5"/>
+<rect class="sc0" x="335.5" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="351.0" y="70" width="13" height="13" rx="2.5"/>
+<rect class="sc1" x="366.5" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="382.0" y="70" width="13" height="13" rx="2.5"/>
+<rect class="sc0" x="397.5" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="413.0" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c1" x="428.5" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="444.0" y="70" width="13" height="13" rx="2.5"/>
+<rect class="sc1" x="459.5" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="475.0" y="70" width="13" height="13" rx="2.5"/>
+<rect class="c0" x="490.5" y="70" width="13" height="13" rx="2.5"/>
+<text class="par" x="528" y="80.5">0</text>
+<text class="dots" x="258" y="99" text-anchor="middle">&#8942;</text>
+<rect class="m0" x="10.0" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="25.5" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="41.0" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="56.5" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="72.0" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="87.5" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="103.0" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="118.5" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="134.0" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="149.5" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="165.0" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="180.5" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="196.0" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="211.5" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="227.0" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="242.5" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m1" x="258.0" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="273.5" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="289.0" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="304.5" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="320.0" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m1" x="335.5" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="351.0" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m1" x="366.5" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="382.0" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m1" x="397.5" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="413.0" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="428.5" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="444.0" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m1" x="459.5" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="475.0" y="109" width="13" height="13" rx="2.5"/>
+<rect class="m0" x="490.5" y="109" width="13" height="13" rx="2.5"/>
+<text class="lbl" x="10" y="139">secret mask &#8212; the k = 5 secret bit positions (the required output)</text>
+</svg>
+<figcaption>One instance: <var>m</var> = 18 strings of <var>n</var> = 32 bits
+(three shown), each labeled with the parity of the <var>k</var> = 5 secret
+positions (highlighted). Only the strings and parities are given to the
+solver.</figcaption>
+</figure>
+
+<p><b>Task:</b> given the <var>m</var> strings and their parities, figure out
+the locations of the secret bits. Every instance: <var>n</var> = 32 bits,
+<var>k</var> = 5 secret positions, <var>m</var> = 18 strings.</p>
+
+<p>We are looking for the lowest-energy solutions at 20%, 40%, 60%, 80% and
+100% accuracy, measured on the
+<a href="https://github.com/cybertronai/simplified-dally-model">simplified
+Bill Dally model</a>
+(<a href="https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets">v3
+instruction set</a>, 8-bit). Accuracy is the secret recovery rate — the
+fraction of instances where all 32 output cells exactly match the hidden
+mask.</p>
+
+<div class="tabs">
+<input type="radio" name="band" id="b20">
+<input type="radio" name="band" id="b40">
+<input type="radio" name="band" id="b60">
+<input type="radio" name="band" id="b80">
+<input type="radio" name="band" id="b100" checked>
+<div class="tabbar">
+<span class="cap">accuracy target</span>
+<label for="b20">20%</label>
+<label for="b40">40%</label>
+<label for="b60">60%</label>
+<label for="b80">80%</label>
+<label for="b100">100%</label>
+</div>
+<section class="panel" id="p20">
+<div class="hero">12.0M<span class="unit">reads</span></div>
+<p class="what"><b>ISD restarts</b> — <code>generate_isd_mask(8)</code></p>
+<p class="meta">22.5% recovered · 291,958 instructions</p>
+<p class="alt">Gray scan: 17.3M reads at 24.9% (<code>generate_scan(127)</code>).</p>
+</section>
+<section class="panel" id="p40">
+<div class="hero">17.9M<span class="unit">reads</span></div>
+<p class="what"><b>Gray scan</b> — <code>generate_scan(511)</code></p>
+<p class="meta">42.2% recovered · 249,096 instructions</p>
+<p class="alt">ISD restarts are dominated here: 36.2% at 48.2M reads by T&nbsp;=&nbsp;32.</p>
+</section>
+<section class="panel" id="p60">
+<div class="hero">23.7M<span class="unit">reads</span></div>
+<p class="what"><b>Gray scan</b> — <code>generate_scan(4095)</code></p>
+<p class="meta">74.2% recovered · 593,160 instructions</p>
+<p class="alt">Only the Gray scan reaches this band under the 2M-instruction cap.</p>
+</section>
+<section class="panel" id="p80">
+<div class="hero">30.2M<span class="unit">reads</span></div>
+<p class="what"><b>Gray scan</b> — <code>generate_scan(8191)</code></p>
+<p class="meta">86.7% recovered · 986,376 instructions</p>
+<p class="alt">Only the Gray scan reaches this band under the 2M-instruction cap.</p>
+</section>
+<section class="panel" id="p100">
+<div class="hero">43.3M<span class="unit">reads</span></div>
+<p class="what"><b>Gray scan</b> — <code>generate_scan(16383)</code>, the full
+null-space walk
+(<a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/submissions/scan_full_mask32.ir">ir</a>)</p>
+<p class="meta">100.0% recovered · 1,772,808 instructions</p>
+<p class="alt">The only known family that reaches 100%.</p>
+</section>
+<p class="note">Lowest-energy known solution per band, measured on the
+deterministic 1,024-instance dev suite
+(<a href="doc/mask32_bands.json">full sweep data</a>); adjudication re-scores
+on a fresh hidden suite.</p>
+</div>
+
+<figure>
+<img src="doc/mask32_energy_vs_recovery.svg"
+     alt="Log-scale energy versus secret recovery rate for the two solution families: the Gray scan curve rises from about 17M reads at 6% recovery to 43M reads at 100%; the ISD restarts curve is far cheaper below 25% recovery, starting at 1.5M reads at 6%.">
+<figcaption>Measured energy vs recovery for the two known families; dots mark
+reference settings.</figcaption>
+</figure>
+
+<h2>The two methods</h2>
+
+<p class="method"><b>ISD restarts</b> — repeated cheap Gaussian eliminations
+over GF(2), each on a different rotating 18-column subset of the 32 positions,
+keeping a solution only if it has weight <var>k</var> and reproduces every
+parity (information-set decoding). The cheapest known way to buy low recovery.
+<a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/scaled_sparse_parity.py">algorithm
+→</a></p>
+
+<p class="method"><b>Gray scan</b> — one full-width Gaussian elimination over
+GF(2), then a Gray-code walk through the null space of the training system,
+capturing any weight-<var>k</var> visitor — which is provably the secret. A
+full walk reaches 100%.
+<a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">description
+→</a></p>
+
+<details>
+<summary>Making a submission</summary>
+<ul>
+<li>A submission is one straight-line program (an <b>IR</b>) in the v3
+instruction set: 8-bit cells, no loops, no branches, no data-dependent
+addressing, at most <b>2,000,000 lines</b> (every line counts, declarations
+included).</li>
+<li>An IR is plain text. Line 1 declares the input cell addresses
+(comma-separated — you choose the addresses; the grader writes the inputs
+there), the last line declares the 32 output addresses, and each line between
+is one op (<code>set</code>, <code>copy</code>, <code>not</code>,
+<code>abs</code>, <code>and</code>, <code>or</code>, <code>xor</code>,
+<code>add</code>, <code>sub</code>, <code>mul</code>, <code>div</code>,
+<code>cmp</code>, <code>select</code>), e.g. <code>xor 3,1,2</code>. Complete
+example:
+<a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/submissions/scan_full_mask32.ir">submissions/scan_full_mask32.ir</a>.</li>
+<li><b>Inputs</b>, in declaration order: the 18×32 training bits (row-major),
+then the 18 parities. <b>Outputs:</b> the 32 declared cells, each holding
+exactly 0 or 1; cell <var>c</var> = 1 iff bit position <var>c</var> is secret.
+An instance scores 1 only on an exact 32-cell match (training sets are
+uniquely identifiable, so 100% is attainable).</li>
+<li><b>Energy</b> is the program's static read cost: every operand read of
+address <var>a</var> costs ⌈√<var>a</var>⌉, and each declared output cell is
+charged one final read.</li>
+<li>Score locally against the deterministic dev suite — run from
+<code>sparse-parity/</code> (needs only numpy). All <code>generate_*</code>
+calls on this page are functions of
+<a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">mask_sparse_parity.py</a>;
+<code>generate_isd_mask</code> wraps the ISD algorithm of the superseded joint
+tier,
+<a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/scaled_sparse_parity.py">scaled_sparse_parity.py</a>.
+<pre><code>import mask_sparse_parity as mp
+
+ir = mp.generate_scan(4095)      # or your own IR string
+res = mp.evaluate_mask(ir)       # 1,024-instance dev suite, a few seconds
+res.cost, res.recovery           # → (23676539, 0.742)</code></pre></li>
+<li>Adjudication: <code>mp.evaluate_mask(ir, suite_key=None)</code> draws a
+fresh random 2,048-instance suite each call (recovery noise ≈ ±2 pp; ~2⁻¹⁴ of
+instances are rank-deficient and can dip a full scan just below 100%).</li>
+<li>The tabs and figure are measured on the dev suite; regenerate the figure
+and <a href="doc/mask32_bands.json">doc/mask32_bands.json</a> with
+<code>python3 generate_mask_graph.py</code> (~4 min).</li>
+<li>Submit a PR adding your <code>.ir</code> and generator under
+<a href="https://github.com/cybertronai/sutro-problems/tree/main/sparse-parity/submissions">submissions/</a>
+and updating the accuracy band (tab) it improves.</li>
+</ul>
+</details>
+
+<footer>
+<a href="legacy.html">Legacy page</a> (all tiers &amp; leaderboards) ·
+<a href="../docs/">benchmark report</a> ·
+<a href="../docs/spatial-model-analysis.html">spatial-model analysis</a> ·
+<a href="https://github.com/cybertronai/sutro-problems/tree/main/sparse-parity">code</a>
+</footer>
+
+</main>
+</body>
+</html>
