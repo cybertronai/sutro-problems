@@ -130,7 +130,7 @@ Times are per-IR scoring on the final 32-repetition suite (7,040 instances, 225,
 
 ## Mask recovery, n=32 — current main tier
 
-5 hidden bits, 32 total bits, 18 train, **no test set**, **2,000,000-instruction cap** — [mask_sparse_parity.py](mask_sparse_parity.py), tested by [test_mask_sparse_parity.py](test_mask_sparse_parity.py). Full write-up: **[benchmark report](https://cybertronai.github.io/sutro-problems/docs/)** (GitHub Pages).
+5 hidden bits, 32 total bits, 18 train, **no test set**, **2,000,000-instruction cap** — [mask_sparse_parity.py](mask_sparse_parity.py), tested by [test_mask_sparse_parity.py](test_mask_sparse_parity.py). Full write-up: **[benchmark report](https://cybertronai.github.io/sutro-problems/docs/)** (GitHub Pages), with a companion **[spatial-model analysis](https://cybertronai.github.io/sutro-problems/docs/spatial-model-analysis.html)** (literature bounds, operation-count sanity checks, RAM-vs-Dally-model asymptotics, and the address-assignment audit).
 
 The submission outputs the secret itself: 32 mask cells, scored by exact match against the hidden k-subset (well-defined because training sets are uniquely identifiable). For sparse parity the dropped test set is provably redundant — a circuit that hasn't identified the secret predicts at exactly 50%, so joint test accuracy was always (1 + recovery)/2 — and a fixed standard evaluator can label rows from a recovered mask for a rank-irrelevant constant (~4.4k reads/row). The accuracy axis is now the **secret recovery rate**, with a chance floor of 1/C(n,k) ≈ 0.
 

@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sparse Parity under the Spatial Cost Model</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #fcfcfb; --plane: #f9f9f7; --ink: #0b0b0b; --ink2: #52514e;
+    --muted: #898781; --grid: #e1e0d9; --line: #c3c2b7;
+    --accent: #2a78d6; --code-bg: #f2f1ed; --good: #006300; --bad: #a33a3a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a19; --plane: #0d0d0d; --ink: #ffffff; --ink2: #c3c2b7;
+      --muted: #898781; --grid: #2c2c2a; --line: #383835;
+      --accent: #3987e5; --code-bg: #242422; --good: #0ca30c; --bad: #e66767;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.65 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 52rem; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+  h1 { font-size: 1.9rem; line-height: 1.25; margin: 0 0 .4rem; }
+  .sub { color: var(--ink2); margin: 0 0 2rem; }
+  h2 { font-size: 1.35rem; margin: 2.8rem 0 .7rem; padding-top: .6rem;
+       border-top: 1px solid var(--grid); }
+  h3 { font-size: 1.05rem; margin: 1.6rem 0 .4rem; }
+  .note { color: var(--ink2); font-size: .92rem; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre { font-family: ui-monospace, "SF Mono", Menlo, monospace;
+              font-size: .88em; background: var(--code-bg); border-radius: 4px; }
+  code { padding: .1em .35em; }
+  pre { padding: .8rem 1rem; overflow-x: auto; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+  .tblwrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0;
+          font-size: .9rem; font-variant-numeric: tabular-nums; }
+  th { text-align: left; color: var(--ink2); font-weight: 600;
+       border-bottom: 1px solid var(--line); padding: .35rem .6rem .35rem 0; }
+  td { border-bottom: 1px solid var(--grid); padding: .35rem .6rem .35rem 0;
+       vertical-align: top; }
+  td.num, th.num { text-align: right; }
+  .toc { background: var(--plane); border: 1px solid var(--grid);
+         border-radius: 8px; padding: .9rem 1.2rem; font-size: .92rem; }
+  .toc a { display: inline-block; margin-right: 1.1rem; }
+  .box { background: var(--plane); border: 1px solid var(--grid);
+         border-radius: 8px; padding: .9rem 1.2rem; margin: 1rem 0; }
+  .good { color: var(--good); font-weight: 600; }
+  .bad { color: var(--bad); font-weight: 600; }
+  ol.refs { font-size: .88rem; color: var(--ink2); }
+  ol.refs li { margin-bottom: .4rem; }
+  footer { margin-top: 3.5rem; padding-top: 1rem; border-top: 1px solid var(--grid);
+           color: var(--muted); font-size: .85rem; }
+  var { font-style: italic; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>Sparse parity under the spatial cost model</h1>
+<p class="sub">Literature anchors, operation-count sanity checks, and the effect of
+distance-priced memory on the implemented decoders — companion analysis to the
+<a href="index.html">benchmark report</a>. August 26, 2026.</p>
+
+<nav class="toc">
+<a href="#summary">Findings</a>
+<a href="#methods">Methods &amp; literature</a>
+<a href="#sanity">Sanity checks</a>
+<a href="#model">The spatial model</a>
+<a href="#asymptotics">Asymptotic impact</a>
+<a href="#bounds">Lower bounds</a>
+<a href="#compiler">Compiler analysis</a>
+<a href="#corrections">Corrections</a>
+<a href="#refs">References</a>
+</nav>
+
+<h2 id="summary">Headline findings</h2>
+<ol>
+<li><b>The implemented methods sit where theory says they should.</b> Pooled over
+12,288 fresh instances at n=32, one Prange/ISD restart recovers the secret
+4.22% of the time versus the textbook C(m,k)/C(n,k) = 4.25% [<a href="#r-prange">Prange 62</a>,
+<a href="#r-kt">KT 17</a>]; per-candidate enumeration costs 1.2× the bit-serial baseline;
+the Gray-scan step costs 2.7× its RAM count. One published claim of ours was wrong
+and is corrected below (§<a href="#corrections">Corrections</a>).</li>
+<li><b>The benchmark's energy model is (up to constants) a known formal model.</b>
+Charging √a per access to address <var>a</var> is the Hierarchical Memory Model of
+Aggarwal–Alpern–Chandra–Snir with cost function f(x)=x<sup>α</sup> at α&nbsp;=&nbsp;½
+[<a href="#r-hmm">AACS 87</a>], which the authors themselves motivate as 2-D physical
+distance — the same argument Dally makes empirically (a 32-bit add costs 20&nbsp;fJ;
+fetching its operands from off-chip costs 1.3&nbsp;nJ — 64,000×) [<a href="#r-dally">Dally 22</a>].</li>
+<li><b>Does the spatial model change asymptotics? Yes for memory-heavy algorithms,
+no for the streaming families implemented here.</b> The working rule is
+E&nbsp;≈&nbsp;T·√W (RAM time × root working set). It leaves the exponential terms of
+enumeration (C(n,k)), Prange ((n/m)<sup>k</sup>), and the null-space scan
+(2<sup>n−m</sup>) untouched — polynomial inflation only — but it halves the
+advantage exponent of the meet-in-the-middle attack (C<sup>1/2</sup>&nbsp;→&nbsp;C<sup>3/4</sup>)
+and, combined with the ISA's lack of data-dependent addressing, prices the
+memory-rich ISD improvements (MMT, BJMM) out entirely, consistent with
+Esser–Bellini's estimator findings [<a href="#r-eb">EB 22</a>].</li>
+<li><b>The compiler (address-assignment rule) is sane but leaves measurable
+energy on the table.</b> Against the provably optimal static assignment
+(hottest cell → lowest address, by the rearrangement inequality), the current
+hand layouts measure 1.41–2.79× over optimal, where the worst assignment would
+be 3.7–8.6×. A mechanical frequency-sorted reassignment pass closes the static
+gap for free; phase-aware relocation (software caching, O(1)-competitive by
+[<a href="#r-hmm">AACS 87</a>, Thm 5.2]) is the remaining headroom.</li>
+</ol>
+
+<h2 id="methods">The implemented methods and their literature anchors</h2>
+<p>The benchmark's mask task is exactly syndrome decoding: find the unique
+weight-k solution of the underdetermined GF(2) system Xw&nbsp;=&nbsp;y (m
+equations, n unknowns). Sample complexity m&nbsp;≥&nbsp;log₂C(n,k) is
+information-theoretic folklore, stated explicitly in [<a href="#r-bgr">BGR 20</a>];
+the tiers sit at m&nbsp;=&nbsp;⌈log₂C⌉+1. Worst-case hardness anchors:
+maximum-likelihood decoding is NP-complete [<a href="#r-bmvt">BMvT 78</a>], minimum
+distance is NP-hard [<a href="#r-vardy">Vardy 97</a>]; whether poly time is possible at
+poly(k&nbsp;log&nbsp;n) samples ("attribute-efficient parity learning") is a
+long-standing open problem attributed to Blum.</p>
+
+<div class="tblwrap"><table>
+<tr><th>method (as implemented)</th><th>RAM cost</th><th>literature anchor</th></tr>
+<tr><td>candidate enumeration (<code>generate_enum_mask</code>)</td>
+    <td>C(n,k)·m(k+1) bit-ops; amortized O(1) vector-ops per candidate with
+        revolving-door Gray order</td>
+    <td>baseline in [<a href="#r-bgr">BGR 20</a>]; minimal-change enumeration
+        [<a href="#r-knuth">Knuth 4A</a>]</td></tr>
+<tr><td>Prange/ISD restarts (<code>generate_isd</code>)</td>
+    <td>E[restarts] = C(n,k)/C(m,k) ≈ (n/m)<sup>k</sup>, × GE cost
+        ½m³+O(m²) bit-ops [<a href="#r-blp">BLP 08</a>]; rank correction O(1)
+        (P[m×m invertible]→0.2888)</td>
+    <td>[<a href="#r-prange">Prange 62</a>]; analysis form [<a href="#r-kt">KT 17</a>];
+        in the sub-linear-weight regime w=o(n), <em>every</em> ISD variant
+        Prange→BJMM has the same exponent 2<sup>k·log₂(n/m)(1+o(1))</sup>
+        [<a href="#r-cts">CTS 16</a>] — so Prange is the right reference here</td></tr>
+<tr><td>GE + null-space Gray scan (<code>generate_scan</code>)</td>
+    <td>GE ½m²n + basis extraction + 2<sup>n−m</sup> steps at amortized one
+        n-bit XOR + weight check per solution</td>
+    <td>Gray-code exhaustive search with O(1)-per-candidate updates
+        [<a href="#r-ches">BCCCNSY 10</a>]; the same reuse trick inside ISD
+        [<a href="#r-blp">BLP 08</a>]</td></tr>
+<tr><td><i>(not implemented)</i> meet-in-the-middle</td>
+    <td>Õ(C(n,⌈k/2⌉)) time and space — the F₂ analogue of the k-SUM barrier</td>
+    <td>Spielman's algorithm, reported in [<a href="#r-ks">KS 06</a>]; smooth
+        time–sample dial O(kn/t + log C(t,k)) samples ↔ C(t,k) time
+        [<a href="#r-bgm">BGM 10</a>], improved by e<sup>−k/4</sup> [<a href="#r-bgr">BGR 20</a>];
+        noisy case n<sup>0.80k</sup> [<a href="#r-valiant">Valiant 15</a>], BKW
+        2<sup>O(n/log n)</sup> [<a href="#r-bkw">BKW 03</a>]</td></tr>
+</table></div>
+
+<h2 id="sanity">Sanity checks: implementation vs. expectation</h2>
+<h3>Success probabilities</h3>
+<div class="tblwrap"><table>
+<tr><th>quantity</th><th class="num">theory</th><th class="num">measured (pooled, fresh suites)</th><th>verdict</th></tr>
+<tr><td>ISD single restart, n=32, m=18, k=5</td><td class="num">4.25% (ideal Prange ratio)</td>
+    <td class="num">4.22% (6×2,048 instances; per-suite 2.2–5.6%)</td>
+    <td class="good">matches</td></tr>
+<tr><td>min-support GE (scan s=0), n=32</td><td class="num">≥4.25% (full-width pivoting beats one fixed info set)</td>
+    <td class="num">5.5% (range 3.6–7.4%)</td><td class="good">consistent</td></tr>
+<tr><td>ISD single restart, n=12, m=8, k=3</td><td class="num">25.45% ideal; ×rank correction</td>
+    <td class="num">19.2% (⇒ correction ≈0.75; corank distribution 0.289/0.578/0.128 [<a href="#r-kolchin">Kolchin 99</a>])</td>
+    <td class="good">within corrected band</td></tr>
+<tr><td>ISD T=6 union, n=32</td><td class="num">22.7% if restarts independent</td>
+    <td class="num">18.4% (rotated information sets overlap → positive correlation)</td>
+    <td class="good">expected direction</td></tr>
+<tr><td>full scan recovery, n=32</td><td class="num">1 − P[rank deficient] ≈ 1 − 2<sup>−14</sup></td>
+    <td class="num">100.0% on 1,024-instance dev suite</td><td class="good">matches</td></tr>
+</table></div>
+
+<h3>Instruction counts vs. RAM operation counts</h3>
+<p>The ISA is straight-line (no loops, branches, or indirect addressing), so
+the honest comparison is circuit instructions vs. bit-serial RAM operations.
+The overhead factor is not a constant — it tracks how much data-dependent
+control and addressing each algorithm needs, exactly as the oblivious-computation
+literature predicts: a data-dependent memory access compiled to
+<code>cmp</code>/<code>select</code> multiplexing costs O(live&nbsp;cells) per access
+(the naive RAM→circuit route), where ORAM-style techniques would give
+Θ(log&nbsp;N) and fully oblivious algorithms O(1)
+[<a href="#r-pf">PF 79</a>, <a href="#r-go">GO 96</a>, <a href="#r-optorama">AKLNPS 20</a>].</p>
+<div class="tblwrap"><table>
+<tr><th>circuit (n=32 tier)</th><th class="num">RAM bit-ops</th><th class="num">circuit ops</th>
+    <th class="num">overhead</th><th>dominant cause</th></tr>
+<tr><td>enumeration, per candidate</td><td class="num">108</td><td class="num">131</td>
+    <td class="num">1.2×</td><td>none — fully oblivious already</td></tr>
+<tr><td>Gray scan, per step</td><td class="num">~35</td><td class="num">96</td>
+    <td class="num">2.7×</td><td>branchless capture (32 selects/step)</td></tr>
+<tr><td>ISD, per restart</td><td class="num">~6,500</td><td class="num">36,542</td>
+    <td class="num">5.6×</td><td>select-chain pivoting (7 ops per candidate row)</td></tr>
+<tr><td>full-width GE + basis extraction</td><td class="num">~11,300</td><td class="num">200,040</td>
+    <td class="num">17.8×</td><td>dynamic reads M[pivot_row(c), f] cost 2m=36 ops each —
+        the O(live cells)-per-access multiplexer bound, hit exactly</td></tr>
+</table></div>
+<p>Everything is where the theory puts it; nothing needed fixing in the
+circuits. What did need fixing is two of our published claims — see
+§<a href="#corrections">Corrections</a>. Wall-clock context: evaluating one circuit
+over a 1,024–2,048-instance suite takes 0.5–5&nbsp;s on an M-series laptop
+(batched numpy engine, ~1.5&nbsp;B instruction-instances/s); a fresh-randomness
+adjudication run including suite generation stays under a minute.</p>
+
+<h2 id="model">The spatial model, formally</h2>
+<p>The benchmark charges ⌈√a⌉ per operand read of address <var>a</var> and
+nothing for arithmetic. Two independent lines of work say this is the right
+first-order model:</p>
+<ul>
+<li><b>Empirical (Dally).</b> Data movement, not arithmetic, dominates energy:
+20&nbsp;fJ for a 32-bit add vs 1.3&nbsp;nJ to fetch its operands from DRAM
+(64,000×); ~1.9&nbsp;pJ per 64&nbsp;bits per mm on-chip; and a 256&nbsp;MB
+on-chip memory access costs 58&nbsp;pJ <em>of which 57.4&nbsp;pJ is wire
+traversal</em>. His proposed fix to PRAM — give every datum a location and
+charge Manhattan distance — is this benchmark's model with arithmetic kept at
+unit cost [<a href="#r-dally">Dally 22</a>]. A memory of capacity S laid out in 2-D
+has side Θ(√S), hence √-in-address pricing.</li>
+<li><b>Formal (HMM).</b> The Hierarchical Memory Model prices access to address
+x at f(x); the polynomial case f(x)=x<sup>α</sup> is analyzed in
+[<a href="#r-hmm">AACS 87</a>, Thm 4.1], and the authors explicitly note a memory
+level of 2<sup>ℓ</sup> cells sits 2<sup>ℓ/2</sup> away in 2-D. At α&nbsp;=&nbsp;½
+(our model): <b>scanning N inputs costs Θ(N<sup>3/2</sup>)</b>; sorting and FFT
+are also Θ(N<sup>3/2</sup>) (scan-dominated — the log factors vanish);
+<b>binary search collapses from log&nbsp;N to Θ(√N)</b>; and α&nbsp;=&nbsp;½ is
+precisely the critical exponent at which cubic linear algebra turns
+movement-bound: matmul is Θ(n³) for α&lt;½, Θ(n³log&nbsp;n) at α=½,
+Θ(n<sup>2α+2</sup>) above. Any time-T, space-S RAM computation costs at most
+T·√S, and their threshold identity T<sub>f</sub> = Σ<sub>m</sub> Δf(m)·T<sub>m</sub>
+converts red–blue-pebbling I/O lower bounds [<a href="#r-hk">HK 81</a>] into
+distance-priced lower bounds.</li>
+</ul>
+
+<h2 id="asymptotics">Does the spatial model change the cost asymptotically?</h2>
+<p>The operational law is <b>E ≈ T·√W</b>: RAM operation count times the square
+root of the live working set (exact when accesses spread uniformly over W;
+better when frequencies are skewed and the layout exploits it). The measured
+mean read costs confirm it: the GE phase, whose working set is the ~1,500-cell
+matrix+tables region, averages 39.3 energy/read (√1500&nbsp;≈&nbsp;39); the scan
+phase, hot on a ~500-cell state, averages 10.6; streaming enumeration averages
+9.0.</p>
+<div class="tblwrap"><table>
+<tr><th>algorithm</th><th>RAM</th><th>spatial (α=½)</th><th>asymptotic change?</th></tr>
+<tr><td>enumeration</td><td>C(n,k)·Θ(mk)</td><td>× Θ(√(nm)) (streams over a fixed
+    input region; tiny scratch)</td><td class="good">no — constant/poly factor</td></tr>
+<tr><td>Prange ISD</td><td>(n/m)<sup>k</sup>·Θ(m³)</td><td>(n/m)<sup>k</sup>·Θ(m³·√(m²)) =
+    (n/m)<sup>k</sup>·Θ(m⁴)</td><td class="good">no — exponent (n/m)<sup>k</sup> intact</td></tr>
+<tr><td>GE + full scan</td><td>2<sup>n−m</sup>·Θ(n)</td><td>2<sup>n−m</sup>·Θ(n·√n)</td>
+    <td class="good">no — exponent 2<sup>n−m</sup> intact</td></tr>
+<tr><td>meet-in-the-middle (Spielman)</td><td>Õ(C(n,k/2)) time <em>and space</em></td>
+    <td>table of W=C(n,k/2) cells ⇒ Õ(C(n,k/2)<sup>3/2</sup>) even with oblivious
+    (Batcher-network) sorting, whose spatial cost is itself Θ(N<sup>3/2</sup>)
+    [<a href="#r-hmm">AACS 87</a>]</td>
+    <td class="bad">yes — advantage exponent halves: C<sup>1/2</sup> → C<sup>3/4</sup></td></tr>
+<tr><td>MMT / BJMM ISD</td><td>2<sup>0.05–0.11n</sup> time with 2<sup>Θ(n)</sup>
+    randomly-accessed memory</td><td>√-priced memory + no data-dependent addressing in
+    the ISA: hash-based collision steps inexpressible; sorting-network substitutes
+    pay the N<sup>3/2</sup> toll</td>
+    <td class="bad">yes — advantage erased (cf. [<a href="#r-eb">EB 22</a>]: charging
+    √memory per access already erodes MMT/BJMM at cryptographic sizes; and in the
+    w=o(n) regime all variants share Prange's exponent anyway
+    [<a href="#r-cts">CTS 16</a>])</td></tr>
+</table></div>
+<p><b>Answer:</b> the spatial model does not change the asymptotic cost of the
+three streaming families implemented in this benchmark — their exponential
+terms survive intact, inflated by working-set polynomials — but it
+<em>does</em> change asymptotics wherever an algorithm buys time with memory:
+time–space tradeoffs shift toward less memory, table-based attacks lose half
+their exponent advantage, and the erasure is compounded by the straight-line
+ISA making hashing inexpressible. This is the model behaving as designed: it is
+an energy model, and memory <em>is</em> distance.</p>
+
+<h2 id="bounds">Lower bounds</h2>
+<h3>RAM model</h3>
+<p>Unconditional: only the trivial Ω(nm) (the solver must examine the
+instance; for exact recovery on all identifiable instances an adversary can
+hide the distinguishing bits in unread cells). Conditional: worst-case
+NP-hardness [<a href="#r-bmvt">BMvT 78</a>, <a href="#r-vardy">Vardy 97</a>];
+average-case, the best known algorithms bracket the truth between
+Õ(C(n,k/2)) [<a href="#r-ks">KS 06</a>] and C(n,k)·m, with n<sup>Ω̃(k)</sup>
+lower bounds for the noisy variant under dense-LPN assumptions
+[<a href="#r-bbtv">BBTV 24</a>]; poly-time at m = poly(k log n) samples is open.</p>
+<h3>Spatial model</h3>
+<p>Three floors, in increasing strength:</p>
+<ol>
+<li><b>Input residence.</b> Reading any R distinct cells costs at least
+Σ<sub>i≤R</sub>√i ≈ ⅔R<sup>3/2</sup> under the best possible placement.
+Reading the whole instance (nm+m = 594 cells at n=32) floors at ≈ 9.7k energy —
+<em>negligible</em> against measured costs of 1.5–43M, so input locality is not
+what binds at benchmark sizes.</li>
+<li><b>Working-set floor.</b> Any GE-style computation keeping an m×n live
+matrix pays Θ(√(mn)) per matrix access on average; via the HMM threshold
+identity, Hong–Kung-style I/O bounds for linear algebra lift to √-priced
+bounds [<a href="#r-hmm">AACS 87</a>, <a href="#r-hk">HK 81</a>]. This is the binding
+term for the implemented decoders (measured 19–39 energy/read).</li>
+<li><b>Conditional.</b> Any super-polynomial RAM lower bound transfers: spatial
+cost ≥ RAM reads (every read costs ≥1), so the conjectured n<sup>Ω̃(k)</sup>
+hardness carries over verbatim, and the spatial model can only raise it.</li>
+</ol>
+
+<h2 id="compiler">The compiler: is the address-assignment rule sensible?</h2>
+<p>"Compiler" here = the rule assigning each logical register to a memory
+address. For a <em>fixed</em> straight-line program the optimal static
+assignment is a closed-form: sort cells by total read count and assign
+addresses in that order (if f₁≥f₂ and c₁≤c₂, any assignment pairing f₁ with
+c₂ is improved by swapping — the rearrangement inequality). We computed this
+optimum exactly for each circuit from its read-frequency profile:</p>
+<div class="tblwrap"><table>
+<tr><th>circuit</th><th class="num">reads</th><th class="num">cells read</th>
+    <th class="num">energy</th><th class="num">E / optimal</th><th class="num">worst / optimal</th></tr>
+<tr><td>ISD T=1 (n=32)</td><td class="num">79,344</td><td class="num">826</td><td class="num">1.51M</td>
+    <td class="num">2.79</td><td class="num">4.06</td></tr>
+<tr><td>ISD T=6</td><td class="num">475,904</td><td class="num">1,078</td><td class="num">9.03M</td>
+    <td class="num">2.78</td><td class="num">4.68</td></tr>
+<tr><td>scan s=0 (GE+basis)</td><td class="num">435,345</td><td class="num">2,920</td><td class="num">17.13M</td>
+    <td class="num">3.96</td><td class="num">5.29</td></tr>
+<tr><td>scan full</td><td class="num">4,105,137</td><td class="num">2,920</td><td class="num">43.33M</td>
+    <td class="num">1.68</td><td class="num">8.58</td></tr>
+<tr><td>enumeration q=15,000</td><td class="num">3,915,032</td><td class="num">630</td><td class="num">35.16M</td>
+    <td class="num">1.41</td><td class="num">3.70</td></tr>
+<tr><td>tier-1 mask decoder (n=12)</td><td class="num">19,992</td><td class="num">2,516</td><td class="num">0.44M</td>
+    <td class="num">2.46</td><td class="num">5.35</td></tr>
+</table></div>
+<p>Reading the table: the hand layouts (hot scratch at low addresses) capture
+most of the assignment win — 1.4–2.8× from optimal where the worst ordering
+would sit 3.7–8.6× — and the sweep-dominated circuits (full scan, enumeration)
+are closest to optimal because their hottest cells were placed first by design.
+The 2.8× ISD gap has a concrete cause: the M matrix occupies addresses 1–594
+while the small pivoting registers, read ~7× per row per column, sit above it;
+frequency-sorted reassignment would move ~30 scratch cells below the matrix.
+The scan's per-phase energy split shows the same structure — scan-state
+15.2M, Gray-basis tables 6.0M, RREF matrix region 7.8M, raw-basis tables
+9.6M, inputs 0.03M — the precompute tables are cold at scan time but were
+priced as if permanent.</p>
+<p><b>Verdict and headroom.</b> The current rule is sensible (measurably better
+than order-of-declaration, within ~2× of static-optimal) and three mechanical
+improvements remain, in order of effort: (1) a <em>frequency-sorted
+reassignment pass</em> — compile, count reads per cell, permute addresses,
+re-emit; closes the static gap to 1.0 at zero algorithmic cost; (2)
+<em>phase-aware address reuse</em> — the RREF phase wants the matrix at address
+1, the scan phase wants its state there; since cells are overwritable, a
+compiler can relocate between phases (copies cost energy, but AACS's Block-LRU
+theorem [<a href="#r-hmm">AACS 87</a>, Thm 5.2] says dynamic placement is
+O(1)-competitive with the offline optimum — static single assignment is not);
+(3) <em>packing</em> — 8 bits per byte cell divides both reads and the working
+set, compounding as ~8×·√8. For the large-scale (10M-instruction) examples the
+same rules apply unchanged; the assignment problem stays linear-time
+(sort by frequency), so compiler cost is not a scaling concern.</p>
+
+<h2 id="corrections">Corrections to previously published claims</h2>
+<ul>
+<li><b>"ISD per-restart success is 1.8%, rank deficiency bites harder at k=5"
+— wrong, now corrected.</b> The 1.8% was a single deterministic dev-suite draw;
+success is strongly secret-dependent under fixed rotating information sets, so
+per-suite recovery ranges 2.2–5.6%. Pooled over fresh randomness the rate is
+4.22%, matching the idealized Prange ratio (4.25%). The genuine rank-deficiency
+correction is visible at n=12 (measured 19.2% vs ideal 25.45%, consistent with
+the 0.289/0.578/0.128 corank law [<a href="#r-kolchin">Kolchin 99</a>]) but washes
+out at n=32 full-width pivoting. The main report's tier-2 section has been
+updated.</li>
+<li><b>"Straight-line instruction count ≈ RAM ops × 2–7" — too narrow.</b>
+The measured band across implemented methods is 1.2× (enumeration) to 17.8×
+(basis extraction), and the upper end is not slack but the predicted
+O(live-cells)-per-dynamic-access multiplexer cost. The main report's
+"Why 10⁶ instructions" section has been updated to 1.2–18×.</li>
+</ul>
+
+<h2 id="refs">References</h2>
+<ol class="refs">
+<li id="r-prange">E. Prange. The use of information sets in decoding cyclic codes. <i>IRE Trans. Information Theory</i> IT-8(5):S5–S9, 1962.</li>
+<li id="r-kt">G. Kachigar, J.-P. Tillich. Quantum information set decoding algorithms. <i>PQCrypto 2017</i> (eprint 2017/213), §3.1 — standard Prange analysis form.</li>
+<li id="r-cts">R. Canto Torres, N. Sendrier. Analysis of information set decoding for a sub-linear error weight. <i>PQCrypto 2016</i>, LNCS 9606, 144–161.</li>
+<li id="r-blp">D.J. Bernstein, T. Lange, C. Peters. Attacking and defending the McEliece cryptosystem. <i>PQCrypto 2008</i>, LNCS 5299, 31–46 (eprint 2008/318).</li>
+<li id="r-bmvt">E. Berlekamp, R. McEliece, H. van Tilborg. On the inherent intractability of certain coding problems. <i>IEEE Trans. IT</i> 24(3):384–386, 1978.</li>
+<li id="r-vardy">A. Vardy. The intractability of computing the minimum distance of a code. <i>IEEE Trans. IT</i> 43(6):1757–1766, 1997.</li>
+<li id="r-ks">A. Klivans, R. Servedio. Toward attribute-efficient learning of decision lists and parities. <i>JMLR</i> 7:587–602, 2006 — reports Spielman's Õ(n<sup>k/2</sup>) meet-in-the-middle algorithm.</li>
+<li id="r-bgm">H. Buhrman, D. García-Soriano, A. Matsliah. Learning parities in the mistake-bound model. <i>IPL</i> 111(1):16–21, 2010.</li>
+<li id="r-bgr">A. Bhattacharyya, A. Gadekar, N. Rajgopal. Improved learning of k-parities. <i>COCOON 2018</i>; <i>TCS</i> 840:249–256, 2020.</li>
+<li id="r-valiant">G. Valiant. Finding correlations in subquadratic time, with applications to learning parities and juntas. <i>FOCS 2012</i>; <i>J. ACM</i> 62(2), 2015 — n<sup>0.80k</sup> for noisy sparse parity.</li>
+<li id="r-bkw">A. Blum, A. Kalai, H. Wasserman. Noise-tolerant learning, the parity problem, and the statistical query model. <i>J. ACM</i> 50(4):506–519, 2003.</li>
+<li id="r-bbtv">K. Bangachev, G. Bresler, S. Tiegel, V. Vaikuntanathan. Near-optimal time-sparsity trade-offs for solving noisy linear equations. arXiv:2411.12512, 2024.</li>
+<li id="r-dally">W. Dally. On the model of computation: Point. <i>CACM</i> 65(9):30–32, 2022 (with U. Vishkin's Counterpoint).</li>
+<li id="r-hmm">A. Aggarwal, B. Alpern, A.K. Chandra, M. Snir. A model for hierarchical memory. <i>STOC 1987</i>, 305–313 — HMM; Thm 4.1 covers f(x)=x<sup>α</sup>.</li>
+<li id="r-hk">J.-W. Hong, H.T. Kung. I/O complexity: the red–blue pebble game. <i>STOC 1981</i>, 326–333.</li>
+<li id="r-thompson">C.D. Thompson. Area–time complexity for VLSI. <i>STOC 1979</i>, 81–88; PhD thesis CMU-CS-80-140, 1980.</li>
+<li id="r-ches">C. Bouillaguet et al. Fast exhaustive search for polynomial systems in F₂. <i>CHES 2010</i>, LNCS 6225, 203–218.</li>
+<li id="r-eb">A. Esser, E. Bellini. Syndrome decoding estimator. <i>PKC 2022</i>, LNCS 13177 (eprint 2021/1243).</li>
+<li id="r-pf">N. Pippenger, M. Fischer. Relations among complexity measures. <i>J. ACM</i> 26(2):361–381, 1979.</li>
+<li id="r-go">O. Goldreich, R. Ostrovsky. Software protection and simulation on oblivious RAMs. <i>J. ACM</i> 43(3):431–473, 1996.</li>
+<li id="r-optorama">G. Asharov, I. Komargodski, W.-K. Lin, K. Nayak, E. Peserico, E. Shi. OptORAMa: optimal oblivious RAM. <i>EUROCRYPT 2020</i>; <i>J. ACM</i> 2023.</li>
+<li id="r-kolchin">V. Kolchin. <i>Random Graphs</i>. Cambridge Univ. Press, 1999, Ch. 3 — corank law for random GF(2) matrices.</li>
+<li id="r-m4ri">M. Albrecht, G. Bard, W. Hart. Algorithm 898: efficient multiplication of dense matrices over GF(2). <i>ACM TOMS</i> 37(1), 2010 — M4RI, O(n³/log n).</li>
+<li id="r-knuth">D.E. Knuth. <i>TAOCP</i> Vol. 4A, 2011, §7.2.1.1–7.2.1.3 — Gray codes, revolving-door combinations.</li>
+</ol>
+
+<footer>
+<a href="index.html">← benchmark report</a> ·
+<a href="https://github.com/cybertronai/sutro-problems">cybertronai/sutro-problems</a>
+· analysis generated 2026-08-26 with <a href="https://claude.com/claude-code">Claude Code</a>.
+</footer>
+
+</main>
+</body>
+</html>

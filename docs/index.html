@@ -79,6 +79,7 @@ August 26, 2026.</p>
 <a href="#whysobig">Why 10⁶ instructions</a>
 <a href="#pitfalls">Pitfalls</a>
 <a href="#reproduce">Reproduce</a>
+<a href="spatial-model-analysis.html"><b>Spatial-model analysis →</b></a>
 </nav>
 
 <h2 id="problem">The problem</h2>
@@ -224,8 +225,10 @@ identifiability turns that acceptance test into a proof: an accepted solution
 is the secret. T restarts use rotating column subsets and OR their accepted
 solutions into a 32-bit mask; prediction is the O(n) mask predictor. Each
 restart succeeds when the secret happens to lie inside its information set —
-idealized probability ∏<sub>i&lt;5</sub>(18−i)/(32−i)&nbsp;≈&nbsp;4.25%,
-measured ≈1.8% (rank-deficient subsets lose cases; see pitfall 7). The
+probability ∏<sub>i&lt;5</sub>(18−i)/(32−i)&nbsp;≈&nbsp;4.25%, confirmed at
+4.22% pooled over fresh suites (single deterministic suites scatter 2.2–5.6%;
+see pitfall 7 and the <a href="spatial-model-analysis.html">spatial-model
+analysis</a>). The
 circuit is all-or-nothing by construction: on every suite instance its output
 is either exactly correct or exactly all-zeros — never garbage.</p>
 
@@ -329,8 +332,13 @@ null-space basis extraction is ~38k instructions mostly for this reason.
 This same restriction is what makes hash-based meet-in-the-middle attacks
 inexpressible — the benchmark's brute-force arithmetic depends on it.</li>
 </ul>
-<p>Rule of thumb observed across the reference circuits: straight-line
-instruction count ≈ (RAM-model operation count) × 2–7.</p>
+<p>Measured across the reference circuits: straight-line instruction count ≈
+(RAM-model bit-operation count) × 1.2–18, where the factor tracks how much
+data-dependent control and addressing the algorithm needs — 1.2× for fully
+oblivious enumeration, 2.7× for the Gray-scan step, 5.6× for select-chain
+pivoting, 17.8× for dynamic matrix reads (the O(live-cells)-per-access
+multiplexer bound, hit exactly). Full derivations and literature anchors in
+the <a href="spatial-model-analysis.html">spatial-model analysis</a>.</p>
 
 <h2 id="pitfalls">Pitfalls in the scoring and benchmark design</h2>
 <ol>
@@ -380,14 +388,18 @@ fresh randomness, measured accuracy on the scaled dev suite varies by up to
 <em>which</em> secrets get sampled). Energy is static and exact — only the
 accuracy coordinate is noisy. Near-threshold comparisons should average ≥3
 fresh runs; the final suite's 2× secret sample cuts the spread by ~√2.</li>
-<li class="pitfall"><b>Idealized analysis overstates decoders.</b> The
-textbook ISD bound (4.25%/restart) assumes full-rank information sets, but a
-random 18×18 GF(2) block is full-rank only ~29% of the time; even counting
-the partial-rank recoveries, the measured rate is 1.8%/restart. Benchmarks should
-publish measured curves, not analytic promises. The same lesson cut the other
-way at n=12: "linear algebra caps at ~53%" was wrong — min-support Gaussian
-elimination reaches 64% (η≈0.28), which recalibrated which targets are
-"interesting".</li>
+<li class="pitfall"><b>Single-suite measurements can masquerade as effects.</b>
+We previously attributed a "measured 1.8%/restart vs textbook 4.25%" ISD gap
+to rank-deficient information sets; deeper measurement (pooled over fresh
+suites) shows 4.22% — matching the textbook Prange ratio — with 2.2–5.6%
+suite-to-suite scatter because success is secret-dependent under fixed
+rotating subsets. The genuine rank correction is real but only visible at
+n=12 (19.2% vs ideal 25.45%). Publish pooled curves with spread, not single
+deterministic points. The companion
+<a href="spatial-model-analysis.html">spatial-model analysis</a> carries the
+full sanity-check table; the same lesson cut the other way at n=12, where
+"linear algebra caps at ~53%" was wrong — min-support Gaussian elimination
+reaches 64% (η≈0.28).</li>
 <li class="pitfall"><b>Complement pairing needs odd k.</b> The exact-50%
 guarantee for constant guesses relies on labels flipping under bitwise
 complement, which holds only for odd k (both tiers use k=3, k=5). An even-k
