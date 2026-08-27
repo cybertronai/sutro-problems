@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Naive 4×4 Matmul</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #faf7f2;
+    --card: #ffffff;
+    --ink: #1f2430;
+    --ink-soft: #5b6472;
+    --line: #e6e0d6;
+    --accent: #c2410c;
+    --accent-soft: #fff1e8;
+    --rA: #2563eb;
+    --rB: #0d9488;
+    --rC: #9333ea;
+    --rT: #ca8a04;
+    --rX: #64748b;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    background: var(--paper); color: var(--ink);
+    font-family: "Inter", system-ui, -apple-system, sans-serif;
+    font-size: 17px; line-height: 1.6; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px 90px; }
+
+  header { padding: 64px 0 8px; }
+  .kicker {
+    font-family: var(--mono); font-size: 12.5px; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--accent); font-weight: 600;
+  }
+  h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-size: clamp(36px, 5.4vw, 52px); font-weight: 700;
+    line-height: 1.08; margin: 8px 0 14px;
+  }
+  .lede { font-size: 19px; color: var(--ink-soft); max-width: 700px; }
+  .lede a { color: var(--accent); }
+  h2 { font-family: "Fraunces", Georgia, serif; font-size: 27px; font-weight: 600; margin: 56px 0 12px; }
+  p { margin: 12px 0; max-width: 700px; }
+  a { color: var(--accent); text-underline-offset: 3px; }
+  code, .m { font-family: var(--mono); font-size: .9em; }
+
+  .facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 22px 0 4px; }
+  .fact {
+    font-family: var(--mono); font-size: 13px; color: var(--ink-soft);
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 999px; padding: 5px 14px;
+  }
+  .fact b { color: var(--ink); font-weight: 600; }
+
+  /* ---------- stage ---------- */
+  .stage {
+    background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+    margin: 22px 0 0; box-shadow: 0 1px 3px rgba(31,36,48,.05); overflow: hidden;
+  }
+  .bar {
+    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    padding: 14px 18px; border-bottom: 1px solid var(--line); background: #fdfcf9;
+  }
+  button.btn {
+    font: 600 14px "Inter", sans-serif; color: var(--ink); background: var(--card);
+    border: 1px solid var(--line); border-radius: 9px; padding: 7px 13px;
+    cursor: pointer; transition: all .13s; white-space: nowrap;
+  }
+  button.btn:hover { border-color: var(--accent); color: var(--accent); }
+  button.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; min-width: 92px; }
+  button.btn.primary:hover { background: #a83809; color: #fff; }
+  button.btn.on { background: var(--ink); border-color: var(--ink); color: #fff; }
+  .speeds { display: flex; gap: 4px; margin-left: 2px; }
+  .speeds button { padding: 7px 10px; font-family: var(--mono); font-size: 13px; }
+  .spacer { flex: 1 1 auto; }
+
+  .scrub { display: flex; align-items: center; gap: 14px; padding: 12px 18px 4px; }
+  input[type=range] {
+    -webkit-appearance: none; appearance: none; flex: 1;
+    height: 4px; border-radius: 2px; background: var(--line); outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 15px; height: 15px; border-radius: 50%;
+    background: var(--accent); cursor: pointer; border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(31,36,48,.3);
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 15px; height: 15px; border-radius: 50%; background: var(--accent);
+    cursor: pointer; border: 2px solid #fff;
+  }
+  .stepno { font-family: var(--mono); font-size: 13px; color: var(--ink-soft); white-space: nowrap; }
+
+  .irline {
+    font-family: var(--mono); font-size: 14px; padding: 6px 18px 14px;
+    color: var(--ink-soft); min-height: 2.5em;
+  }
+  .irline .op { color: var(--ink); font-weight: 600; }
+  .irline .plus { color: var(--accent); font-weight: 600; }
+  .irline .dim { opacity: .6; }
+
+  .panes {
+    display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px; padding: 4px 18px 10px; align-items: start;
+  }
+  @media (max-width: 940px) { .panes { grid-template-columns: 1fr; } }
+
+  /* ---------- matrices ---------- */
+  .mats { display: flex; align-items: center; justify-content: center; gap: 7px; flex-wrap: wrap; padding-top: 6px; }
+  .mat { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .mat .name { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); letter-spacing: .06em; }
+  .grid4 { display: grid; grid-template-columns: repeat(4, 33px); grid-auto-rows: 28px; gap: 2.5px; }
+  .cellv {
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 12.5px; border-radius: 6px;
+    background: #f4f1ea; color: var(--ink-soft); transition: background .12s, color .12s;
+    border: 1.5px solid transparent;
+  }
+  .cellv.band { background: #ece8de; }
+  .cellv.hot { color: #fff; font-weight: 600; }
+  .cellv.hotA { background: var(--rA); }
+  .cellv.hotB { background: var(--rB); }
+  .cellv.hotC { background: var(--rC); }
+  .cellv.target { border-color: var(--accent); color: var(--ink); font-weight: 600; }
+  .cellv.done { color: var(--ink); }
+  .cellv.empty { color: #c3bcb0; }
+  .sym { font-family: var(--mono); font-size: 17px; color: var(--ink-soft); padding-top: 16px; }
+  .tmpchip {
+    display: flex; align-items: center; gap: 7px; justify-content: center;
+    font-family: var(--mono); font-size: 12.5px; color: var(--ink-soft); margin-top: 12px;
+  }
+  .tmpchip .box {
+    min-width: 54px; text-align: center; padding: 3px 8px; border-radius: 6px;
+    background: #f4f1ea; border: 1.5px solid transparent; color: var(--ink);
+  }
+  .tmpchip .box.hot { background: var(--rT); color: #fff; font-weight: 600; }
+  .verdict {
+    text-align: center; font-family: var(--mono); font-size: 12.5px;
+    margin-top: 10px; color: #23703a; opacity: 0; transition: opacity .3s;
+  }
+  .verdict.show { opacity: 1; }
+
+  /* ---------- arena ---------- */
+  .arena svg { display: block; width: 100%; height: auto; }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 6px 14px; justify-content: center;
+    font-family: var(--mono); font-size: 11.5px; color: var(--ink-soft); padding: 2px 0 6px;
+  }
+  .legend[hidden] { display: none; }
+  .legend span { display: inline-flex; align-items: center; gap: 5px; }
+  .legend i { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
+
+  /* ---------- meter ---------- */
+  .meter { border-top: 1px solid var(--line); background: #fdfcf9; padding: 16px 18px 18px; }
+  .total { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .total .num {
+    font-family: var(--mono); font-size: 34px; font-weight: 600; color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+  .total .lbl { font-size: 14px; color: var(--ink-soft); }
+  .total .delta {
+    font-family: var(--mono); font-size: 13px; color: var(--accent);
+    background: var(--accent-soft); border-radius: 999px; padding: 2px 10px; opacity: 0;
+    transition: opacity .15s;
+  }
+  .total .delta.show { opacity: 1; }
+  .bars { margin-top: 12px; display: grid; grid-template-columns: auto 1fr auto; gap: 5px 10px; align-items: center; }
+  .bars .k { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); }
+  .bars .track { height: 9px; background: #efeae1; border-radius: 5px; overflow: hidden; }
+  .bars .fill { height: 100%; width: 0; border-radius: 5px; transition: width .12s linear; }
+  .bars .v { font-family: var(--mono); font-size: 12px; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+  table.lay { border-collapse: collapse; font-family: var(--mono); font-size: 13.5px; margin-top: 6px; }
+  table.lay td { padding: 4px 18px 4px 0; border-bottom: 1px solid var(--line); }
+  table.lay td:first-child { color: var(--ink-soft); }
+
+  footer { margin-top: 64px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 14px; color: var(--ink-soft); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">sutro-problems · matmul</div>
+  <h1>Naive 4×4 Matmul</h1>
+  <p class="lede">
+    The baseline triple loop, executed one instruction at a time under the
+    <a href="https://github.com/cybertronai/simplified-dally-model">simplified Dally model</a>:
+    a read from address <span class="m">a</span> costs <span class="m">⌈√a⌉</span>; writes and arithmetic are free.
+  </p>
+  <div class="facts">
+    <span class="fact">112 instructions</span>
+    <span class="fact">64 <b>mul</b> · 48 <b>add</b></span>
+    <span class="fact">16 exit reads</span>
+    <span class="fact">total <b>1,316</b></span>
+    <span class="fact">best known <b>800</b></span>
+  </div>
+</header>
+
+<figure class="stage">
+  <div class="bar">
+    <button class="btn primary" id="play">▶ Play</button>
+    <button class="btn" id="stepb">−1</button>
+    <button class="btn" id="stepf">+1</button>
+    <div class="speeds" id="speeds"></div>
+    <button class="btn" id="heat">heat</button>
+    <div class="spacer"></div>
+    <button class="btn" id="reset">Reset</button>
+  </div>
+
+  <div class="scrub">
+    <input type="range" id="range" min="0" max="128" value="0" step="1">
+    <div class="stepno" id="stepno">0 / 128</div>
+  </div>
+  <div class="irline" id="irline"></div>
+
+  <div class="panes">
+    <div class="pane">
+      <div class="mats" id="mats"></div>
+      <div class="tmpchip"><span>tmp @49</span><span class="box" id="tmpbox">·</span></div>
+      <div class="verdict" id="verdict">✓ C = A · B</div>
+    </div>
+    <div class="pane arena">
+      <div id="arena"></div>
+      <div class="legend" id="legend">
+        <span><i style="background:var(--rA)"></i>A 1–16</span>
+        <span><i style="background:var(--rB)"></i>B 17–32</span>
+        <span><i style="background:var(--rC)"></i>C 33–48</span>
+        <span><i style="background:var(--rT)"></i>tmp 49</span>
+        <span>dashed = write (free)</span>
+      </div>
+      <div class="legend" id="heatlegend" hidden></div>
+    </div>
+  </div>
+
+  <div class="meter">
+    <div class="total">
+      <span class="num" id="costnum">0</span>
+      <span class="lbl">read cost</span>
+      <span class="delta" id="delta"></span>
+    </div>
+    <div class="bars" id="bars"></div>
+  </div>
+</figure>
+
+<h2>Layout</h2>
+<p>
+  Addresses are assigned by the baseline generator; the cell at linear index
+  <span class="m">a</span> sits at Manhattan distance <span class="m">⌈√a⌉</span> from the core,
+  so ring <span class="m">k</span> holds <span class="m">2k−1</span> cells and the whole
+  program fits in seven rings.
+</p>
+<table class="lay">
+  <tr><td>A row-major</td><td>1 – 16</td><td>d = 1 – 4</td></tr>
+  <tr><td>B row-major</td><td>17 – 32</td><td>d = 5 – 6</td></tr>
+  <tr><td>C row-major</td><td>33 – 48</td><td>d = 6 – 7</td></tr>
+  <tr><td>tmp</td><td>49</td><td>d = 7</td></tr>
+</table>
+
+<h2>Where the energy goes</h2>
+<p>
+  Two thirds of the bill is scratch traffic. Every one of the 48 accumulate steps
+  re-reads <span class="m">C[i,j]</span> at distance 6–7 and <span class="m">tmp</span> at
+  distance 7, so <span class="m">tmp</span> alone (336) costs more than every read of A (200).
+  The 800-cost record removes it by restructuring the loop as outer products and
+  keeping the accumulator in cheap addresses.
+</p>
+
+<footer>
+  <p>
+    Runs the IR emitted by <span class="m">generate_baseline_4x4()</span> in
+    <a href="https://github.com/cybertronai/sutro-problems/tree/main/matmul">cybertronai/sutro-problems/matmul</a>;
+    cost is computed in-page by the same rule as the scorer and totals 1,316.
+    Layout math and animation are plain JavaScript — view source.
+  </p>
+</footer>
+
+</div>
+
+<script>
+"use strict";
+/* ---------------- cost model ---------------- */
+function isqrt(x) { let r = Math.floor(Math.sqrt(x)); while (r * r > x) r--; while ((r + 1) * (r + 1) <= x) r++; return r; }
+const dist = (a) => isqrt(a - 1) + 1;                 // ⌈√a⌉
+function pos(a) {                                     // upper-half spiral
+  const k = dist(a), idx = a - ((k - 1) * (k - 1) + 1);
+  const x = (k % 2 === 1) ? -(k - 1) + idx : (k - 1) - idx;
+  return { x, y: k - Math.abs(x), k };
+}
+
+/* ---------------- program ---------------- */
+const N = 4;
+const A_at = (i, j) => 1 + i * N + j;
+const B_at = (i, j) => 1 + N * N + i * N + j;
+const C_at = (i, j) => 1 + 2 * N * N + i * N + j;
+const TMP = 3 * N * N + 1;
+const Av = (i, j) => i * N + j + 1;
+const Bv = (i, j) => i + 2 * j + 3;
+const region = (a) => a <= 16 ? "A" : a <= 32 ? "B" : a <= 48 ? "C" : "T";
+const RCOL = { A: "var(--rA)", B: "var(--rB)", C: "var(--rC)", T: "var(--rT)" };
+
+// Event stream, mirroring generate_baseline_4x4().
+const EV = [];
+for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+  EV.push({ op: "mul", dest: C_at(i, j), srcs: [A_at(i, 0), B_at(0, j)], i, j, k: 0 });
+  for (let k = 1; k < N; k++) {
+    EV.push({ op: "mul", dest: TMP, srcs: [A_at(i, k), B_at(k, j)], i, j, k });
+    EV.push({ op: "add", dest: C_at(i, j), srcs: [C_at(i, j), TMP], i, j, k });
+  }
+}
+for (let i = 0; i < N; i++) for (let j = 0; j < N; j++)
+  EV.push({ op: "exit", dest: null, srcs: [C_at(i, j)], i, j });
+const NEV = EV.length;                                 // 128
+
+const EXPECT = [];
+for (let i = 0; i < N; i++) { const r = []; for (let j = 0; j < N; j++) { let s = 0; for (let k = 0; k < N; k++) s += Av(i, k) * Bv(k, j); r.push(s); } EXPECT.push(r); }
+
+/* ---------------- simulate to step n ---------------- */
+function simulate(n) {
+  const mem = {};
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) { mem[A_at(i, j)] = Av(i, j); mem[B_at(i, j)] = Bv(i, j); }
+  const by = { A: 0, B: 0, C: 0, T: 0, X: 0 };
+  const readCost = {};
+  let cost = 0;
+  for (let s = 0; s < n; s++) {
+    const e = EV[s];
+    for (const a of e.srcs) {
+      const c = dist(a);
+      cost += c;
+      by[e.op === "exit" ? "X" : region(a)] += c;
+      readCost[a] = (readCost[a] || 0) + c;
+    }
+    if (e.op === "mul") mem[e.dest] = mem[e.srcs[0]] * mem[e.srcs[1]];
+    else if (e.op === "add") mem[e.dest] = mem[e.srcs[0]] + mem[e.srcs[1]];
+  }
+  return { mem, cost, by, readCost };
+}
+
+/* ---------------- matrices ---------------- */
+const matsEl = document.getElementById("mats");
+const cellsA = [], cellsB = [], cellsC = [];
+function buildMat(name, store) {
+  const w = document.createElement("div"); w.className = "mat";
+  const nm = document.createElement("div"); nm.className = "name"; nm.textContent = name; w.appendChild(nm);
+  const g = document.createElement("div"); g.className = "grid4";
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+    const c = document.createElement("div"); c.className = "cellv";
+    g.appendChild(c); store.push(c);
+  }
+  w.appendChild(g); matsEl.appendChild(w);
+}
+function sym(t) { const s = document.createElement("div"); s.className = "sym"; s.textContent = t; matsEl.appendChild(s); }
+buildMat("A", cellsA); sym("×"); buildMat("B", cellsB); sym("="); buildMat("C", cellsC);
+for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+  cellsA[i * N + j].textContent = Av(i, j);
+  cellsB[i * N + j].textContent = Bv(i, j);
+}
+const tmpBox = document.getElementById("tmpbox");
+
+/* ---------------- arena ---------------- */
+const S = 40, MAXX = 6, MAXY = 7;
+const padL = 54, padR = 54, padT = 26, padB = 104;
+const W = 2 * MAXX * S + padL + padR, H = MAXY * S + padT + padB;
+const PX = (x) => padL + (x + MAXX) * S, PY = (y) => padT + (MAXY - y) * S;
+const ns = "http://www.w3.org/2000/svg";
+const svg = document.createElementNS(ns, "svg");
+svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+document.getElementById("arena").appendChild(svg);
+const mk = (n, at, p = svg) => { const e = document.createElementNS(ns, n); for (const k in at) e.setAttribute(k, at[k]); p.appendChild(e); return e; };
+
+// faint distance rings (|x|+|y| = k tents)
+for (let k = 1; k <= MAXY; k++)
+  mk("path", { d: `M ${PX(-k)} ${PY(0)} L ${PX(0)} ${PY(k)} L ${PX(k)} ${PY(0)}`, fill: "none", stroke: "#e3dcd0", "stroke-width": 1 });
+for (let k = 1; k <= MAXY; k++)
+  mk("text", { x: PX(-k) - 6, y: PY(0) + 4, "text-anchor": "end", "font-size": 10.5,
+               fill: "#b7b0a3", "font-family": "var(--mono)" }).textContent = k;
+
+const wireLayer = mk("g", {});
+const cellG = {}, cellEl = {};
+for (let a = 1; a <= 49; a++) {
+  const p = pos(a);
+  const c = mk("circle", { cx: PX(p.x), cy: PY(p.y), r: 13, fill: RCOL[region(a)],
+                           stroke: "#fff", "stroke-width": 2, opacity: .42 });
+  cellEl[a] = c; cellG[a] = p;
+}
+for (const a of [1, 17, 33, 49]) {
+  const p = pos(a);
+  mk("text", { x: PX(p.x), y: PY(p.y) - 19, "text-anchor": "middle", "font-size": 10.5,
+               fill: "var(--ink-soft)", "font-family": "var(--mono)" }).textContent = a;
+}
+// core
+mk("line", { x1: PX(0), y1: PY(0), x2: PX(0), y2: PY(0) + 30, stroke: "#2b2f3a", "stroke-width": 4, "stroke-linecap": "round" });
+mk("rect", { x: PX(0) - 58, y: PY(0) + 30, width: 116, height: 34, rx: 10, fill: "#2b2f3a" });
+mk("text", { x: PX(0), y: PY(0) + 52, "text-anchor": "middle", "font-size": 11, "letter-spacing": "1.6",
+             fill: "#9aa3b2", "font-family": "Inter, sans-serif", "font-weight": 600 }).textContent = "CORE";
+mk("circle", { cx: PX(0), cy: PY(0), r: 8, fill: "#2b2f3a", stroke: "#fff", "stroke-width": 2.5 });
+
+// data flows vertically first, then horizontally, into the core
+function drawWire(a, color, dur) {
+  const p = cellG[a];
+  const d = `M ${PX(p.x)} ${PY(p.y)} L ${PX(p.x)} ${PY(0)} L ${PX(0)} ${PY(0)}`;
+  mk("path", { d, fill: "none", stroke: color, "stroke-width": 10, opacity: .15,
+               "stroke-linecap": "round", "stroke-linejoin": "round" }, wireLayer);
+  const w = mk("path", { d, fill: "none", stroke: color, "stroke-width": 3.4,
+                         "stroke-linecap": "round", "stroke-linejoin": "round" }, wireLayer);
+  if (dur > 90) {
+    const len = w.getTotalLength();
+    w.style.strokeDasharray = len; w.style.strokeDashoffset = -len;
+    w.getBoundingClientRect();
+    w.style.transition = `stroke-dashoffset ${Math.min(dur * .7, 260)}ms ease-out`;
+    w.style.strokeDashoffset = 0;
+  }
+}
+
+/* ---------------- breakdown bars ---------------- */
+const BARS = [["A", "A reads", "var(--rA)"], ["B", "B reads", "var(--rB)"],
+              ["C", "C reads", "var(--rC)"], ["T", "tmp reads", "var(--rT)"],
+              ["X", "exit reads", "var(--rX)"]];
+const barsEl = document.getElementById("bars"), fills = {}, vals = {};
+for (const [key, label, col] of BARS) {
+  const k = document.createElement("div"); k.className = "k"; k.textContent = label;
+  const t = document.createElement("div"); t.className = "track";
+  const f = document.createElement("div"); f.className = "fill"; f.style.background = col; t.appendChild(f);
+  const v = document.createElement("div"); v.className = "v"; v.textContent = "0";
+  barsEl.append(k, t, v); fills[key] = f; vals[key] = v;
+}
+const BAR_MAX = 360;
+
+/* ---------------- render ---------------- */
+const irEl = document.getElementById("irline"), costEl = document.getElementById("costnum");
+const deltaEl = document.getElementById("delta"), stepnoEl = document.getElementById("stepno");
+const rangeEl = document.getElementById("range"), verdictEl = document.getElementById("verdict");
+const legendEl = document.getElementById("legend"), heatLegendEl = document.getElementById("heatlegend");
+let cur = 0, heat = false, stepMs = 110, playing = false;
+
+function heatFill(a, st, max) {
+  const v = (st.readCost[a] || 0) / (max || 1);
+  const c0 = [247, 241, 232], c1 = [179, 64, 10];
+  const m = Math.pow(v, .42);
+  return `rgb(${c0.map((c, n) => Math.round(c + (c1[n] - c) * m)).join(",")})`;
+}
+
+function render() {
+  const st = simulate(cur);
+  const e = cur > 0 ? EV[cur - 1] : null;
+  const prevCost = cur > 0 ? simulate(cur - 1).cost : 0;
+
+  // --- arena cells ---
+  const maxRead = Math.max(1, ...Object.values(st.readCost));
+  legendEl.hidden = heat; heatLegendEl.hidden = !heat;
+  if (heat) {
+    let top = 1, topA = 49;
+    for (const a in st.readCost) if (st.readCost[a] > top) { top = st.readCost[a]; topA = +a; }
+    heatLegendEl.textContent = `fill = cumulative read cost · hottest ${top} @${topA}`;
+  }
+  const active = new Set(e ? e.srcs : []);
+  for (let a = 1; a <= 49; a++) {
+    const c = cellEl[a], on = active.has(a), isDest = e && e.dest === a;
+    c.setAttribute("fill", heat ? heatFill(a, st, maxRead) : RCOL[region(a)]);
+    c.setAttribute("opacity", heat ? 1 : (on ? 1 : (st.readCost[a] ? .58 : .34)));
+    c.setAttribute("r", on ? 15.5 : 13);
+    c.setAttribute("stroke", on ? RCOL[region(a)] : (isDest ? "var(--ink)" : "#fff"));
+    c.setAttribute("stroke-width", on ? 3 : (isDest ? 2 : 2));
+    c.setAttribute("stroke-dasharray", isDest && !on ? "3 3" : "none");
+  }
+  wireLayer.replaceChildren();
+  if (e) for (const a of e.srcs) drawWire(a, RCOL[region(a)], playing ? stepMs : 200);
+
+  // --- matrices ---
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+    const idx = i * N + j;
+    const ca = cellsA[idx], cb = cellsB[idx], cc = cellsC[idx];
+    ca.className = "cellv"; cb.className = "cellv"; cc.className = "cellv";
+    if (e && e.op !== "exit") { if (i === e.i) ca.classList.add("band"); if (j === e.j) cb.classList.add("band"); }
+    const v = st.mem[C_at(i, j)];
+    cc.textContent = v === undefined ? "·" : v;
+    if (v === undefined) cc.classList.add("empty");
+    else if (cur >= 7 * idx + 7) cc.classList.add("done");
+  }
+  if (e) {
+    if (e.op === "mul") {
+      cellsA[e.i * N + e.k].classList.add("hot", "hotA");
+      cellsB[e.k * N + e.j].classList.add("hot", "hotB");
+      cellsC[e.i * N + e.j].classList.add("target");
+    } else if (e.op === "add") {
+      cellsC[e.i * N + e.j].classList.add("hot", "hotC");
+    } else {
+      cellsC[e.i * N + e.j].classList.add("hot", "hotC");
+    }
+  }
+  const tv = st.mem[TMP];
+  tmpBox.textContent = tv === undefined ? "·" : tv;
+  tmpBox.className = "box" + (e && (e.dest === TMP || e.srcs.includes(TMP)) ? " hot" : "");
+
+  // --- readouts ---
+  costEl.textContent = st.cost.toLocaleString("en-US");
+  for (const [key] of BARS) {
+    fills[key].style.width = (100 * Math.min(1, st.by[key] / BAR_MAX)) + "%";
+    vals[key].textContent = st.by[key];
+  }
+  stepnoEl.textContent = `${cur} / ${NEV}`;
+  rangeEl.value = cur;
+
+  if (e) {
+    const inc = st.cost - prevCost;
+    const rd = e.srcs.map(a => `d(${a})=${dist(a)}`).join(" + ");
+    const head = e.op === "exit"
+      ? `<span class="op">exit</span> ${e.srcs[0]}`
+      : `<span class="op">${e.op}</span> ${e.dest},${e.srcs.join(",")}`;
+    const tag = e.op === "exit" ? `read C[${e.i},${e.j}]`
+              : `C[${e.i},${e.j}] ${e.op === "mul" ? (e.k === 0 ? "= A·B" : "tmp = A·B") : "+= tmp"}`;
+    irEl.innerHTML = `${head} &nbsp;<span class="dim">${rd}</span> &nbsp;<span class="plus">+${inc}</span> &nbsp;<span class="dim">${tag}</span>`;
+    deltaEl.textContent = `+${inc}`; deltaEl.classList.add("show");
+  } else {
+    irEl.innerHTML = `<span class="dim">inputs placed free · A@1–16, B@17–32 · press Play</span>`;
+    deltaEl.classList.remove("show");
+  }
+  verdictEl.classList.toggle("show", cur === NEV);
+}
+
+/* ---------------- controls ---------------- */
+const playBtn = document.getElementById("play");
+function setPlaying(p) {
+  playing = p && cur < NEV;
+  playBtn.textContent = playing ? "❚❚ Pause" : (cur >= NEV ? "↺ Replay" : "▶ Play");
+  if (playing) { last = performance.now(); requestAnimationFrame(tick); }
+}
+let last = 0, acc = 0;
+function tick(now) {
+  if (!playing) return;
+  acc += now - last; last = now;
+  let moved = false;
+  while (acc >= stepMs && cur < NEV) { acc -= stepMs; cur++; moved = true; }
+  if (moved) render();
+  if (cur >= NEV) { setPlaying(false); return; }
+  requestAnimationFrame(tick);
+}
+playBtn.onclick = () => { if (cur >= NEV) { cur = 0; render(); } setPlaying(!playing); };
+document.getElementById("stepf").onclick = () => { setPlaying(false); if (cur < NEV) { cur++; render(); } };
+document.getElementById("stepb").onclick = () => { setPlaying(false); if (cur > 0) { cur--; render(); } };
+document.getElementById("reset").onclick = () => { setPlaying(false); cur = 0; render(); };
+rangeEl.oninput = () => { setPlaying(false); cur = +rangeEl.value; render(); };
+
+const SPEEDS = [["0.5×", 220], ["1×", 110], ["3×", 34], ["max", 6]];
+const speedsEl = document.getElementById("speeds");
+SPEEDS.forEach(([label, ms]) => {
+  const b = document.createElement("button");
+  b.className = "btn" + (ms === stepMs ? " on" : ""); b.textContent = label;
+  b.onclick = () => { stepMs = ms; [...speedsEl.children].forEach(c => c.classList.remove("on")); b.classList.add("on"); };
+  speedsEl.appendChild(b);
+});
+const heatBtn = document.getElementById("heat");
+heatBtn.onclick = () => { heat = !heat; heatBtn.classList.toggle("on", heat); render(); };
+
+document.addEventListener("keydown", (ev) => {
+  if (ev.key === " ") { ev.preventDefault(); playBtn.click(); }
+  else if (ev.key === "ArrowRight") { ev.preventDefault(); document.getElementById("stepf").click(); }
+  else if (ev.key === "ArrowLeft") { ev.preventDefault(); document.getElementById("stepb").click(); }
+  else if (ev.key === "r") { document.getElementById("reset").click(); }
+});
+
+// sanity: the animation must reproduce the scorer's numbers
+const FIN = simulate(NEV);
+const okC = EXPECT.every((row, i) => row.every((v, j) => FIN.mem[C_at(i, j)] === v));
+if (!okC || FIN.cost !== 1316) console.error("model mismatch", FIN.cost, okC);
+
+render();
+</script>
+</body>
+</html>
