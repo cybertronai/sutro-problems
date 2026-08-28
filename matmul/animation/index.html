@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Naive Matmul, Priced</title>
+<title>Matmul, Priced</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
@@ -11,7 +11,7 @@
   :root {
     --paper: #faf7f2; --card: #ffffff; --ink: #1f2430; --ink-soft: #5b6472;
     --line: #e6e0d6; --accent: #c2410c; --accent-soft: #fff1e8;
-    --rA: #2563eb; --rB: #0d9488; --rC: #9333ea; --rT: #ca8a04; --rX: #64748b;
+    --rA: #2563eb; --rB: #0d9488; --rC: #9333ea; --rS: #ca8a04; --rX: #64748b;
     --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   }
   * { box-sizing: border-box; margin: 0; }
@@ -87,18 +87,28 @@
   .cellv.band { background: #ece8de; }
   .cellv.hot { color: #fff; font-weight: 600; }
   .cellv.hotA { background: var(--rA); } .cellv.hotB { background: var(--rB); } .cellv.hotC { background: var(--rC); }
+  .cellv.mirrorA { box-shadow: inset 0 0 0 2px var(--rA); color: var(--ink); }
+  .cellv.mirrorB { box-shadow: inset 0 0 0 2px var(--rB); color: var(--ink); }
+  .cellv.mirrorC { box-shadow: inset 0 0 0 2px var(--rC); color: var(--ink); }
   .cellv.target { border-color: var(--accent); color: var(--ink); font-weight: 600; }
   .cellv.done { color: var(--ink); }
   .cellv.empty { color: #c3bcb0; }
   .sym { font-family: var(--mono); font-size: 17px; color: var(--ink-soft); padding-top: 16px; }
-  .tmpchip { display: flex; align-items: center; gap: 7px; justify-content: center;
-             font-family: var(--mono); font-size: 12.5px; color: var(--ink-soft); margin-top: 12px; }
-  .tmpchip .box { min-width: 54px; text-align: center; padding: 3px 8px; border-radius: 6px;
-                  background: #f4f1ea; border: 1.5px solid transparent; color: var(--ink); }
-  .tmpchip .box.hot { background: var(--rT); color: #fff; font-weight: 600; }
-  .tmpchip .box.target { border-color: var(--ink-soft); border-style: dashed; }
+
+  .scratch { display: flex; gap: 16px; justify-content: center; align-items: flex-end;
+             flex-wrap: wrap; margin-top: 14px; }
+  .sgroup { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+  .sgroup .nm { font-family: var(--mono); font-size: 11px; color: var(--ink-soft); }
+  .sgrid { display: grid; gap: 2px; }
+  .scell { display: flex; align-items: center; justify-content: center; font-family: var(--mono);
+           font-size: 11.5px; border-radius: 5px; background: #f4f1ea; color: var(--ink);
+           border: 1.5px solid transparent; min-width: 34px; height: 24px; }
+  .scell.hot { background: var(--rS); color: #fff; font-weight: 600; }
+  .scell.target { border-color: var(--ink-soft); border-style: dashed; }
+  .scell.empty { color: #c3bcb0; }
+
   .verdict { text-align: center; font-family: var(--mono); font-size: 12.5px;
-             margin-top: 10px; color: #23703a; opacity: 0; transition: opacity .3s; }
+             margin-top: 12px; color: #23703a; opacity: 0; transition: opacity .3s; }
   .verdict.show { opacity: 1; }
 
   .arena svg { display: block; width: 100%; height: auto; }
@@ -155,9 +165,9 @@
 
 <header>
   <div class="kicker">sutro-problems · matmul</div>
-  <h1>Naive Matmul, Priced</h1>
+  <h1>Matmul, Priced</h1>
   <p class="lede">
-    The baseline triple loop, executed one memory access per clock under the
+    Matrix multiply executed one memory access per clock under the
     <a href="https://github.com/cybertronai/simplified-dally-model">simplified Dally model</a>:
     an access to address <span class="m">a</span> costs <span class="m">⌈√a⌉</span>; writes and arithmetic are free.
   </p>
@@ -187,7 +197,7 @@
   <div class="panes">
     <div class="pane">
       <div class="mats" id="mats"></div>
-      <div class="tmpchip"><span id="tmplabel">tmp</span><span class="box" id="tmpbox">·</span></div>
+      <div class="scratch" id="scratch"></div>
       <div class="verdict" id="verdict">✓ C = A · B</div>
     </div>
     <div class="pane arena">
@@ -212,8 +222,8 @@
 <p>
   The cell at linear index <span class="m">a</span> sits at Manhattan distance
   <span class="m">⌈√a⌉</span> from the core, so ring <span class="m">k</span> holds
-  <span class="m">2k−1</span> cells. The arrays are placed contiguously, which leaves the
-  output furthest from the core.
+  <span class="m">2k−1</span> cells. The naive schedules place the arrays contiguously; the
+  tiled schedule reserves the cheapest cells for its scratchpad and pushes the bulk arrays out.
 </p>
 <table class="lay" id="laytable"></table>
 
@@ -235,20 +245,25 @@
 
 <h2>Where the energy goes</h2>
 <p>
-  Two thirds of the 4×4 bill is scratch traffic. Every one of the 48 accumulate steps
-  reads <span class="m">C[i,j]</span> at distance 6–7 and <span class="m">tmp</span> at
-  distance 7, so <span class="m">tmp</span> alone (336) costs more than every access to A
-  (200). The same shape holds at every size: <span class="m">tmp</span> is 16 of the 84
-  units at 2×2 and 108 of 429 at 3×3. The 800-cost 4×4 record restructures the loop as outer
-  products, keeping the accumulator and the broadcast operand in the cheapest addresses.
+  Two thirds of the naive 4×4 bill is scratch traffic: each of the 48 accumulate steps reads
+  <span class="m">C[i,j]</span> at distance 6–7 and <span class="m">tmp</span> at distance 7,
+  so <span class="m">tmp</span> alone (336) costs more than every access to A (200).
+</p>
+<p>
+  Tiling barely helps at this size — 1,296 against 1,316. The 2×2 scratchpad does keep the
+  inner loop in the cheapest thirteen cells, but paying to copy tiles in and out, and pushing
+  the bulk arrays from addresses 1–48 out to 14–61, eats almost all of the saving. The same
+  schedule at 16×16 wins properly, 133,783 against 340,704, because each copied tile is reused
+  across a whole block row instead of twice.
 </p>
 
 <footer>
   <p>
-    Runs the IR from <span class="m">generate_baseline_4x4()</span> (and the same generator at
-    n = 2) in
-    <a href="https://github.com/cybertronai/sutro-problems/tree/main/matmul">cybertronai/sutro-problems/matmul</a>.
-    Every algorithm reproduces its reference cost: 84 · 429 · 1,316 · 800 · 340,704 · 133,783.
+    Programs come from <span class="m">generate_baseline_4x4()</span> and
+    <span class="m">generate_tiled_16x16()</span> in
+    <a href="https://github.com/cybertronai/sutro-problems/tree/main/matmul">cybertronai/sutro-problems/matmul</a>,
+    re-run here at other sizes. Every one reproduces its reference cost:
+    84 · 429 · 1,316 · 1,296 · 800 · 340,704 · 133,783.
     Layout math, simulator and plots are plain JavaScript — view source.
   </p>
 </footer>
@@ -265,62 +280,124 @@ function pos(a) {                                     // upper-half spiral
   const x = (k % 2 === 1) ? -(k - 1) + idx : (k - 1) - idx;
   return { x, y: k - Math.abs(x), k };
 }
-const RCOL = { A: "var(--rA)", B: "var(--rB)", C: "var(--rC)", T: "var(--rT)" };
-
-/* ================= program, parameterised by n ================= */
-let N, A_at, B_at, C_at, TMP, NCELLS, EV, NEV, EXPECT, CYC_PER_CELL, BAR_MAX, region;
-const Av = (i, j) => i * N + j + 1;                   // matmul._matmul_test data
+const RCOL = { A: "var(--rA)", B: "var(--rB)", C: "var(--rC)", S: "var(--rS)" };
+const Av = (n, i, j) => i * n + j + 1;                // matmul._matmul_test data
 const Bv = (i, j) => i + 2 * j + 3;
 
-function buildProgram(n) {
-  N = n;
-  A_at = (i, j) => 1 + i * n + j;
-  B_at = (i, j) => 1 + n * n + i * n + j;
-  C_at = (i, j) => 1 + 2 * n * n + i * n + j;
-  TMP = 3 * n * n + 1;
-  NCELLS = TMP;
-  region = (a) => a <= n * n ? "A" : a <= 2 * n * n ? "B" : a <= 3 * n * n ? "C" : "T";
-  CYC_PER_CELL = 2 * (2 * n - 1);                     // cycles to finish one C[i,j]
-
-  // one event = one clock = one priced access; a binary op takes two cycles
-  EV = [];
-  const emit = (op, dest, s1, s2, ctx) => {
-    EV.push(Object.assign({ op, dest, s1, s2, addr: s1, slot: 0, write: false }, ctx));
-    EV.push(Object.assign({ op, dest, s1, s2, addr: s2, slot: 1, write: true }, ctx));
+/* ================================================================
+   Programs. Each event is one clock = one priced access.
+   cell/wcell say which matrix element an address stands for, so the
+   tiled schedule can show a scratch slot and the element it holds.
+   ================================================================ */
+function makeNaive(n) {
+  const A = (i, j) => 1 + i * n + j, B = (i, j) => 1 + n * n + i * n + j;
+  const C = (i, j) => 1 + 2 * n * n + i * n + j, tmp = 3 * n * n + 1;
+  const EV = [];
+  const bin = (op, dest, s1, s2, c1, c2, wc, ctx) => {
+    EV.push(Object.assign({ op, dest, s1, s2, addr: s1, slot: 0, write: false, cell: c1, wcell: null }, ctx));
+    EV.push(Object.assign({ op, dest, s1, s2, addr: s2, slot: 1, write: true, cell: c2, wcell: wc }, ctx));
   };
   for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
-    emit("mul", C_at(i, j), A_at(i, 0), B_at(0, j), { i, j, k: 0 });
+    bin("mul", C(i, j), A(i, 0), B(0, j), { m: "A", i, j: 0 }, { m: "B", i: 0, j }, { m: "C", i, j }, { i, j, k: 0 });
     for (let k = 1; k < n; k++) {
-      emit("mul", TMP, A_at(i, k), B_at(k, j), { i, j, k });
-      emit("add", C_at(i, j), C_at(i, j), TMP, { i, j, k });
+      bin("mul", tmp, A(i, k), B(k, j), { m: "A", i, j: k }, { m: "B", i: k, j }, null, { i, j, k });
+      bin("add", C(i, j), C(i, j), tmp, { m: "C", i, j }, null, { m: "C", i, j }, { i, j, k });
     }
   }
   for (let i = 0; i < n; i++) for (let j = 0; j < n; j++)
-    EV.push({ op: "exit", dest: null, s1: C_at(i, j), s2: null, addr: C_at(i, j), slot: 0, write: false, i, j });
-  NEV = EV.length;
+    EV.push({ op: "exit", dest: null, s1: C(i, j), s2: null, addr: C(i, j), slot: 0,
+              write: false, cell: { m: "C", i, j }, wcell: null, i, j });
 
-  EXPECT = [];
-  for (let i = 0; i < n; i++) {
-    const r = [];
-    for (let j = 0; j < n; j++) { let s = 0; for (let k = 0; k < n; k++) s += Av(i, k) * Bv(k, j); r.push(s); }
-    EXPECT.push(r);
-  }
-  const fin = simulate(NEV);
-  BAR_MAX = Math.max(...Object.values(fin.by)) * 1.03;
-  return fin;
+  return {
+    key: `naive${n}`, label: `${n}×${n}`, n, tiled: false, nCells: tmp,
+    region: (a) => a <= n * n ? "A" : a <= 2 * n * n ? "B" : a <= 3 * n * n ? "C" : "S",
+    scratchLabel: "tmp",
+    labelAddrs: [1, n * n + 1, 2 * n * n + 1, tmp],
+    legend: [["A", "rA", `1–${n * n}`], ["B", "rB", `${n * n + 1}–${2 * n * n}`],
+             ["C", "rC", `${2 * n * n + 1}–${3 * n * n}`], ["tmp", "rS", `${tmp}`]],
+    layout: [["A row-major", 1, n * n], ["B row-major", n * n + 1, 2 * n * n],
+             ["C row-major", 2 * n * n + 1, 3 * n * n], ["tmp", tmp, tmp]],
+    scratch: [{ name: `tmp @${tmp}`, rows: 1, cols: 1, addrs: [tmp] }],
+    cAddr: C, EV,
+    initMem: () => { const m = {}; for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) { m[A(i, j)] = Av(n, i, j); m[B(i, j)] = Bv(i, j); } return m; },
+  };
 }
 
+function makeTiled(n, T) {
+  const sA = (a, b) => 1 + a * T + b, sB = (a, b) => 1 + T * T + a * T + b, sC = (a, b) => 1 + 2 * T * T + a * T + b;
+  const tmp = 3 * T * T + 1, Ab = tmp + 1, Bb = Ab + n * n, Cb = Bb + n * n;
+  const A = (i, j) => Ab + i * n + j, B = (i, j) => Bb + i * n + j, C = (i, j) => Cb + i * n + j;
+  const nb = n / T, EV = [];
+  const cp = (dest, src, cell, wcell, ctx) =>
+    EV.push(Object.assign({ op: "copy", dest, s1: src, s2: null, addr: src, slot: 0, write: true, cell, wcell }, ctx));
+  const bin = (op, dest, s1, s2, c1, c2, wc, ctx) => {
+    EV.push(Object.assign({ op, dest, s1, s2, addr: s1, slot: 0, write: false, cell: c1, wcell: null }, ctx));
+    EV.push(Object.assign({ op, dest, s1, s2, addr: s2, slot: 1, write: true, cell: c2, wcell: wc }, ctx));
+  };
+  for (let bi = 0; bi < nb; bi++) for (let bj = 0; bj < nb; bj++) {
+    for (let bk = 0; bk < nb; bk++) {
+      const ctx = { bi, bj, bk };
+      for (let ii = 0; ii < T; ii++) for (let kk = 0; kk < T; kk++)
+        cp(sA(ii, kk), A(bi * T + ii, bk * T + kk), { m: "A", i: bi * T + ii, j: bk * T + kk }, null, ctx);
+      for (let kk = 0; kk < T; kk++) for (let jj = 0; jj < T; jj++)
+        cp(sB(kk, jj), B(bk * T + kk, bj * T + jj), { m: "B", i: bk * T + kk, j: bj * T + jj }, null, ctx);
+      for (let ii = 0; ii < T; ii++) for (let jj = 0; jj < T; jj++) for (let kk = 0; kk < T; kk++) {
+        // scratch reads: cell = the element that slot currently holds (shown as an outline)
+        bin("mul", tmp, sA(ii, kk), sB(kk, jj),
+            { m: "A", i: bi * T + ii, j: bk * T + kk, mirror: true },
+            { m: "B", i: bk * T + kk, j: bj * T + jj, mirror: true }, null, ctx);
+        if (bk === 0 && kk === 0)
+          cp(sC(ii, jj), tmp, null, { m: "C", i: bi * T + ii, j: bj * T + jj }, ctx);
+        else
+          bin("add", sC(ii, jj), sC(ii, jj), tmp,
+              { m: "C", i: bi * T + ii, j: bj * T + jj, mirror: true }, null,
+              { m: "C", i: bi * T + ii, j: bj * T + jj }, ctx);
+      }
+    }
+    for (let ii = 0; ii < T; ii++) for (let jj = 0; jj < T; jj++)
+      cp(C(bi * T + ii, bj * T + jj), sC(ii, jj),
+         { m: "C", i: bi * T + ii, j: bj * T + jj, mirror: true },
+         { m: "C", i: bi * T + ii, j: bj * T + jj }, { bi, bj, bk: nb - 1 });
+  }
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++)
+    EV.push({ op: "exit", dest: null, s1: C(i, j), s2: null, addr: C(i, j), slot: 0,
+              write: false, cell: { m: "C", i, j }, wcell: null, i, j });
+
+  const sAddrs = (f) => { const o = []; for (let a = 0; a < T; a++) for (let b = 0; b < T; b++) o.push(f(a, b)); return o; };
+  return {
+    key: `tiled${n}`, label: `${n}×${n} tiled`, n, T, tiled: true, nCells: Cb + n * n - 1,
+    region: (a) => a <= tmp ? "S" : a < Bb ? "A" : a < Cb ? "B" : "C",
+    scratchLabel: "scratch",
+    labelAddrs: [1, Ab, Bb, Cb],
+    legend: [["scratch", "rS", `1–${tmp}`], ["A", "rA", `${Ab}–${Ab + n * n - 1}`],
+             ["B", "rB", `${Bb}–${Bb + n * n - 1}`], ["C", "rC", `${Cb}–${Cb + n * n - 1}`]],
+    layout: [[`sA ${T}×${T}`, 1, T * T], [`sB ${T}×${T}`, T * T + 1, 2 * T * T],
+             [`sC ${T}×${T}`, 2 * T * T + 1, 3 * T * T], ["tmp", tmp, tmp],
+             ["A row-major", Ab, Ab + n * n - 1], ["B row-major", Bb, Bb + n * n - 1],
+             ["C row-major", Cb, Cb + n * n - 1]],
+    scratch: [{ name: "sA", rows: T, cols: T, addrs: sAddrs(sA) },
+              { name: "sB", rows: T, cols: T, addrs: sAddrs(sB) },
+              { name: "sC", rows: T, cols: T, addrs: sAddrs(sC) },
+              { name: `tmp @${tmp}`, rows: 1, cols: 1, addrs: [tmp] }],
+    cAddr: C, EV,
+    initMem: () => { const m = {}; for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) { m[A(i, j)] = Av(n, i, j); m[B(i, j)] = Bv(i, j); } return m; },
+  };
+}
+
+/* ================= active program ================= */
+let P, EV, NEV, N, EXPECT, DONE_AT, BAR_MAX;
+
 function simulate(upto) {
-  const mem = {};
-  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) { mem[A_at(i, j)] = Av(i, j); mem[B_at(i, j)] = Bv(i, j); }
-  const by = { A: 0, B: 0, C: 0, T: 0, X: 0 }, readCost = {};
+  const mem = P.initMem();
+  const by = { A: 0, B: 0, C: 0, S: 0, X: 0 }, readCost = {};
   let cost = 0;
   for (let s = 0; s < upto; s++) {
     const e = EV[s], c = dist(e.addr);
     cost += c;
-    by[e.op === "exit" ? "X" : region(e.addr)] += c;
+    by[e.op === "exit" ? "X" : P.region(e.addr)] += c;
     readCost[e.addr] = (readCost[e.addr] || 0) + c;
-    if (e.write) mem[e.dest] = e.op === "mul" ? mem[e.s1] * mem[e.s2] : mem[e.s1] + mem[e.s2];
+    if (e.write) mem[e.dest] = e.op === "mul" ? mem[e.s1] * mem[e.s2]
+                             : e.op === "add" ? mem[e.s1] + mem[e.s2] : mem[e.s1];
   }
   return { mem, cost, by, readCost };
 }
@@ -331,16 +408,17 @@ let cellsA = [], cellsB = [], cellsC = [];
 function buildMatrices() {
   matsEl.replaceChildren();
   cellsA = []; cellsB = []; cellsC = [];
-  const cw = N === 2 ? 46 : N === 3 ? 39 : 33;
-  const ch = N === 2 ? 38 : N === 3 ? 32 : 28;
-  const fs = N === 2 ? 15 : N === 3 ? 13.5 : 12.5;
+  const n = N;
+  const cw = n === 2 ? 46 : n === 3 ? 39 : 33;
+  const ch = n === 2 ? 38 : n === 3 ? 32 : 28;
+  const fs = n === 2 ? 15 : n === 3 ? 13.5 : 12.5;
   const one = (name, store, val) => {
     const w = document.createElement("div"); w.className = "mat";
     const nm = document.createElement("div"); nm.className = "name"; nm.textContent = name; w.appendChild(nm);
     const g = document.createElement("div"); g.className = "gridn";
-    g.style.gridTemplateColumns = `repeat(${N}, ${cw}px)`;
+    g.style.gridTemplateColumns = `repeat(${n}, ${cw}px)`;
     g.style.gridAutoRows = ch + "px";
-    for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
       const c = document.createElement("div"); c.className = "cellv";
       c.style.fontSize = fs + "px";
       if (val) c.textContent = val(i, j);
@@ -349,10 +427,27 @@ function buildMatrices() {
     w.appendChild(g); matsEl.appendChild(w);
   };
   const sym = (t) => { const s = document.createElement("div"); s.className = "sym"; s.textContent = t; matsEl.appendChild(s); };
-  one("A", cellsA, Av); sym("×"); one("B", cellsB, Bv); sym("="); one("C", cellsC, null);
-  document.getElementById("tmplabel").textContent = `tmp @${TMP}`;
+  one("A", cellsA, (i, j) => Av(n, i, j)); sym("×"); one("B", cellsB, Bv); sym("="); one("C", cellsC, null);
 }
-const tmpBox = document.getElementById("tmpbox");
+
+/* ================= scratchpad ================= */
+const scratchEl = document.getElementById("scratch");
+let scratchCells = {};                                  // address -> element
+function buildScratch() {
+  scratchEl.replaceChildren();
+  scratchCells = {};
+  for (const g of P.scratch) {
+    const w = document.createElement("div"); w.className = "sgroup";
+    const nm = document.createElement("div"); nm.className = "nm"; nm.textContent = g.name; w.appendChild(nm);
+    const grid = document.createElement("div"); grid.className = "sgrid";
+    grid.style.gridTemplateColumns = `repeat(${g.cols}, auto)`;
+    for (const a of g.addrs) {
+      const c = document.createElement("div"); c.className = "scell"; c.textContent = "·";
+      grid.appendChild(c); scratchCells[a] = c;
+    }
+    w.appendChild(grid); scratchEl.appendChild(w);
+  }
+}
 
 /* ================= arena ================= */
 const ns = "http://www.w3.org/2000/svg";
@@ -360,9 +455,9 @@ let cellEl = {}, cellG = {}, wireLayer, PX, PY, RAD, WIREW;
 function buildArena() {
   const host = document.getElementById("arena");
   host.replaceChildren();
-  const MAXY = dist(NCELLS), MAXX = MAXY - 1;
+  const MAXY = dist(P.nCells), MAXX = MAXY - 1;
   const S = Math.round(288 / MAXY);
-  RAD = Math.round(S * 0.33); WIREW = Math.max(3, Math.round(S * 0.09));
+  RAD = Math.max(7, Math.round(S * 0.33)); WIREW = Math.max(3, Math.round(S * 0.09));
   const padL = S * 1.4, padR = S * 1.4, padT = S * 0.7, padB = S * 2.7;
   const W = 2 * MAXX * S + padL + padR, H = MAXY * S + padT + padB;
   PX = (x) => padL + (x + MAXX) * S;
@@ -381,10 +476,10 @@ function buildArena() {
 
   wireLayer = mk("g", {});
   cellEl = {}; cellG = {};
-  const labelAll = NCELLS <= 30;
-  for (let a = 1; a <= NCELLS; a++) {
+  const labelAll = P.nCells <= 30;
+  for (let a = 1; a <= P.nCells; a++) {
     const p = pos(a);
-    cellEl[a] = mk("circle", { cx: PX(p.x), cy: PY(p.y), r: RAD, fill: RCOL[region(a)],
+    cellEl[a] = mk("circle", { cx: PX(p.x), cy: PY(p.y), r: RAD, fill: RCOL[P.region(a)],
                                stroke: "#fff", "stroke-width": 2, opacity: .42 });
     cellG[a] = p;
     if (labelAll)
@@ -393,9 +488,9 @@ function buildArena() {
                    "pointer-events": "none" }).textContent = a;
   }
   if (!labelAll)
-    for (const a of [1, N * N + 1, 2 * N * N + 1, TMP]) {
+    for (const a of P.labelAddrs) {
       const p = pos(a);
-      mk("text", { x: PX(p.x), y: PY(p.y) - RAD - 6, "text-anchor": "middle", "font-size": S * 0.26,
+      mk("text", { x: PX(p.x), y: PY(p.y) - RAD - 5, "text-anchor": "middle", "font-size": S * 0.27,
                    fill: "var(--ink-soft)", "font-family": "var(--mono)" }).textContent = a;
     }
 
@@ -406,10 +501,8 @@ function buildArena() {
   mk("circle", { cx: PX(0), cy: PY(0), r: RAD * 0.6, fill: "#2b2f3a", stroke: "#fff", "stroke-width": 2.5 });
 
   document.getElementById("legend").innerHTML =
-    [["A", "rA", `1–${N * N}`], ["B", "rB", `${N * N + 1}–${2 * N * N}`],
-     ["C", "rC", `${2 * N * N + 1}–${3 * N * N}`], ["tmp", "rT", `${TMP}`]]
-      .map(([nm, v, r]) => `<span><i style="background:var(--${v})"></i>${nm} ${r}</span>`)
-      .join("") + `<span>dashed = write (free)</span>`;
+    P.legend.map(([nm, v, r]) => `<span><i style="background:var(--${v})"></i>${nm} ${r}</span>`).join("") +
+    `<span>dashed = write (free)</span>`;
 }
 
 function drawWire(a, color, dur) {
@@ -428,15 +521,15 @@ function drawWire(a, color, dur) {
 }
 
 /* ================= breakdown ================= */
-const BARS = [["A", "A", "var(--rA)"], ["B", "B", "var(--rB)"], ["C", "C", "var(--rC)"],
-              ["T", "tmp", "var(--rT)"], ["X", "result", "var(--rX)"]];
-const barsEl = document.getElementById("bars"), fills = {}, vals = {};
-for (const [key, label, col] of BARS) {
-  const k = document.createElement("div"); k.className = "k"; k.textContent = label;
+const BARS = [["A", "var(--rA)"], ["B", "var(--rB)"], ["C", "var(--rC)"],
+              ["S", "var(--rS)"], ["X", "var(--rX)"]];
+const barsEl = document.getElementById("bars"), fills = {}, vals = {}, keys = {};
+for (const [key, col] of BARS) {
+  const k = document.createElement("div"); k.className = "k";
   const t = document.createElement("div"); t.className = "track";
   const f = document.createElement("div"); f.className = "fill"; f.style.background = col; t.appendChild(f);
   const v = document.createElement("div"); v.className = "v"; v.textContent = "0";
-  barsEl.append(k, t, v); fills[key] = f; vals[key] = v;
+  barsEl.append(k, t, v); fills[key] = f; vals[key] = v; keys[key] = k;
 }
 
 /* ================= render ================= */
@@ -451,60 +544,70 @@ function heatFill(a, st, max) {
   const c0 = [247, 241, 232], c1 = [179, 64, 10], m = Math.pow(v, .42);
   return `rgb(${c0.map((c, n) => Math.round(c + (c1[n] - c) * m)).join(",")})`;
 }
+const MATS = () => ({ A: cellsA, B: cellsB, C: cellsC });
 
 function render() {
   const st = simulate(cur);
   const e = cur > 0 ? EV[cur - 1] : null;
   const inc = e ? dist(e.addr) : 0;
 
+  /* ---- arena ---- */
   const maxRead = Math.max(1, ...Object.values(st.readCost));
   legendEl.hidden = heat; heatLegendEl.hidden = !heat;
   if (heat) {
-    let top = 1, topA = TMP;
+    let top = 1, topA = 1;
     for (const a in st.readCost) if (st.readCost[a] > top) { top = st.readCost[a]; topA = +a; }
     heatLegendEl.textContent = `fill = cumulative access cost · hottest ${top} @${topA}`;
   }
-  for (let a = 1; a <= NCELLS; a++) {
+  for (let a = 1; a <= P.nCells; a++) {
     const c = cellEl[a], on = e && e.addr === a;
     const isDest = e && e.write && e.dest === a && !on;
-    c.setAttribute("fill", heat ? heatFill(a, st, maxRead) : RCOL[region(a)]);
+    c.setAttribute("fill", heat ? heatFill(a, st, maxRead) : RCOL[P.region(a)]);
     c.setAttribute("opacity", heat ? 1 : (on ? 1 : (st.readCost[a] ? .55 : .32)));
     c.setAttribute("r", on ? RAD * 1.19 : RAD);
-    c.setAttribute("stroke", on ? RCOL[region(a)] : (isDest ? "var(--ink-soft)" : "#fff"));
+    c.setAttribute("stroke", on ? RCOL[P.region(a)] : (isDest ? "var(--ink-soft)" : "#fff"));
     c.setAttribute("stroke-width", 2 + (on ? 1 : 0));
     c.setAttribute("stroke-dasharray", isDest ? "3 3" : "none");
   }
   wireLayer.replaceChildren();
-  if (e) drawWire(e.addr, RCOL[region(e.addr)], playing ? stepMs : 200);
+  if (e) drawWire(e.addr, RCOL[P.region(e.addr)], playing ? stepMs : 200);
 
+  /* ---- matrices ---- */
+  const inBlock = (v, b) => P.T && v >= b * P.T && v < (b + 1) * P.T;
   for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
     const idx = i * N + j;
     cellsA[idx].className = "cellv"; cellsB[idx].className = "cellv"; cellsC[idx].className = "cellv";
-    if (e && e.op !== "exit") { if (i === e.i) cellsA[idx].classList.add("band"); if (j === e.j) cellsB[idx].classList.add("band"); }
-    const v = st.mem[C_at(i, j)];
+    if (e && e.op !== "exit") {
+      if (P.tiled) {                                   // band the tiles in play
+        if (inBlock(i, e.bi) && inBlock(j, e.bk)) cellsA[idx].classList.add("band");
+        if (inBlock(i, e.bk) && inBlock(j, e.bj)) cellsB[idx].classList.add("band");
+        if (inBlock(i, e.bi) && inBlock(j, e.bj)) cellsC[idx].classList.add("band");
+      } else {
+        if (i === e.i) cellsA[idx].classList.add("band");
+        if (j === e.j) cellsB[idx].classList.add("band");
+      }
+    }
+    const v = st.mem[P.cAddr(i, j)];
     cellsC[idx].textContent = v === undefined ? "·" : v;
     if (v === undefined) cellsC[idx].classList.add("empty");
-    else if (cur >= CYC_PER_CELL * (idx + 1)) cellsC[idx].classList.add("done");
+    else if (DONE_AT[idx] && cur >= DONE_AT[idx]) cellsC[idx].classList.add("done");
   }
   if (e) {
-    const mark = (arr, at, cls) => arr[at].classList.add(...cls);
-    if (e.op === "mul") {
-      if (e.slot === 0) mark(cellsA, e.i * N + e.k, ["hot", "hotA"]);
-      else {
-        mark(cellsB, e.k * N + e.j, ["hot", "hotB"]);
-        if (e.dest !== TMP) mark(cellsC, e.i * N + e.j, ["target"]);
-      }
-    } else if (e.op === "add") {
-      mark(cellsC, e.i * N + e.j, e.slot === 0 ? ["hot", "hotC"] : ["target"]);
-    } else {
-      mark(cellsC, e.i * N + e.j, ["hot", "hotC"]);
-    }
+    const put = (c, cls) => { if (c) MATS()[c.m][c.i * N + c.j].classList.add(...cls); };
+    // the address read this clock; a scratch slot shows the element it holds as an outline
+    if (e.cell) put(e.cell, e.cell.mirror ? ["mirror" + e.cell.m] : ["hot", "hot" + e.cell.m]);
+    if (e.write && e.wcell) put(e.wcell, ["target"]);
   }
-  const tv = st.mem[TMP];
-  tmpBox.textContent = tv === undefined ? "·" : tv;
-  tmpBox.className = "box" + (e && e.addr === TMP ? " hot"
-                     : (e && e.write && e.dest === TMP ? " target" : ""));
 
+  /* ---- scratchpad ---- */
+  for (const a in scratchCells) {
+    const c = scratchCells[a], v = st.mem[a];
+    c.textContent = v === undefined ? "·" : v;
+    c.className = "scell" + (v === undefined ? " empty" : "")
+                + (e && e.addr === +a ? " hot" : (e && e.write && e.dest === +a ? " target" : ""));
+  }
+
+  /* ---- readouts ---- */
   costEl.textContent = st.cost.toLocaleString("en-US");
   for (const [key] of BARS) {
     fills[key].style.width = (100 * Math.min(1, st.by[key] / BAR_MAX)) + "%";
@@ -516,46 +619,60 @@ function render() {
   if (e) {
     let head;
     if (e.op === "exit") head = `<span class="op">exit</span> <span class="now">${e.s1}</span>`;
+    else if (e.op === "copy") head = `<span class="op">copy</span> ${e.dest},<span class="now">${e.s1}</span>`;
     else {
       const o1 = e.slot === 0 ? `<span class="now">${e.s1}</span>` : `<span class="dim">${e.s1}</span>`;
       const o2 = e.slot === 1 ? `<span class="now">${e.s2}</span>` : `<span class="dim">${e.s2}</span>`;
       head = `<span class="op">${e.op}</span> ${e.dest},${o1},${o2}`;
     }
     const tag = e.op === "exit" ? `result C[${e.i},${e.j}]`
-              : (e.write ? `write ${e.dest} (free)` : `cycle 1 of 2`);
+              : (e.op === "copy" ? `write ${e.dest} (free)`
+              : (e.write ? `write ${e.dest} (free)` : `cycle 1 of 2`));
     irEl.innerHTML = `${head} &nbsp;<span class="dim">d(${e.addr})=${inc}</span> &nbsp;<span class="plus">+${inc}</span> &nbsp;<span class="dim">${tag}</span>`;
     deltaEl.textContent = `+${inc}`; deltaEl.classList.add("show");
   } else {
-    irEl.innerHTML = `<span class="dim">inputs placed free · A@1–${N * N}, B@${N * N + 1}–${2 * N * N} · one access per clock · press Play</span>`;
+    irEl.innerHTML = `<span class="dim">inputs placed free · one access per clock · press Play</span>`;
     deltaEl.classList.remove("show");
   }
   verdictEl.classList.toggle("show", cur === NEV);
 }
 
-/* ================= size switch ================= */
-function setSize(n) {
-  const fin = buildProgram(n);
-  buildMatrices();
-  buildArena();
-  rangeEl.max = NEV;
-  cur = 0; playing = false;
+/* ================= program switch ================= */
+function setProgram(prog) {
+  P = prog; EV = P.EV; NEV = EV.length; N = P.n;
+  EXPECT = [];
+  for (let i = 0; i < N; i++) {
+    const r = [];
+    for (let j = 0; j < N; j++) { let s = 0; for (let k = 0; k < N; k++) s += Av(N, i, k) * Bv(k, j); r.push(s); }
+    EXPECT.push(r);
+  }
+  DONE_AT = new Array(N * N).fill(0);
+  EV.forEach((e, idx) => { if (e.write && e.wcell && e.wcell.m === "C" && e.dest === P.cAddr(e.wcell.i, e.wcell.j)) DONE_AT[e.wcell.i * N + e.wcell.j] = idx + 1; });
+
+  const fin = simulate(NEV);
+  BAR_MAX = Math.max(...Object.values(fin.by)) * 1.03;
+  buildMatrices(); buildScratch(); buildArena();
+  keys.A.textContent = "A"; keys.B.textContent = "B"; keys.C.textContent = "C";
+  keys.S.textContent = P.scratchLabel; keys.X.textContent = "result";
+  rangeEl.max = NEV; cur = 0; playing = false;
+
+  const nIns = EV.filter(e => e.op !== "exit" && (e.slot === 0)).length;
+  const nMul = EV.filter(e => e.op === "mul" && e.slot === 0).length;
+  const nAdd = EV.filter(e => e.op === "add" && e.slot === 0).length;
+  const nCopy = EV.filter(e => e.op === "copy").length;
   document.getElementById("facts").innerHTML = [
-    `${N * N * (2 * N - 1)} instructions`,
-    `${N ** 3} <b>mul</b> · ${N * N * (N - 1)} <b>add</b>`,
+    `${nIns} instructions`,
+    `${nMul} <b>mul</b> · ${nAdd} <b>add</b>` + (nCopy ? ` · ${nCopy} <b>copy</b>` : ""),
     `${NEV} cycles`,
     `cost <b>${fin.cost.toLocaleString("en-US")}</b>`,
-  ].concat(N === 4 ? [`best known <b>800</b>`] : [])
-   .map(t => `<span class="fact">${t}</span>`).join("");
-  document.getElementById("laytable").innerHTML = [
-    ["A row-major", 1, N * N], ["B row-major", N * N + 1, 2 * N * N],
-    ["C row-major", 2 * N * N + 1, 3 * N * N], ["tmp", TMP, TMP],
-  ].map(([k, lo, hi]) => {
+  ].map(t => `<span class="fact">${t}</span>`).join("");
+  document.getElementById("laytable").innerHTML = P.layout.map(([k, lo, hi]) => {
     const dl = dist(lo), dh = dist(hi);
     return `<tr><td>${k}</td><td>${lo === hi ? lo : lo + " – " + hi}</td>` +
            `<td>d = ${dl === dh ? dl : dl + " – " + dh}</td></tr>`;
   }).join("");
-  if (!EXPECT.every((r, i) => r.every((v, j) => fin.mem[C_at(i, j)] === v)))
-    console.error("matmul mismatch at n =", n);
+  if (!EXPECT.every((r, i) => r.every((v, j) => fin.mem[P.cAddr(i, j)] === v)))
+    console.error("matmul mismatch:", P.key);
   setPlaying(false);
   render();
 }
@@ -584,11 +701,12 @@ document.getElementById("stepb").onclick = () => { if (cur > 0) cur--; setPlayin
 document.getElementById("reset").onclick = () => { cur = 0; setPlaying(false); render(); };
 rangeEl.oninput = () => { cur = +rangeEl.value; setPlaying(false); render(); };
 
+const PROGRAMS = [makeNaive(2), makeNaive(3), makeNaive(4), makeTiled(4, 2)];
 const sizesEl = document.getElementById("sizes");
-[2, 3, 4].forEach((n) => {
+PROGRAMS.forEach((prog, idx) => {
   const b = document.createElement("button");
-  b.className = "btn" + (n === 4 ? " on" : ""); b.textContent = `${n}×${n}`;
-  b.onclick = () => { [...sizesEl.children].forEach(c => c.classList.remove("on")); b.classList.add("on"); setSize(n); };
+  b.className = "btn" + (idx === 2 ? " on" : ""); b.textContent = prog.label;
+  b.onclick = () => { [...sizesEl.children].forEach(c => c.classList.remove("on")); b.classList.add("on"); setProgram(prog); };
   sizesEl.appendChild(b);
 });
 const SPEEDS = [["0.5×", 180], ["1×", 90], ["3×", 28], ["max", 5]];
@@ -609,7 +727,7 @@ document.addEventListener("keydown", (ev) => {
   else if (ev.key === "r") document.getElementById("reset").click();
 });
 
-setSize(4);
+setProgram(PROGRAMS[2]);
 
 /* ================================================================
    Algorithm comparison — generic IR simulation + access plots
@@ -631,8 +749,7 @@ function baselineIR(n) {
   L.push(outs.join(","));
   return L.join("\n");
 }
-function tiledIR() {
-  const n = 16, T = 4;
+function tiledIR(n, T) {
   const sA = (a, b) => 1 + a * T + b, sB = (a, b) => 1 + T * T + a * T + b, sC = (a, b) => 1 + 2 * T * T + a * T + b;
   const t = 3 * T * T + 1, Ab = t + 1, Bb = Ab + n * n, Cb = Bb + n * n;
   const A = (i, j) => Ab + i * n + j, B = (i, j) => Bb + i * n + j, C = (i, j) => Cb + i * n + j;
@@ -657,7 +774,6 @@ function tiledIR() {
   return L.join("\n");
 }
 
-// Flatten an IR into its ordered access stream (one entry per priced read).
 function accesses(ir) {
   const lines = ir.replace(/;/g, "\n").split("\n").map(s => s.trim()).filter(Boolean);
   const out = [], last = lines[lines.length - 1];
@@ -676,9 +792,10 @@ const ALGOS = [
   { key: "naive2", name: "Naive 2×2", ir: () => baselineIR(2), cost: 84 },
   { key: "naive3", name: "Naive 3×3", ir: () => baselineIR(3), cost: 429 },
   { key: "naive4", name: "Naive 4×4", ir: () => baselineIR(4), cost: 1316 },
+  { key: "tiled4", name: "Tiled 4×4", ir: () => tiledIR(4, 2), cost: 1296 },
   { key: "outer4", name: "Outer product 4×4", ir: () => OUTER_4X4_IR, cost: 800 },
   { key: "naive16", name: "Naive 16×16", ir: () => baselineIR(16), cost: 340704 },
-  { key: "tiled16", name: "Tiled 16×16", ir: () => tiledIR(), cost: 133783 },
+  { key: "tiled16", name: "Tiled 16×16", ir: () => tiledIR(16, 4), cost: 133783 },
 ];
 const cache = {};
 function analyze(a) {
