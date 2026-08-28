@@ -107,6 +107,76 @@
       "evidence": "preliminary peak-throughput/assumed-power estimate; not measured"
     }
   ],
+  "blackwell_b200_precision_estimates": [
+    {
+      "precision": "NVFP4",
+      "stored_bits_per_input_element": 4,
+      "dense_throughput_TOPS": 9000,
+      "power_W": 1000,
+      "ideal_time_s": 0.0001221679586417778,
+      "energy_J": 0.1221679586417778,
+      "minimum_input_bytes_excluding_scales_and_output": 67108864,
+      "semantics": "block-scaled four-bit inputs; conversion, scale metadata, and higher-precision output are omitted"
+    },
+    {
+      "precision": "INT8",
+      "stored_bits_per_input_element": 8,
+      "dense_throughput_TOPS": 4500,
+      "power_W": 1000,
+      "ideal_time_s": 0.0002443359172835556,
+      "energy_J": 0.2443359172835556,
+      "minimum_logical_bytes_with_INT32_output": 402653184
+    },
+    {
+      "precision": "TF32",
+      "stored_bits_per_input_element": 32,
+      "dense_throughput_TOPS": 1100,
+      "power_W": 1000,
+      "ideal_time_s": 0.0009995560252509091,
+      "energy_J": 0.9995560252509091,
+      "minimum_logical_bytes_with_FP32_output": 805306368,
+      "semantics": "FP32 storage and accumulation with reduced-precision TF32 multiplication"
+    },
+    {
+      "precision": "FP32",
+      "stored_bits_per_input_element": 32,
+      "dense_throughput_TOPS": 75,
+      "power_W": 1000,
+      "ideal_time_s": 0.014660155037013333,
+      "energy_J": 14.660155037013332,
+      "minimum_logical_bytes_with_FP32_output": 805306368,
+      "semantics": "literal four-byte FP32 path"
+    }
+  ],
+  "blackwell_b300_precision_estimates": [
+    {
+      "precision": "NVFP4",
+      "stored_bits_per_input_element": 4,
+      "dense_throughput_TOPS": 14000,
+      "power_W": 1100,
+      "ideal_time_s": 0.00007853654484114286,
+      "energy_J": 0.08639019932525714,
+      "qualification": "individual-GPU table rounds dense throughput to 14 PFLOPS; 8-GPU aggregate implies 13.5 PFLOPS per GPU and 0.0895898363373 J"
+    },
+    {
+      "precision": "TF32",
+      "stored_bits_per_input_element": 32,
+      "dense_throughput_TOPS": 1100,
+      "power_W": 1100,
+      "ideal_time_s": 0.0009995560252509091,
+      "energy_J": 1.0995116277760002,
+      "semantics": "FP32 storage and accumulation with reduced-precision TF32 multiplication"
+    },
+    {
+      "precision": "FP32",
+      "stored_bits_per_input_element": 32,
+      "dense_throughput_TOPS": 75,
+      "power_W": 1100,
+      "ideal_time_s": 0.014660155037013333,
+      "energy_J": 16.126170540714664,
+      "semantics": "literal four-byte FP32 path"
+    }
+  ],
   "formula_for_peak_power_rows": "energy_J = conventional_operations / (dense_TOPS * 1e12) * power_W",
   "semantic_warning": "The repository verifier uses unbounded Python integers; the score is value-independent, but the INT8 table is not semantic equivalence."
 }

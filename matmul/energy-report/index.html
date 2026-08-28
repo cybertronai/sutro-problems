@@ -380,6 +380,34 @@
         <p>The Rubin result is intentionally counterintuitive. The same preliminary product table emphasizes 50 PFLOPS NVFP4 and 17.5 PFLOPS FP8, but those formats are not interchangeable with exact INT8×INT8→INT32 work. A 72-GPU rack cross-check—18 dense INT8 POPS at 136 kW provisioned power—gives 8.31 J per GEMM when amortized across 72 simultaneous GEMMs. It is consistent with, but does not measure, the 7.92 J per-GPU estimate.</p>
         <p class="warning"><strong>SKU names matter:</strong> NVIDIA’s current Blackwell Ultra B300 table lists only 153.5 dense INT8 TOPS and up to 1,100 W, which implies <strong>7.88 J</strong>. That is radically different from B200’s 0.244 J and reflects the published legacy-INT8 specification—not a general claim that B300 or Rubin is less efficient on its target FP4/FP8 workloads.</p>
 
+        <h3>Four bytes and four bits are different Blackwell paths</h3>
+        <p>Taking “four byte” literally means <strong>FP32: four bytes per matrix element</strong>. NVIDIA publishes 75 TFLOP/s FP32 for one HGX B200 GPU. The same FP32 storage can enter the much faster <a href="https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/precision-control.html">TF32 Tensor Core path</a>, but TF32 reduces multiply precision. <a href="https://docs.nvidia.com/deeplearning/transformer-engine/user-guide/features/low_precision_training/nvfp4/nvfp4.html">NVFP4</a> is the other common reading: <strong>four bits, or half a byte, plus block-scale metadata</strong>.</p>
+        <div class="two-up">
+          <article class="panel dark">
+            <p class="eyebrow">Literal 4-byte FP32</p>
+            <span class="callout-number">14.66 J</span>
+            <p>75 TFLOP/s at the 1,000 W maximum TDP gives 14.660 ms and 14.660 J—123× the Sutro movement-only term.</p>
+          </article>
+          <article class="panel">
+            <p class="eyebrow">If “4-bit” was intended</p>
+            <span class="callout-number">0.122 J</span>
+            <p>9 dense PFLOP/s NVFP4 at the same 1,000 W gives 0.1222 ms and 0.1222 J. This has different numerical semantics and excludes quantization, scaling, and conversion work.</p>
+          </article>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <caption>One B200, one full 8192³ GEMM: precision sensitivity from published dense rates</caption>
+            <thead><tr><th scope="col">Stored input / math path</th><th scope="col">Published dense rate</th><th scope="col">Minimum logical data</th><th scope="col" class="num">Ideal time</th><th scope="col" class="num">Peak/TDP energy</th></tr></thead>
+            <tbody>
+              <tr><td>NVFP4 · 4-bit block-scaled</td><td>9 PFLOP/s Tensor Cores</td><td>64 MiB inputs, plus scales and higher-precision output</td><td class="num">0.1222 ms</td><td class="num">0.1222 J</td></tr>
+              <tr><td>INT8 · 1 byte</td><td>4.5 POPS Tensor Cores</td><td>384 MiB with INT32 output</td><td class="num">0.2443 ms</td><td class="num">0.2443 J</td></tr>
+              <tr><td>TF32 math · FP32 storage</td><td>1.1 PFLOP/s Tensor Cores</td><td>768 MiB for FP32 A, B, and C</td><td class="num">0.9996 ms</td><td class="num">0.9996 J</td></tr>
+              <tr><td><strong>FP32 · literal 4 bytes</strong></td><td>75 TFLOP/s FP32</td><td>768 MiB for FP32 A, B, and C</td><td class="num">14.660 ms</td><td class="num"><strong>14.660 J</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="small">All four B200 rows divide the same 1.0995 trillion conventional operations by NVIDIA’s published dense rate and multiply by the 1,000 W maximum TDP. They are matched roofline-style estimates, not measured per-precision power. FP32/TF32 traffic assumes <code>C=A·B</code> without reading a prior C matrix. For B300’s 1,100 W maximum TDP, the corresponding strict-FP32 and TF32 estimates are 16.13 J and 1.10 J; its per-GPU dense-FP4 figure gives 0.086 J.</p>
+
         <h3>8K comparison with evidence boundaries</h3>
         <div class="table-wrap">
           <table>
@@ -453,7 +481,7 @@
         <ol class="source-list">
           <li><a href="../matmul.py">Sutro scorer implementation</a> and <a href="../submissions/best_66300.md">66,300 record audit</a>.</li>
           <li><a href="eightk_scaling.py">Reproducible 8K closed-form scorer</a> and the report’s <a href="eightk-audit.json">derivation audit</a>.</li>
-          <li><a href="https://dam-cdn.nvd.orangelogic.com/AssetLink/y441155802qub41q118b2852i557jem5.pdf">NVIDIA B200 Blackwell datasheet</a> and <a href="https://dam-cdn.nvd.orangelogic.com/AssetLink/1k0p832eq8r5ca0u5383ie5o4tp3bst1.pdf">B300 Blackwell Ultra datasheet</a>.</li>
+          <li><a href="https://dam-cdn.nvd.orangelogic.com/AssetLink/y441155802qub41q118b2852i557jem5.pdf">NVIDIA B200 Blackwell datasheet</a>, <a href="https://dam-cdn.nvd.orangelogic.com/AssetLink/1k0p832eq8r5ca0u5383ie5o4tp3bst1.pdf">B300 Blackwell Ultra datasheet</a>, and the <a href="https://www.nvidia.com/en-us/data-center/hgx/">current HGX specification table</a>.</li>
           <li><a href="https://www.nvidia.com/en-us/data-center/vera-rubin-nvl72/">NVIDIA Vera Rubin preliminary specifications</a>, <a href="https://dam-cdn.nvd.orangelogic.com/AssetLink/v5rf2icnf86o26e464tf6djn23r8ibhe.pdf">datasheet</a>, and <a href="https://developer.nvidia.com/blog/?p=121508">rack-power analysis</a>.</li>
           <li><a href="https://users.ece.cmu.edu/~jhoe/distribution/2020/fpt2020.pdf">Exact 8192³ INT8 T4 study</a> (<a href="https://doi.org/10.1109/ICFPT51103.2020.00011">DOI</a>).</li>
           <li><a href="https://arxiv.org/abs/2305.18698">AutoMM measured INT8 efficiency on A100 and VCK190</a>.</li>
