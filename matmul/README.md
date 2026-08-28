@@ -1,6 +1,6 @@
 # Matmul
 
-**Research note:** [One femtojoule per scored grid step — compiler audit and chip-energy comparison](energy-report/)
+**Research note:** [One femtojoule per scored grid step — compiler audit, 8K INT8 extrapolation, and Blackwell/Rubin comparison](energy-report/)
 
 - DeepMind's [AlphaTensor](https://github.com/google-deepmind/alphatensor) discover a better 4x4 matrix multiplication algorithm in terms of FLOPs. 
 - What is the best algorithm when we care about *energy* instead?

@@ -1,0 +1,112 @@
+{
+  "report_date": "2026-08-28",
+  "workload": {
+    "m": 8192,
+    "n": 8192,
+    "k": 8192,
+    "macs": 549755813888,
+    "conventional_operations": 1099511627776,
+    "vendor_counting_convention": "one multiply-accumulate equals two operations",
+    "comparison_contract": "INT8 inputs with INT32 accumulation/output unless a row says otherwise",
+    "input_bytes": 134217728,
+    "int32_output_bytes": 268435456,
+    "minimum_logical_device_traffic_bytes": 402653184
+  },
+  "sutro_model": {
+    "energy_coefficient_J_per_score_unit": 1e-15,
+    "score_unit": "one source operand times one abstract address-grid step",
+    "omitted_terms": [
+      "destination writes",
+      "arithmetic",
+      "memory capacity and physical hierarchy",
+      "HBM transfers",
+      "control and clocking",
+      "leakage and time"
+    ],
+    "schedules": [
+      {
+        "name": "current record cubically scaled lower bound",
+        "score": 8898635366400,
+        "energy_J": 0.0088986353664,
+        "qualification": "not a generated 8K program; assumes fixed average distance"
+      },
+      {
+        "name": "retuned sa_cache",
+        "tile_i": 256,
+        "tile_j": 128,
+        "paid_reads": 2205465706496,
+        "score": 118953083721334,
+        "energy_J": 0.118953083721334,
+        "fJ_per_conventional_operation": 108.187199404105,
+        "movement_only_TOPS_per_W_equivalent": 9.24323769825,
+        "improvement_over_naive": 196.727009216
+      },
+      {
+        "name": "retuned square tiled",
+        "tile": 64,
+        "score": 317312291631114,
+        "energy_J": 0.317312291631114
+      },
+      {
+        "name": "fixed 4x4 tiled",
+        "score": 2136290066409474,
+        "energy_J": 2.136290066409474
+      },
+      {
+        "name": "naive baseline",
+        "score": 23401284397481984,
+        "energy_J": 23.401284397481984
+      }
+    ],
+    "retuned_sa_cache_breakdown_J": {
+      "bulk_A_loads": 0.0234753910,
+      "bulk_B_loads": 0.0214486658,
+      "C_exit": 0.0008678997,
+      "near_ALU_A_stage": 0.0005497558,
+      "B_stage": 0.0045140106,
+      "accumulator_stage": 0.0010993774,
+      "output_tile_stage": 0.0669979834
+    },
+    "endpoint_sensitivity": {
+      "formula": "2.5e-15 * (S + 160*R)",
+      "S": 118953083721334,
+      "R": 2205465706496,
+      "energy_J": 1.179568991901735
+    }
+  },
+  "nvidia_estimates": [
+    {
+      "sku": "B200 Blackwell",
+      "dense_INT8_TOPS": 4500,
+      "power_W": 1000,
+      "power_scope": "maximum configurable TDP",
+      "ideal_time_s": 0.0002443359172835556,
+      "energy_J": 0.2443359172835556,
+      "source": "https://dam-cdn.nvd.orangelogic.com/AssetLink/y441155802qub41q118b2852i557jem5.pdf",
+      "evidence": "peak-throughput/TDP estimate; not measured"
+    },
+    {
+      "sku": "B300 Blackwell Ultra",
+      "dense_INT8_TOPS": 153.5,
+      "power_W": 1100,
+      "power_scope": "maximum configurable TDP",
+      "ideal_time_s": 0.007162942200495114,
+      "energy_J": 7.879236420544625,
+      "source": "https://dam-cdn.nvd.orangelogic.com/AssetLink/1k0p832eq8r5ca0u5383ie5o4tp3bst1.pdf",
+      "evidence": "peak-throughput/TDP estimate; not measured"
+    },
+    {
+      "sku": "Rubin",
+      "dense_INT8_TOPS": 250,
+      "power_W": 1800,
+      "power_scope": "datasheet application-comparison assumption, not formally labeled TDP",
+      "ideal_time_s": 0.004398046511104,
+      "energy_J": 7.916483719987201,
+      "source": "https://www.nvidia.com/en-us/data-center/vera-rubin-nvl72/",
+      "power_source": "https://dam-cdn.nvd.orangelogic.com/AssetLink/v5rf2icnf86o26e464tf6djn23r8ibhe.pdf",
+      "evidence": "preliminary peak-throughput/assumed-power estimate; not measured"
+    }
+  ],
+  "formula_for_peak_power_rows": "energy_J = conventional_operations / (dense_TOPS * 1e12) * power_W",
+  "semantic_warning": "The repository verifier uses unbounded Python integers; the score is value-independent, but the INT8 table is not semantic equivalence."
+}

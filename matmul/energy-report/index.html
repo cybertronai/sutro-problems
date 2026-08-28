@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>One femtojoule per step — Sutro matmul energy report</title>
-  <meta name="description" content="A unit-audited compiler report and hardware literature comparison for the Sutro 16×16 matrix-multiplication distance score.">
+  <meta name="description" content="A unit-audited compiler report, an 8192³ INT8 extrapolation, and hardware estimates including NVIDIA Blackwell and Rubin.">
   <link rel="canonical" href="https://cybertronai.github.io/sutro-problems/matmul/energy-report/">
   <meta property="og:type" content="article">
   <meta property="og:title" content="One femtojoule per scored grid step">
@@ -156,7 +156,7 @@
     <header class="site-head">
       <div class="brand">Sutro Problems · research note</div>
       <nav aria-label="Report sections">
-        <a href="#conversion">Conversion</a><a href="#compiler">Compiler audit</a><a href="#hardware">Hardware</a><a href="#model">Model extension</a><a href="#sources">Sources</a>
+        <a href="#conversion">Conversion</a><a href="#compiler">Compiler audit</a><a href="#hardware">Hardware</a><a href="#eightk">8K extrapolation</a><a href="#model">Model extension</a><a href="#sources">Sources</a>
       </nav>
       <div class="tag">28 Aug 2026</div>
     </header>
@@ -333,8 +333,83 @@
         <details><summary>How to read the evidence badges</summary><p><span class="badge measured">measured</span> means workload power or energy was reported, but its scope can still be a macro, accelerator, device, or CPU package. <span class="badge derived">peak / power</span> divides a throughput figure by a TDP, TBP, nominal, or system-power figure; it is not measured energy. <span class="badge modeled">modeled</span> denotes post-layout or a deliberately chosen coefficient. None of these scopes are interchangeable.</p></details>
       </section>
 
+      <section id="eightk">
+        <p class="eyebrow">04 · 8K INT8 extrapolation</p>
+        <h2>A scalable Sutro schedule lands at 119 mJ. Blackwell B200 estimates 244 mJ.</h2>
+        <p class="lead">For a full square <code>C[8192×8192] = A[8192×8192] · B[8192×8192]</code>, the workload is <strong>549,755,813,888 MACs</strong>, or <strong>1,099,511,627,776 conventional operations</strong>. The numbers below assume INT8 inputs and INT32 accumulation/output for the hardware comparison.</p>
+        <div class="metrics" role="list" aria-label="8K INT8 headline estimates">
+          <div class="metric" role="listitem"><strong>0.119 J</strong><span>retuned scalable Sutro schedule at 1 fJ per scored grid-step; movement only</span></div>
+          <div class="metric" role="listitem"><strong>0.244 J</strong><span>NVIDIA B200: 4.5 dense POPS at 1,000 W; peak/TDP estimate</span></div>
+          <div class="metric" role="listitem"><strong>7.92 J</strong><span>NVIDIA Rubin: preliminary 250 dense TOPS at a stated 1,800 W/GPU assumption</span></div>
+        </div>
+        <p class="warning"><strong>“8K model” is ambiguous.</strong> This section computes a synthetic full 8192³ GEMM. One-token autoregressive decode usually multiplies a 1×8192 activation by an 8192×8192 weight matrix—<strong>8,192× less arithmetic</strong>—and is much more likely to be memory-bound, so its energy cannot be obtained by simply dividing these joules by 8,192.</p>
+
+        <h3>How the distance score scales</h3>
+        <p>The checked-in 66,300-point record is a final physical-address program specialized to 16×16; it has no generator that can be rerun at 8K. Cubically scaling 66,300 gives 8.90 mJ, but freezes the average distance while the live memory footprint grows. The defensible projection instead generalizes the repository’s <code>sa_cache</code> schedule and retunes its tile sizes to <strong>256×128</strong>.</p>
+        <div class="table-wrap">
+          <table>
+            <caption>Sutro 8192³ score extrapolations at exactly 1 fJ per score unit</caption>
+            <thead><tr><th scope="col">Schedule</th><th scope="col">Scaling treatment</th><th scope="col" class="num">Score units</th><th scope="col" class="num">Movement term</th><th scope="col" class="num">vs. naive</th></tr></thead>
+            <tbody>
+              <tr><td>66,300 record × n³</td><td>Fixed-distance local-kernel lower bound; not a generated 8K program</td><td class="num">8,898,635,366,400</td><td class="num">0.008899 J</td><td class="num">2,630× lower</td></tr>
+              <tr class="best-row"><td>Retuned <code>sa_cache</code></td><td>Exact analytic score, 256×128 tiles; formula reproduces the checked-in 16×16 program</td><td class="num">118,953,083,721,334</td><td class="num">0.118953 J</td><td class="num">196.7× lower</td></tr>
+              <tr><td>Retuned square tiles</td><td>64×64 tiles</td><td class="num">317,312,291,631,114</td><td class="num">0.317312 J</td><td class="num">73.7× lower</td></tr>
+              <tr><td>Fixed 4×4 tiles</td><td>Literal generalization of the small tiled schedule</td><td class="num">2,136,290,066,409,474</td><td class="num">2.13629 J</td><td class="num">11.0× lower</td></tr>
+              <tr><td>Naive baseline</td><td>Exact closed form under the scorer</td><td class="num">23,401,284,397,481,984</td><td class="num">23.4013 J</td><td class="num">1×</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The naive placement grows as Θ(n<sup>4</sup>). A size-retuned locality schedule is approximately Θ(n<sup>3.5</sup>) because the scorer’s <code>ceil(sqrt(address))</code> distance grows with the footprint. The selected schedule performs 2.205 trillion paid reads and averages 53.93 score units per read; its 0.118953 J is <strong>108.2 fJ per conventional operation</strong>, or 9.24 TOPS/W-equivalent for movement alone.</p>
+        <details><summary>Exact 0.118953 J schedule breakdown</summary><p>Bulk A loads: 0.023475 J; bulk B loads: 0.021449 J; output exit: 0.000868 J; near-ALU A staging: 0.000550 J; B staging: 0.004514 J; accumulator staging: 0.001099 J; output-tile staging: 0.066998 J. Total: 0.118953083721334 J.</p></details>
+
+        <h3>Blackwell and Rubin: what the official INT8 tables imply</h3>
+        <div class="two-up">
+          <article class="panel dark">
+            <p class="eyebrow">Blackwell · B200</p>
+            <span class="callout-number">0.244 J</span>
+            <p>NVIDIA’s formal B200 datasheet reports 9 sparse INT8 POPS and says dense is half: <strong>4.5 dense POPS</strong>. At the maximum 1,000 W TDP, ideal runtime is 0.244 ms and peak/TDP energy is 0.244 J—2.05× the Sutro movement-only term.</p>
+            <p class="small">Roofline-style estimate, not measured kernel energy or a strict bound. Structured-sparse 9 POPS is deliberately not used.</p>
+          </article>
+          <article class="panel teal">
+            <p class="eyebrow">Rubin · preliminary</p>
+            <span class="callout-number">7.92 J</span>
+            <p>NVIDIA currently lists <strong>250 dense INT8 TOPS</strong> per Rubin GPU. Combining that with the datasheet’s 1,800 W/GPU application-model assumption gives 4.398 ms and 7.916 J—66.6× the Sutro movement-only term.</p>
+            <p class="small">The 1,800 W figure is an application-comparison assumption, not a formally labeled TDP. Rubin specifications are preliminary.</p>
+          </article>
+        </div>
+        <p>The Rubin result is intentionally counterintuitive. The same preliminary product table emphasizes 50 PFLOPS NVFP4 and 17.5 PFLOPS FP8, but those formats are not interchangeable with exact INT8×INT8→INT32 work. A 72-GPU rack cross-check—18 dense INT8 POPS at 136 kW provisioned power—gives 8.31 J per GEMM when amortized across 72 simultaneous GEMMs. It is consistent with, but does not measure, the 7.92 J per-GPU estimate.</p>
+        <p class="warning"><strong>SKU names matter:</strong> NVIDIA’s current Blackwell Ultra B300 table lists only 153.5 dense INT8 TOPS and up to 1,100 W, which implies <strong>7.88 J</strong>. That is radically different from B200’s 0.244 J and reflects the published legacy-INT8 specification—not a general claim that B300 or Rubin is less efficient on its target FP4/FP8 workloads.</p>
+
+        <h3>8K comparison with evidence boundaries</h3>
+        <div class="table-wrap">
+          <table>
+            <caption>One full 8192³ dense INT8 GEMM (1.0995 trillion conventional operations)</caption>
+            <thead><tr><th scope="col">Hardware or model</th><th scope="col">Published or modeled basis</th><th scope="col">Evidence</th><th scope="col" class="num">Ideal / derived time</th><th scope="col" class="num">Energy</th></tr></thead>
+            <tbody>
+              <tr class="best-row"><td>Sutro retuned <code>sa_cache</code></td><td>Exact score at 1 fJ per operand-grid-step</td><td><span class="badge modeled">movement only</span></td><td class="num">not modeled</td><td class="num">0.11895 J</td></tr>
+              <tr><td><a href="https://dam-cdn.nvd.orangelogic.com/AssetLink/y441155802qub41q118b2852i557jem5.pdf">NVIDIA B200 Blackwell</a></td><td>4.5 dense POPS; 1,000 W maximum TDP</td><td><span class="badge derived">peak / TDP</span></td><td class="num">0.244 ms</td><td class="num">0.244 J</td></tr>
+              <tr><td><a href="https://www.amd.com/content/dam/amd/en/documents/instinct-tech-docs/data-sheets/amd-instinct-mi300x-data-sheet.pdf">AMD MI300X</a></td><td>2,614.9 dense INT8 TOPS; 750 W maximum TBP</td><td><span class="badge derived">peak / TBP</span></td><td class="num">0.420 ms</td><td class="num">0.315 J</td></tr>
+              <tr><td><a href="https://www.nvidia.com/en-us/data-center/h100/">NVIDIA H100 SXM</a></td><td>1,979 dense INT8 TOPS; 700 W maximum TDP</td><td><span class="badge derived">peak / TDP</span></td><td class="num">0.556 ms</td><td class="num">0.389 J</td></tr>
+              <tr><td><a href="https://arxiv.org/abs/1704.04760">Google TPUv1</a></td><td>92 dense INT8 TOPS; 40 W typical incremental busy power</td><td><span class="badge derived">peak / busy W</span></td><td class="num">11.95 ms</td><td class="num">0.478 J</td></tr>
+              <tr><td><a href="https://doi.org/10.1109/MM.2020.2975764">Tesla FSD, one chip</a></td><td>72 INT8 TOPS; 40 W upper TDP; includes 96×96 edge padding</td><td><span class="badge derived">peak / TDP</span></td><td class="num">15.51 ms</td><td class="num">≈0.620 J</td></tr>
+              <tr><td><a href="https://users.ece.cmu.edu/~jhoe/distribution/2020/fpt2020.pdf">NVIDIA T4, pre-transformed layout</a></td><td>Exact 8192³ cuBLASLt graph-read ≈95 TOPS at measured 70 W card power</td><td><span class="badge measured">exact-size proxy</span></td><td class="num">≈11.57 ms</td><td class="num">≈0.81 J</td></tr>
+              <tr><td>Sutro endpoint sensitivity</td><td><code>2.5 fJ × (S + 160R)</code> on the retuned schedule</td><td><span class="badge modeled">movement + reads</span></td><td class="num">not modeled</td><td class="num">1.180 J</td></tr>
+              <tr><td><a href="https://users.ece.cmu.edu/~jhoe/distribution/2020/fpt2020.pdf">NVIDIA T4, standard layout</a></td><td>Exact 8192³ including required device-side layout transformation; ≈55 TOPS at 70 W</td><td><span class="badge measured">exact-size proxy</span></td><td class="num">≈19.99 ms</td><td class="num">≈1.40 J</td></tr>
+              <tr><td><a href="https://arxiv.org/abs/2305.18698">AMD VCK190 AutoMM</a></td><td>Measured repeated 16K INT8 energy/op applied to 8K work</td><td><span class="badge measured">size-scaled proxy</span></td><td class="num">39.06 ms</td><td class="num">2.38 J</td></tr>
+              <tr><td><a href="https://arxiv.org/abs/2305.18698">NVIDIA A100 cuBLAS</a></td><td>Measured repeated 16K INT8: 67.2 TOPS at 248.08 W; same energy/op applied to 8K</td><td><span class="badge measured">size-scaled proxy</span></td><td class="num">16.36 ms</td><td class="num">4.06 J</td></tr>
+              <tr><td><a href="https://dam-cdn.nvd.orangelogic.com/AssetLink/1k0p832eq8r5ca0u5383ie5o4tp3bst1.pdf">NVIDIA B300 Blackwell Ultra</a></td><td>153.5 dense INT8 TOPS; 1,100 W maximum TDP</td><td><span class="badge derived">peak / TDP</span></td><td class="num">7.16 ms</td><td class="num">7.88 J</td></tr>
+              <tr><td><a href="https://www.nvidia.com/en-us/data-center/vera-rubin-nvl72/">NVIDIA Rubin</a></td><td>250 dense INT8 TOPS; 1,800 W/GPU application-model assumption</td><td><span class="badge derived">preliminary</span></td><td class="num">4.40 ms</td><td class="num">7.92 J</td></tr>
+              <tr><td>Sutro naive baseline</td><td>Exact closed-form scorer extrapolation</td><td><span class="badge modeled">movement only</span></td><td class="num">not modeled</td><td class="num">23.40 J</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>Only the T4 rows use an exact 8192³ published run paired with measured card power—and even those joules are derived from a graph-read throughput. No primary source located reports integrated exact-8K INT8 kernel joules for B200, B300, Rubin, H100, MI300X, TPUv1, or Tesla FSD. Their rows are roofline-style estimates, not measurements.</p>
+        <p>Two INT8 inputs occupy 128 MiB and an INT32 output another 256 MiB, for at least <strong>384 MiB of logical device traffic</strong>. Sutro’s widthless, unbounded 2-D memory charges none of the HBM transfers, writes, arithmetic, clocks, leakage, or dispatch. Also, the repository verifier currently uses unbounded Python integers, so this hardware table is a scale comparison rather than semantic equivalence.</p>
+        <p class="small">Reproducibility: download the <a href="eightk-comparison-data.csv">8K comparison CSV</a>, inspect the <a href="eightk-audit.json">machine-readable derivations</a>, or run the standalone <a href="eightk_scaling.py">scaling script</a>.</p>
+      </section>
+
       <section id="model">
-        <p class="eyebrow">04 · Calibration and extension</p>
+        <p class="eyebrow">05 · Calibration and extension</p>
         <h2>Distance optimization survives. Absolute energy needs more terms.</h2>
         <p class="lead">The 1 fJ coefficient is best treated as a transparent hypothesis. It answers “what if link movement costs 1 fJ per operand-grid-step?” It does not calibrate SRAM activation, arithmetic, or the physical length and width of a wire.</p>
         <h3>Sensitivity to the earlier endpoint-offset idea</h3>
@@ -372,11 +447,16 @@
       </section>
 
       <section id="sources">
-        <p class="eyebrow">05 · Sources and method</p>
+        <p class="eyebrow">06 · Sources and method</p>
         <h2>Primary sources, explicit derivations.</h2>
-        <p>All hardware conversions use <strong>one MAC = two conventional operations</strong> and 2mnk = 8,192 operations for n = 16. Reported sparse peaks were excluded. Values marked measured retain the source’s measurement boundary; peak/TDP values are explicitly labeled derived. Sources were reviewed 28 August 2026.</p>
+        <p>All hardware conversions use <strong>one MAC = two conventional operations</strong>: 8,192 operations at n = 16 and 1,099,511,627,776 operations at n = 8,192. Reported sparse peaks were excluded. Values marked measured retain the source’s measurement boundary; peak/TDP values are explicitly labeled derived. Sources were reviewed 28 August 2026.</p>
         <ol class="source-list">
           <li><a href="../matmul.py">Sutro scorer implementation</a> and <a href="../submissions/best_66300.md">66,300 record audit</a>.</li>
+          <li><a href="eightk_scaling.py">Reproducible 8K closed-form scorer</a> and the report’s <a href="eightk-audit.json">derivation audit</a>.</li>
+          <li><a href="https://dam-cdn.nvd.orangelogic.com/AssetLink/y441155802qub41q118b2852i557jem5.pdf">NVIDIA B200 Blackwell datasheet</a> and <a href="https://dam-cdn.nvd.orangelogic.com/AssetLink/1k0p832eq8r5ca0u5383ie5o4tp3bst1.pdf">B300 Blackwell Ultra datasheet</a>.</li>
+          <li><a href="https://www.nvidia.com/en-us/data-center/vera-rubin-nvl72/">NVIDIA Vera Rubin preliminary specifications</a>, <a href="https://dam-cdn.nvd.orangelogic.com/AssetLink/v5rf2icnf86o26e464tf6djn23r8ibhe.pdf">datasheet</a>, and <a href="https://developer.nvidia.com/blog/?p=121508">rack-power analysis</a>.</li>
+          <li><a href="https://users.ece.cmu.edu/~jhoe/distribution/2020/fpt2020.pdf">Exact 8192³ INT8 T4 study</a> (<a href="https://doi.org/10.1109/ICFPT51103.2020.00011">DOI</a>).</li>
+          <li><a href="https://arxiv.org/abs/2305.18698">AutoMM measured INT8 efficiency on A100 and VCK190</a>.</li>
           <li><a href="https://doi.org/10.1109/MM.2020.2975764">Tesla FSD computer, IEEE Micro</a>; <a href="https://www.old.hotchips.org/hc31/HC31_2.3_Tesla_Hotchips_ppt_Final_0817.pdf">Hot Chips 31 slides</a>.</li>
           <li><a href="https://arxiv.org/abs/1704.04760">In-Datacenter Performance Analysis of a TPU</a>.</li>
           <li><a href="https://dam-cdn.nvd.orangelogic.com/AssetLink/mfj81tsm68n0ne632upmuvirso3ta3g3.pdf">NVIDIA H100 Tensor Core GPU datasheet</a>.</li>
