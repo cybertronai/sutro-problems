@@ -1,5 +1,7 @@
 # Matmul
 
+**Research note:** [One femtojoule per scored grid step — compiler audit and chip-energy comparison](energy-report/)
+
 - DeepMind's [AlphaTensor](https://github.com/google-deepmind/alphatensor) discover a better 4x4 matrix multiplication algorithm in terms of FLOPs. 
 - What is the best algorithm when we care about *energy* instead?
 - To measure energy, use simplified version of Bill Dally's [model](https://github.com/cybertronai/simplified-dally-model), v0 [instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets)

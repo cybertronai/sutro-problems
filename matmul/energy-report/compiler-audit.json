@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "generated_for": "Sutro 16x16 matmul energy report",
+  "energy_hypothesis": {
+    "coefficient_fJ_per_operand_grid_step": 1,
+    "formula": "E_proxy_fJ = score",
+    "scope": "distance-weighted source reads and output-exit reads only"
+  },
+  "operation_conventions": {
+    "matrix_shape": [16, 16, 16],
+    "macs": 4096,
+    "vendor_conventional_operations": 8192,
+    "repository_multiplies": 4096,
+    "repository_explicit_adds": 3840
+  },
+  "baseline": {
+    "file": "../submissions/baseline_16x16.ir",
+    "score": 340704,
+    "proxy_energy_fJ": 340704,
+    "paid_reads": 16128,
+    "average_paid_distance": 21.125,
+    "max_read_address": 769,
+    "score_breakdown": {
+      "multiply_reads": 127696,
+      "add_reads": 206415,
+      "copy_reads": 0,
+      "output_exit_reads": 6593
+    }
+  },
+  "record": {
+    "file": "../submissions/best_66300.ir",
+    "score": 66300,
+    "proxy_energy_fJ": 66300,
+    "paid_reads": 17781,
+    "average_paid_distance": 3.728699,
+    "max_read_address": 646,
+    "destination_writes": 9589,
+    "copies": 1653,
+    "score_breakdown": {
+      "multiply_reads": 14272,
+      "add_reads": 26209,
+      "copy_reads": 21565,
+      "output_exit_reads": 4254
+    }
+  },
+  "derived": {
+    "score_improvement_factor": 5.138823529,
+    "score_reduction_percent": 80.540293,
+    "record_proxy_pJ": 66.3,
+    "record_proxy_J": 6.63e-11,
+    "record_proxy_fJ_per_conventional_operation": 8.09326171875,
+    "record_proxy_TOPS_per_W_equivalent": 123.559578
+  },
+  "omissions": [
+    "destination-write energy",
+    "arithmetic energy",
+    "initial input placement",
+    "SRAM endpoint energy",
+    "control and clock energy",
+    "leakage and idle energy",
+    "bandwidth, contention, and time"
+  ]
+}
