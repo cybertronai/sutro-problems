@@ -24,6 +24,12 @@ ir = matmul.generate_tiled_16x16()       # 4×4 scratchpad-cached tiles
 cost = matmul.score_16x16(ir)
 ```
 
+Correctness is checked symbolically over the commutative integer polynomial
+ring, so a program must compute `A @ B` for arbitrary inputs rather than one
+sample pair. The scorer accepts quadratic programs, which covers the usual
+bilinear matrix-multiplication algorithms; an instruction that would create a
+term above degree two is rejected.
+
 ## 4×4 Record History
 
 | Date       | Cost  | Submission                                          | Contributors                                 | Description                              |

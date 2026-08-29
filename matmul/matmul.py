@@ -37,8 +37,8 @@ integers; ``addr ≤ 0`` raises.
 from __future__ import annotations
 
 import math
-from typing import List, Tuple
-
+from collections.abc import Callable, Mapping
+from typing import TypeVar
 
 # ---------------------------------------------------------------------------
 # Cost model
@@ -76,6 +76,46 @@ _BINARY = {
     "mul": lambda a, b: a * b,
 }
 
+_Value = TypeVar("_Value")
+_Monomial = tuple[int, ...]
+_Polynomial = dict[_Monomial, int]
+
+
+def _poly_add(left: _Polynomial, right: _Polynomial, sign: int = 1) -> _Polynomial:
+    result = dict(left)
+    for monomial, coefficient in right.items():
+        updated = result.get(monomial, 0) + sign * coefficient
+        if updated:
+            result[monomial] = updated
+        else:
+            result.pop(monomial, None)
+    return result
+
+
+def _poly_mul(left: _Polynomial, right: _Polynomial) -> _Polynomial:
+    if not left or not right:
+        return {}
+    if max(map(len, left)) + max(map(len, right)) > 2:
+        raise ValueError(
+            "correctness failed: multiplication produced a polynomial "
+            "with degree greater than two")
+    result: _Polynomial = {}
+    for left_monomial, left_coefficient in left.items():
+        for right_monomial, right_coefficient in right.items():
+            monomial = tuple(sorted(left_monomial + right_monomial))
+            result[monomial] = (
+                result.get(monomial, 0) +
+                left_coefficient * right_coefficient)
+    return {monomial: coefficient for monomial, coefficient in result.items()
+            if coefficient}
+
+
+_POLYNOMIAL_BINARY = {
+    "add": _poly_add,
+    "sub": lambda a, b: _poly_add(a, b, -1),
+    "mul": _poly_mul,
+}
+
 
 def _parse(ir: str):
     text = ir.replace(";", "\n")
@@ -97,7 +137,11 @@ def _parse(ir: str):
     return input_addrs, ops, output_addrs
 
 
-def _simulate(ir: str, inputs: List[int]) -> Tuple[List[int], int]:
+def _simulate(
+        ir: str,
+        inputs: list[_Value],
+        binary: Mapping[str, Callable[[_Value, _Value], _Value]] = _BINARY,
+) -> tuple[list[_Value], int]:
     input_addrs, ops, output_addrs = _parse(ir)
     if len(input_addrs) != len(inputs):
         raise ValueError(
@@ -132,7 +176,7 @@ def _simulate(ir: str, inputs: List[int]) -> Tuple[List[int], int]:
                     f"{op} {','.join(map(str,oprs))} reads "
                     f"uninitialized addr {src}")
         cost += _cost(s1) + _cost(s2)
-        mem[dest] = _BINARY[op](mem[s1], mem[s2])
+        mem[dest] = binary[op](mem[s1], mem[s2])
     outputs = []
     for a in output_addrs:
         if a not in mem:
@@ -147,15 +191,18 @@ def _simulate(ir: str, inputs: List[int]) -> Tuple[List[int], int]:
 # ---------------------------------------------------------------------------
 
 def _matmul_test(n: int):
-    """Deterministic ``A``, ``B``, expected ``C = A @ B``.
+    """Deterministic example ``A``, ``B``, expected ``C = A @ B``.
 
-    Inputs convention (used by all scorers and baseline generators):
+    Inputs convention (used by the scorers and baseline generators):
     A flattened row-major first (``n²`` values), then B flattened
     row-major (``n²`` values), so ``2 n²`` inputs total. Outputs:
     C flattened row-major (``n²`` values).
 
-    The two formulas below produce distinct, **non-symmetric** test
-    data on purpose — earlier versions used ``B = A.T`` which made
+    These values are retained for examples and regression tests. Scoring now
+    uses exact symbolic validation instead of relying on any numeric example.
+
+    The two formulas below produce distinct, **non-symmetric** data on
+    purpose — earlier versions used ``B = A.T`` which made
     ``C = A·B = A·A.T`` symmetric, allowing IRs that confused the
     ``i, j`` indices to pass coincidentally. With the current data,
     ``C[i,j] != C[j,i]`` for ``n ≥ 2``, and the 1×1 case has
@@ -172,13 +219,29 @@ def _matmul_test(n: int):
     return inputs, expected
 
 
+def _symbolic_matmul(n: int) -> tuple[list[_Polynomial], list[_Polynomial]]:
+    inputs = [{(variable,): 1} for variable in range(2 * n * n)]
+    expected = []
+    for i in range(n):
+        for j in range(n):
+            expected.append({
+                (i * n + k, n * n + k * n + j): 1
+                for k in range(n)
+            })
+    return inputs, expected
+
+
 def _score_n(ir: str, n: int) -> int:
-    inputs, expected = _matmul_test(n)
-    actual, cost = _simulate(ir, inputs)
+    inputs, expected = _symbolic_matmul(n)
+    actual, cost = _simulate(ir, inputs, _POLYNOMIAL_BINARY)
     if actual != expected:
+        mismatches = [
+            i for i in range(max(len(actual), len(expected)))
+            if i >= len(actual) or i >= len(expected) or actual[i] != expected[i]
+        ]
         raise ValueError(
-            f"correctness failed (n={n}):\n  got      {actual}\n"
-            f"  expected {expected}")
+            f"correctness failed (n={n}): symbolic outputs differ at "
+            f"indices {mismatches[:8]}")
     return cost
 
 
