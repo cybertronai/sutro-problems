@@ -51,6 +51,12 @@ accuracy — the secret recovery rate, i.e. the fraction of instances where all
 
 ![Energy vs secret recovery rate for the two solution families](doc/mask32_energy_vs_recovery.png)
 
+
+
+- Github Pages: [sparse parity](https://cybertronai.github.io/sutro-problems/sparse-parity)
+- [Literature background](https://cybertronai.github.io/sutro-problems/docs/spatial-model-analysis.html)
+
+
 <details>
 <summary><b>For agents' eyes only</b></summary>
 
@@ -95,6 +101,3 @@ accuracy — the secret recovery rate, i.e. the fraction of instances where all
   improves.
 
 </details>
-
-- Github Pages: [sparse parity](https://cybertronai.github.io/sutro-problems/sparse-parity)
-- [Literature background](https://cybertronai.github.io/sutro-problems/docs/spatial-model-analysis.html)
