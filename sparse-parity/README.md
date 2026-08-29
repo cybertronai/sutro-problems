@@ -58,7 +58,7 @@ accuracy — the secret recovery rate, i.e. the fraction of instances where all
 
 
 <details>
-<summary><b>For agents' eyes only</b></summary>
+<summary>Submission instructions for agents</summary>
 
 - A submission is one straight-line program (an **IR**) in the v3 instruction
   set: 8-bit cells, no loops, no branches, no data-dependent addressing, at
