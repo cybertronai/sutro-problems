@@ -50,8 +50,12 @@
   button.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; min-width: 92px; }
   button.btn.primary:hover { background: #a83809; color: #fff; }
   button.btn.on { background: var(--ink); border-color: var(--ink); color: #fff; }
-  .speeds, .sizes { display: flex; gap: 4px; }
-  .speeds button, .sizes button { padding: 7px 10px; font-family: var(--mono); font-size: 13px; }
+  button.btn.icon-btn { display: inline-flex; align-items: center; justify-content: center;
+                        width: 36px; height: 36px; padding: 0; }
+  button.btn.icon-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor;
+                            stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .sizes { display: flex; gap: 4px; }
+  .sizes button { padding: 7px 10px; font-family: var(--mono); font-size: 13px; }
   .sep { width: 1px; height: 22px; background: var(--line); margin: 0 4px; }
   .spacer { flex: 1 1 auto; }
 
@@ -177,13 +181,14 @@
 <figure class="stage">
   <div class="bar">
     <button class="btn primary" id="play">▶ Play</button>
-    <button class="btn" id="stepb">−1</button>
-    <button class="btn" id="stepf">+1</button>
+    <button class="btn icon-btn" id="stepb" aria-label="Previous step" title="Previous step">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+    </button>
+    <button class="btn icon-btn" id="stepf" aria-label="Next step" title="Next step">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+    </button>
     <div class="sep"></div>
     <div class="sizes" id="sizes"></div>
-    <div class="sep"></div>
-    <div class="speeds" id="speeds"></div>
-    <button class="btn" id="heat">heat</button>
     <div class="spacer"></div>
     <button class="btn" id="reset">Reset</button>
   </div>
@@ -202,8 +207,8 @@
     </div>
     <div class="pane arena">
       <div id="arena"></div>
-      <div class="legend" id="legend"></div>
-      <div class="legend" id="heatlegend" hidden></div>
+      <div class="legend" id="legend" hidden></div>
+      <div class="legend" id="heatlegend"></div>
     </div>
   </div>
 
@@ -227,13 +232,8 @@
 </p>
 <table class="lay" id="laytable"></table>
 
-<h2>Locality across algorithms</h2>
-<p>
-  Each program is generated and simulated in-page, then plotted per access.
-  <b>Address</b> is the linear memory index touched at that clock, so loop structure shows up
-  directly as bands and sweeps; <b>access cost</b> is what the model charges for it,
-  <span class="m">⌈√a⌉</span>.
-</p>
+<h2>Access Patterns</h2>
+<p>Compare each algorithm’s memory address and access cost at every clock.</p>
 
 <div class="tabs" id="tabs"></div>
 <div class="panel">
@@ -242,20 +242,6 @@
   <canvas class="plot" id="plot" width="1900" height="620"></canvas>
   <div class="cap" id="cap"></div>
 </div>
-
-<h2>Where the energy goes</h2>
-<p>
-  Two thirds of the naive 4×4 bill is scratch traffic: each of the 48 accumulate steps reads
-  <span class="m">C[i,j]</span> at distance 6–7 and <span class="m">tmp</span> at distance 7,
-  so <span class="m">tmp</span> alone (336) costs more than every access to A (200).
-</p>
-<p>
-  Tiling barely helps at this size — 1,296 against 1,316. The 2×2 scratchpad does keep the
-  inner loop in the cheapest thirteen cells, but paying to copy tiles in and out, and pushing
-  the bulk arrays from addresses 1–48 out to 14–61, eats almost all of the saving. The same
-  schedule at 16×16 wins properly, 133,783 against 340,704, because each copied tile is reused
-  across a whole block row instead of twice.
-</p>
 
 <footer>
   <p>
@@ -536,8 +522,9 @@ for (const [key, col] of BARS) {
 const irEl = document.getElementById("irline"), costEl = document.getElementById("costnum");
 const deltaEl = document.getElementById("delta"), stepnoEl = document.getElementById("stepno");
 const rangeEl = document.getElementById("range"), verdictEl = document.getElementById("verdict");
-const legendEl = document.getElementById("legend"), heatLegendEl = document.getElementById("heatlegend");
-let cur = 0, heat = false, stepMs = 90, playing = false;
+const heatLegendEl = document.getElementById("heatlegend");
+const STEP_MS = 90;
+let cur = 0, playing = false;
 
 function heatFill(a, st, max) {
   const v = (st.readCost[a] || 0) / (max || 1);
@@ -553,24 +540,23 @@ function render() {
 
   /* ---- arena ---- */
   const maxRead = Math.max(1, ...Object.values(st.readCost));
-  legendEl.hidden = heat; heatLegendEl.hidden = !heat;
-  if (heat) {
-    let top = 1, topA = 1;
-    for (const a in st.readCost) if (st.readCost[a] > top) { top = st.readCost[a]; topA = +a; }
-    heatLegendEl.textContent = `fill = cumulative access cost · hottest ${top} @${topA}`;
-  }
+  let top = 0, topA = null;
+  for (const a in st.readCost) if (st.readCost[a] > top) { top = st.readCost[a]; topA = +a; }
+  heatLegendEl.textContent = topA === null
+    ? "fill = cumulative access cost"
+    : `fill = cumulative access cost · hottest ${top} @${topA}`;
   for (let a = 1; a <= P.nCells; a++) {
     const c = cellEl[a], on = e && e.addr === a;
     const isDest = e && e.write && e.dest === a && !on;
-    c.setAttribute("fill", heat ? heatFill(a, st, maxRead) : RCOL[P.region(a)]);
-    c.setAttribute("opacity", heat ? 1 : (on ? 1 : (st.readCost[a] ? .55 : .32)));
+    c.setAttribute("fill", heatFill(a, st, maxRead));
+    c.setAttribute("opacity", 1);
     c.setAttribute("r", on ? RAD * 1.19 : RAD);
     c.setAttribute("stroke", on ? RCOL[P.region(a)] : (isDest ? "var(--ink-soft)" : "#fff"));
     c.setAttribute("stroke-width", 2 + (on ? 1 : 0));
     c.setAttribute("stroke-dasharray", isDest ? "3 3" : "none");
   }
   wireLayer.replaceChildren();
-  if (e) drawWire(e.addr, RCOL[P.region(e.addr)], playing ? stepMs : 200);
+  if (e) drawWire(e.addr, RCOL[P.region(e.addr)], playing ? STEP_MS : 200);
 
   /* ---- matrices ---- */
   const inBlock = (v, b) => P.T && v >= b * P.T && v < (b + 1) * P.T;
@@ -689,7 +675,7 @@ function tick(now) {
   if (!playing) return;
   acc += now - last; last = now;
   let moved = false;
-  while (acc >= stepMs && cur < NEV) { acc -= stepMs; cur++; moved = true; }
+  while (acc >= STEP_MS && cur < NEV) { acc -= STEP_MS; cur++; moved = true; }
   if (moved) render();
   if (cur >= NEV) { setPlaying(false); return; }
   requestAnimationFrame(tick);
@@ -709,16 +695,6 @@ PROGRAMS.forEach((prog, idx) => {
   b.onclick = () => { [...sizesEl.children].forEach(c => c.classList.remove("on")); b.classList.add("on"); setProgram(prog); };
   sizesEl.appendChild(b);
 });
-const SPEEDS = [["0.5×", 180], ["1×", 90], ["3×", 28], ["max", 5]];
-const speedsEl = document.getElementById("speeds");
-SPEEDS.forEach(([label, ms]) => {
-  const b = document.createElement("button");
-  b.className = "btn" + (ms === stepMs ? " on" : ""); b.textContent = label;
-  b.onclick = () => { stepMs = ms; [...speedsEl.children].forEach(c => c.classList.remove("on")); b.classList.add("on"); };
-  speedsEl.appendChild(b);
-});
-const heatBtn = document.getElementById("heat");
-heatBtn.onclick = () => { heat = !heat; heatBtn.classList.toggle("on", heat); render(); };
 document.addEventListener("keydown", (ev) => {
   if (ev.target.tagName === "INPUT") return;
   if (ev.key === " ") { ev.preventDefault(); playBtn.click(); }
@@ -851,24 +827,22 @@ function plot(a, kind) {
   ctx2.textAlign = "left"; ctx2.textBaseline = "alphabetic";
   ctx2.fillText(kind === "addr"
     ? `${a.name} — memory address per access (${d.lo}–${d.hi})`
-    : `${a.name} — access cost ⌈√a⌉ per access (max = ${dmax})`, L, 30);
+    : `${a.name} — access cost per access (max = ${dmax} fJ)`, L, 30);
   ctx2.save();
   ctx2.translate(34, (h - T - B) / 2 + T); ctx2.rotate(-Math.PI / 2);
   ctx2.fillStyle = "#5b6472"; ctx2.font = "25px Inter, sans-serif"; ctx2.textAlign = "center";
-  ctx2.fillText(kind === "addr" ? "memory address (linear index)" : "cost ⌈√a⌉", 0, 0);
+  ctx2.fillText(kind === "addr" ? "memory address (linear index)" : "access cost (fJ)", 0, 0);
   ctx2.restore();
   ctx2.textAlign = "center";
   ctx2.fillText("access index (time)", L + (w - L - R) / 2, h - 16);
 
   const F = (v) => v.toLocaleString("en-US");
   document.getElementById("stats").innerHTML = [
-    ["cost", F(d.cost)], ["cycles", F(d.list.length)], ["instructions", F(d.nInstr)],
-    ["distinct addresses", F(d.distinct)], ["address range", `${d.lo}–${d.hi}`],
-    ["mean cost", (d.cost / d.list.length).toFixed(2)],
+    ["instructions", F(d.nInstr)], ["cost", `${F(d.cost)} fJ`],
   ].map(([k, v]) => `<span>${k} <b>${v}</b></span>`).join("");
   document.getElementById("cap").textContent = kind === "addr"
-    ? "y is the linear memory index touched at that clock; an access there costs ⌈√a⌉, so higher on the plot is more expensive."
-    : `Mean cost per access ${(d.cost / d.list.length).toFixed(2)}; total ${F(d.cost)}.`;
+    ? "Each dot is one clock; height is the memory address touched."
+    : `Each dot is one clock; total cost is ${F(d.cost)} fJ.`;
   if (d.cost !== d.expected) console.error("cost mismatch", a.key, d.cost, d.expected);
 }
 
