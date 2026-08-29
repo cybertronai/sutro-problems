@@ -89,6 +89,16 @@
   }
   #b20:checked ~ #p20, #b40:checked ~ #p40, #b60:checked ~ #p60,
   #b80:checked ~ #p80, #b100:checked ~ #p100 { display: block; }
+  @media (max-width: 30rem) {
+    .tabbar { gap: .1rem; }
+    .tabbar .cap { margin-right: .35rem; }
+    .tabbar label { padding: .3rem .5rem; font-size: .9rem; }
+  }
+  @media (max-width: 23rem) {
+    /* Narrowest phones: give the five bands the full width by dropping the
+       caption onto its own line rather than letting the row wrap raggedly. */
+    .tabbar .cap { flex-basis: 100%; margin: 0 0 .3rem; }
+  }
   details { margin: 1.8rem 0; border: 1px solid var(--grid); border-radius: 8px;
             padding: .7rem 1.1rem; background: var(--plane); }
   summary { cursor: pointer; color: var(--ink2); font-weight: 600; }
@@ -277,7 +287,7 @@ mask.</p>
 <input type="radio" name="band" id="b80">
 <input type="radio" name="band" id="b100" checked>
 <div class="tabbar">
-<span class="cap">accuracy target</span>
+<span class="cap">acc.</span>
 <label for="b20">20%</label>
 <label for="b40">40%</label>
 <label for="b60">60%</label>
