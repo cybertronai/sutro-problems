@@ -410,11 +410,26 @@ def _sample_secrets(spec: Spec, n_secrets: int, rng: Random) -> List[Tuple[int, 
             out.append(s)
     return out
 
-def _isd_subsets(spec: Spec, n_restarts: int) -> List[List[int]]:
-    """Deterministic rotating information sets: restart t uses columns
-    [(stride*t + j) mod n for j < m_train].  stride is coprime to n so
-    consecutive subsets overlap as little as possible."""
+def _isd_subsets(
+    spec: Spec, n_restarts: int, *, seed: int | None = None
+) -> List[List[int]]:
+    """Information sets for the T restarts.
+
+    Default (``seed=None``) keeps the original deterministic rotation:
+    restart t uses columns [(stride*t + j) % n for j < m_train].  The
+    rotation has period exactly n = 32 (gcd(stride, n) = 1), so past
+    T = 32 every restart re-deals a subset an earlier restart already
+    used and recovery plateaus.
+
+    ``seed`` is not None switches to independent random information
+    sets: each restart draws a fresh uniform m_train-subset of the
+    n_bits columns once, at generation time, from a seeded RNG (the
+    emitted circuit stays deterministic).  Independent draws stack as
+    1 - (1 - p)^T instead of saturating."""
     n, m = spec.n_bits, spec.m_train
+    if seed is not None:
+        rng = Random(seed)
+        return [sorted(rng.sample(range(n), m)) for _ in range(n_restarts)]
     stride = 7 if math.gcd(7, n) == 1 else 5
     return [[(stride * t + j) % n for j in range(m)] for t in range(n_restarts)]
 
@@ -425,6 +440,7 @@ def generate_isd(
     spec: Spec = MASK32,
     mask_output: bool = False,
     op_cap: int = OP_CAP,
+    subset_seed: int | None = None,
 ) -> str:
     """T-restart information-set-decoding circuit.
 
@@ -451,7 +467,7 @@ def generate_isd(
         raise ValueError("n_restarts must be >= 1")
     n_sub = m          # information-set size = m_train (square system)
     n_aug = n_sub + 1
-    subsets = _isd_subsets(spec, n_restarts)
+    subsets = _isd_subsets(spec, n_restarts, seed=subset_seed)
 
     # ---- layout: hottest scratch at the lowest addresses ----------------
     a = 1
@@ -710,11 +726,18 @@ def evaluate_mask(
 # Reference circuits
 # --------------------------------------------------------------------------
 
-def generate_isd_mask(n_restarts: int = 1, *, spec: Spec = MASK32) -> str:
-    """ISD restart family on the mask task (no prediction phase)."""
+def generate_isd_mask(
+    n_restarts: int = 1, *, spec: Spec = MASK32, subset_seed: int | None = None
+) -> str:
+    """ISD restart family on the mask task (no prediction phase).
+
+    ``subset_seed`` is not None draws independent random information
+    sets instead of the default period-32 rotation (see
+    ``_isd_subsets``)."""
     joint_spec = Spec(spec.n_bits, spec.k_secret, spec.m_train, 0)
     return generate_isd(
-        n_restarts, spec=joint_spec, mask_output=True, op_cap=OP_CAP
+        n_restarts, spec=joint_spec, mask_output=True, op_cap=OP_CAP,
+        subset_seed=subset_seed,
     )
 
 
@@ -779,12 +802,35 @@ def generate_enum_mask(
     return ir
 
 
+def _weight_order_flips(G: int, cap: int) -> List[List[int]]:
+    """Flip schedule for a coefficient-weight-ordered walk.
+
+    Visits the empty coefficient vector, then every index subset of the
+    G free variables in increasing Hamming weight, up to ``cap``.  For
+    each transition returns the list of Gray slots whose basis vector
+    must be XORed into the running solution.  With ~2.2 average ones in
+    the secret's coefficient vector (measured on the dev suite), the
+    secret is reached in tens-to-hundreds of visits instead of the
+    thousands a reflected-Gray walk needs."""
+    sets: List[tuple] = [()]
+    for w in range(1, cap + 1):
+        sets.extend(combinations(range(G), w))
+    flips, prev = [], frozenset()
+    for cur in sets:
+        cur_s = frozenset(cur)
+        flips.append(sorted(cur_s.symmetric_difference(prev)))
+        prev = cur_s
+    return flips
+
+
 def generate_scan(
     n_steps: int | None = None,
     *,
     spec: Spec = MASK32,
     joint: bool = False,
     op_cap: int = OP_CAP,
+    walk: str = "gray",
+    weight_cap: int | None = None,
 ) -> str:
     """GE + null-space Gray scan: the family that reaches 100%.
 
@@ -824,6 +870,8 @@ def generate_scan(
     s = max_steps if n_steps is None else n_steps
     if not 0 <= s <= max_steps:
         raise ValueError(f"n_steps must be in [0, {max_steps}]")
+    if walk not in ("gray", "weight"):
+        raise ValueError(f"unknown walk {walk!r}")
     n_aug = n + 1
 
     a = 1
@@ -978,11 +1026,24 @@ def generate_scan(
             emit(f"select {out_at(c)},{OK},{w_at(c)},{out_at(c)}")
 
     capture()                       # n_steps=0 == min-support GE
-    for i in range(1, s + 1):
-        j = (i & -i).bit_length() - 1   # reflected-Gray flip schedule
-        for c in range(n):
-            emit(f"xor {w_at(c)},{FB_at(j, c)}")
-        capture()
+    if walk == "gray":
+        for i in range(1, s + 1):
+            j = (i & -i).bit_length() - 1   # reflected-Gray flip schedule
+            for c in range(n):
+                emit(f"xor {w_at(c)},{FB_at(j, c)}")
+            capture()
+    elif walk == "weight":
+        if weight_cap is None:
+            raise ValueError("walk='weight' requires weight_cap")
+        if not 0 <= weight_cap <= G:
+            raise ValueError(f"weight_cap must be in [0, {G}]")
+        for flips in _weight_order_flips(G, weight_cap):
+            for j in flips:
+                for c in range(n):
+                    emit(f"xor {w_at(c)},{FB_at(j, c)}")
+            capture()
+    else:
+        raise ValueError(f"unknown walk {walk!r}")
 
     if joint:
         # ---- joint mode: label every test row from the captured mask ----
@@ -1008,6 +1069,7 @@ __all__ = [
     "DEV_SECRETS", "DEV_REPS", "FINAL_SECRETS", "FINAL_REPS",
     "MaskResult", "mask_suite", "evaluate_mask",
     "generate_scan", "generate_isd_mask", "generate_enum_mask",
+    "_weight_order_flips",
 ]
 
 

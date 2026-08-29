@@ -40,7 +40,8 @@ INK_2 = "#52514e"
 MUTED = "#898781"
 GRID = "#e1e0d9"
 BASELINE = "#c3c2b7"
-SERIES = {"blue": "#2a78d6", "orange": "#eb6834"}
+SERIES = {"blue": "#2a78d6", "orange": "#eb6834",
+           "green": "#2e9e4f", "purple": "#8259b8"}
 
 # Dense sweeps feed the band table; the marker subset keeps the plot quiet.
 S_SWEEP = [0, 127, 255, 383, 511, 767, 1023, 1535, 2047, 3071, 4095,
@@ -48,6 +49,10 @@ S_SWEEP = [0, 127, 255, 383, 511, 767, 1023, 1535, 2047, 3071, 4095,
 S_MARKERS = [0, 1023, 2047, 4095, 8191, 16383]
 T_SWEEP = [1, 2, 3, 4, 6, 8, 12, 16, 24, 32]
 T_MARKERS = [1, 4, 8, 16, 32]
+W_SWEEP = [0, 1, 2, 3, 4, 5]
+W_MARKERS = [1, 2, 3, 5]
+R_SWEEP = [1, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32]
+R_MARKERS = [1, 8, 16, 32]
 BANDS = [0.2, 0.4, 0.6, 0.8, 1.0]
 
 
@@ -76,6 +81,15 @@ def collect() -> List[Series]:
             "ISD restarts", SERIES["orange"], "T", T_SWEEP, T_MARKERS,
             [_eval(mp.generate_isd_mask(T)) for T in T_SWEEP],
         ),
+        Series(
+            "Weight-ordered scan", SERIES["green"], "cap", W_SWEEP, W_MARKERS,
+            [_eval(mp.generate_scan(0, walk="weight", weight_cap=w))
+             for w in W_SWEEP],
+        ),
+        Series(
+            "Random ISD", SERIES["purple"], "T", R_SWEEP, R_MARKERS,
+            [_eval(mp.generate_isd_mask(T, subset_seed=0)) for T in R_SWEEP],
+        ),
     ]
 
 
@@ -103,14 +117,20 @@ def plot(series: List[Series]) -> None:
                 markersize=6, markeredgecolor=SURFACE, markeredgewidth=1.2)
 
     # direct labels at the curve ends, in ink -- identity never color-alone
-    scan_end = series[0].points[-1]
-    ax.annotate("Gray scan", (scan_end[1], scan_end[0]),
-                xytext=(-10, 6), textcoords="offset points",
-                ha="right", va="bottom", fontsize=9.5, color=INK_2)
-    isd_end = series[1].points[-1]
-    ax.annotate("ISD restarts", (isd_end[1], isd_end[0]),
-                xytext=(8, -2), textcoords="offset points",
-                ha="left", va="top", fontsize=9.5, color=INK_2)
+    by_label = {s.label: s for s in series}
+    ends = [
+        ("Gray scan", (-10, 6), "right", "bottom"),
+        ("ISD restarts", (8, -2), "left", "top"),
+        ("Weight-ordered scan", (-10, 6), "right", "bottom"),
+        ("Random ISD", (8, -2), "left", "top"),
+    ]
+    for label, (dx, dy), ha, va in ends:
+        if label not in by_label:
+            continue
+        end = by_label[label].points[-1]
+        ax.annotate(label, (end[1], end[0]),
+                    xytext=(dx, dy), textcoords="offset points",
+                    ha=ha, va=va, fontsize=9.5, color=INK_2)
 
     ax.set_yscale("log")
     ax.set_xlim(-0.02, 1.04)
@@ -154,13 +174,25 @@ def plot(series: List[Series]) -> None:
 
 
 def band_table(series: List[Series]):
+    by_label = {s.label: s for s in series}
     methods = {
-        "Gray scan": ("generate_scan", series[0]),
-        "ISD restarts": ("generate_isd_mask", series[1]),
+        "Gray scan": ("generate_scan", by_label["Gray scan"]),
+        "ISD restarts": ("generate_isd_mask", by_label["ISD restarts"]),
+        "Weight-ordered scan": ("generate_scan(0, walk='weight',"
+                                " weight_cap=…)",
+                                by_label["Weight-ordered scan"]),
+        "Random ISD": ("generate_isd_mask(…, subset_seed=0)",
+                       by_label["Random ISD"]),
+    }
+    fmt_call = {
+        "Weight-ordered scan": lambda kn: f"generate_scan(0, walk='weight',"
+                                          f" weight_cap={kn})",
+        "Random ISD": lambda kn: f"generate_isd_mask({kn}, subset_seed=0)",
     }
     labeled = [
-        {"method": name, "call": f"{fn}({kn})", "knob": kn,
-         "cost": cost, "recovery": rec, "ops": ops}
+        {"method": name,
+         "call": fmt_call.get(name, lambda kn, fn=fn: f"{fn}({kn})")(kn),
+         "knob": kn, "cost": cost, "recovery": rec, "ops": ops}
         for name, (fn, s) in methods.items()
         for (cost, rec, ops), kn in zip(s.points, s.knobs)
     ]
