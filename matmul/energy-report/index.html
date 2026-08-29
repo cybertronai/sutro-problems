@@ -26,6 +26,7 @@
     }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
+    [id] { scroll-margin-top: 26px; }
     body {
       margin: 0; color: var(--ink);
       background: radial-gradient(circle at 82% 4%, rgba(217,87,45,.14), transparent 28rem), radial-gradient(circle at 10% 30%, rgba(21,95,119,.11), transparent 34rem), var(--paper);
@@ -56,12 +57,24 @@
     .verdict .stamp { align-self: stretch; display: grid; place-content: center; padding: 24px; border: 1px solid rgba(255,255,255,.22); border-radius: 17px; text-align: center; }
     .stamp strong { color: #ffbd8d; font: 700 54px/1 var(--serif); }
     .stamp span { margin-top: 10px; color: rgba(255,255,255,.72); }
+    .toc { display: block; margin: 38px 0 18px; padding: 25px; border: 1px solid var(--line); border-radius: 20px; background: rgba(255,255,255,.58); }
+    .toc .eyebrow { margin-bottom: 15px; }
+    .toc ol { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px 24px; margin: 0; padding: 0; list-style: none; counter-reset: toc; }
+    .toc li { counter-increment: toc; min-width: 0; }
+    .toc li > a { display: block; padding: 6px 0; color: var(--ink); font-weight: 700; text-decoration: none; }
+    .toc li > a::before { content: counter(toc, decimal-leading-zero) " · "; color: var(--orange); font: 700 11px var(--mono); }
+    .toc-deep { display: flex; flex-wrap: wrap; gap: 8px 18px; margin-top: 16px; padding-top: 15px; border-top: 1px solid var(--line); }
+    .toc-deep a { font: 700 12px var(--mono); }
     section { padding: 58px 0; border-top: 1px solid var(--line); }
     h2 { max-width: 850px; margin: 0 0 22px; font: 700 clamp(31px, 4vw, 48px)/1.06 var(--serif); letter-spacing: -.035em; }
     h3 { margin: 36px 0 12px; font: 700 25px/1.2 var(--serif); }
+    h4 { margin: 0 0 9px; font: 700 18px/1.3 var(--serif); }
+    .anchor-link { margin-left: .25em; color: var(--muted); font: 700 .58em var(--mono); text-decoration: none; vertical-align: middle; }
+    .anchor-link:hover { color: var(--orange); }
     p { max-width: 800px; }
     .lead { font-size: 19px; color: var(--ink-2); }
     .formula { max-width: 970px; margin: 30px 0; padding: 24px 28px; border-left: 5px solid var(--orange); background: var(--paper-2); font: 600 clamp(17px, 2.2vw, 26px)/1.55 var(--mono); overflow-wrap: anywhere; }
+    .formula.compact { font-size: clamp(13px, 1.55vw, 17px); line-height: 1.7; }
     .two-up, .three-up { display: grid; gap: 18px; margin-top: 28px; }
     .two-up { grid-template-columns: repeat(2, 1fr); }
     .three-up { grid-template-columns: repeat(3, 1fr); }
@@ -129,12 +142,15 @@
       .arrow { transform: rotate(90deg); justify-self: center; }
       .controls { grid-template-columns: 1fr; }
       .source-list { columns: 1; }
+      .toc ol { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .axis, .bar-row { grid-template-columns: 105px 1fr 80px; }
       main { padding-top: 48px; }
     }
     @media (max-width: 500px) {
       .wrap { width: min(100% - 24px, 1160px); }
       nav { width: 100%; flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+      .toc { width: auto; overflow: visible; padding: 20px; }
+      .toc ol { grid-template-columns: 1fr; }
       .metric, .panel, .score { padding: 20px; }
       th, td { padding: 10px; }
     }
@@ -156,7 +172,7 @@
     <header class="site-head">
       <div class="brand">Sutro Problems · research note</div>
       <nav aria-label="Report sections">
-        <a href="#conversion">Conversion</a><a href="#compiler">Compiler audit</a><a href="#hardware">Hardware</a><a href="#eightk">8K extrapolation</a><a href="#model">Model extension</a><a href="#sources">Sources</a>
+        <a href="#contents">Contents</a><a href="#eightk-derivation">8K derivation</a><a href="#eightk-comparison">8K table</a><a href="#sources">Sources</a>
       </nav>
       <div class="tag">28 Aug 2026</div>
     </header>
@@ -166,6 +182,23 @@
         <p class="eyebrow">16 × 16 matrix multiplication · 4,096 MACs</p>
         <h1>One femtojoule per scored grid step.</h1>
         <p class="dek">Applied literally, the current 66,300-point record becomes a <strong>66.3-picojoule synthetic movement term</strong>. It is a crisp measure of locality. It is not a measurement of the energy consumed by a complete matmul chip.</p>
+        <nav class="toc" id="contents" aria-label="Table of contents">
+          <p class="eyebrow">Table of contents</p>
+          <ol>
+            <li><a href="#conversion">Unit audit</a></li>
+            <li><a href="#compiler">Compiler report</a></li>
+            <li><a href="#hardware">Hardware literature</a></li>
+            <li><a href="#eightk">8K INT8 extrapolation</a></li>
+            <li><a href="#model">Calibration and extension</a></li>
+            <li><a href="#sources">Sources and method</a></li>
+          </ol>
+          <div class="toc-deep" aria-label="8K section links">
+            <a href="#eightk-derivation">How 0.118953 J was derived</a>
+            <a href="#blackwell-rubin">Blackwell and Rubin</a>
+            <a href="#blackwell-precision">Blackwell precision table</a>
+            <a href="#eightk-comparison">8K evidence comparison table</a>
+          </div>
+        </nav>
         <div class="metrics" role="list" aria-label="Headline findings">
           <div class="metric" role="listitem"><strong>66.3 pJ</strong><span>record score × exactly 1 fJ per operand-grid-step</span></div>
           <div class="metric" role="listitem"><strong>5.14×</strong><span>lower movement term than the 340,704-point baseline</span></div>
@@ -344,8 +377,41 @@
         </div>
         <p class="warning"><strong>“8K model” is ambiguous.</strong> This section computes a synthetic full 8192³ GEMM. One-token autoregressive decode usually multiplies a 1×8192 activation by an 8192×8192 weight matrix—<strong>8,192× less arithmetic</strong>—and is much more likely to be memory-bound, so its energy cannot be obtained by simply dividing these joules by 8,192.</p>
 
-        <h3>How the distance score scales</h3>
-        <p>The checked-in 66,300-point record is a final physical-address program specialized to 16×16; it has no generator that can be rerun at 8K. Cubically scaling 66,300 gives 8.90 mJ, but freezes the average distance while the live memory footprint grows. The defensible projection instead generalizes the repository’s <code>sa_cache</code> schedule and retunes its tile sizes to <strong>256×128</strong>.</p>
+        <h3 id="eightk-derivation">How the 0.118953 J Sutro estimate was derived <a class="anchor-link" href="#eightk-derivation" aria-label="Permalink to the Sutro 8K derivation">#</a></h3>
+        <p class="lead">This is an exact score for one <em>parameterized schedule family</em>, followed by the chosen 1 fJ/unit conversion. It is not the 66,300-point 16×16 record multiplied by a scale factor.</p>
+        <p>The checked-in 66,300-point record is a final physical-address program specialized to 16×16; it has no generator that can be rerun at 8K. Cubically scaling 66,300 gives 8.90 mJ, but incorrectly freezes average access distance while the live memory footprint grows. Instead, the calculation generalizes the repository’s <code>sa_cache</code> loop nest to <var>N</var> = 8192 and searches every tile pair whose dimensions divide <var>N</var>.</p>
+        <div class="two-up">
+          <article class="panel">
+            <h4>1 · Generalize the schedule</h4>
+            <p>For every output tile <code>(bi,bj)</code> and reduction index <code>k</code>, load <var>T<sub>j</sub></var> B values into <code>sB</code>. Then stream each of the <var>T<sub>i</sub></var> A values through one near-ALU <code>sA</code> cell, multiply across the B strip, and accumulate a <var>T<sub>i</sub>×T<sub>j</sub></var> output tile in <code>sC</code>.</p>
+          </article>
+          <article class="panel">
+            <h4>2 · Retune for the larger footprint</h4>
+            <p>Because 8192 = 2<sup>13</sup>, it has 14 divisors. Evaluating all <strong>14×14 = 196</strong> legal <var>T<sub>i</sub>,T<sub>j</sub></var> pairs selects <strong>256×128</strong>. The formula reproduces the checked-in 16×16 <code>sa_cache</code> score of 73,602 at its original 8×4 tiles.</p>
+          </article>
+        </div>
+        <p class="small">The sweep is exhaustive within this literal two-parameter <code>sa_cache</code> family, not across all possible matmul algorithms. The next two shapes are 128×128 at 121,105,737,911,286 and 256×64 at 121,681,290,169,654 score units. The 8K result is evaluated in closed form; it does not materialize a trillion-scale IR.</p>
+        <h4>Exact scorer equation</h4>
+        <p>Let <code>d(a)=ceil(sqrt(a))</code> be the cost of reading address <var>a</var>, and let <code>D(R)</code> be the sum of <code>d(a)</code> over every address in region <var>R</var>. Cells are packed by descending reads per cell—<code>sA</code>, <code>TMP</code>, <code>sB</code>, <code>sC</code>, A, B, C—which is optimal for this fixed schedule because <code>d(a)</code> never decreases with address.</p>
+        <div class="formula compact">S = N³d(1) + N²(N−1)d(2)<br>+ (N³/T<sub>j</sub>)D(sB) + (N³/(T<sub>i</sub>T<sub>j</sub>))D(sC)<br>+ (N/T<sub>j</sub>)D(A) + (N/T<sub>i</sub>)D(B) + D(C)<br><br>D([l,h]) = F(h) − F(l−1)<br>F(x) = q(q+1)(4q−1)/6 + (x−q²)(q+1), &nbsp;q = floor(√x)</div>
+        <p>Substituting <var>N</var> = 8192, <var>T<sub>i</sub></var> = 256, and <var>T<sub>j</sub></var> = 128 gives this exact ledger:</p>
+        <div class="table-wrap">
+          <table>
+            <caption>Retuned <code>sa_cache</code> address layout and score contribution</caption>
+            <thead><tr><th scope="col">Region and address range</th><th scope="col" class="num">Cells</th><th scope="col" class="num">Paid reads / cell</th><th scope="col" class="num">Score units</th><th scope="col" class="num">At 1 fJ/unit</th></tr></thead>
+            <tbody>
+              <tr><td><code>sA</code> · 1</td><td class="num">1</td><td class="num">549,755,813,888</td><td class="num">549,755,813,888</td><td class="num">0.000550 J</td></tr>
+              <tr><td><code>TMP</code> · 2</td><td class="num">1</td><td class="num">549,688,705,024</td><td class="num">1,099,377,410,048</td><td class="num">0.001099 J</td></tr>
+              <tr><td><code>sB</code> · 3–130</td><td class="num">128</td><td class="num">4,294,967,296</td><td class="num">4,514,010,628,096</td><td class="num">0.004514 J</td></tr>
+              <tr><td><code>sC</code> · 131–32,898</td><td class="num">32,768</td><td class="num">16,777,216</td><td class="num">66,997,983,379,456</td><td class="num">0.066998 J</td></tr>
+              <tr><td>A bulk · 32,899–67,141,762</td><td class="num">67,108,864</td><td class="num">64</td><td class="num">23,475,391,008,000</td><td class="num">0.023475 J</td></tr>
+              <tr><td>B bulk · 67,141,763–134,250,626</td><td class="num">67,108,864</td><td class="num">32</td><td class="num">21,448,665,777,152</td><td class="num">0.021449 J</td></tr>
+              <tr><td>C exit · 134,250,627–201,359,490</td><td class="num">67,108,864</td><td class="num">1</td><td class="num">867,899,704,694</td><td class="num">0.000868 J</td></tr>
+              <tr class="best-row"><td>Total</td><td class="num">201,359,490</td><td class="num">2,205,465,706,496 total reads</td><td class="num">118,953,083,721,334</td><td class="num">0.1189530837 J</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p>The last step is only the proposed unit conversion: <code>118,953,083,721,334 × 10⁻¹⁵ J = 0.118953083721334 J</code>. No throughput or clock rate is used, so the model produces energy but <strong>does not produce time</strong>. Arithmetic, destination writes, finite SRAM/HBM capacity, data conversion, control, clocks, and leakage remain unpriced.</p>
         <div class="table-wrap">
           <table>
             <caption>Sutro 8192³ score extrapolations at exactly 1 fJ per score unit</caption>
@@ -359,10 +425,9 @@
             </tbody>
           </table>
         </div>
-        <p>The naive placement grows as Θ(n<sup>4</sup>). A size-retuned locality schedule is approximately Θ(n<sup>3.5</sup>) because the scorer’s <code>ceil(sqrt(address))</code> distance grows with the footprint. The selected schedule performs 2.205 trillion paid reads and averages 53.93 score units per read; its 0.118953 J is <strong>108.2 fJ per conventional operation</strong>, or 9.24 TOPS/W-equivalent for movement alone.</p>
-        <details><summary>Exact 0.118953 J schedule breakdown</summary><p>Bulk A loads: 0.023475 J; bulk B loads: 0.021449 J; output exit: 0.000868 J; near-ALU A staging: 0.000550 J; B staging: 0.004514 J; accumulator staging: 0.001099 J; output-tile staging: 0.066998 J. Total: 0.118953083721334 J.</p></details>
+        <p>The naive placement grows as Θ(n<sup>4</sup>). A size-retuned locality schedule is approximately Θ(n<sup>3.5</sup>) because the scorer’s <code>ceil(sqrt(address))</code> distance grows with the footprint. The selected schedule averages 53.94 score units per paid read; its 0.118953 J is <strong>108.2 fJ per conventional operation</strong>, or 9.24 TOPS/W-equivalent for movement alone.</p>
 
-        <h3>Blackwell and Rubin: what the official INT8 tables imply</h3>
+        <h3 id="blackwell-rubin">Blackwell and Rubin: what the official INT8 tables imply <a class="anchor-link" href="#blackwell-rubin" aria-label="Permalink to Blackwell and Rubin estimates">#</a></h3>
         <div class="two-up">
           <article class="panel dark">
             <p class="eyebrow">Blackwell · B200</p>
@@ -380,7 +445,7 @@
         <p>The Rubin result is intentionally counterintuitive. The same preliminary product table emphasizes 50 PFLOPS NVFP4 and 17.5 PFLOPS FP8, but those formats are not interchangeable with exact INT8×INT8→INT32 work. A 72-GPU rack cross-check—18 dense INT8 POPS at 136 kW provisioned power—gives 8.31 J per GEMM when amortized across 72 simultaneous GEMMs. It is consistent with, but does not measure, the 7.92 J per-GPU estimate.</p>
         <p class="warning"><strong>SKU names matter:</strong> NVIDIA’s current Blackwell Ultra B300 table lists only 153.5 dense INT8 TOPS and up to 1,100 W, which implies <strong>7.88 J</strong>. That is radically different from B200’s 0.244 J and reflects the published legacy-INT8 specification—not a general claim that B300 or Rubin is less efficient on its target FP4/FP8 workloads.</p>
 
-        <h3>Four bytes and four bits are different Blackwell paths</h3>
+        <h3 id="blackwell-precision">Four bytes and four bits are different Blackwell paths <a class="anchor-link" href="#blackwell-precision" aria-label="Permalink to the Blackwell precision table">#</a></h3>
         <p>Taking “four byte” literally means <strong>FP32: four bytes per matrix element</strong>. NVIDIA publishes 75 TFLOP/s FP32 for one HGX B200 GPU. The same FP32 storage can enter the much faster <a href="https://docs.nvidia.com/deeplearning/tensorrt/latest/inference-library/precision-control.html">TF32 Tensor Core path</a>, but TF32 reduces multiply precision. <a href="https://docs.nvidia.com/deeplearning/transformer-engine/user-guide/features/low_precision_training/nvfp4/nvfp4.html">NVFP4</a> is the other common reading: <strong>four bits, or half a byte, plus block-scale metadata</strong>.</p>
         <div class="two-up">
           <article class="panel dark">
@@ -408,7 +473,12 @@
         </div>
         <p class="small">All four B200 rows divide the same 1.0995 trillion conventional operations by NVIDIA’s published dense rate and multiply by the 1,000 W maximum TDP. They are matched roofline-style estimates, not measured per-precision power. FP32/TF32 traffic assumes <code>C=A·B</code> without reading a prior C matrix. For B300’s 1,100 W maximum TDP, the corresponding strict-FP32 and TF32 estimates are 16.13 J and 1.10 J; its per-GPU dense-FP4 figure gives 0.086 J.</p>
 
-        <h3>8K comparison with evidence boundaries</h3>
+        <h3 id="eightk-comparison">8K comparison with evidence boundaries <a class="anchor-link" href="#eightk-comparison" aria-label="Permalink to the 8K INT8 comparison table">#</a></h3>
+        <div class="panel">
+          <span class="callout-number">0.118953 J</span>
+          <p><strong>Provenance of the Sutro row below:</strong> the exact 8K <code>sa_cache</code> score is 118,953,083,721,334 units after an exhaustive 196-pair tile sweep selects 256×128. Multiplying that score by the chosen 1 fJ/unit coefficient yields 0.118953 J. This is a movement-only model result—not measured chip energy and not a throughput/TDP estimate.</p>
+          <p class="small"><a href="#eightk-derivation">Read the complete derivation and score ledger above</a> · Direct table permalink: <a href="#eightk-comparison">#eightk-comparison</a></p>
+        </div>
         <div class="table-wrap">
           <table>
             <caption>One full 8192³ dense INT8 GEMM (1.0995 trillion conventional operations)</caption>

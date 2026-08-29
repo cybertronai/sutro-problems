@@ -34,6 +34,9 @@
         "name": "retuned sa_cache",
         "tile_i": 256,
         "tile_j": 128,
+        "tile_candidates_evaluated": 196,
+        "search_scope": "all ordered pairs of the 14 divisors of 8192 within the literal generalized sa_cache family",
+        "validation": "the same formula reproduces sa_cache(16,8,4)=73602 and naive(16)=340704",
         "paid_reads": 2205465706496,
         "score": 118953083721334,
         "energy_J": 0.118953083721334,
@@ -58,6 +61,45 @@
         "energy_J": 23.401284397481984
       }
     ],
+    "retuned_sa_cache_derivation": {
+      "distance": "d(a)=ceil(sqrt(a))",
+      "range_sum": "D(l,h)=F(h)-F(l-1)",
+      "prefix_sum": "F(x)=q(q+1)(4q-1)/6+(x-q^2)(q+1), q=floor(sqrt(x))",
+      "score_formula": "N^3*d(1)+N^2*(N-1)*d(2)+(N^3/Tj)*D(sB)+(N^3/(Ti*Tj))*D(sC)+(N/Tj)*D(A)+(N/Ti)*D(B)+D(C)",
+      "address_regions": {
+        "sA": [1, 1],
+        "TMP": [2, 2],
+        "sB": [3, 130],
+        "sC": [131, 32898],
+        "A": [32899, 67141762],
+        "B": [67141763, 134250626],
+        "C": [134250627, 201359490]
+      },
+      "reads_per_cell": {
+        "sA": 549755813888,
+        "TMP": 549688705024,
+        "sB": 4294967296,
+        "sC": 16777216,
+        "A": 64,
+        "B": 32,
+        "C": 1
+      },
+      "score_units_by_region": {
+        "sA": 549755813888,
+        "TMP": 1099377410048,
+        "sB": 4514010628096,
+        "sC": 66997983379456,
+        "A": 23475391008000,
+        "B": 21448665777152,
+        "C": 867899704694,
+        "total": 118953083721334
+      },
+      "next_tile_candidates": [
+        {"tile_i": 128, "tile_j": 128, "score": 121105737911286},
+        {"tile_i": 256, "tile_j": 64, "score": 121681290169654}
+      ],
+      "qualification": "exact closed-form evaluation for this schedule family; not a proof over all algorithms and no 8K IR is materialized"
+    },
     "retuned_sa_cache_breakdown_J": {
       "bulk_A_loads": 0.0234753910,
       "bulk_B_loads": 0.0214486658,
