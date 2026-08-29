@@ -78,9 +78,9 @@ accuracy — the secret recovery rate, i.e. the fraction of instances where all
   a costs ⌈√a⌉, and each declared output cell is charged one final read.
 - Score locally against the deterministic dev suite — run from this directory
   (needs only numpy). All `generate_*` calls on this page are functions of
-  [mask_sparse_parity.py](mask_sparse_parity.py); `generate_isd_mask` wraps
-  the ISD algorithm of the superseded joint tier,
-  [scaled_sparse_parity.py](scaled_sparse_parity.py).
+  [mask_sparse_parity.py](mask_sparse_parity.py), a single self-contained
+  module (IR compiler, energy model, batch simulator, suite, generators),
+  checked by [test_mask_sparse_parity.py](test_mask_sparse_parity.py).
 
   ```python
   import mask_sparse_parity as mp
@@ -95,7 +95,7 @@ accuracy — the secret recovery rate, i.e. the fraction of instances where all
   are rank-deficient and can dip a full scan just below 100%).
 - The table and figure above are measured on the dev suite; the full sweep is
   in [doc/mask32_bands.json](doc/mask32_bands.json). Regenerate both with
-  `python3 generate_mask_graph.py` (~4 min).
+  `python3 doc/generate_mask_graph.py` (~4 min).
 - Submit a PR adding your `.ir` and generator under
   [submissions/](submissions/) and updating the accuracy band (table row) it
   improves.

@@ -8,12 +8,13 @@ writes ``doc/mask32_energy_vs_recovery.png`` (and ``.svg``), plus
 solution at each recovery band (20/40/60/80/100%), plus a markdown
 band table on stdout.
 
-Runs in a couple of minutes:  python3 generate_mask_graph.py
+Runs in a couple of minutes:  python3 doc/generate_mask_graph.py
 """
 from __future__ import annotations
 
 import json
 import os
+import sys
 import time
 from dataclasses import dataclass
 from typing import List, Tuple
@@ -24,12 +25,14 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator, FuncFormatter, NullLocator
 
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(HERE))       # the tier module lives one level up
+
 import mask_sparse_parity as mp
 
-HERE = os.path.dirname(os.path.abspath(__file__))
-OUT_PNG = os.path.join(HERE, "doc", "mask32_energy_vs_recovery.png")
-OUT_SVG = os.path.join(HERE, "doc", "mask32_energy_vs_recovery.svg")
-OUT_JSON = os.path.join(HERE, "doc", "mask32_bands.json")
+OUT_PNG = os.path.join(HERE, "mask32_energy_vs_recovery.png")
+OUT_SVG = os.path.join(HERE, "mask32_energy_vs_recovery.svg")
+OUT_JSON = os.path.join(HERE, "mask32_bands.json")
 
 SURFACE = "#fcfcfb"
 INK = "#0b0b0b"

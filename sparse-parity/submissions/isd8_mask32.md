@@ -44,8 +44,7 @@ mp.evaluate_mask(ir)          # → cost 12,042,480, recovery 0.2246
 
 The generator lives in
 [`mask_sparse_parity.py`](../mask_sparse_parity.py); it wraps
-`generate_isd(..., mask_output=True)` from
-[`scaled_sparse_parity.py`](../scaled_sparse_parity.py), where the ISD
+`generate_isd(..., mask_output=True)` in the same module, where the ISD
 circuit construction is documented in detail.
 
 Further reading: [benchmark report](https://cybertronai.github.io/sutro-problems/docs/).

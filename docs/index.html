@@ -446,13 +446,20 @@ suite-construction tricks are available to submissions, or vice versa.</li>
 <p>Measured on an Apple-silicon laptop, each command in a fresh process
 (imports included). Regenerating <em>everything</em> — all three curves plus
 the full test suite — takes about 65 seconds.</p>
+<p class="note">These timings date from this report (2026-08-26), when all
+three tiers lived in the tree. Tiers 1 and 2 have since been retired: the
+repository now ships only the Tier 3 mask task as a single self-contained
+<code>mask_sparse_parity.py</code>, with the curve script at
+<code>doc/generate_mask_graph.py</code>. The retired tiers' modules, scripts
+and submissions remain in git history; the numbers below are kept as the
+measurement record.</p>
 <div class="tblwrap"><table>
 <tr><th>command</th><th class="num">time</th><th>what dominates</th></tr>
 <tr><td><code>generate_graph.py</code> (Tier 1 curve)</td><td class="num">2.0 s</td>
     <td>32 circuit evaluations; suite build is 0.09 s</td></tr>
 <tr><td><code>generate_scaled_graph.py</code> (Tier 2 curve)</td><td class="num">15.7 s</td>
     <td>3 suite builds (5.3 s) + 25 evaluations</td></tr>
-<tr><td><code>generate_mask_graph.py</code> (Tier 3 curve)</td><td class="num">44.4 s</td>
+<tr><td><code>doc/generate_mask_graph.py</code> (Tier 3 curve)</td><td class="num">44.4 s</td>
     <td>13 evaluations of large circuits (~25 s) + 3 suite builds</td></tr>
 <tr><td><code>mask_sparse_parity.py</code> (Tier 3 references)</td><td class="num">14.3 s</td>
     <td>5 circuits including the 1.77 M-op full scan</td></tr>
@@ -486,12 +493,15 @@ cap discussed in <a href="spatial-model-analysis.html">the companion analysis</a
 <pre><code>git clone https://github.com/cybertronai/sutro-problems
 cd sutro-problems/sparse-parity        # needs python3 + numpy + matplotlib
 
-python3 generate_graph.py              # tier-1 curve, ~2 s
-python3 generate_scaled_graph.py       # tier-2 curve, ~15 s
-python3 generate_mask_graph.py         # tier-3 curve, ~40 s
+python3 doc/generate_mask_graph.py     # tier-3 curve + accuracy bands, ~4 min
 python3 mask_sparse_parity.py          # scan/ISD/enum reference measurements
-python3 -m pytest test_approx_sparse_parity.py test_scaled_sparse_parity.py test_mask_sparse_parity.py
+python3 -m pytest test_mask_sparse_parity.py
 </code></pre>
+<p class="note">Tiers 1 and 2 are no longer in the tree. To rerun their
+curves, check out a commit from before the cleanup — e.g.
+<code>git checkout 8c83dad -- sparse-parity</code> — which restores
+<code>generate_graph.py</code>, <code>generate_scaled_graph.py</code> and
+their modules.</p>
 <p class="note">Dev evaluations run in seconds on an Apple-silicon laptop
 (suites are cached after first build); a fresh-randomness adjudication run of
 one circuit — suite generation included — stays under a minute.</p>

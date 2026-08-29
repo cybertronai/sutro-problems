@@ -5,10 +5,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-import approx_sparse_parity as ap
 import mask_sparse_parity as mp
-import sparse_parity
-from sparse_parity import Spec
+from mask_sparse_parity import Spec
 
 
 SMALL = Spec(n_bits=12, k_secret=3, m_train=8, m_test=0)
@@ -47,8 +45,12 @@ def test_targets_are_secret_masks_and_instances_identifiable():
     ]
     y_tr = [int(v) for v in row[spec.n_bits * spec.m_train:]]
     from itertools import combinations
-    combs = combinations(range(spec.n_bits), spec.k_secret)
-    assert sparse_parity._count_matches(X_tr, y_tr, combs) == 1
+    n_match = sum(
+        all(sum(X_tr[r][c] for c in comb) % 2 == y_tr[r]
+            for r in range(spec.m_train))
+        for comb in combinations(range(spec.n_bits), spec.k_secret)
+    )
+    assert n_match == 1
 
 
 def test_final_default_sample_size(monkeypatch):
@@ -94,25 +96,13 @@ def test_scan_all_or_nothing():
     """Scan output is always exactly the secret mask or exactly zeros --
     the weight-k capture can never admit a non-secret."""
     ir = mp.generate_scan(7, spec=SMALL)
-    run, _, _ = ap._compile_vector(ir, mp.OP_CAP)
+    run, _, _ = mp._compile_vector(ir, mp.OP_CAP)
     inputs, masks, _ = mp.mask_suite(**SMALL_SUITE)
     out = run(inputs)
     exact = (out == masks).all(axis=1)
     zeros = (out == 0).all(axis=1)
     assert bool((exact | zeros).all())
     assert 0 < int(exact.sum()) < len(masks)
-
-
-def test_scan_joint_mode_on_tier1_spec():
-    """joint=True targets the joint train+test task: near-exact at full
-    scan, and per-instance all-or-nothing."""
-    ir = mp.generate_scan(spec=ap.APPROX, joint=True, op_cap=100_000)
-    res = ap.evaluate(ir, repetitions=2)
-    assert res.advantage >= 0.95
-    run, _, _ = ap._compile_vector(ir)
-    inputs, y, _ = ap.suite(repetitions=2)
-    out = run(inputs)
-    assert bool(((out == y).all(axis=1) | (out == 0).all(axis=1)).all())
 
 
 # ---------------------------------------------------------------------------

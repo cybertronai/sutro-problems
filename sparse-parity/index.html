@@ -381,10 +381,10 @@ charged one final read.</li>
 <li>Score locally against the deterministic dev suite — run from
 <code>sparse-parity/</code> (needs only numpy). All <code>generate_*</code>
 calls on this page are functions of
-<a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">mask_sparse_parity.py</a>;
-<code>generate_isd_mask</code> wraps the ISD algorithm of the superseded joint
-tier,
-<a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/scaled_sparse_parity.py">scaled_sparse_parity.py</a>.
+<a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/mask_sparse_parity.py">mask_sparse_parity.py</a>, a single
+self-contained module (IR compiler, energy model, batch simulator, suite,
+generators), checked by
+<a href="https://github.com/cybertronai/sutro-problems/blob/main/sparse-parity/test_mask_sparse_parity.py">test_mask_sparse_parity.py</a>.
 <pre><code>import mask_sparse_parity as mp
 
 ir = mp.generate_scan(4095)      # or your own IR string
@@ -395,7 +395,7 @@ fresh random 2,048-instance suite each call (recovery noise ≈ ±2 pp; ~2⁻¹�
 instances are rank-deficient and can dip a full scan just below 100%).</li>
 <li>The tabs and figure are measured on the dev suite; regenerate the figure
 and <a href="doc/mask32_bands.json">doc/mask32_bands.json</a> with
-<code>python3 generate_mask_graph.py</code> (~4 min).</li>
+<code>python3 doc/generate_mask_graph.py</code> (~4 min).</li>
 <li>Submit a PR adding your <code>.ir</code> and generator under
 <a href="https://github.com/cybertronai/sutro-problems/tree/main/sparse-parity/submissions">submissions/</a>
 and updating the accuracy band (tab) it improves.</li>
