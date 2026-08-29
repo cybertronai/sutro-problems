@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="920" height="420" viewBox="0 0 920 420" role="img" aria-labelledby="title desc">
+  <title id="title">Sparse parity cost versus baseline</title>
+  <desc id="desc">Normalized read-cost bars for sparse parity small and medium submissions. Lower is better.</desc>
+  <style>
+    text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; fill: #17202a; }
+    .title { font-size: 24px; font-weight: 700; }
+    .subtitle { font-size: 14px; fill: #5b6773; }
+    .axis { stroke: #ccd3da; stroke-width: 1; }
+    .tick { font-size: 12px; fill: #6b7280; }
+    .label { font-size: 14px; font-weight: 600; }
+    .value { font-size: 13px; fill: #334155; }
+    .baseline { fill: #94a3b8; }
+    .ge { fill: #38bdf8; }
+    .best { fill: #22c55e; }
+    .note { font-size: 12px; fill: #64748b; }
+  </style>
+
+  <rect x="0" y="0" width="920" height="420" fill="#ffffff"/>
+  <text class="title" x="40" y="44">Sparse parity read-cost vs baseline</text>
+  <text class="subtitle" x="40" y="68">Normalized to each problem's upstream try-each-candidate baseline. Lower is better.</text>
+
+  <line class="axis" x1="220" y1="100" x2="820" y2="100"/>
+  <line class="axis" x1="220" y1="100" x2="220" y2="342"/>
+  <line class="axis" x1="520" y1="100" x2="520" y2="342" stroke-dasharray="4 4"/>
+  <line class="axis" x1="820" y1="100" x2="820" y2="342" stroke-dasharray="4 4"/>
+  <text class="tick" x="213" y="92">0%</text>
+  <text class="tick" x="506" y="92">50%</text>
+  <text class="tick" x="801" y="92">100%</text>
+
+  <text class="label" x="40" y="130">Small baseline</text>
+  <rect class="baseline" x="220" y="112" width="600" height="24" rx="4"/>
+  <text class="value" x="830" y="130">6,918</text>
+
+  <text class="label" x="40" y="170">small_pack_best</text>
+  <rect class="best" x="220" y="152" width="168" height="24" rx="4"/>
+  <text class="value" x="398" y="170">1,932 (27.9%, 3.6x lower)</text>
+
+  <text class="label" x="40" y="235">Medium baseline</text>
+  <rect class="baseline" x="220" y="217" width="600" height="24" rx="4"/>
+  <text class="value" x="830" y="235">816,251</text>
+
+  <text class="label" x="40" y="275">GE baseline</text>
+  <rect class="ge" x="220" y="257" width="348" height="24" rx="4"/>
+  <text class="value" x="578" y="275">473,046 (58.0%)</text>
+
+  <text class="label" x="40" y="315">predpack_tuned</text>
+  <rect class="best" x="220" y="297" width="12" height="24" rx="4"/>
+  <text class="value" x="242" y="315">15,691 (1.9%, 52.0x lower)</text>
+
+  <text class="note" x="40" y="378">The medium best bar is still visible at true normalized scale; it is 1.92% of baseline read-cost.</text>
+</svg>

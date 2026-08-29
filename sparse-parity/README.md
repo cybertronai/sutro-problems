@@ -105,3 +105,9 @@ accuracy — the secret recovery rate, i.e. the fraction of instances where all
   improves.
 
 </details>
+
+---
+
+[**Legacy page**](legacy.md) — the archived full write-up: the retired Small,
+Medium, Approximate and Scaled-joint tiers with their leaderboards, scoring
+rules and submissions. Their modules are in [legacy/](legacy/).
