@@ -48,3 +48,5 @@ mp.evaluate_mask(ir)          # → cost 43,325,468, recovery 1.0
 The circuit construction is documented phase-by-phase in the
 `generate_scan` docstring of
 [`mask_sparse_parity.py`](../mask_sparse_parity.py).
+
+Further reading: [benchmark report](https://cybertronai.github.io/sutro-problems/docs/).

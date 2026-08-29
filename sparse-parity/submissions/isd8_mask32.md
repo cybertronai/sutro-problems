@@ -47,3 +47,5 @@ The generator lives in
 `generate_isd(..., mask_output=True)` from
 [`scaled_sparse_parity.py`](../scaled_sparse_parity.py), where the ISD
 circuit construction is documented in detail.
+
+Further reading: [benchmark report](https://cybertronai.github.io/sutro-problems/docs/).
