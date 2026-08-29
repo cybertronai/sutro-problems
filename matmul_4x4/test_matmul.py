@@ -38,6 +38,18 @@ def test_score_1x1_rejects_identity_ir():
         matmul.score_1x1(identity)
 
 
+def test_score_1x1_rejects_fixed_pair_exploit():
+    """A quadratic IR tailored to the public test pair is not matmul."""
+    exploit = "1,2;mul 3,1,1;add 4,3,3;add 5,4,3;5"
+
+    fixed_inputs, fixed_expected = matmul._matmul_test(1)
+    assert matmul._simulate(exploit, fixed_inputs)[0] == fixed_expected
+    assert matmul._simulate(exploit, [2, 3])[0] != [6]
+
+    with pytest.raises(ValueError, match="correctness failed"):
+        matmul.score_1x1(exploit)
+
+
 def test_score_myfunc_worked_example():
     """Documented `myfunc(a,b,c,d,e) = a*b + c*d + e` example: total cost 15."""
     ir = (
