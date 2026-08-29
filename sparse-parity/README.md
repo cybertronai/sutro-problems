@@ -95,5 +95,6 @@ accuracy — the secret recovery rate, i.e. the fraction of instances where all
   improves.
 
 </details>
+
 - Github Pages: <https://cybertronai.github.io/sutro-problems/sparse-parity/> ·
 - [Literature background](https://cybertronai.github.io/sutro-problems/docs/spatial-model-analysis.html)
