@@ -3,7 +3,7 @@
 **Author:** [@zh4ngx](https://github.com/zh4ngx)
 **Date:** 2026-08-28
 **Problem:** Mask sparse parity, n=32 — 100% accuracy target
-**Cost:** 28,169,066
+**Cost:** 14,824,711
 **IR:** [`weightscan5_mask32.ir`](weightscan5_mask32.ir)
 **Method:** `generate_scan(0, walk="weight", weight_cap=5)` (weight-ordered null-space scan)
 
@@ -15,7 +15,9 @@ columns, and the secret has exactly k = 5 ones), so visiting every
 coefficient vector of weight ≤ 5 — 3,473 of the 16,384 in the
 solution space — provably covers every full-rank instance, not just
 the measured ones. Measured: 100% recovery on the dev suite and on
-both 2,048-instance fresh draws, at 28,169,066 reads (709,002 lines).
+every fresh draw pre and post layout optimization (2026-08-30:
+14,824,711 reads via `renumber_addresses`, recovery bit-identical;
+fresh draws post-optimization 1.0000, 1.0000), at 709,002 lines.
 The reflected-Gray full walk needs all 16,384 visits for the same
 coverage and costs 43,325,468.
 
@@ -32,6 +34,7 @@ rank-deficient adjudication draws.
 ```python
 import mask_sparse_parity as mp
 
-ir = mp.generate_scan(0, walk="weight", weight_cap=5)
-res = mp.evaluate_mask(ir)          # → cost 28,169,066, recovery 1.0
+ir = mp.renumber_addresses(
+    mp.generate_scan(0, walk="weight", weight_cap=5))
+res = mp.evaluate_mask(ir)          # → cost 14,824,711, recovery 1.0
 ```

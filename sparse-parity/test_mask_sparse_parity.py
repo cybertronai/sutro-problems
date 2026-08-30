@@ -133,6 +133,13 @@ def test_sis_mask_cheaper_than_full_scan():
     )
     assert sis.cost < scan.cost
 
+def test_renumber_preserves_recovery_and_reduces_cost():
+    ir = mp.generate_scan(0, walk="weight", weight_cap=2, spec=SMALL)
+    r0 = mp.evaluate_mask(ir, **SMALL_SUITE)
+    r1 = mp.evaluate_mask(mp.renumber_addresses(ir), **SMALL_SUITE)
+    assert r0.recovery == r1.recovery
+    assert r1.cost < r0.cost
+
 def test_output_arity_validated():
     n_in = mp._n_inputs(SMALL)
     bad = ",".join(str(i) for i in range(1, n_in + 1)) + "\n1,2,3"
