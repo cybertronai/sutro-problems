@@ -41,7 +41,8 @@ MUTED = "#898781"
 GRID = "#e1e0d9"
 BASELINE = "#c3c2b7"
 SERIES = {"blue": "#2a78d6", "orange": "#eb6834",
-           "green": "#2e9e4f", "purple": "#8259b8"}
+           "green": "#2e9e4f", "purple": "#8259b8",
+           "teal": "#1f8a8a", "magenta": "#c2548a"}
 
 # Dense sweeps feed the band table; the marker subset keeps the plot quiet.
 S_SWEEP = [0, 127, 255, 383, 511, 767, 1023, 1535, 2047, 3071, 4095,
@@ -53,6 +54,10 @@ W_SWEEP = [0, 1, 2, 3, 4, 5]
 W_MARKERS = [1, 2, 3, 5]
 R_SWEEP = [1, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32]
 R_MARKERS = [1, 8, 16, 32]
+SIS2_SWEEP = [1, 2]
+SIS2_MARKERS = [1]
+SIS3_SWEEP = [1, 2, 3, 4]
+SIS3_MARKERS = [1, 4]
 BANDS = [0.2, 0.4, 0.6, 0.8, 1.0]
 
 
@@ -89,6 +94,15 @@ def collect() -> List[Series]:
         Series(
             "Random ISD", SERIES["purple"], "T", R_SWEEP, R_MARKERS,
             [_eval(mp.generate_isd_mask(T, subset_seed=0)) for T in R_SWEEP],
+        ),        Series(
+            "Static-IS walk (cap=2)", SERIES["teal"], "T", SIS2_SWEEP,
+            SIS2_MARKERS,
+            [_eval(mp.generate_sis_mask(T, 2)) for T in SIS2_SWEEP],
+        ),
+        Series(
+            "Static-IS walk (cap=3)", SERIES["magenta"], "T", SIS3_SWEEP,
+            SIS3_MARKERS,
+            [_eval(mp.generate_sis_mask(T, 3)) for T in SIS3_SWEEP],
         ),
     ]
 
@@ -119,6 +133,8 @@ def plot(series: List[Series]) -> None:
     # direct labels at the curve ends, in ink -- identity never color-alone
     by_label = {s.label: s for s in series}
     ends = [
+        ("Static-IS walk (cap=3)", (6, 10), "left", "bottom"),
+        ("Static-IS walk (cap=2)", (6, 14), "left", "bottom"),
         ("Gray scan", (-10, 6), "right", "bottom"),
         ("ISD restarts", (8, -2), "left", "top"),
         ("Weight-ordered scan", (-10, 6), "right", "bottom"),
@@ -183,11 +199,17 @@ def band_table(series: List[Series]):
                                 by_label["Weight-ordered scan"]),
         "Random ISD": ("generate_isd_mask(…, subset_seed=0)",
                        by_label["Random ISD"]),
+            "Static-IS walk (cap=2)": ("generate_sis_mask(…, 2)",
+                                  by_label["Static-IS walk (cap=2)"]),
+        "Static-IS walk (cap=3)": ("generate_sis_mask(…, 3)",
+                                  by_label["Static-IS walk (cap=3)"]),
     }
     fmt_call = {
         "Weight-ordered scan": lambda kn: f"generate_scan(0, walk='weight',"
                                           f" weight_cap={kn})",
         "Random ISD": lambda kn: f"generate_isd_mask({kn}, subset_seed=0)",
+            "Static-IS walk (cap=2)": lambda kn: f"generate_sis_mask({kn}, 2)",
+        "Static-IS walk (cap=3)": lambda kn: f"generate_sis_mask({kn}, 3)",
     }
     labeled = [
         {"method": name,

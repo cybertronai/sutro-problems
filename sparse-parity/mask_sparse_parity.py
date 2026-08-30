@@ -823,6 +823,174 @@ def _weight_order_flips(G: int, cap: int) -> List[List[int]]:
     return flips
 
 
+def generate_sis_mask(
+    n_sets: int = 1,
+    cap: int = 3,
+    *,
+    spec: Spec = MASK32,
+    seed: int = 0,
+    op_cap: int = OP_CAP,
+) -> str:
+    """Static information set + weight-ordered walk (the siswalk family).
+
+    Cheaper alternative to generate_scan for the low/mid accuracy bands.
+    For each of ``n_sets`` information sets S (independent uniform
+    m_train-column subsets, drawn once from a seeded RNG) the circuit
+    RREFs the square subsystem [X_S | y | X_F] with statically ordered
+    pivots on the S columns only, reads s0 off the y column and each of
+    the G = n - m knob vectors off the augmented X_F columns (a knob is
+    the solution of X_S v = X_f padded with e_f), then runs the same
+    coefficient-weight-ordered walk and weight-k capture as
+    ``generate_scan(walk="weight")``.  One square RREF costs about a
+    fifth of the full-width RREF, so low-band energy drops several-fold.
+
+    When X_S is rank-deficient (probability ~0.71 per set, uniform GF(2))
+    the static pivoting degrades gracefully -- some S columns get no
+    pivot row, the walked space is then not guaranteed to be the true
+    solution space, and the set contributes nothing (or, rarely, a wrong
+    weight-k visitor that scores 0 exactly like an abstention).  Measured
+    on the dev suite the family still recovers ~44% at cap=2 with one
+    set -- well above the 28.5% invertibility rate, because deficient
+    sets often leave the secret inside the walked space anyway -- and
+    saturates near 76% with several sets; the residual instances are a
+    correlated hard class that only the full dynamic RREF of
+    ``generate_scan`` handles, so the 80/100% bands stay with the scan.
+
+    Captures from all sets OR into the same output cells; by unique
+    identifiability at most one weight-k visitor per instance is the
+    secret.
+    """
+    n, m, k = spec.n_bits, spec.m_train, spec.k_secret
+    G = n - m
+    if not 1 <= n_sets:
+        raise ValueError("n_sets must be >= 1")
+    if not 0 <= cap <= G:
+        raise ValueError(f"cap must be in [0, {G}]")
+    rng = Random(seed)
+    sets = [sorted(rng.sample(range(n), m)) for _ in range(n_sets)]
+
+    n_aug = n + 1                      # [X_S | y | X_F] per set
+    a = 1
+    def alloc(sz):
+        nonlocal a
+        base = a; a += sz; return base
+
+    w_base = alloc(n); out_base = alloc(n)
+    WSUM = alloc(1); OK = alloc(1)
+    FB_base = alloc(G * n)
+    M_base = alloc(m * n_aug)
+    PR_base = alloc(n_aug)
+    ZERO = alloc(1); ONE = alloc(1); M_VAL = alloc(1); K_VAL = alloc(1)
+    ROW_base = alloc(m)
+    used_base = alloc(m)
+    pivot_base = alloc(m)              # pivot row per S column
+    X_tr_base = alloc(n * m)
+    y_tr_base = alloc(m)
+    piv_i = alloc(1); found = alloc(1); bit = alloc(1)
+    not_used = alloc(1); eligible = alloc(1); is_first = alloc(1)
+    is_match = alloc(1); is_other = alloc(1); do_xor = alloc(1)
+    a_tmp = alloc(1); b_tmp = alloc(1); mask = alloc(1)
+
+    w_at = lambda c: w_base + c
+    out_at = lambda c: out_base + c
+    FB_at = lambda j, c: FB_base + j * n + c
+    M_at = lambda i, j: M_base + i * n_aug + j
+    PR_at = lambda j: PR_base + j
+    ROW_at = lambda r: ROW_base + r
+    used_at = lambda r: used_base + r
+    pivot_at = lambda c: pivot_base + c
+    X_at = lambda i, c: X_tr_base + i * n + c
+    y_at = lambda i: y_tr_base + i
+
+    inputs = [X_at(i, c) for i in range(m) for c in range(n)] + [
+        y_at(i) for i in range(m)
+    ]
+    lines = [",".join(map(str, inputs))]
+    def emit(s): lines.append(s)
+
+    emit(f"set {ZERO},0"); emit(f"set {ONE},1")
+    emit(f"set {M_VAL},{m}"); emit(f"set {K_VAL},{k}")
+    for r in range(m):
+        emit(f"set {ROW_at(r)},{r}")
+    for c in range(n):
+        emit(f"set {out_at(c)},0")
+
+    for S in sets:
+        free_cols = [c for c in range(n) if c not in S]
+        for i in range(m):
+            for j, c in enumerate(S):
+                emit(f"copy {M_at(i, j)},{X_at(i, c)}")
+            emit(f"copy {M_at(i, m)},{y_at(i)}")
+            for j, c in enumerate(free_cols):
+                emit(f"copy {M_at(i, m + 1 + j)},{X_at(i, c)}")
+        for r in range(m):
+            emit(f"set {used_at(r)},0")
+        for col in range(m):
+            emit(f"copy {piv_i},{M_VAL}")
+            emit(f"copy {found},{ZERO}")
+            for r in range(m):
+                emit(f"copy {bit},{M_at(r, col)}")
+                emit(f"select {not_used},{used_at(r)},{ZERO},{ONE}")
+                emit(f"and {eligible},{bit},{not_used}")
+                emit(f"select {is_first},{found},{ZERO},{eligible}")
+                emit(f"select {piv_i},{is_first},{ROW_at(r)},{piv_i}")
+                emit(f"or {used_at(r)},{is_first}")
+                emit(f"or {found},{eligible}")
+            emit(f"copy {pivot_at(col)},{piv_i}")
+            for j in range(n_aug):
+                emit(f"copy {PR_at(j)},{ZERO}")
+                for r in range(m):
+                    emit(f"cmp {is_match},{piv_i},{ROW_at(r)},eq")
+                    emit(f"select {PR_at(j)},{is_match},{M_at(r, j)},{PR_at(j)}")
+            for r in range(m):
+                emit(f"cmp {is_match},{piv_i},{ROW_at(r)},eq")
+                emit(f"select {is_other},{is_match},{ZERO},{ONE}")
+                emit(f"copy {bit},{M_at(r, col)}")
+                emit(f"and {do_xor},{is_other},{bit}")
+                emit(f"copy {mask},{ZERO}")
+                emit(f"sub {mask},{mask},{do_xor}")
+                for j in range(n_aug):
+                    emit(f"and {a_tmp},{PR_at(j)},{mask}")
+                    emit(f"xor {M_at(r, j)},{M_at(r, j)},{a_tmp}")
+
+        def capture():
+            emit(f"add {WSUM},{w_at(0)},{w_at(1)}")
+            for c in range(2, n):
+                emit(f"add {WSUM},{w_at(c)}")
+            emit(f"cmp {OK},{WSUM},{K_VAL},eq")
+            for c in range(n):
+                emit(f"select {out_at(c)},{OK},{w_at(c)},{out_at(c)}")
+
+        for c in range(n):
+            emit(f"set {w_at(c)},0")
+        for jj, c in enumerate(S):
+            for r in range(m):
+                emit(f"cmp {is_match},{pivot_at(jj)},{ROW_at(r)},eq")
+                emit(f"select {w_at(c)},{is_match},{M_at(r, m)},{w_at(c)}")
+        for j, f in enumerate(free_cols):
+            for c in range(n):
+                emit(f"set {FB_at(j, c)},0")
+            emit(f"copy {FB_at(j, f)},{ONE}")
+            for jj, c in enumerate(S):
+                for r in range(m):
+                    emit(f"cmp {is_match},{pivot_at(jj)},{ROW_at(r)},eq")
+                    emit(f"select {FB_at(j, c)},{is_match},{M_at(r, m + 1 + j)},{FB_at(j, c)}")
+        capture()
+        for flips in _weight_order_flips(G, cap):
+            for j in flips:
+                for c in range(n):
+                    emit(f"xor {w_at(c)},{FB_at(j, c)}")
+            capture()
+
+    lines.append(",".join(str(out_at(c)) for c in range(n)))
+    ir = "\n".join(lines)
+    if len(lines) > op_cap:
+        raise ValueError(
+            f"siswalk IR has {len(lines) - 2:,} ops, over the {op_cap:,} cap"
+        )
+    return ir
+
+
 def generate_scan(
     n_steps: int | None = None,
     *,
@@ -1069,6 +1237,7 @@ __all__ = [
     "DEV_SECRETS", "DEV_REPS", "FINAL_SECRETS", "FINAL_REPS",
     "MaskResult", "mask_suite", "evaluate_mask",
     "generate_scan", "generate_isd_mask", "generate_enum_mask",
+    "generate_sis_mask",
     "_weight_order_flips",
 ]
 

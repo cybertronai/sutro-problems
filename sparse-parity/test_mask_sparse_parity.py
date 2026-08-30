@@ -120,6 +120,19 @@ def test_isd_mask_positive_recovery():
     assert 0.2 < res.recovery < 0.8
 
 
+def test_sis_mask_positive_recovery():
+    res = mp.evaluate_mask(mp.generate_sis_mask(1, 2, spec=SMALL), **SMALL_SUITE)
+    assert 0.1 < res.recovery < 0.9
+
+
+def test_sis_mask_cheaper_than_full_scan():
+    sis = mp.evaluate_mask(mp.generate_sis_mask(1, 4, spec=SMALL), **SMALL_SUITE)
+    scan = mp.evaluate_mask(
+        mp.generate_scan(0, walk="weight", weight_cap=4, spec=SMALL),
+        **SMALL_SUITE,
+    )
+    assert sis.cost < scan.cost
+
 def test_output_arity_validated():
     n_in = mp._n_inputs(SMALL)
     bad = ",".join(str(i) for i in range(1, n_in + 1)) + "\n1,2,3"
