@@ -134,7 +134,7 @@ def plot(series: List[Series]) -> None:
     by_label = {s.label: s for s in series}
     ends = [
         ("Static-IS walk (cap=3)", (6, 10), "left", "bottom"),
-        ("Static-IS walk (cap=2)", (6, 14), "left", "bottom"),
+        ("Static-IS walk (cap=2)", (8, -8), "left", "top"),
         ("Gray scan", (-10, 6), "right", "bottom"),
         ("ISD restarts", (8, -2), "left", "top"),
         ("Weight-ordered scan", (-10, 6), "right", "bottom"),
@@ -148,9 +148,11 @@ def plot(series: List[Series]) -> None:
                     xytext=(dx, dy), textcoords="offset points",
                     ha=ha, va=va, fontsize=9.5, color=INK_2)
 
-    ax.set_yscale("log")
+    # Linear y from zero. The families span 0.54M-29.2M (~54x), so a log
+    # axis reads better, but a zero baseline makes the absolute size of each
+    # gap legible instead of only its ratio.
     ax.set_xlim(-0.02, 1.04)
-    ax.set_ylim(1e6, 6.5e7)
+    ax.set_ylim(0, 3.05e7)
     ax.set_ylabel("Energy — read cost (Dally model, v3 ISA)",
                   color=INK_2, fontsize=10)
     ax.set_xlabel("Secret recovery rate", color=INK_2, fontsize=10)
@@ -161,7 +163,8 @@ def plot(series: List[Series]) -> None:
 
     ax.yaxis.set_major_formatter(FuncFormatter(_fmt_cost))
     ax.yaxis.set_minor_locator(NullLocator())
-    ax.yaxis.set_major_locator(FixedLocator([1e6, 2e6, 5e6, 1e7, 2e7, 5e7]))
+    ax.yaxis.set_major_locator(
+        FixedLocator([0, 5e6, 1e7, 1.5e7, 2e7, 2.5e7, 3e7]))
     xticks = [0, 0.2, 0.4, 0.6, 0.8, 1.0]
     ax.xaxis.set_major_locator(FixedLocator(xticks))
     ax.xaxis.set_major_formatter(FuncFormatter(lambda v, _: f"{v:.0%}"))
@@ -175,8 +178,10 @@ def plot(series: List[Series]) -> None:
         ax.spines[side].set_color(BASELINE)
     ax.set_axisbelow(True)
 
+    # Upper left: on the linear-from-zero axis every curve sits low, so the
+    # lower right (the log layout's home for the legend) is now occupied.
     legend = ax.legend(
-        loc="lower right", frameon=False, fontsize=9, labelcolor=INK_2,
+        loc="upper left", frameon=False, fontsize=9, labelcolor=INK_2,
         handlelength=1.6, borderaxespad=0.2,
     )
     for line in legend.get_lines():
