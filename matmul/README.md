@@ -1,4 +1,7 @@
+[View this project on GitHub ↗](https://github.com/cybertronai/sutro-problems/tree/main/matmul)
+
 # Matmul
+
 <img width="780" height="430" alt="naive_4x4_matmul" src="https://github.com/user-attachments/assets/dfab8831-876a-4cdd-bda4-79a7ef869152" />
 
 
