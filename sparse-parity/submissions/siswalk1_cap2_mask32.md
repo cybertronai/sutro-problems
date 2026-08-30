@@ -3,7 +3,7 @@
 **Author:** [@zh4ngx](https://github.com/zh4ngx)
 **Date:** 2026-08-29
 **Problem:** Mask sparse parity, n=32 — 20% and 40% accuracy targets
-**Cost:** 1,592,584
+**Cost:** 1,317,480
 **IR:** [`siswalk1_cap2_mask32.ir`](siswalk1_cap2_mask32.ir)
 **Method:** `generate_sis_mask(1, 2)` (static information set + weight-ordered walk)
 
@@ -36,9 +36,10 @@ handles, so the 80/100% bands stay with the scan family.
 
 Dev suite: recovery 0.4453 at 1,592,584 reads (72,782 lines;
 layout-optimized 2026-08-30 from 4,991,107 via
-`renumber_addresses`, recovery bit-identical per instance, so the
+`renumber_addresses` and then staged into the dead RREF address range
+via `optimize_layout`, recovery bit-identical per instance, so the
 fresh-draw margin analysis above is unchanged). Fresh 2,048-instance
-draws post-optimization: 0.4795, 0.4771. Previous records at these
+draws post-staging: 0.4634, 0.4917. Previous records at these
 bands: 12,042,480 (ISD restarts, 20%) and 17,418,235 (weightscan2, 40%).
 
 **Margin on the 40% band.** Recovery here is only a few points above the 40%
@@ -54,6 +55,6 @@ only ~1.8 sd under the mean, so an occasional draw can miss it. The 20% band
 ```python
 import mask_sparse_parity as mp
 
-ir = mp.renumber_addresses(mp.generate_sis_mask(1, 2))
-res = mp.evaluate_mask(ir)          # → cost 1,592,584, recovery 0.4453
+ir = mp.optimize_layout(mp.generate_sis_mask(1, 2))
+res = mp.evaluate_mask(ir)          # → cost 1,317,480, recovery 0.4453
 ```

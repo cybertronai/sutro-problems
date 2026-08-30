@@ -3,7 +3,7 @@
 **Author:** [@zh4ngx](https://github.com/zh4ngx)
 **Date:** 2026-08-28
 **Problem:** Mask sparse parity, n=32 — 60% and 80% accuracy targets
-**Cost:** 6,735,542
+**Cost:** 5,593,997
 **IR:** [`weightscan3_mask32.ir`](weightscan3_mask32.ir)
 **Method:** `generate_scan(0, walk="weight", weight_cap=3)` (weight-ordered null-space scan)
 
@@ -18,17 +18,17 @@ weight ≤ 3, so one IR serves both the 60% and the 80% band at
 
 ## Numbers
 
-Dev suite: recovery 0.8984. Layout-optimized 2026-08-30 from
-18,509,753 via `renumber_addresses` (recovery bit-identical); fresh
-2,048-instance draws post-optimization: 0.8936, 0.8984. Pre-optimization
-draws: 0.9048, 0.8960.
+Dev suite: recovery 0.8984. Layout-optimized 2026-08-30 from 18,509,753 via `renumber_addresses`,
+then staged into the dead RREF range via `optimize_layout` (recovery
+bit-identical); fresh 2,048-instance draws post-staging: 0.8887,
+0.9155. Pre-optimization draws: 0.9048, 0.8960.
 
 ## Reproduce
 
 ```python
 import mask_sparse_parity as mp
 
-ir = mp.renumber_addresses(
+ir = mp.optimize_layout(
     mp.generate_scan(0, walk="weight", weight_cap=3))
-res = mp.evaluate_mask(ir)          # → cost 6,735,542, recovery 0.8984
+res = mp.evaluate_mask(ir)          # → cost 5,593,997, recovery 0.8984
 ```

@@ -897,6 +897,108 @@ def renumber_addresses(ir: str) -> str:
     return "\n".join(out)
 
 
+def stage_walk_layout(ir: str) -> str:
+    """Stage the walk into the dead RREF address range.
+
+    Two-phase layout pass for canonical generate_scan /
+    generate_sis_mask outputs (whose head cells are allocated in the
+    standard order: w, out, WSUM, OK, then the FB knob slots, all below
+    the RREF working table).  Splits the program at the first capture
+    block, gives the prefix (RREF + readoffs) its own read-frequency
+    optimal addressing, then re-addresses the walk from scratch in the
+    same low range -- the RREF table is dead by then, so its slots are
+    free -- and bridges the boundary with one copy per live-in cell.
+    Recovery is bit-identical; cost drops a further ~1.2-1.3x on top of
+    renumber_addresses (the one-boundary case of the software caching
+    headroom named in docs/spatial-model-analysis.html).
+    """
+    W_ = set(range(1, 33)); OUT_ = set(range(33, 65))
+    WSUM_, OK_ = 65, 66; FB_ = set(range(67, 515))
+
+    def split_op(l):
+        parts = l.split(" ", 1)
+        return parts[0], parts[1] if len(parts) > 1 else ""
+
+    lines = ir.splitlines()
+    inputs_d, outputs_d = lines[0], lines[-1]
+    body = lines[1:-1]
+
+    split = next((i for i, l in enumerate(body)
+                  if (p := split_op(l))[0] == "xor"
+                  and int(p[1].split(",")[0]) in W_
+                  and int(p[1].split(",")[1]) in FB_), None)
+    if split is None:
+        return renumber_addresses(ir)      # no walk: global layout only
+    j = split
+    while j > 0:
+        op, rest = split_op(body[j - 1])
+        d = rest.split(",")[0]
+        dst = int(d) if d.isdigit() else -1
+        if ((op == "add" and dst == WSUM_) or (op == "cmp" and dst == OK_)
+                or (op == "select" and dst in OUT_)):
+            j -= 1
+        else:
+            break
+    prefix, walk = body[:j], body[j:]
+
+    def universe_reads(seg):
+        cnt, uni = {}, set()
+        for l in seg:
+            op, rest = split_op(l)
+            if op == "set":
+                uni.add(int(rest.split(",")[0]))
+                continue
+            rest2 = rest.replace(",eq", "").replace(",ne", "")
+            try:
+                args = [int(x) for x in rest2.split(",")]
+            except ValueError:
+                continue
+            uni.add(args[0])
+            for a in args[1:]:
+                uni.add(a)
+                cnt[a] = cnt.get(a, 0) + 1
+        return cnt, uni
+
+    pc, pu = universe_reads(prefix)
+    wc, wu = universe_reads(walk)
+    pre_map = {a: i + 1 for i, a in enumerate(
+        sorted(pu, key=lambda a: (-pc.get(a, 0), a)))}
+    walk_order = sorted(wu, key=lambda a: (-wc.get(a, 0), a))
+    walk_map = {a: i + 1 for i, a in enumerate(walk_order)}
+
+    def remap(seg, mapping):
+        out = []
+        for l in seg:
+            op, rest = split_op(l)
+            suffix = ""
+            if rest.endswith(",eq") or rest.endswith(",ne"):
+                rest, suffix = rest[:-3], rest[-3:]
+            args = rest.split(",")
+            dst = mapping.get(int(args[0]), int(args[0]))
+            if op == "set":
+                out.append(f"{op} {dst},{args[1]}{suffix}")
+                continue
+            srcs = ",".join(str(mapping.get(int(x), int(x)))
+                            for x in args[1:])
+            out.append(f"{op} {dst},{srcs}{suffix}")
+        return out
+
+    out = [",".join(str(pre_map[int(x)]) for x in inputs_d.split(","))]
+    out += remap(prefix, pre_map)
+    out += [f"copy {walk_map[a]},{pre_map[a]}"
+            for a in walk_order if a in pu]
+    out += remap(walk, walk_map)
+    out.append(",".join(str(walk_map[int(x)]) for x in outputs_d.split(",")))
+    return "\n".join(out)
+
+
+def optimize_layout(ir: str) -> str:
+    """Canonical layout pipeline for scan/sis submissions: staged
+    two-phase addressing (implies the global renumbering of the prefix
+    phase).  Takes the RAW generator output; see stage_walk_layout."""
+    return stage_walk_layout(ir)
+
+
 def generate_sis_mask(
     n_sets: int = 1,
     cap: int = 3,
@@ -1313,6 +1415,7 @@ __all__ = [
     "generate_scan", "generate_isd_mask", "generate_enum_mask",
     "generate_sis_mask",
     "renumber_addresses",
+    "stage_walk_layout", "optimize_layout",
     "_weight_order_flips",
 ]
 
