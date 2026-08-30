@@ -72,7 +72,7 @@ class Series:
 
 
 def _eval(ir: str):
-    res = mp.evaluate_mask(ir)
+    res = mp.evaluate_mask(mp.renumber_addresses(ir))
     return res.cost, res.recovery, len(ir.splitlines()) - 2
 
 
