@@ -38,6 +38,14 @@ Dev suite: recovery 0.4453 at 4,991,107 reads (72,782 lines). Fresh
 2,048-instance draws: 0.4536, 0.4580. Previous records at these
 bands: 12,042,480 (ISD restarts, 20%) and 17,418,235 (weightscan2, 40%).
 
+**Margin on the 40% band.** Recovery here is only a few points above the 40%
+line, and fresh-draw spread is wider than the ±2 pp quoted for the scan
+families — success is correlated through the information set, so per-suite
+variance exceeds binomial. Over 15 independent adjudication draws: min 0.4048,
+max 0.5063, mean 0.4527, sd 0.0283, none below 0.40, but the threshold sits
+only ~1.8 sd under the mean, so an occasional draw can miss it. The 20% band
+(+20 pp) and the cap-3 submission's 60% band are not close calls.
+
 ## Reproduce
 
 ```python
