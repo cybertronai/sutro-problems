@@ -1,4 +1,5 @@
 # Matmul
+<img width="780" height="430" alt="naive_4x4_matmul" src="https://github.com/user-attachments/assets/dfab8831-876a-4cdd-bda4-79a7ef869152" />
 
 
 - DeepMind's [AlphaTensor](https://github.com/google-deepmind/alphatensor) discover a better 4x4 matrix multiplication algorithm in terms of FLOPs. 
