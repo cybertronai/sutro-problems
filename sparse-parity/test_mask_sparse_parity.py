@@ -2,11 +2,21 @@
 ``python3 -m pytest test_mask_sparse_parity.py``."""
 from __future__ import annotations
 
+import json
+import os
+import sys
+from pathlib import Path
+
 import numpy as np
 import pytest
 
 import mask_sparse_parity as mp
 from mask_sparse_parity import Spec
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "submissions"))
+import packedsis  # noqa: E402
+import packedwalk  # noqa: E402
+import septwalk  # noqa: E402
 
 
 SMALL = Spec(n_bits=12, k_secret=3, m_train=8, m_test=0)
@@ -158,6 +168,84 @@ def test_output_arity_validated():
 def test_cap_enforced_by_generators():
     with pytest.raises(ValueError, match="cap"):
         mp.generate_enum_mask(20_000)   # ~2.5M ops > 2M
+
+
+# ---------------------------------------------------------------------------
+# Bit-packed families (submissions/): same algorithms as above, cells hold
+# multiple bits instead of one. Hardcoded to MASK32 (n=32, m=18, k=5), so
+# these run against the full dev suite rather than SMALL.
+# ---------------------------------------------------------------------------
+
+def test_packedsis_positive_recovery_and_cheaper_than_reference():
+    # Not bit-identical to generate_sis_mask: packedsis takes the *last*
+    # eligible pivot row (no first-found tracking) instead of the first,
+    # so it's a different, independently-verified algorithm in the same
+    # family (checked against its own numpy emulation in
+    # submissions/packedsis_xcheck.py), not a drop-in reimplementation.
+    ref = mp.evaluate_mask(mp.generate_sis_mask(1, 2, seed=3))
+    packed = mp.evaluate_mask(packedsis.generate_packed_sis(cap=2, seed=3))
+    assert 0.1 < packed.recovery < 0.9
+    assert packed.cost < ref.cost
+
+
+def test_packedsis_tuned_partial_walk_record():
+    """Seed 13 is strictly cheaper than the prior seed-3 20% record."""
+    prior = mp.evaluate_mask(packedsis.generate_packed_sis(
+        cap=2, seed=3, g2=8))
+    tuned = mp.evaluate_mask(packedsis.generate_packed_sis(
+        cap=2, seed=13, g2=8))
+    assert tuned.cost < prior.cost
+    assert tuned.recovery >= 0.20
+
+
+def test_packedwalk_matches_reference_recovery():
+    ref = mp.evaluate_mask(mp.optimize_layout(mp.generate_sis_mask(1, 2)))
+    packed = mp.evaluate_mask(packedwalk.generate(1, 2))
+    assert packed.recovery == ref.recovery
+    assert packed.cost < ref.cost
+
+
+def test_packedwalk_seed5_record_and_generated_band_data_agree():
+    """The 40% table artifact is seed 5, not the retired seed-0 point."""
+    seed0 = mp.evaluate_mask(packedwalk.generate(1, 2, seed=0))
+    seed5 = mp.evaluate_mask(packedwalk.generate(1, 2, seed=5))
+    assert seed5.cost == seed0.cost == 163_378
+    assert seed5.recovery > seed0.recovery
+
+    bands_path = Path(__file__).with_name("doc") / "mask32_bands.json"
+    bands = json.loads(bands_path.read_text())["bands"]
+    band40 = next(b for b in bands if b["target"] == 0.4)
+    assert (band40["adjudicated_best"]["call"] ==
+            "packedwalk.generate(1, 2, seed=5)")
+    assert band40["adjudicated_best"]["recovery"] == seed5.recovery
+
+
+def test_packed_record_irs_regenerate_byte_identically():
+    records = {
+        "packedsis_pcap2_mask32.ir":
+            packedsis.generate_packed_sis(cap=2, seed=13, g2=8),
+        "packedwalk1_cap2_s5_mask32.ir":
+            packedwalk.generate(1, 2, seed=5),
+        "packedsis_cap3_s13_mask32.ir":
+            packedsis.generate_packed_sis(cap=3, seed=13),
+        "septwalk_wcap3_mask32.ir":
+            septwalk.generate_staged(weight_cap=3),
+        "septwalk_mask32.ir":
+            septwalk.generate_staged(weight_cap=5),
+    }
+    submissions = Path(__file__).with_name("submissions")
+    for filename, generated in records.items():
+        committed = (submissions / filename).read_text()
+        assert generated.rstrip("\n") + "\n" == committed.rstrip("\n") + "\n"
+
+
+def test_septwalk_full_recovery():
+    res = mp.evaluate_mask(septwalk.generate_staged(weight_cap=5))
+    assert res.recovery == 1.0
+    ref = mp.evaluate_mask(
+        mp.optimize_layout(
+            mp.generate_scan(0, walk="weight", weight_cap=5)))
+    assert res.cost < ref.cost
 
 
 if __name__ == "__main__":
