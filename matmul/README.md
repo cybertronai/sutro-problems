@@ -37,7 +37,8 @@ rejected, which admits the usual bilinear matmul algorithms.
 | -          | -:    | -                                                   | -                                            | -                                        |
 | 2026-04-29 | 1,316 | [ir](submissions/baseline_4x4.ir), [report](submissions/baseline_4x4.md)       | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_baseline_4x4` (naive)          |
 | 2026-04-30 |   800 | [ir](submissions/outer_product_4x4.ir), [report](submissions/outer_product_4x4.md)  | [@sjbaebae](https://github.com/sjbaebae)     | `generate_outer_product_4x4` (size-1 sA) |
-| 2026-09-01 | 689 | [ir](submissions/best_689.ir), [report](submissions/best_689.md), [py](submissions/best_689.py) | [@jurajselep](https://github.com/jurajselep) | row-wise lifetime fusion + dead-A output reuse + exact tier allocation ★ best |
+| 2026-09-01 |   689 | [ir](submissions/best_689.ir), [report](submissions/best_689.md), [py](submissions/best_689.py) | [@jurajselep](https://github.com/jurajselep) | row-wise lifetime fusion + dead-A output reuse + exact tier allocation |
+| 2026-09-01 |   681 | [ir](submissions/best_681.ir), [report](submissions/best_681.md), [py](submissions/best_681.py) | [@jurajselep](https://github.com/jurajselep) | hybrid row-0 schedule + JIT A staging + interleaved final adds ★ best |
 
 ## 16×16 Record History
 

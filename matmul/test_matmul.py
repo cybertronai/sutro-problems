@@ -153,6 +153,36 @@ def test_best_689_cost_matches_record_history():
     assert not [a for a in outputs if a not in written]
 
 
+def test_best_681_cost_matches_record_history():
+    import hashlib
+    from collections import Counter
+
+    from matmul.submissions.best_681 import (
+        EXPECTED_SHA256,
+        generate_best_681,
+    )
+
+    ir = generate_best_681()
+    assert hashlib.sha256(ir.encode()).hexdigest() == EXPECTED_SHA256
+    assert matmul.score_4x4(ir) == 681
+
+    inputs, ops, outputs = matmul._parse(ir)
+    assert len(inputs) == 32 and len(set(inputs)) == 32
+    assert len(outputs) == 16 and len(set(outputs)) == 16
+    assert all(a > 0 for a in inputs + outputs)
+    assert Counter(op for op, _ in ops) == {
+        "mul": 64,
+        "add": 48,
+        "copy": 13,
+    }
+    written = set()
+    for op, operands in ops:
+        assert all(a > 0 for a in operands)
+        assert op in {"add", "sub", "mul", "copy"}, op
+        written.add(operands[0])
+    assert not [a for a in outputs if a not in written]
+
+
 def test_macro_b_staging_66633_cost_matches_record_history():
     from matmul.submissions.macro_b_staging_66633 import (
         generate_macro_b_staging_66633,
