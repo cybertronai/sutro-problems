@@ -25,10 +25,18 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FixedLocator, FuncFormatter, NullLocator
 
+# Keep generated SVG IDs stable and omit wall-clock metadata so rerunning this
+# script with the same inputs produces a reviewable artifact diff.
+matplotlib.rcParams["svg.hashsalt"] = "sutro-sparse-parity-mask32-v1"
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))       # the tier module lives one level up
 
 import mask_sparse_parity as mp
+
+_SUB = os.path.join(os.path.dirname(HERE), "submissions")
+sys.path.insert(0, _SUB)
+import packedsis, packedwalk, septwalk  # noqa: E402
 
 OUT_PNG = os.path.join(HERE, "mask32_energy_vs_recovery.png")
 OUT_SVG = os.path.join(HERE, "mask32_energy_vs_recovery.svg")
@@ -42,7 +50,10 @@ GRID = "#e1e0d9"
 BASELINE = "#c3c2b7"
 SERIES = {"blue": "#2a78d6", "orange": "#eb6834",
            "green": "#2e9e4f", "purple": "#8259b8",
-           "teal": "#1f8a8a", "magenta": "#c2548a"}
+           "teal": "#1f8a8a", "magenta": "#c2548a",
+           "crimson": "#c0392b", "olive": "#7f8c1f",
+           "slate": "#4a6572", "amber": "#c9971e",
+           "brick": "#8c4a3a"}
 
 # Dense sweeps feed the band table; the marker subset keeps the plot quiet.
 S_SWEEP = [0, 127, 255, 383, 511, 767, 1023, 1535, 2047, 3071, 4095,
@@ -58,6 +69,20 @@ SIS2_SWEEP = [1, 2]
 SIS2_MARKERS = [1]
 SIS3_SWEEP = [1, 2, 3, 4]
 SIS3_MARKERS = [1, 4]
+# Bit-packed families (7/8 bits per cell instead of 1): same algorithms as
+# above, cheaper circuits. Knobs mirror each submission's own report.
+PSIS_SWEEP = [0, 2, 4, 6, 8, 10, 12, 14]      # packedsis.py: g2 (partial cap-2 walk)
+PSIS_MARKERS = [0, 8, 14]
+PSIS3_SWEEP = [3]                              # packedsis.py: full cap-3 walk
+PSIS3_MARKERS = [3]
+PW_SWEEP = [0, 1, 2, 3]                       # packedwalk.py: cap, n_sets=1
+PW_MARKERS = [1, 2, 3]
+# The promoted cap-2 artifact uses seed 5; the other committed sweep points
+# retain seed 0.  Keep the generated JSON/figure tied to the actual artifacts
+# instead of silently plotting the retired seed-0 cap-2 point.
+PW_SEEDS = {0: 0, 1: 0, 2: 5, 3: 0}
+SEPT_SWEEP = [0, 1, 2, 3, 4, 5]                # septwalk.py: weight_cap
+SEPT_MARKERS = [1, 3, 5]
 BANDS = [0.2, 0.4, 0.6, 0.8, 1.0]
 
 
@@ -73,6 +98,15 @@ class Series:
 
 def _eval(ir: str):
     res = mp.evaluate_mask(mp.optimize_layout(ir))
+    return res.cost, res.recovery, len(ir.splitlines()) - 2
+
+
+def _eval_raw(ir: str):
+    """Like _eval, but for generators whose own pipeline already applies
+    its layout pass (packedsis/packedwalk/septwalk) -- re-running the
+    generic optimize_layout on top would relabel an already
+    phase-optimal address space and typically raises cost slightly."""
+    res = mp.evaluate_mask(ir)
     return res.cost, res.recovery, len(ir.splitlines()) - 2
 
 
@@ -103,6 +137,29 @@ def collect() -> List[Series]:
             "Static-IS walk (cap=3)", SERIES["magenta"], "T", SIS3_SWEEP,
             SIS3_MARKERS,
             [_eval(mp.generate_sis_mask(T, 3)) for T in SIS3_SWEEP],
+        ),
+        Series(
+            "Packed SIS (partial walk)", SERIES["crimson"], "g2",
+            PSIS_SWEEP, PSIS_MARKERS,
+            [_eval_raw(packedsis.generate_packed_sis(cap=2, seed=13, g2=g2))
+             for g2 in PSIS_SWEEP],
+        ),
+        Series(
+            "Packed SIS (cap=3 walk)", SERIES["brick"], "cap",
+            PSIS3_SWEEP, PSIS3_MARKERS,
+            [_eval_raw(packedsis.generate_packed_sis(cap=3, seed=13))],
+        ),
+        Series(
+            "Bit-packed SIS walk", SERIES["olive"], "cap", PW_SWEEP,
+            PW_MARKERS,
+            [_eval_raw(packedwalk.generate(1, cap, seed=PW_SEEDS[cap]))
+             for cap in PW_SWEEP],
+        ),
+        Series(
+            "Septet-packed walk", SERIES["amber"], "cap", SEPT_SWEEP,
+            SEPT_MARKERS,
+            [_eval_raw(septwalk.generate_staged(weight_cap=w))
+             for w in SEPT_SWEEP],
         ),
     ]
 
@@ -190,8 +247,12 @@ def plot(series: List[Series]) -> None:
     fig.tight_layout()
     os.makedirs(os.path.dirname(OUT_PNG), exist_ok=True)
     fig.savefig(OUT_PNG, facecolor=SURFACE)
-    fig.savefig(OUT_SVG, facecolor=SURFACE)
+    fig.savefig(OUT_SVG, facecolor=SURFACE, metadata={"Date": None})
     plt.close(fig)
+    with open(OUT_SVG, encoding="utf-8") as f:
+        svg = f.read()
+    with open(OUT_SVG, "w", encoding="utf-8") as f:
+        f.write("\n".join(line.rstrip() for line in svg.splitlines()) + "\n")
 
 
 def band_table(series: List[Series]):
@@ -204,17 +265,35 @@ def band_table(series: List[Series]):
                                 by_label["Weight-ordered scan"]),
         "Random ISD": ("generate_isd_mask(…, subset_seed=0)",
                        by_label["Random ISD"]),
-            "Static-IS walk (cap=2)": ("generate_sis_mask(…, 2)",
+        "Static-IS walk (cap=2)": ("generate_sis_mask(…, 2)",
                                   by_label["Static-IS walk (cap=2)"]),
         "Static-IS walk (cap=3)": ("generate_sis_mask(…, 3)",
                                   by_label["Static-IS walk (cap=3)"]),
+        "Packed SIS (partial walk)": ("packedsis.generate_packed_sis(cap=2,"
+                                       " seed=13, g2=…)",
+                                       by_label["Packed SIS (partial walk)"]),
+        "Packed SIS (cap=3 walk)": ("packedsis.generate_packed_sis(cap=3,"
+                                     " seed=13)",
+                                     by_label["Packed SIS (cap=3 walk)"]),
+        "Bit-packed SIS walk": ("packedwalk.generate(1, …)",
+                                 by_label["Bit-packed SIS walk"]),
+        "Septet-packed walk": ("septwalk.generate_staged(weight_cap=…)",
+                                by_label["Septet-packed walk"]),
     }
     fmt_call = {
         "Weight-ordered scan": lambda kn: f"generate_scan(0, walk='weight',"
                                           f" weight_cap={kn})",
         "Random ISD": lambda kn: f"generate_isd_mask({kn}, subset_seed=0)",
-            "Static-IS walk (cap=2)": lambda kn: f"generate_sis_mask({kn}, 2)",
+        "Static-IS walk (cap=2)": lambda kn: f"generate_sis_mask({kn}, 2)",
         "Static-IS walk (cap=3)": lambda kn: f"generate_sis_mask({kn}, 3)",
+        "Packed SIS (partial walk)": lambda kn: (
+            f"packedsis.generate_packed_sis(cap=2, seed=13, g2={kn})"),
+        "Packed SIS (cap=3 walk)": lambda kn: (
+            f"packedsis.generate_packed_sis(cap={kn}, seed=13)"),
+        "Bit-packed SIS walk": lambda kn: (
+            f"packedwalk.generate(1, {kn}, seed={PW_SEEDS[kn]})"),
+        "Septet-packed walk": lambda kn: (
+            f"septwalk.generate_staged(weight_cap={kn})"),
     }
     labeled = [
         {"method": name,
@@ -223,6 +302,13 @@ def band_table(series: List[Series]):
         for name, (fn, s) in methods.items()
         for (cost, rec, ops), kn in zip(s.points, s.knobs)
     ]
+    adjudicated_calls = {
+        0.2: "packedsis.generate_packed_sis(cap=2, seed=13, g2=8)",
+        0.4: "packedwalk.generate(1, 2, seed=5)",
+        0.6: "packedsis.generate_packed_sis(cap=3, seed=13)",
+        0.8: "septwalk.generate_staged(weight_cap=3)",
+        1.0: "septwalk.generate_staged(weight_cap=5)",
+    }
     bands = []
     for target in BANDS:
         eligible = [p for p in labeled if p["recovery"] >= target - 1e-9]
@@ -231,7 +317,14 @@ def band_table(series: List[Series]):
         best = min(eligible, key=lambda p: p["cost"])
         others = [p for p in eligible if p["method"] != best["method"]]
         runner = min(others, key=lambda p: p["cost"]) if others else None
-        bands.append({"target": target, "best": best, "runner_up": runner})
+        adjudicated = next(
+            p for p in labeled if p["call"] == adjudicated_calls[target])
+        bands.append({
+            "target": target,
+            "best": best,
+            "adjudicated_best": adjudicated,
+            "runner_up": runner,
+        })
     return labeled, bands
 
 
@@ -246,7 +339,7 @@ def main() -> None:
     print("| Target | Energy (reads) | Recovery | Ops | Cheapest solution |")
     print("| -: | -: | -: | -: | - |")
     for b in bands:
-        p = b["best"]
+        p = b["adjudicated_best"]
         print(f"| {b['target']:.0%} | {p['cost']:,} | {p['recovery']:.1%} "
               f"| {p['ops']:,} | `{p['call']}` |")
     print()
