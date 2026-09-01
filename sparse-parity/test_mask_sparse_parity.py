@@ -206,7 +206,7 @@ def test_packedwalk_matches_reference_recovery():
 
 
 def test_packedwalk_seed5_record_and_generated_band_data_agree():
-    """The 40% table artifact is seed 5, not the retired seed-0 point."""
+    """The historical 40% packed-walk record remains the seed-5 point."""
     seed0 = mp.evaluate_mask(packedwalk.generate(1, 2, seed=0))
     seed5 = mp.evaluate_mask(packedwalk.generate(1, 2, seed=5))
     assert seed5.cost == seed0.cost == 163_378
@@ -215,9 +215,10 @@ def test_packedwalk_seed5_record_and_generated_band_data_agree():
     bands_path = Path(__file__).with_name("doc") / "mask32_bands.json"
     bands = json.loads(bands_path.read_text())["bands"]
     band40 = next(b for b in bands if b["target"] == 0.4)
-    assert (band40["adjudicated_best"]["call"] ==
+    assert band40["adjudicated_best"]["call"] == "generate_packed_scan(2)"
+    assert (band40["runner_up"]["call"] ==
             "packedwalk.generate(1, 2, seed=5)")
-    assert band40["adjudicated_best"]["recovery"] == seed5.recovery
+    assert band40["runner_up"]["recovery"] == seed5.recovery
 
 
 def test_packed_record_irs_regenerate_byte_identically():
