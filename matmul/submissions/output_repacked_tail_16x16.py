@@ -15,6 +15,8 @@ changes only address/liveness choices:
 """
 from __future__ import annotations
 
+from typing import Union
+
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path
@@ -46,7 +48,7 @@ EXPECTED_COST = 68_390
 
 Block = tuple[int, int]
 Output = tuple[int, int]
-Home = tuple[str, int, int] | tuple[str, int]
+Home = Union[tuple[str, int, int], tuple[str, int]]
 
 
 def sA(ii: int) -> int:
