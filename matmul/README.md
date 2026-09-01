@@ -7,7 +7,7 @@
 
 - DeepMind's [AlphaTensor](https://github.com/google-deepmind/alphatensor) discover a better 4x4 matrix multiplication algorithm in terms of FLOPs. 
 - What is the best algorithm when we care about *energy* instead?
-- Most energy is spent on data movement, score using simplified version of Bill Dally's [model](https://github.com/cybertronai/simplified-dally-model), v0 [instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets)
+- To measure energy, use simplified version of Bill Dally's [model](https://github.com/cybertronai/simplified-dally-model), v0 [instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets)
 
 ## API
 
@@ -64,3 +64,5 @@ rejected, which admits the usual bilinear matmul algorithms.
 | 2026-05-28 |  66,300 | [ir](submissions/best_66300.ir), [report](submissions/best_66300.md), [py](submissions/best_66300.py) | [@cosminscn](https://github.com/cosminscn) | Claude-assisted simulated annealing over a leaderboard physical-address IR |
 | 2026-08-29 |  66,199 | [ir](submissions/best_66199.ir), [report](submissions/best_66199.md), [py](submissions/best_66199.py) | [@sigkillme0](https://github.com/sigkillme0) | dependency-safe rescheduling + exact tier allocation |
 | 2026-08-30 |  66,178 | [ir](submissions/best_66178.ir), [report](submissions/best_66178.md), [py](submissions/best_66178.py) | [@sigkillme0](https://github.com/sigkillme0) | exact LP-optimal address assignment (provably optimal for this operation order) ★ best |
+
+[access_distance](doc/access_distance/) — read-distance histograms for the plotted submission set.

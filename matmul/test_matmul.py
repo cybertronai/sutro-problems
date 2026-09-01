@@ -132,10 +132,26 @@ def test_output_repacked_tail_deferred_value_colored_live_b_tiny_a_endpoint_16x1
     _assert_submission_invariants(ir)
     assert matmul.score_16x16(ir) == 67_821
 
+
 def test_best_689_cost_matches_record_history():
     from matmul.submissions.best_689 import generate_best_689
-  
-    assert matmul.score_4x4(generate_best_689()) == 689
+
+    ir = generate_best_689()
+    assert matmul.score_4x4(ir) == 689
+
+    # 4x4 analogue of the 16x16 submissions' invariants: the per-submission
+    # helpers are hardcoded to N=16, so spell the checks out here.
+    inputs, ops, outputs = matmul._parse(ir)
+    assert len(inputs) == 32 and len(set(inputs)) == 32
+    assert len(outputs) == 16 and len(set(outputs)) == 16
+    assert all(a > 0 for a in inputs + outputs)
+    written = set()
+    for op, operands in ops:
+        assert all(a > 0 for a in operands)
+        assert op in {"add", "sub", "mul", "copy"}, op
+        written.add(operands[0])
+    assert not [a for a in outputs if a not in written]
+
 
 def test_macro_b_staging_66633_cost_matches_record_history():
     from matmul.submissions.macro_b_staging_66633 import (
