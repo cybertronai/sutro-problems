@@ -17,7 +17,7 @@ EXPECTED = {
     1: (10_732, 135_348, 0.2001953125),
     2: (13_752, 151_943, 0.5654296875),
     3: (23_325, 200_937, 0.8984375),
-    5: (64_073, 409_001, 1.0),
+    5: (61_070, 392_666, 1.0),
 }
 
 
@@ -63,6 +63,21 @@ def test_cap5_walk_attains_transition_lower_bound():
     assert packed.bounded_weight_transition_lower_bound(14, 5) == 4_759
 
 
+def test_weight_one_sum_xor_predicate_exhaustive():
+    for a in range(64):
+        for b in range(64):
+            for c in range(64):
+                parity = a ^ b ^ c
+                error = ((a + b + c) ^ parity) | (parity & (parity - 1))
+                accepted = error == 0 and parity != 0
+                assert accepted == (
+                    packed._bit_count(a)
+                    + packed._bit_count(b)
+                    + packed._bit_count(c)
+                    == 1
+                )
+
+
 def test_optimizer_preserves_raw_semantics_on_arbitrary_inputs():
     raw = packed.generate_packed_scan(3, optimize_layout=False)
     optimized = packed.generate_packed_scan(3)
@@ -104,7 +119,7 @@ def test_storage_floor_and_fixed_trace_address_optimum():
         for position, frequency in enumerate(frequencies, start=1)
     )
     _, actual_cost, _ = mp._compile_ir(ir, mp.OP_CAP)
-    assert actual_cost == lower_bound == 409_001
+    assert actual_cost == lower_bound == 392_666
     assert packed._global_frequency_layout(ir) == ir
 
 
@@ -114,3 +129,50 @@ def test_mask32_only_contract_and_cap_validation():
         packed.generate_packed_scan(3, spec=small)
     with pytest.raises(ValueError, match="weight_cap"):
         packed.generate_packed_scan(6)
+
+
+def test_packed_static20_artifact_and_dev_score():
+    generated = packed.generate_packed_static20()
+    stored = (
+        HERE / "submissions" / "packedstatic20_mask32.ir"
+    ).read_text().rstrip("\n")
+    assert generated == stored
+    assert len(generated.splitlines()) == 10_457
+    result = mp.evaluate_mask(generated)
+    assert result.cost == 86_753
+    assert result.recovery == 0.259765625
+
+
+def test_packed_route40_artifact_and_dev_score():
+    generated = packed.generate_packed_route40()
+    stored = (
+        HERE / "submissions" / "packedroute40_mask32.ir"
+    ).read_text().rstrip("\n")
+    assert generated == stored
+    assert len(generated.splitlines()) == 12_863
+    result = mp.evaluate_mask(generated)
+    assert result.cost == 147_000
+    assert result.recovery == 0.44140625
+
+
+@pytest.mark.parametrize(
+    "band,generator,lines,cost,recovery",
+    [
+        (60, packed.generate_packed_route60,
+         18_573, 176_331, 0.6767578125),
+        (80, packed.generate_packed_route80,
+         22_191, 196_139, 0.8408203125),
+    ],
+)
+def test_packed_high_route_artifact_and_dev_score(
+    band, generator, lines, cost, recovery
+):
+    generated = generator()
+    stored = (
+        HERE / "submissions" / f"packedroute{band}_mask32.ir"
+    ).read_text().rstrip("\n")
+    assert generated == stored
+    assert len(generated.splitlines()) == lines
+    result = mp.evaluate_mask(generated)
+    assert result.cost == cost
+    assert result.recovery == recovery

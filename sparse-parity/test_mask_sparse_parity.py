@@ -213,12 +213,16 @@ def test_packedwalk_seed5_record_and_generated_band_data_agree():
     assert seed5.recovery > seed0.recovery
 
     bands_path = Path(__file__).with_name("doc") / "mask32_bands.json"
-    bands = json.loads(bands_path.read_text())["bands"]
+    payload = json.loads(bands_path.read_text())
+    bands = payload["bands"]
     band40 = next(b for b in bands if b["target"] == 0.4)
-    assert band40["adjudicated_best"]["call"] == "generate_packed_scan(2)"
-    assert (band40["runner_up"]["call"] ==
-            "packedwalk.generate(1, 2, seed=5)")
-    assert band40["runner_up"]["recovery"] == seed5.recovery
+    assert band40["adjudicated_best"]["call"] == "generate_packed_route40()"
+    assert any(
+        point["call"] == "packedwalk.generate(1, 2, seed=5)"
+        and point["cost"] == seed5.cost
+        and point["recovery"] == seed5.recovery
+        for point in payload["points"]
+    )
 
 
 def test_packed_record_irs_regenerate_byte_identically():

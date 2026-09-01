@@ -116,6 +116,18 @@ def _eval_raw(ir: str):
 def collect() -> List[Series]:
     return [
         Series(
+            "Packed static IS", SERIES["slate"], "record",
+            [0], [0], [_eval_raw(packed.generate_packed_static20())],
+        ),
+        Series(
+            "Packed Gray prefix", "#5b4b8a", "record",
+            [40, 60, 80], [40, 60, 80], [
+                _eval_raw(packed.generate_packed_route40()),
+                _eval_raw(packed.generate_packed_route60()),
+                _eval_raw(packed.generate_packed_route80()),
+            ],
+        ),
+        Series(
             "Packed-column scan", SERIES["red"], "cap",
             P_SWEEP, P_MARKERS,
             [_eval_raw(packed.generate_packed_scan(cap))
@@ -268,6 +280,10 @@ def plot(series: List[Series]) -> None:
 def band_table(series: List[Series]):
     by_label = {s.label: s for s in series}
     methods = {
+        "Packed static IS": ("generate_packed_static20",
+                              by_label["Packed static IS"]),
+        "Packed Gray prefix": ("generate_packed_route40",
+                                by_label["Packed Gray prefix"]),
         "Packed-column scan": ("generate_packed_scan",
                                 by_label["Packed-column scan"]),
         "Gray scan": ("generate_scan", by_label["Gray scan"]),
@@ -293,6 +309,8 @@ def band_table(series: List[Series]):
                                 by_label["Septet-packed walk"]),
     }
     fmt_call = {
+        "Packed static IS": lambda _kn: "generate_packed_static20()",
+        "Packed Gray prefix": lambda kn: f"generate_packed_route{kn}()",
         "Packed-column scan": lambda kn: f"generate_packed_scan({kn})",
         "Weight-ordered scan": lambda kn: f"generate_scan(0, walk='weight',"
                                           f" weight_cap={kn})",
@@ -316,10 +334,10 @@ def band_table(series: List[Series]):
         for (cost, rec, ops), kn in zip(s.points, s.knobs)
     ]
     adjudicated_calls = {
-        0.2: "generate_packed_scan(1)",
-        0.4: "generate_packed_scan(2)",
-        0.6: "generate_packed_scan(3)",
-        0.8: "generate_packed_scan(3)",
+        0.2: "generate_packed_static20()",
+        0.4: "generate_packed_route40()",
+        0.6: "generate_packed_route60()",
+        0.8: "generate_packed_route80()",
         1.0: "generate_packed_scan(5)",
     }
     bands = []
@@ -347,7 +365,7 @@ def main() -> None:
     plot(series)
     labeled, bands = band_table(series)
     with open(OUT_JSON, "w") as f:
-        json.dump({"points": labeled, "bands": bands}, f, indent=1)
+        json.dump({"points": labeled, "bands": bands}, f, indent=2)
 
     print("| Target | Energy (reads) | Recovery | Ops | Cheapest solution |")
     print("| -: | -: | -: | -: | - |")

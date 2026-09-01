@@ -29,6 +29,12 @@ import mask_sparse_parity as mp
 MASK32 = mp.MASK32
 OP_CAP = mp.OP_CAP
 
+# Fixed before the final audit; selected on the deterministic development suite.
+PACKED_STATIC_20_COLUMNS = (
+    2, 3, 6, 9, 11, 12, 14, 15, 18,
+    19, 20, 22, 23, 24, 26, 27, 29, 30,
+)
+
 _BINARY_OPS = {"add", "sub", "mul", "div", "and", "or", "xor"}
 _UNARY_OPS = {"copy", "not", "abs"}
 _CMP_PREDICATES = {"eq", "ne", "lt", "le", "gt", "ge"}
@@ -653,12 +659,19 @@ def generate_packed_scan(
     spec=MASK32,
     op_cap: int = OP_CAP,
     optimize_layout: bool = True,
+    static_information_set: Sequence[int] | None = None,
+    walk_states: Sequence[int] | None = None,
 ) -> str:
     """Generate the packed-column bounded-weight affine scan.
 
     ``weight_cap`` is the largest number of free variables set in a visited
     coefficient mask.  For MASK32, caps 1, 2, 3 and 5 are useful for the 20%,
     40%, 60/80% and 100% leaderboard bands respectively.
+
+    When ``static_information_set`` supplies 18 columns, only that square
+    subsystem is pivoted and the complementary columns form the affine basis
+    directly.  Rank-deficient cases are allowed to produce a candidate; exact
+    recovery remains the benchmark's scoring criterion.
 
     The implementation intentionally targets MASK32.  Its three 6-bit chunks,
     two-byte coefficient checkpoint and exact zero/one predicates rely on
@@ -671,6 +684,18 @@ def generate_packed_scan(
     free_dimension = n - m
     if not 0 <= weight_cap <= k:
         raise ValueError(f"weight_cap must be in [0, {k}]")
+
+    if static_information_set is None:
+        pivot_columns = list(range(n))
+        free_columns: List[int] | None = None
+    else:
+        pivot_columns = list(static_information_set)
+        if len(pivot_columns) != m or len(set(pivot_columns)) != m:
+            raise ValueError("static information set must contain m distinct columns")
+        if any(column < 0 or column >= n for column in pivot_columns):
+            raise ValueError("static information-set column out of range")
+        pivot_set = set(pivot_columns)
+        free_columns = [column for column in range(n) if column not in pivot_set]
 
     chunks = 3
     chunk_bits = 6
@@ -813,7 +838,7 @@ def generate_packed_scan(
     # Full RREF.  A selected pivot is a one-hot 18-row mask; E is the set of
     # non-pivot rows whose current-column bit must be eliminated.  For each
     # augmented column, one pivot-bit test gates three bytewise XORs.
-    for column in range(n):
+    for order_index, column in enumerate(pivot_columns):
         for chunk in range(chunks):
             emit(f"xor {temporary},{used(chunk)},{mask6}")
             emit(f"and {eligible(chunk)},{matrix(column, chunk)},{temporary}")
@@ -841,7 +866,13 @@ def generate_packed_scan(
         # Earlier pivot columns are already unit columns.  The newly selected
         # pivot row is unused, hence those columns contain zero at that row and
         # would be unchanged; update only the current/future columns and y.
-        for augmented_column in range(column, n + 1):
+        if free_columns is None:
+            remaining_columns = list(range(column, n + 1))
+        else:
+            remaining_columns = (
+                pivot_columns[order_index:] + free_columns + [n]
+            )
+        for augmented_column in remaining_columns:
             if augmented_column == column:
                 # A successful pivot turns the current column into its one-hot
                 # pivot mask.  A free column must be preserved as basis data.
@@ -867,22 +898,42 @@ def generate_packed_scan(
         emit(f"copy {base_solution(chunk)},{matrix(n, chunk)}")
         emit(f"copy {pivot_state(chunk)},{base_solution(chunk)}")
 
-    # Gather the first 14 free columns into packed pivot-space basis vectors.
-    # Compare a column's tagged rank once, then use that condition for all
-    # three chunks.  This removes the 448-cell rank-match table entirely.
-    for j in range(free_dimension):
-        for chunk in range(chunks):
-            emit(f"set {basis(j, chunk)},0")
-        for column in range(n):
-            emit(f"cmp {temporary},{rank(column)},"
-                 f"{rank_constant(j)},eq")
+    if free_columns is None:
+        # Gather the first 14 free columns into packed pivot-space basis vectors.
+        # Compare a column's tagged rank once, then use that condition for all
+        # three chunks.  This removes the 448-cell rank-match table entirely.
+        for j in range(free_dimension):
             for chunk in range(chunks):
-                emit(f"select {basis(j, chunk)},{temporary},"
-                     f"{matrix(column, chunk)},{basis(j, chunk)}")
+                emit(f"set {basis(j, chunk)},0")
+            for column in range(n):
+                emit(f"cmp {temporary},{rank(column)},"
+                     f"{rank_constant(j)},eq")
+                for chunk in range(chunks):
+                    emit(f"select {basis(j, chunk)},{temporary},"
+                         f"{matrix(column, chunk)},{basis(j, chunk)}")
+    else:
+        for column in pivot_columns:
+            emit(f"set {rank(column)},63")
+        for j, column in enumerate(free_columns):
+            emit(f"set {rank(column)},{j}")
+            for chunk in range(chunks):
+                emit(f"copy {basis(j, chunk)},{matrix(column, chunk)}")
 
     emit(f"set {best_low},0")
     emit(f"set {best_high},0")
-    states = bounded_weight_gray_states(free_dimension, weight_cap)
+    states = (
+        list(walk_states)
+        if walk_states is not None
+        else bounded_weight_gray_states(free_dimension, weight_cap)
+    )
+    if not states or states[0] != 0:
+        raise ValueError("walk_states must start at zero")
+    if len(set(states)) != len(states):
+        raise ValueError("walk_states must be distinct")
+    if any(state < 0 or state >= 1 << free_dimension for state in states):
+        raise ValueError("walk state is outside the coefficient space")
+    if any(_bit_count(state) > weight_cap for state in states):
+        raise ValueError("walk state exceeds weight_cap")
 
     def emit_packed_popcount(cells: Sequence[int]) -> None:
         """Emit popcount of three 6-bit chunks into ``weight_sum``.
@@ -929,25 +980,27 @@ def generate_packed_scan(
         if target == 0:
             emit(f"or {any_value},{cells[0]},{cells[1]}")
             emit(f"or {any_value},{cells[2]}")
-            emit(f"cmp {candidate_ok},{any_value},{zero},eq")
+            # A nonzero OR rejects the state.  Reverse the select branches so
+            # the packed OR itself is the condition; no boolean comparison is
+            # needed for the 2,002 weight-5 coefficient states.
+            if low_byte:
+                emit(f"select {best_low},{any_value},{best_low},{current_low}")
+            if high_byte:
+                emit(f"select {best_high},{any_value},{best_high},{current_high}")
         elif target == 1:
-            # The aligned OR must be a nonzero power of two, and the majority
-            # bitset must be zero so that two chunks cannot occupy that bit.
-            emit(f"or {any_value},{cells[0]},{cells[1]}")
-            emit(f"or {any_value},{cells[2]}")
-            emit(f"sub {temporary2},{any_value},{one}")
-            emit(f"and {temporary2},{any_value}")
+            # With no overlapping bits, integer sum equals XOR.  Require that
+            # equality and a nonzero power-of-two XOR; this is one operation
+            # shorter than constructing the cross-chunk majority bitset.
+            emit(f"add {any_value},{cells[0]},{cells[1]}")
+            emit(f"add {any_value},{cells[2]}")
             emit(f"xor {temporary0},{cells[0]},{cells[1]}")
-            emit(f"and {temporary1},{cells[0]},{cells[1]}")
-            emit(f"and {temporary0},{cells[2]}")
-            emit(f"or {temporary1},{temporary0}")
-            # Both the power-of-two error and the cross-chunk majority must
-            # be zero.  Combining them before one comparison saves a boolean
-            # comparison/AND pair.
-            emit(f"or {temporary2},{temporary1}")
+            emit(f"xor {temporary1},{temporary0},{cells[2]}")
+            emit(f"xor {any_value},{temporary1}")
+            emit(f"sub {temporary2},{temporary1},{one}")
+            emit(f"and {temporary2},{temporary1}")
+            emit(f"or {temporary2},{any_value}")
             emit(f"cmp {candidate_ok},{temporary2},{zero},eq")
-            # Reject zero; a nonzero one-hot value is a valid select condition.
-            emit(f"mul {candidate_ok},{candidate_ok},{any_value}")
+            emit(f"mul {candidate_ok},{candidate_ok},{temporary1}")
         elif target == 2:
             # Let p be the per-bit parity across chunks and m the majority.
             # Total weight two means either popcount(p)=2,m=0 or p=0 and
@@ -1018,10 +1071,11 @@ def generate_packed_scan(
                 f"{target_constant(coefficient_weight)},eq"
             )
 
-        if low_byte:
-            emit(f"select {best_low},{candidate_ok},{current_low},{best_low}")
-        if high_byte:
-            emit(f"select {best_high},{candidate_ok},{current_high},{best_high}")
+        if target != 0:
+            if low_byte:
+                emit(f"select {best_low},{candidate_ok},{current_low},{best_low}")
+            if high_byte:
+                emit(f"select {best_high},{candidate_ok},{current_high},{best_high}")
 
     capture(states[0])
     previous = states[0]
@@ -1105,6 +1159,32 @@ def generate_packed_scan(
     return ir
 
 
+def generate_packed_static20() -> str:
+    """Generate the packed static-information-set 20% submission."""
+    return generate_packed_scan(
+        2,
+        static_information_set=PACKED_STATIC_20_COLUMNS,
+    )
+
+
+def generate_packed_route40() -> str:
+    """Generate the 40% submission from a fixed cap-2 Gray prefix."""
+    states = bounded_weight_gray_states(14, 2)[:80]
+    return generate_packed_scan(2, walk_states=states)
+
+
+def generate_packed_route60() -> str:
+    """Generate the 60% submission from a fixed cap-3 Gray prefix."""
+    states = bounded_weight_gray_states(14, 3)[:300]
+    return generate_packed_scan(3, walk_states=states)
+
+
+def generate_packed_route80() -> str:
+    """Generate the 80% submission from a fixed cap-3 Gray prefix."""
+    states = bounded_weight_gray_states(14, 3)[:430]
+    return generate_packed_scan(3, walk_states=states)
+
+
 __all__ = [
     "MASK32",
     "OP_CAP",
@@ -1112,4 +1192,8 @@ __all__ = [
     "bounded_weight_transition_lower_bound",
     "transition_cost",
     "generate_packed_scan",
+    "generate_packed_static20",
+    "generate_packed_route40",
+    "generate_packed_route60",
+    "generate_packed_route80",
 ]
