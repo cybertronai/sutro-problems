@@ -38,6 +38,7 @@ rejected, which admits the usual bilinear matmul algorithms.
 | 2026-04-29 | 1,316 | [ir](submissions/baseline_4x4.ir), [report](submissions/baseline_4x4.md)       | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_baseline_4x4` (naive)          |
 | 2026-04-30 |   800 | [ir](submissions/outer_product_4x4.ir), [report](submissions/outer_product_4x4.md)  | [@sjbaebae](https://github.com/sjbaebae)     | `generate_outer_product_4x4` (size-1 sA) |
 | 2026-09-01 | 689 | [ir](submissions/best_689.ir), [report](submissions/best_689.md), [py](submissions/best_689.py) | [@jurajselep](https://github.com/jurajselep) | row-wise lifetime fusion + dead-A output reuse + exact tier allocation ★ best |
+| 2026-09-01 | 683 | [ir](submissions/hkkk_ilp_4x4.ir), [report](submissions/hkkk_ilp_4x4.md), [py](submissions/hkkk_ilp_4x4.py) | [@npow](https://github.com/npow) | HKKK + one deferred output add + exact fixed-schedule allocation ★ best |
 
 ## 16×16 Record History
 
