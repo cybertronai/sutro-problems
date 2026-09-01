@@ -72,6 +72,16 @@ accuracy — the secret recovery rate, i.e. the fraction of instances where all
 
 ![Energy vs secret recovery rate across the solution families](doc/mask32_energy_vs_recovery.png)
 
+## Evaluation speed
+
+| program | ops | Python | Rust CPU | speedup |
+| - | -: | -: | -: | -: |
+| packedsis (20% band, 172k cost) | 15,390 | 15.2k inst/s | 935k inst/s | 61x |
+| packedwalk (40% band, 163k cost) | 17,815 | 13.7k inst/s | 876k inst/s | 64x |
+| packedsis (60% band, 284k cost) | 30,555 | 7.0k inst/s | 502k inst/s | 72x |
+| weightscan (80% band, 5.6M cost) | 266,185 | 937 inst/s | 60k inst/s | 64x |
+| weightscan (100% band, 12.5M cost) | 709,513 | 313 inst/s | 21.8k inst/s | 70x |
+
 
 
 - Github Pages: [sparse parity](https://cybertronai.github.io/sutro-problems/sparse-parity)
