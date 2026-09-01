@@ -29,6 +29,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))       # the tier module lives one level up
 
 import mask_sparse_parity as mp
+import packed_sparse_parity as packed
 
 OUT_PNG = os.path.join(HERE, "mask32_energy_vs_recovery.png")
 OUT_SVG = os.path.join(HERE, "mask32_energy_vs_recovery.svg")
@@ -42,7 +43,8 @@ GRID = "#e1e0d9"
 BASELINE = "#c3c2b7"
 SERIES = {"blue": "#2a78d6", "orange": "#eb6834",
            "green": "#2e9e4f", "purple": "#8259b8",
-           "teal": "#1f8a8a", "magenta": "#c2548a"}
+           "teal": "#1f8a8a", "magenta": "#c2548a",
+           "red": "#b4483f"}
 
 # Dense sweeps feed the band table; the marker subset keeps the plot quiet.
 S_SWEEP = [0, 127, 255, 383, 511, 767, 1023, 1535, 2047, 3071, 4095,
@@ -52,6 +54,8 @@ T_SWEEP = [1, 2, 3, 4, 6, 8, 12, 16, 24, 32]
 T_MARKERS = [1, 4, 8, 16, 32]
 W_SWEEP = [0, 1, 2, 3, 4, 5]
 W_MARKERS = [1, 2, 3, 5]
+P_SWEEP = [1, 2, 3, 5]
+P_MARKERS = [1, 2, 3, 5]
 R_SWEEP = [1, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32]
 R_MARKERS = [1, 8, 16, 32]
 SIS2_SWEEP = [1, 2]
@@ -76,8 +80,19 @@ def _eval(ir: str):
     return res.cost, res.recovery, len(ir.splitlines()) - 2
 
 
+def _eval_packed(ir: str):
+    res = mp.evaluate_mask(ir)
+    return res.cost, res.recovery, len(ir.splitlines()) - 2
+
+
 def collect() -> List[Series]:
     return [
+        Series(
+            "Packed-column scan", SERIES["red"], "cap",
+            P_SWEEP, P_MARKERS,
+            [_eval_packed(packed.generate_packed_scan(cap))
+             for cap in P_SWEEP],
+        ),
         Series(
             "Gray scan", SERIES["blue"], "s", S_SWEEP, S_MARKERS,
             [_eval(mp.generate_scan(s)) for s in S_SWEEP],
@@ -133,6 +148,7 @@ def plot(series: List[Series]) -> None:
     # direct labels at the curve ends, in ink -- identity never color-alone
     by_label = {s.label: s for s in series}
     ends = [
+        ("Packed-column scan", (8, 6), "left", "bottom"),
         ("Static-IS walk (cap=3)", (6, 10), "left", "bottom"),
         ("Static-IS walk (cap=2)", (8, -8), "left", "top"),
         ("Gray scan", (-10, 6), "right", "bottom"),
@@ -197,6 +213,8 @@ def plot(series: List[Series]) -> None:
 def band_table(series: List[Series]):
     by_label = {s.label: s for s in series}
     methods = {
+        "Packed-column scan": ("generate_packed_scan",
+                                by_label["Packed-column scan"]),
         "Gray scan": ("generate_scan", by_label["Gray scan"]),
         "ISD restarts": ("generate_isd_mask", by_label["ISD restarts"]),
         "Weight-ordered scan": ("generate_scan(0, walk='weight',"
@@ -210,6 +228,7 @@ def band_table(series: List[Series]):
                                   by_label["Static-IS walk (cap=3)"]),
     }
     fmt_call = {
+        "Packed-column scan": lambda kn: f"generate_packed_scan({kn})",
         "Weight-ordered scan": lambda kn: f"generate_scan(0, walk='weight',"
                                           f" weight_cap={kn})",
         "Random ISD": lambda kn: f"generate_isd_mask({kn}, subset_seed=0)",
