@@ -33,6 +33,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.dirname(HERE))       # the tier module lives one level up
 
 import mask_sparse_parity as mp
+import packed_sparse_parity as packed
 
 _SUB = os.path.join(os.path.dirname(HERE), "submissions")
 sys.path.insert(0, _SUB)
@@ -53,7 +54,7 @@ SERIES = {"blue": "#2a78d6", "orange": "#eb6834",
            "teal": "#1f8a8a", "magenta": "#c2548a",
            "crimson": "#c0392b", "olive": "#7f8c1f",
            "slate": "#4a6572", "amber": "#c9971e",
-           "brick": "#8c4a3a"}
+           "brick": "#8c4a3a", "red": "#b4483f"}
 
 # Dense sweeps feed the band table; the marker subset keeps the plot quiet.
 S_SWEEP = [0, 127, 255, 383, 511, 767, 1023, 1535, 2047, 3071, 4095,
@@ -63,6 +64,8 @@ T_SWEEP = [1, 2, 3, 4, 6, 8, 12, 16, 24, 32]
 T_MARKERS = [1, 4, 8, 16, 32]
 W_SWEEP = [0, 1, 2, 3, 4, 5]
 W_MARKERS = [1, 2, 3, 5]
+P_SWEEP = [1, 2, 3, 5]
+P_MARKERS = [1, 2, 3, 5]
 R_SWEEP = [1, 2, 4, 6, 8, 10, 12, 16, 20, 24, 32]
 R_MARKERS = [1, 8, 16, 32]
 SIS2_SWEEP = [1, 2]
@@ -103,7 +106,7 @@ def _eval(ir: str):
 
 def _eval_raw(ir: str):
     """Like _eval, but for generators whose own pipeline already applies
-    its layout pass (packedsis/packedwalk/septwalk) -- re-running the
+    its layout pass (packed scan/packedsis/packedwalk/septwalk) -- re-running the
     generic optimize_layout on top would relabel an already
     phase-optimal address space and typically raises cost slightly."""
     res = mp.evaluate_mask(ir)
@@ -112,6 +115,12 @@ def _eval_raw(ir: str):
 
 def collect() -> List[Series]:
     return [
+        Series(
+            "Packed-column scan", SERIES["red"], "cap",
+            P_SWEEP, P_MARKERS,
+            [_eval_raw(packed.generate_packed_scan(cap))
+             for cap in P_SWEEP],
+        ),
         Series(
             "Gray scan", SERIES["blue"], "s", S_SWEEP, S_MARKERS,
             [_eval(mp.generate_scan(s)) for s in S_SWEEP],
@@ -190,6 +199,7 @@ def plot(series: List[Series]) -> None:
     # direct labels at the curve ends, in ink -- identity never color-alone
     by_label = {s.label: s for s in series}
     ends = [
+        ("Packed-column scan", (8, 6), "left", "bottom"),
         ("Static-IS walk (cap=3)", (6, 10), "left", "bottom"),
         ("Static-IS walk (cap=2)", (8, -8), "left", "top"),
         ("Gray scan", (-10, 6), "right", "bottom"),
@@ -258,6 +268,8 @@ def plot(series: List[Series]) -> None:
 def band_table(series: List[Series]):
     by_label = {s.label: s for s in series}
     methods = {
+        "Packed-column scan": ("generate_packed_scan",
+                                by_label["Packed-column scan"]),
         "Gray scan": ("generate_scan", by_label["Gray scan"]),
         "ISD restarts": ("generate_isd_mask", by_label["ISD restarts"]),
         "Weight-ordered scan": ("generate_scan(0, walk='weight',"
@@ -281,6 +293,7 @@ def band_table(series: List[Series]):
                                 by_label["Septet-packed walk"]),
     }
     fmt_call = {
+        "Packed-column scan": lambda kn: f"generate_packed_scan({kn})",
         "Weight-ordered scan": lambda kn: f"generate_scan(0, walk='weight',"
                                           f" weight_cap={kn})",
         "Random ISD": lambda kn: f"generate_isd_mask({kn}, subset_seed=0)",
@@ -303,11 +316,11 @@ def band_table(series: List[Series]):
         for (cost, rec, ops), kn in zip(s.points, s.knobs)
     ]
     adjudicated_calls = {
-        0.2: "packedsis.generate_packed_sis(cap=2, seed=13, g2=8)",
-        0.4: "packedwalk.generate(1, 2, seed=5)",
-        0.6: "packedsis.generate_packed_sis(cap=3, seed=13)",
-        0.8: "septwalk.generate_staged(weight_cap=3)",
-        1.0: "septwalk.generate_staged(weight_cap=5)",
+        0.2: "generate_packed_scan(1)",
+        0.4: "generate_packed_scan(2)",
+        0.6: "generate_packed_scan(3)",
+        0.8: "generate_packed_scan(3)",
+        1.0: "generate_packed_scan(5)",
     }
     bands = []
     for target in BANDS:
