@@ -1,6 +1,38 @@
 {
   "points": [
     {
+      "method": "Packed static IS",
+      "call": "generate_packed_static20()",
+      "knob": 0,
+      "cost": 86753,
+      "recovery": 0.259765625,
+      "ops": 10455
+    },
+    {
+      "method": "Packed Gray prefix",
+      "call": "generate_packed_route40()",
+      "knob": 40,
+      "cost": 147000,
+      "recovery": 0.44140625,
+      "ops": 12861
+    },
+    {
+      "method": "Packed Gray prefix",
+      "call": "generate_packed_route60()",
+      "knob": 60,
+      "cost": 176331,
+      "recovery": 0.6767578125,
+      "ops": 18571
+    },
+    {
+      "method": "Packed Gray prefix",
+      "call": "generate_packed_route80()",
+      "knob": 80,
+      "cost": 196139,
+      "recovery": 0.8408203125,
+      "ops": 22189
+    },
+    {
       "method": "Packed-column scan",
       "call": "generate_packed_scan(1)",
       "knob": 1,
@@ -28,9 +60,9 @@
       "method": "Packed-column scan",
       "call": "generate_packed_scan(5)",
       "knob": 5,
-      "cost": 409001,
+      "cost": 392666,
       "recovery": 1.0,
-      "ops": 64071
+      "ops": 61068
     },
     {
       "method": "Gray scan",
@@ -581,109 +613,109 @@
     {
       "target": 0.2,
       "best": {
+        "method": "Packed static IS",
+        "call": "generate_packed_static20()",
+        "knob": 0,
+        "cost": 86753,
+        "recovery": 0.259765625,
+        "ops": 10455
+      },
+      "adjudicated_best": {
+        "method": "Packed static IS",
+        "call": "generate_packed_static20()",
+        "knob": 0,
+        "cost": 86753,
+        "recovery": 0.259765625,
+        "ops": 10455
+      },
+      "runner_up": {
         "method": "Bit-packed SIS walk",
         "call": "packedwalk.generate(1, 1, seed=0)",
         "knob": 1,
         "cost": 131620,
         "recovery": 0.203125,
         "ops": 13173
-      },
-      "adjudicated_best": {
-        "method": "Packed-column scan",
-        "call": "generate_packed_scan(1)",
-        "knob": 1,
-        "cost": 135348,
-        "recovery": 0.2001953125,
-        "ops": 10730
-      },
-      "runner_up": {
-        "method": "Packed-column scan",
-        "call": "generate_packed_scan(1)",
-        "knob": 1,
-        "cost": 135348,
-        "recovery": 0.2001953125,
-        "ops": 10730
       }
     },
     {
       "target": 0.4,
       "best": {
-        "method": "Packed-column scan",
-        "call": "generate_packed_scan(2)",
-        "knob": 2,
-        "cost": 151943,
-        "recovery": 0.5654296875,
-        "ops": 13750
+        "method": "Packed Gray prefix",
+        "call": "generate_packed_route40()",
+        "knob": 40,
+        "cost": 147000,
+        "recovery": 0.44140625,
+        "ops": 12861
       },
       "adjudicated_best": {
+        "method": "Packed Gray prefix",
+        "call": "generate_packed_route40()",
+        "knob": 40,
+        "cost": 147000,
+        "recovery": 0.44140625,
+        "ops": 12861
+      },
+      "runner_up": {
         "method": "Packed-column scan",
         "call": "generate_packed_scan(2)",
         "knob": 2,
         "cost": 151943,
         "recovery": 0.5654296875,
         "ops": 13750
-      },
-      "runner_up": {
-        "method": "Bit-packed SIS walk",
-        "call": "packedwalk.generate(1, 2, seed=5)",
-        "knob": 2,
-        "cost": 163378,
-        "recovery": 0.5263671875,
-        "ops": 17815
       }
     },
     {
       "target": 0.6,
       "best": {
-        "method": "Packed-column scan",
-        "call": "generate_packed_scan(3)",
-        "knob": 3,
-        "cost": 200937,
-        "recovery": 0.8984375,
-        "ops": 23323
+        "method": "Packed Gray prefix",
+        "call": "generate_packed_route60()",
+        "knob": 60,
+        "cost": 176331,
+        "recovery": 0.6767578125,
+        "ops": 18571
       },
       "adjudicated_best": {
+        "method": "Packed Gray prefix",
+        "call": "generate_packed_route60()",
+        "knob": 60,
+        "cost": 176331,
+        "recovery": 0.6767578125,
+        "ops": 18571
+      },
+      "runner_up": {
         "method": "Packed-column scan",
         "call": "generate_packed_scan(3)",
         "knob": 3,
         "cost": 200937,
         "recovery": 0.8984375,
         "ops": 23323
-      },
-      "runner_up": {
-        "method": "Packed SIS (cap=3 walk)",
-        "call": "packedsis.generate_packed_sis(cap=3, seed=13)",
-        "knob": 3,
-        "cost": 284049,
-        "recovery": 0.78515625,
-        "ops": 30521
       }
     },
     {
       "target": 0.8,
       "best": {
-        "method": "Packed-column scan",
-        "call": "generate_packed_scan(3)",
-        "knob": 3,
-        "cost": 200937,
-        "recovery": 0.8984375,
-        "ops": 23323
+        "method": "Packed Gray prefix",
+        "call": "generate_packed_route80()",
+        "knob": 80,
+        "cost": 196139,
+        "recovery": 0.8408203125,
+        "ops": 22189
       },
       "adjudicated_best": {
+        "method": "Packed Gray prefix",
+        "call": "generate_packed_route80()",
+        "knob": 80,
+        "cost": 196139,
+        "recovery": 0.8408203125,
+        "ops": 22189
+      },
+      "runner_up": {
         "method": "Packed-column scan",
         "call": "generate_packed_scan(3)",
         "knob": 3,
         "cost": 200937,
         "recovery": 0.8984375,
         "ops": 23323
-      },
-      "runner_up": {
-        "method": "Septet-packed walk",
-        "call": "septwalk.generate_staged(weight_cap=3)",
-        "knob": 3,
-        "cost": 493193,
-        "recovery": 0.8984375,
-        "ops": 46391
       }
     },
     {
@@ -692,17 +724,17 @@
         "method": "Packed-column scan",
         "call": "generate_packed_scan(5)",
         "knob": 5,
-        "cost": 409001,
+        "cost": 392666,
         "recovery": 1.0,
-        "ops": 64071
+        "ops": 61068
       },
       "adjudicated_best": {
         "method": "Packed-column scan",
         "call": "generate_packed_scan(5)",
         "knob": 5,
-        "cost": 409001,
+        "cost": 392666,
         "recovery": 1.0,
-        "ops": 64071
+        "ops": 61068
       },
       "runner_up": {
         "method": "Septet-packed walk",

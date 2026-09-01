@@ -19,7 +19,8 @@ accuracy — the secret recovery rate, i.e. the fraction of instances where all
 
 | Date       | Cost       | Submission | Contributors | Description |
 | -          | -:         | -          | -            | -           |
-| 2026-09-01 | 135,348 | [ir](submissions/packedscan1_mask32.ir), [report](submissions/packedscan1_mask32.md), [py](packed_sparse_parity.py) | [@jurajselep](https://github.com/jurajselep) | `generate_packed_scan(1)` (packed-column scan + SSA layout) ★ best |
+| 2026-09-02 | 86,753 | [ir](submissions/packedstatic20_mask32.ir), [py](packed_sparse_parity.py), [audit](submissions/packed_static20_audit.json) | [@b0nce](https://github.com/b0nce) | `generate_packed_static20()` (packed static information set) |
+| 2026-09-01 | 135,348 | [ir](submissions/packedscan1_mask32.ir), [report](submissions/packedscan1_mask32.md), [py](packed_sparse_parity.py) | [@jurajselep](https://github.com/jurajselep) | `generate_packed_scan(1)` (packed-column scan + SSA layout) |
 | 2026-08-31 | 151,117 | [ir](submissions/packedsis_pcap2_mask32.ir), [report](submissions/packedsis_pcap2_mask32.md), [py](submissions/packedsis.py) | [@npow](https://github.com/npow) | `generate_packed_sis(cap=2, seed=13, g2=8)` (packed SIS, partial cap-2 walk, exhaustive information-set tuning) |
 | 2026-08-30 | 1,317,480 | [ir](submissions/siswalk1_cap2_mask32.ir), [report](submissions/siswalk1_cap2_mask32.md), [py](mask_sparse_parity.py) | [@zh4ngx](https://github.com/zh4ngx) | `optimize_layout(generate_sis_mask(1, 2))` (static-IS walk, staged layout) |
 | 2026-08-27 | 17,331,683 | [report](submissions/scan127_mask32.md), [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_scan(127)` (Gray scan) |
@@ -29,7 +30,8 @@ accuracy — the secret recovery rate, i.e. the fraction of instances where all
 
 | Date       | Cost       | Submission | Contributors | Description |
 | -          | -:         | -          | -            | -           |
-| 2026-09-01 | 151,943 | [ir](submissions/packedscan2_mask32.ir), [report](submissions/packedscan2_mask32.md), [py](packed_sparse_parity.py) | [@jurajselep](https://github.com/jurajselep) | `generate_packed_scan(2)` (packed-column scan + SSA layout) ★ best |
+| 2026-09-02 | 147,000 | [ir](submissions/packedroute40_mask32.ir), [py](packed_sparse_parity.py) | [@b0nce](https://github.com/b0nce) | `generate_packed_route40()` (cap-2 Gray prefix) |
+| 2026-09-01 | 151,943 | [ir](submissions/packedscan2_mask32.ir), [report](submissions/packedscan2_mask32.md), [py](packed_sparse_parity.py) | [@jurajselep](https://github.com/jurajselep) | `generate_packed_scan(2)` (packed-column scan + SSA layout) |
 | 2026-08-31 | 163,378 | [ir](submissions/packedwalk1_cap2_s5_mask32.ir), [report](submissions/packedwalk1_mask32.md), [py](submissions/packedwalk.py) | [@npow](https://github.com/npow) | `generate(1, 2, seed=5)` (bit-packed SIS walk, 3-phase layout, higher dev recovery) |
 | 2026-08-30 | 1,317,480 | [ir](submissions/siswalk1_cap2_mask32.ir), [report](submissions/siswalk1_cap2_mask32.md), [py](mask_sparse_parity.py) | [@zh4ngx](https://github.com/zh4ngx) | `optimize_layout(generate_sis_mask(1, 2))` (static-IS walk, staged layout) |
 | 2026-08-28 | 17,418,235 | [ir](submissions/weightscan2_mask32.ir), [report](submissions/weightscan2_mask32.md), [py](mask_sparse_parity.py) | [@zh4ngx](https://github.com/zh4ngx) | `generate_scan(0, walk="weight", weight_cap=2)` (weight-ordered scan) |
@@ -40,7 +42,8 @@ accuracy — the secret recovery rate, i.e. the fraction of instances where all
 
 | Date       | Cost       | Submission | Contributors | Description |
 | -          | -:         | -          | -            | -           |
-| 2026-09-01 | 200,937 | [ir](submissions/packedscan3_mask32.ir), [report](submissions/packedscan3_mask32.md), [py](packed_sparse_parity.py) | [@jurajselep](https://github.com/jurajselep) | `generate_packed_scan(3)` (packed-column scan + SSA layout) ★ best |
+| 2026-09-02 | 176,331 | [ir](submissions/packedroute60_mask32.ir), [py](packed_sparse_parity.py) | [@b0nce](https://github.com/b0nce) | `generate_packed_route60()` (cap-3 Gray prefix) |
+| 2026-09-01 | 200,937 | [ir](submissions/packedscan3_mask32.ir), [report](submissions/packedscan3_mask32.md), [py](packed_sparse_parity.py) | [@jurajselep](https://github.com/jurajselep) | `generate_packed_scan(3)` (packed-column scan + SSA layout) |
 | 2026-08-31 | 284,049 | [ir](submissions/packedsis_cap3_s13_mask32.ir), [report](submissions/packedsis_pcap2_mask32.md), [py](submissions/packedsis.py) | [@npow](https://github.com/npow) | `generate_packed_sis(cap=3, seed=13)` (bit-packed SIS walk, full cap-3, tuned seed) |
 | 2026-08-30 | 2,137,725 | [ir](submissions/siswalk1_cap3_mask32.ir), [report](submissions/siswalk1_cap3_mask32.md), [py](mask_sparse_parity.py) | [@zh4ngx](https://github.com/zh4ngx) | `optimize_layout(generate_sis_mask(1, 3))` (static-IS walk, staged layout) |
 | 2026-08-28 | 18,509,753 | [ir](submissions/weightscan3_mask32.ir), [report](submissions/weightscan3_mask32.md), [py](mask_sparse_parity.py) | [@zh4ngx](https://github.com/zh4ngx) | `generate_scan(0, walk="weight", weight_cap=3)` (weight-ordered scan) |
@@ -51,7 +54,8 @@ accuracy — the secret recovery rate, i.e. the fraction of instances where all
 
 | Date       | Cost       | Submission | Contributors | Description |
 | -          | -:         | -          | -            | -           |
-| 2026-09-01 | 200,937 | [ir](submissions/packedscan3_mask32.ir), [report](submissions/packedscan3_mask32.md), [py](packed_sparse_parity.py) | [@jurajselep](https://github.com/jurajselep) | `generate_packed_scan(3)` (packed-column scan + SSA layout) ★ best |
+| 2026-09-02 | 196,139 | [ir](submissions/packedroute80_mask32.ir), [py](packed_sparse_parity.py) | [@b0nce](https://github.com/b0nce) | `generate_packed_route80()` (cap-3 Gray prefix) |
+| 2026-09-01 | 200,937 | [ir](submissions/packedscan3_mask32.ir), [report](submissions/packedscan3_mask32.md), [py](packed_sparse_parity.py) | [@jurajselep](https://github.com/jurajselep) | `generate_packed_scan(3)` (packed-column scan + SSA layout) |
 | 2026-08-31 | 493,193 | [ir](submissions/septwalk_wcap3_mask32.ir), [report](submissions/septwalk_wcap3_mask32.md), [py](submissions/septwalk.py) | [@npow](https://github.com/npow) | `generate_staged(weight_cap=3)` (septet-packed dynamic RREF + row-coordinate walk) |
 | 2026-08-30 | 5,593,997 | [ir](submissions/weightscan3_mask32.ir), [report](submissions/weightscan3_mask32.md), [py](mask_sparse_parity.py) | [@zh4ngx](https://github.com/zh4ngx) | `optimize_layout(generate_scan(0, walk="weight", weight_cap=3))` (weight-ordered scan, staged layout) |
 | 2026-08-27 | 33,501,030 | [report](submissions/scan10239_mask32.md), [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_scan(10239)` (Gray scan) |
@@ -61,7 +65,7 @@ accuracy — the secret recovery rate, i.e. the fraction of instances where all
 
 | Date       | Cost       | Submission | Contributors | Description |
 | -          | -:         | -          | -            | -           |
-| 2026-09-01 | 409,001 | [ir](submissions/packedscan5_mask32.ir), [report](submissions/packedscan5_mask32.md), [py](packed_sparse_parity.py) | [@jurajselep](https://github.com/jurajselep) | `generate_packed_scan(5)` (packed RREF + tight bounded Gray scan) ★ best |
+| 2026-09-02 | 392,666 | [ir](submissions/packedscan5_mask32.ir), [report](submissions/packedscan5_mask32.md), [py](packed_sparse_parity.py) | [@jurajselep](https://github.com/jurajselep), [@b0nce](https://github.com/b0nce) | `generate_packed_scan(5)` (packed RREF + specialized capture) |
 | 2026-08-31 | 938,331 | [ir](submissions/septwalk_mask32.ir), [report](submissions/septwalk_mask32.md), [py](submissions/septwalk.py) | [@npow](https://github.com/npow) | `generate_staged()` (septet-packed RREF + row-coordinate walk) |
 | 2026-08-30 | 12,461,610 | [ir](submissions/weightscan5_mask32.ir), [report](submissions/weightscan5_mask32.md), [py](mask_sparse_parity.py) | [@zh4ngx](https://github.com/zh4ngx) | `optimize_layout(generate_scan(0, walk="weight", weight_cap=5))` (weight-ordered scan, staged layout) |
 | 2026-08-26 | 43,325,468 | [ir](submissions/scan_full_mask32.ir), [report](submissions/scan_full_mask32.md), [py](mask_sparse_parity.py) | [@yaroslavvb](https://github.com/yaroslavvb) | `generate_scan(16383)` (Gray scan, full walk) |
