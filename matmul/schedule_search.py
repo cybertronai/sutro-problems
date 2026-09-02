@@ -10,26 +10,30 @@ Floor decomposition (from structural analysis of the 681 record):
 
 This harness enumerates schedules over three concrete dimensions:
   1. accumulation tree shape per output (left-linear, right-linear,
-     zigzag, balanced)
+     balanced)
   2. product-to-add assignment order (which product enters the chain
      first: cell-reuse pressure depends on it)
-  3. dead-cell address recycling (products consumed by an add free
-     their cell for the next mul)
+  3. dead-cell address recycling (temporary operands consumed by an add
+     return to the pool for later operations)
 
 Scoring uses the exact competition cost function (read cost
 ceil(sqrt(addr)); the accumulator 2-operand form reads dst as first
-source). Best-found schedules print as competition-format IR text
-ready for symbolic verification by matmul.score_4x4.
+source). The best-found schedule is symbolically verified by
+matmul.score_4x4 before its competition-format IR is written.
 
-Run:  python3 schedule_search.py [trials]
+Run from the repository root:  python3 matmul/schedule_search.py [trials]
 """
 from __future__ import annotations
 
-import itertools
 import math
 import random
 import sys
 from dataclasses import dataclass, field
+
+try:
+    from . import score_4x4
+except ImportError:  # Direct execution: python3 matmul/schedule_search.py
+    from matmul import score_4x4
 
 K = 4
 N_IN = 2 * K * K  # 32 inputs
@@ -43,8 +47,7 @@ def read_cost(addr: int) -> int:
 
 @dataclass
 class CellPool:
-    """Address allocator with free-list recycling: dead product cells
-    return to the pool so later muls reuse cheap addresses."""
+    """Address allocator that recycles dead temporary cells."""
     next_addr: int = N_IN + 1
     free: list[int] = field(default_factory=list)
     peak: int = N_IN
@@ -68,6 +71,13 @@ def build_schedule(
     rng: random.Random,
 ) -> tuple[list[tuple], list[int]]:
     """Emit (ops, outputs) where ops are (opcode, dst, [srcs...])."""
+    if tree not in {"left", "right", "balanced"}:
+        raise ValueError(f"unknown tree shape: {tree!r}")
+    if order not in {"batched", "shuffled", "pipelined"}:
+        raise ValueError(f"unknown assignment order: {order!r}")
+    if order == "pipelined" and tree != "left":
+        raise ValueError("pipelined order uses a left-linear tree")
+
     pool = CellPool()
     ops: list[tuple[str, int, list[int]]] = []
 
@@ -77,9 +87,16 @@ def build_schedule(
     # outputs (pipelined = fewer live products).
     outputs: list[int] = []
 
-    def emit_add(dst_live: int, src: int) -> int:
+    def emit_add(left: int, right: int) -> int:
         nd = pool.alloc()
-        ops.append(("add", nd, [dst_live, src]))
+        ops.append(("add", nd, [left, right]))
+        if recycle:
+            # Allocate the destination first so it cannot alias a source
+            # before the operation has consumed both operands. The pool is
+            # LIFO, so release the accumulator-side operand last for prompt
+            # reuse while leaving other cheap cells available to later muls.
+            pool.release(right)
+            pool.release(left)
         return nd
 
     if order == "pipelined":
@@ -103,9 +120,6 @@ def build_schedule(
                     ops.append(("mul", prod, [a, b]))
                     old = accs[i * K + j]
                     accs[i * K + j] = emit_add(old, prod)
-                    if recycle:
-                        pool.release(prod)
-                        pool.release(old)
         outputs = accs
     else:
         # batched: all products for one output, then its add tree
@@ -131,9 +145,7 @@ def build_schedule(
                     while len(cur) > 1:
                         nxt = []
                         for x in range(0, len(cur) - 1, 2):
-                            nd = pool.alloc()
-                            ops.append(("add", nd, [cur[x], cur[x + 1]]))
-                            nxt.append(nd)
+                            nxt.append(emit_add(cur[x], cur[x + 1]))
                         if len(cur) % 2:
                             nxt.append(cur[-1])
                         cur = nxt
@@ -141,8 +153,6 @@ def build_schedule(
                     rest = []
                 for p in rest:
                     acc = emit_add(acc, p)
-                    if recycle:
-                        pool.release(p)
                 outputs.append(acc)
 
     return ops, outputs
@@ -169,22 +179,34 @@ def main() -> None:
     trials = int(sys.argv[1]) if len(sys.argv) > 1 else 20_000
     rng = random.Random(2026_0901)
     best = None
-    for tree in ("left", "right", "balanced"):
-        for order in ("batched", "shuffled", "pipelined"):
-            for recycle in (False, True):
-                for t in range(max(1, trials // 18)):
-                    ops, outs = build_schedule(tree, order, recycle, rng)
-                    c = score(ops, outs)
-                    if best is None or c < best[0]:
-                        best = (c, tree, order, recycle, ops, outs)
-                        print(f"new best {c} (tree={tree} order={order} recycle={recycle})")
+    configurations = [
+        (tree, order, recycle)
+        for tree in ("left", "right", "balanced")
+        for order in ("batched", "shuffled")
+        for recycle in (False, True)
+    ]
+    configurations.extend(("left", "pipelined", recycle)
+                          for recycle in (False, True))
+    attempts = max(1, trials // len(configurations))
+    for tree, order, recycle in configurations:
+        for _ in range(attempts):
+            ops, outs = build_schedule(tree, order, recycle, rng)
+            c = score(ops, outs)
+            if best is None or c < best[0]:
+                best = (c, tree, order, recycle, ops, outs)
+                print(f"new best {c} (tree={tree} order={order} recycle={recycle})")
     c, tree, order, recycle, ops, outs = best
-    print(f"\nfinal best: {c}  tree={tree} order={order} recycle={recycle}")
-    print(f"ops: {len(ops)}, live peak cells tracked by pool")
     ir = to_ir(ops, outs)
+    verified_cost = score_4x4(ir)
+    if verified_cost != c:
+        raise RuntimeError(
+            f"cost mismatch: search reported {c}, scorer returned {verified_cost}")
+
+    print(f"\nfinal best: {verified_cost}  tree={tree} order={order} recycle={recycle}")
+    print(f"ops: {len(ops)}")
     with open("best_schedule.ir", "w") as f:
         f.write(ir)
-    print("IR written to best_schedule.ir (verify with matmul.score_4x4)")
+    print("symbolically verified IR written to best_schedule.ir")
 
 
 if __name__ == "__main__":
