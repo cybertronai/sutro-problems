@@ -461,7 +461,7 @@
       <h1>A100 and grid energy for 8192³ GEMM and Ciresan MNIST</h1>
       <p class="deck">A controlled comparison of exact <span class="mono">8192 × 8192 × 8192</span> matrix multiplication across four arithmetic formats, followed by one INT8 forward-only pass over all 60,000 MNIST training images.</p>
       <div class="hero-meta">
-        <span>Report date: September 1, 2026</span>
+        <span>Report date: September 2, 2026</span>
         <span>GPU: NVIDIA A100-SXM4-40GB, 400 W cap</span>
         <span>Energy: idle-adjusted NVML board counter</span>
       </div>
@@ -469,6 +469,7 @@
         <a href="#contract">Scope</a>
         <a href="#gemm">8192³ GEMM</a>
         <a href="#mnist">MNIST epoch</a>
+        <a href="#grid-batching">Grid batching</a>
         <a href="#dally">Dally cross-check</a>
         <a href="#methods">Methods</a>
         <a href="#sources">Sources</a>
@@ -612,7 +613,7 @@
                 <td class="num"><span class="primary">1.445 T</span><span class="subvalue">2.01× logical, including row and width padding</span></td>
                 <td class="num"><span class="primary">780.364 ms</span></td>
                 <td class="num"><span class="primary">12.106 J</span><span class="subvalue">trial SD 0.515 J<br>baseline 11.430–12.782 J</span></td>
-                <td class="num"><span class="primary">0.126846 J</span><span class="subvalue">3,750 independently scored layouts</span></td>
+                <td class="num"><span class="primary">0.134310 J</span><span class="subvalue">one persistent epoch address space</span></td>
                 <td class="dash">—<span class="subvalue">no comparable published A100 INT8 epoch-energy result found</span></td>
               </tr>
               <tr>
@@ -621,7 +622,7 @@
                 <td class="num"><span class="primary">722.504 G</span><span class="subvalue">0.641% width padding</span></td>
                 <td class="num"><span class="primary">7.774 ms</span></td>
                 <td class="num"><span class="primary">2.569 J</span><span class="subvalue">trial SD 0.0411 J<br>baseline 2.549–2.590 J</span></td>
-                <td class="num"><span class="primary">0.134090 J</span><span class="subvalue">one jointly packed layout</span></td>
+                <td class="num"><span class="primary">0.133503 J</span><span class="subvalue">one jointly packed layout</span></td>
                 <td class="dash">—<span class="subvalue">no comparable published A100 INT8 epoch-energy result found</span></td>
               </tr>
             </tbody>
@@ -634,8 +635,8 @@
             <p>Batch 16 is <strong>100.4× slower</strong> and <strong>4.71× more energy</strong> than the full batch. The main causes are 22,500 small GEMMs plus 22,500 epilogues and the native-path M=32 padding—not a change in logical network work.</p>
           </article>
           <article class="note-card">
-            <h3>The grid ordering reverses</h3>
-            <p>The model scores batch 16 about <strong>5.4% lower</strong> because each invocation resets to a smaller abstract address footprint. It prices none of the 45,000 launches, elapsed time, idle power, or physical row padding that dominate the GPU result.</p>
+            <h3>The grid result is almost tied</h3>
+            <p>With weights and the 60k-image input held in one epoch-wide address space, batch 16 is only <strong>0.60% above</strong> full batch. The batch-local sensitivity is 0.126846 J because it models compact reusable buffers and free external staging. It still counts repeated reads. Neither version prices the 45,000 GPU launches, elapsed time, idle power, or physical row padding.</p>
           </article>
           <article class="note-card">
             <h3>MAC-only sensitivity</h3>
@@ -644,18 +645,103 @@
         </div>
       </section>
 
+      <section id="grid-batching">
+        <p class="section-kicker">Table 3</p>
+        <h2>Batching in one persistent 2D grid</h2>
+        <p class="section-lede">Every row performs the same 717.9 billion logical MACs over the same 60,000 images. What changes is the schedule: smaller batches reread weights more often and have less row reuse, while larger batches occupy a wider activation footprint. The primary score allocates weights, all source images, and all 600,000 final logits once, then reuses layer-specific batch-local scratch and intermediate buffers across invocations.</p>
+        <div class="table-wrap">
+          <table>
+            <caption>Each displayed <span class="mono">S</span> is the exact evaluation of the best schedule found from three deterministic coordinate-descent starts, converted with <span class="mono">E = S × 1 fJ</span>; it is not a global lower bound. “Batch-local” scores one compact reusable buffer layout and multiplies by its call count; repeated reads are still counted, but external staging is free. The endpoint column is an illustrative same-schedule sensitivity, not part of the v0 grid score.</caption>
+            <thead>
+              <tr>
+                <th scope="col">Logical batch</th>
+                <th scope="col">Exact epoch decomposition</th>
+                <th scope="col" class="num">Paid source reads <span class="mono">R</span></th>
+                <th scope="col" class="num">Persistent-grid score and energy</th>
+                <th scope="col" class="num">Vs. full batch</th>
+                <th scope="col" class="num">Earlier batch-local sensitivity</th>
+                <th scope="col" class="num">Same schedule + 400 fJ/read sensitivity</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Full: 60,000</th>
+                <td>1 × 60,000</td>
+                <td class="num"><span class="primary">2.888892 T</span><span class="subvalue">46.21 steps/read average</span></td>
+                <td class="num"><span class="primary">0.133503 J</span><span class="subvalue">133.502856 T score units = fJ</span></td>
+                <td class="num"><span class="primary">1.000×</span></td>
+                <td class="num"><span class="primary">0.133503 J</span></td>
+                <td class="num"><span class="primary">1.289060 J</span></td>
+              </tr>
+              <tr>
+                <th scope="row">64</th>
+                <td>937 × 64 + 1 × 32</td>
+                <td class="num"><span class="primary">2.909029 T</span><span class="subvalue">25.11 steps/read average</span></td>
+                <td class="num"><span class="primary">0.073034 J</span><span class="subvalue">73.034299 T score units = fJ</span></td>
+                <td class="num"><span class="primary">0.547×</span></td>
+                <td class="num"><span class="primary">0.064150 J</span></td>
+                <td class="num"><span class="primary">1.236646 J</span></td>
+              </tr>
+              <tr>
+                <th scope="row">16</th>
+                <td>3,750 × 16</td>
+                <td class="num"><span class="primary">2.943519 T</span><span class="subvalue">45.63 steps/read average</span></td>
+                <td class="num"><span class="primary">0.134310 J</span><span class="subvalue">134.309616 T score units = fJ</span></td>
+                <td class="num"><span class="primary">1.006×</span></td>
+                <td class="num"><span class="primary">0.126846 J</span></td>
+                <td class="num"><span class="primary">1.311717 J</span></td>
+              </tr>
+              <tr>
+                <th scope="row">4</th>
+                <td>15,000 × 4</td>
+                <td class="num"><span class="primary">3.081125 T</span><span class="subvalue">141.40 steps/read average</span></td>
+                <td class="num"><span class="primary">0.435668 J</span><span class="subvalue">435.668465 T score units = fJ</span></td>
+                <td class="num"><span class="primary">3.263×</span></td>
+                <td class="num"><span class="primary">0.430160 J</span></td>
+                <td class="num"><span class="primary">1.668119 J</span></td>
+              </tr>
+              <tr>
+                <th scope="row">1</th>
+                <td>60,000 × 1</td>
+                <td class="num"><span class="primary">3.626300 T</span><span class="subvalue">461.52 steps/read average</span></td>
+                <td class="num"><span class="primary">1.673598 J</span><span class="subvalue">1,673.597885 T score units = fJ</span></td>
+                <td class="num"><span class="primary">12.536×</span></td>
+                <td class="num"><span class="primary">1.668527 J</span></td>
+                <td class="num"><span class="primary">3.124118 J</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="notes-grid">
+          <article class="note-card">
+            <h3>Batching now matters</h3>
+            <p>Starting at the spatial sweet spot of batch 64, movement energy rises <strong>1.84×</strong> at batch 16, <strong>5.97×</strong> at batch 4, and <strong>22.9×</strong> at batch 1. Those increases come from explicit lost reuse and repeated weight reads—not an imposed utilization multiplier.</p>
+          </article>
+          <article class="note-card">
+            <h3>Why 64 beats the monolithic batch</h3>
+            <p>The grid model trades weight reuse against distance. Batch 64 reuses compact activation buffers; the 60k schedule materializes very large layer activations farther from the single processor. An unrestricted streaming full-batch program could imitate the batch-64 schedule, so 0.073034 J is a schedule-family result, not a lower-bound theorem.</p>
+          </article>
+          <article class="note-card">
+            <h3>What “harder to make efficient” means here</h3>
+            <p>The scorer has no GPU lanes, occupancy, launch latency, clock, or leakage. It can express batch inefficiency only when the program performs more reads or moves operands farther. A hardware-efficiency penalty belongs in the A100 model, not as an unexplained surcharge on the grid score.</p>
+          </article>
+        </div>
+      </section>
+
       <section id="dally" class="dally">
         <div>
           <p class="section-kicker">Heuristic cross-check</p>
-          <h2>How this squares with Bill Dally’s 2022 argument</h2>
+          <h2>How this squares with Dally’s 2022–2023 heuristics</h2>
           <p>Dally’s central point survives the comparison: communication and location dominate arithmetic. His example says a 32-bit add costs 20 fJ, moving its two 32-bit inputs 1 mm costs 1.9 pJ, and fetching two words from main memory costs 1.3 nJ. The stated 40 mm in 16 ns corresponds to about 2.5×10⁶ m/s—roughly <strong>c/120</strong>.</p>
-          <p>His MLP recomputation example uses <strong>160 fJ/MAC</strong>. Applied mechanically, that is 0.087961 J for 8192³ and 0.114864 J for this 60k-image network. Those figures sit near the 0.118953 J and 0.126846–0.134090 J grid projections, but the agreement is only an order-of-magnitude cross-check: the score unit is abstract, and neither estimate is A100 board energy.</p>
+          <p>His MLP recomputation example uses <strong>160 fJ/MAC</strong>. Applied mechanically, that is 0.087961 J for 8192³ and 0.114864 J for this 60k-image network. That network estimate is near the persistent full-batch and batch-16 grid scores, but the agreement is only an order-of-magnitude cross-check: the score unit is abstract, and neither estimate is A100 board energy.</p>
+          <p>Dally’s later 2023 AHA talk rounds on-chip communication to <strong>100 fJ/(bit·mm)</strong> and a small-RAM access to <strong>50 fJ/bit</strong>. At that calibration, 1 fJ per whole INT8 operand-step is energy-equivalent to only <strong>1.25 μm</strong> of wire; adding 400 fJ for every paid read produces the last column of Table 3. That is only a what-if: it overprices reads served by registers and underprices any 32-bit accumulator read.</p>
           <p>The article does not identify a semiconductor node for all of these heuristic numbers. The A100 is a 7 nm device, but a 2022 publication date alone does not make Dally’s examples A100- or 7 nm-calibrated.</p>
         </div>
         <ul class="dally-list">
           <li><strong>Grid vs. Dally, 8192³:</strong> 0.118953 J is 1.35× the 160 fJ/MAC heuristic.</li>
           <li><strong>A100 vs. grid, 8192³:</strong> measured board energy is 5.45× grid for B1, 7.60× for INT8, 11.99× for FP16, and 132.47× for strict FP32.</li>
-          <li><strong>A100 vs. grid, MNIST:</strong> 19.16× for the full batch and 95.44× for logical batch 16.</li>
+          <li><strong>A100 vs. grid, MNIST:</strong> 19.25× for the full batch and 90.14× for logical batch 16.</li>
           <li><strong>Interpretation:</strong> the gaps are where real data paths, HBM, output traffic, control, launches, clocking, and leakage enter. That is evidence for Dally’s hierarchy, not a contradiction.</li>
         </ul>
       </section>
@@ -688,8 +774,9 @@
             <h3>MNIST grid projection</h3>
             <ul>
               <li>Six rectangular GEMMs are jointly packed by read frequency.</li>
-              <li>Coordinate-descent tile search starts from independently optimal per-layer tiles.</li>
-              <li>Batch-16 score is evaluated per invocation and multiplied by 3,750.</li>
+              <li>Tile search keeps the best of three deterministic coordinate-descent starts: independent per-layer optima, all-minimum tiles, and all-maximum tiles.</li>
+              <li>Primary batching comparison uses one persistent epoch address space: weights, 60k source images, and 60k outputs are allocated once; local activation and scratch buffers are reused.</li>
+              <li>The separate batch-local sensitivity scores one compact invocation and multiplies by the exact call decomposition.</li>
               <li>Logical dimensions only; Tensor Core padding, bias, ReLU, saturation, writes, and launches are omitted.</li>
             </ul>
           </article>
@@ -714,6 +801,7 @@
           <li><a href="https://github.com/bcacdwk/vllmbench/blob/92a8ca495b1c8cfe9ae5b1fc31badeb48a47ea65/slidesparse/benchmark_kernel/cuBLASLt/alg_search_results/A100_cc80_py312_cu129_x86_64/INT8/alg_search_SQUARE.csv">vllmbench A100 cuBLASLt INT8 exact-shape CSV.</a> Timing anchor used by the supplied research report; output-type caveat applies.</li>
           <li><a href="https://arxiv.org/html/2505.03269v1">Oostrum et al., “The Tensor-Core Beamformer.”</a> Binary A100 TOP/J anchor on a much larger nonsquare workload; the 0.089 J row is deliberately marked aggressive and non-comparable.</li>
           <li><a href="https://doi.org/10.1145/3548783">William Dally, “On the Model of Computation: Point,” CACM 65(9), 2022.</a> Communication-distance and 160 fJ/MAC MLP heuristics. <a href="https://www.cs.mun.ca/~harold/Courses/Old/CS3600.W23/Diary/3548783.pdf">Accessible PDF.</a></li>
+          <li><a href="https://aha.stanford.edu/sites/g/files/sbiybj20066/files/media/file/aha-retreat-2023_dally_keynote_en_eff_ai_hw_0.pdf">Bill Dally, “Energy Efficiency and AI Hardware,” Stanford AHA Retreat, 2023.</a> Later 100 fJ/(bit·mm), 50 fJ/bit small-RAM, and 1 fJ/bit add heuristics.</li>
           <li><a href="https://developer.nvidia.com/blog/nvidia-ampere-architecture-in-depth/">NVIDIA Ampere architecture overview.</a> A100 process and arithmetic-mode context.</li>
           <li><a href="https://docs.nvidia.com/deploy/nvml-api/group__nvmlDeviceQueries.html">NVIDIA NVML device-query reference.</a> Cumulative energy-counter definition.</li>
           <li><a href="https://people.idsia.ch/~ciresan/data/NNtricks.pdf">Cireșan et al., “Deep Big Multilayer Perceptrons.”</a> Historical architecture context; it does not report A100 INT8 inference energy.</li>
