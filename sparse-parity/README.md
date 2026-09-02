@@ -30,6 +30,7 @@ accuracy — the secret recovery rate, i.e. the fraction of instances where all
 
 | Date       | Cost       | Submission | Contributors | Description |
 | -          | -:         | -          | -            | -           |
+| 2026-09-01 | 141,218 | [ir](submissions/packedfrontier40_mask32.ir), [report](submissions/packed_frontier.md), [py](submissions/packed_frontier.py) | [@npow](https://github.com/npow) | 55 audited weight-2 states + compact flow + reverse route ★ best |
 | 2026-09-02 | 147,000 | [ir](submissions/packedroute40_mask32.ir), [py](packed_sparse_parity.py) | [@b0nce](https://github.com/b0nce) | `generate_packed_route40()` (cap-2 Gray prefix) |
 | 2026-09-01 | 151,943 | [ir](submissions/packedscan2_mask32.ir), [report](submissions/packedscan2_mask32.md), [py](packed_sparse_parity.py) | [@jurajselep](https://github.com/jurajselep) | `generate_packed_scan(2)` (packed-column scan + SSA layout) |
 | 2026-08-31 | 163,378 | [ir](submissions/packedwalk1_cap2_s5_mask32.ir), [report](submissions/packedwalk1_mask32.md), [py](submissions/packedwalk.py) | [@npow](https://github.com/npow) | `generate(1, 2, seed=5)` (bit-packed SIS walk, 3-phase layout, higher dev recovery) |
@@ -42,6 +43,7 @@ accuracy — the secret recovery rate, i.e. the fraction of instances where all
 
 | Date       | Cost       | Submission | Contributors | Description |
 | -          | -:         | -          | -            | -           |
+| 2026-09-01 | 149,665 | [ir](submissions/packedfrontier60_mask32.ir), [report](submissions/packed_frontier.md), [py](submissions/packed_frontier.py) | [@npow](https://github.com/npow) | 19 audited weight-3 states + compact flow + reversed 2-opt walk ★ best |
 | 2026-09-02 | 176,331 | [ir](submissions/packedroute60_mask32.ir), [py](packed_sparse_parity.py) | [@b0nce](https://github.com/b0nce) | `generate_packed_route60()` (cap-3 Gray prefix) |
 | 2026-09-01 | 200,937 | [ir](submissions/packedscan3_mask32.ir), [report](submissions/packedscan3_mask32.md), [py](packed_sparse_parity.py) | [@jurajselep](https://github.com/jurajselep) | `generate_packed_scan(3)` (packed-column scan + SSA layout) |
 | 2026-08-31 | 284,049 | [ir](submissions/packedsis_cap3_s13_mask32.ir), [report](submissions/packedsis_pcap2_mask32.md), [py](submissions/packedsis.py) | [@npow](https://github.com/npow) | `generate_packed_sis(cap=3, seed=13)` (bit-packed SIS walk, full cap-3, tuned seed) |
@@ -54,6 +56,7 @@ accuracy — the secret recovery rate, i.e. the fraction of instances where all
 
 | Date       | Cost       | Submission | Contributors | Description |
 | -          | -:         | -          | -            | -           |
+| 2026-09-01 | 182,744 | [ir](submissions/packedfrontier80_mask32.ir), [report](submissions/packed_frontier.md), [py](submissions/packed_frontier.py) | [@npow](https://github.com/npow) | 269 audited weight-3 states + compact flow + reversed 2-opt walk ★ best |
 | 2026-09-02 | 196,139 | [ir](submissions/packedroute80_mask32.ir), [py](packed_sparse_parity.py) | [@b0nce](https://github.com/b0nce) | `generate_packed_route80()` (cap-3 Gray prefix) |
 | 2026-09-01 | 200,937 | [ir](submissions/packedscan3_mask32.ir), [report](submissions/packedscan3_mask32.md), [py](packed_sparse_parity.py) | [@jurajselep](https://github.com/jurajselep) | `generate_packed_scan(3)` (packed-column scan + SSA layout) |
 | 2026-08-31 | 493,193 | [ir](submissions/septwalk_wcap3_mask32.ir), [report](submissions/septwalk_wcap3_mask32.md), [py](submissions/septwalk.py) | [@npow](https://github.com/npow) | `generate_staged(weight_cap=3)` (septet-packed dynamic RREF + row-coordinate walk) |

@@ -320,6 +320,7 @@ def _allocate_phase(
     input_count: int,
     include_inputs: bool,
     output_phase: bool,
+    order_bias: float | None = 1.0,
 ):
     """Linear-scan allocation, biased toward short read-dense intervals.
 
@@ -387,14 +388,35 @@ def _allocate_phase(
             _end, slot = heapq.heappop(active)
             free_slots.add(slot)
 
-        ordered = sorted(
-            by_start[start_time],
-            key=lambda identifier: (
-                (ends[identifier] - starts[identifier])
-                / (reads[identifier] + 1),
-                identifier,
-            ),
-        )
+        if order_bias is None:
+            ordered = sorted(
+                by_start[start_time],
+                key=lambda identifier: (
+                    -reads[identifier],
+                    ends[identifier] - starts[identifier],
+                    identifier,
+                ),
+            )
+        elif order_bias == 1.0:
+            # Preserve the published packed-scan layout exactly by default.
+            ordered = sorted(
+                by_start[start_time],
+                key=lambda identifier: (
+                    (ends[identifier] - starts[identifier])
+                    / (reads[identifier] + 1),
+                    identifier,
+                ),
+            )
+        else:
+            ordered = sorted(
+                by_start[start_time],
+                key=lambda identifier: (
+                    (ends[identifier] - starts[identifier])
+                    / (reads[identifier] + order_bias),
+                    -reads[identifier],
+                    identifier,
+                ),
+            )
         for identifier in ordered:
             if free_slots:
                 slot = min(free_slots)
@@ -535,7 +557,12 @@ def _global_frequency_layout(ir: str) -> str:
     return "\n".join(result)
 
 
-def _optimize_two_phase_ir(ir: str, walk_start_destination: int) -> str:
+def _optimize_two_phase_ir(
+    ir: str,
+    walk_start_destination: int,
+    walk_order_bias: float | None = 1.0,
+    remove_self_copies: bool = False,
+) -> str:
     """DCE + exact-liveness register allocation across RREF and walk phases."""
     body = [line.strip() for line in ir.splitlines()[1:-1] if line.strip()]
     split_original_index = next(
@@ -595,6 +622,7 @@ def _optimize_two_phase_ir(ir: str, walk_start_destination: int) -> str:
         input_count=len(input_addresses),
         include_inputs=False,
         output_phase=True,
+        order_bias=walk_order_bias,
     )
     prefix_address_for_slot, walk_address_for_slot = _bucketed_phase_addresses(
         prefix_slots,
@@ -647,6 +675,16 @@ def _optimize_two_phase_ir(ir: str, walk_start_destination: int) -> str:
         )
     )
 
+    if remove_self_copies:
+        compact_result = []
+        for line in result:
+            if line.startswith("copy "):
+                destination, source = line[5:].split(",")
+                if destination == source:
+                    continue
+            compact_result.append(line)
+        result = compact_result
+
     # The phase allocator minimizes live storage and puts each phase in the
     # right cost buckets.  This final rearrangement-inequality pass makes the
     # whole emitted trace exactly frequency-optimal after bridge insertion.
@@ -661,6 +699,9 @@ def generate_packed_scan(
     optimize_layout: bool = True,
     static_information_set: Sequence[int] | None = None,
     walk_states: Sequence[int] | None = None,
+    compact_predicates: bool = False,
+    compact_flow: bool = False,
+    walk_order_bias: float | None = 1.0,
 ) -> str:
     """Generate the packed-column bounded-weight affine scan.
 
@@ -684,6 +725,8 @@ def generate_packed_scan(
     free_dimension = n - m
     if not 0 <= weight_cap <= k:
         raise ValueError(f"weight_cap must be in [0, {k}]")
+    if walk_order_bias is not None and walk_order_bias <= 0:
+        raise ValueError("walk_order_bias must be positive or None")
 
     if static_information_set is None:
         pivot_columns = list(range(n))
@@ -722,10 +765,10 @@ def generate_packed_scan(
 
     # Packed RREF and metadata.
     matrix_base = allocate((n + 1) * chunks)
-    used_base = allocate(chunks)
+    pivot_row_mask_base = allocate(chunks)
     eligible_base = allocate(chunks)
     lowbit_base = allocate(chunks)
-    selected_pivot_base = allocate(chunks)
+    selected_pivot_base = allocate(chunks - 1 if compact_flow else chunks)
     eliminate_base = allocate(chunks)
     zero = allocate(1)
     one = allocate(1)
@@ -757,10 +800,14 @@ def generate_packed_scan(
     popcount = lambda q: popcount_base + q
     basis = lambda j, q: basis_base + j * chunks + q
     matrix = lambda c, q: matrix_base + c * chunks + q
-    used = lambda q: used_base + q
+    pivot_row_mask = lambda q: pivot_row_mask_base + q
     eligible = lambda q: eligible_base + q
     lowbit = lambda q: lowbit_base + q
-    selected_pivot = lambda q: selected_pivot_base + q
+    selected_pivot = lambda q: (
+        lowbit(0)
+        if compact_flow and q == 0
+        else selected_pivot_base + q - (1 if compact_flow else 0)
+    )
     eliminate = lambda q: eliminate_base + q
     power = lambda bit: powers_base + bit - 1
     rank_constant = lambda j: rank_constants_base + j
@@ -832,7 +879,7 @@ def generate_packed_scan(
         emit(f"set {rank_constant(j)},{j}")
 
     for chunk in range(chunks):
-        emit(f"set {used(chunk)},0")
+        emit(f"set {pivot_row_mask(chunk)},{63 if compact_flow else 0}")
     emit(f"set {free_count},0")
 
     # Full RREF.  A selected pivot is a one-hot 18-row mask; E is the set of
@@ -840,24 +887,48 @@ def generate_packed_scan(
     # augmented column, one pivot-bit test gates three bytewise XORs.
     for order_index, column in enumerate(pivot_columns):
         for chunk in range(chunks):
-            emit(f"xor {temporary},{used(chunk)},{mask6}")
-            emit(f"and {eligible(chunk)},{matrix(column, chunk)},{temporary}")
+            if compact_flow:
+                emit(
+                    f"and {eligible(chunk)},{matrix(column, chunk)},"
+                    f"{pivot_row_mask(chunk)}"
+                )
+            else:
+                emit(f"xor {temporary},{pivot_row_mask(chunk)},{mask6}")
+                emit(
+                    f"and {eligible(chunk)},{matrix(column, chunk)},"
+                    f"{temporary}"
+                )
             emit(f"sub {negative},{zero},{eligible(chunk)}")
             emit(f"and {lowbit(chunk)},{eligible(chunk)},{negative}")
 
-        emit(f"copy {selected_pivot(0)},{lowbit(0)}")
+        if not compact_flow:
+            emit(f"copy {selected_pivot(0)},{lowbit(0)}")
         emit(f"select {selected_pivot(1)},{eligible(0)},{zero},{lowbit(1)}")
         emit(f"or {any_value},{eligible(0)},{eligible(1)}")
         emit(f"select {selected_pivot(2)},{any_value},{zero},{lowbit(2)}")
         emit(f"or {found},{any_value},{eligible(2)}")
-        emit(f"select {temporary},{found},{zero},{one}")
+        if compact_flow:
+            emit(f"cmp {temporary},{found},{zero},eq")
+        else:
+            emit(f"select {temporary},{found},{zero},{one}")
         emit(f"select {rank(column)},{found},{mask6},{free_count}")
         emit(f"add {free_count},{temporary}")
         emit(f"or {gate},{selected_pivot(0)},{selected_pivot(1)}")
         emit(f"or {gate},{selected_pivot(2)}")
 
         for chunk in range(chunks):
-            emit(f"or {used(chunk)},{selected_pivot(chunk)}")
+            if compact_flow:
+                # selected_pivot is either zero or a one-hot subset of the
+                # unused mask, so XOR clears exactly the claimed pivot row.
+                emit(
+                    f"xor {pivot_row_mask(chunk)},"
+                    f"{selected_pivot(chunk)}"
+                )
+            else:
+                emit(
+                    f"or {pivot_row_mask(chunk)},"
+                    f"{selected_pivot(chunk)}"
+                )
             emit(
                 f"xor {eliminate(chunk)},{matrix(column, chunk)},"
                 f"{selected_pivot(chunk)}"
@@ -968,9 +1039,13 @@ def generate_packed_scan(
         high_byte = state >> 8
         # The checkpoint is initialized to state zero.  By uniqueness there
         # is at most one accepted state, so a zero byte never needs writing.
-        # Keep one explicit first-state set as the phase-boundary marker.
+        # Bit 14 is outside the coefficient space and acts as a sentinel when
+        # state zero is accepted; coefficient decoding ignores that bit.
+        # Keep the first low-byte set as the phase-boundary marker.
         if state == 0:
             emit(f"set {current_low},0")
+            if compact_flow:
+                emit(f"set {current_high},64")
         if low_byte:
             emit(f"set {current_low},{low_byte}")
         if high_byte:
@@ -987,6 +1062,20 @@ def generate_packed_scan(
                 emit(f"select {best_low},{any_value},{best_low},{current_low}")
             if high_byte:
                 emit(f"select {best_high},{any_value},{best_high},{current_high}")
+        elif target == 1 and compact_predicates:
+            # The aligned OR must be a nonzero power of two, and integer
+            # addition must equal OR so that no bit is present in two chunks.
+            # Since each chunk is in [0, 63], the three-cell sum is at most
+            # 189 and cannot wrap modulo 256.
+            emit(f"or {any_value},{cells[0]},{cells[1]}")
+            emit(f"or {any_value},{cells[2]}")
+            emit(f"add {temporary1},{cells[0]},{cells[1]}")
+            emit(f"add {temporary1},{cells[2]}")
+            emit(f"xor {temporary0},{temporary1},{any_value}")
+            emit(f"sub {temporary2},{any_value},{one}")
+            emit(f"and {temporary2},{any_value}")
+            emit(f"or {temporary2},{temporary0}")
+            emit(f"select {candidate_ok},{temporary2},{zero},{any_value}")
         elif target == 1:
             # With no overlapping bits, integer sum equals XOR.  Require that
             # equality and a nonzero power-of-two XOR; this is one operation
@@ -1001,6 +1090,29 @@ def generate_packed_scan(
             emit(f"or {temporary2},{any_value}")
             emit(f"cmp {candidate_ok},{temporary2},{zero},eq")
             emit(f"mul {candidate_ok},{candidate_ok},{temporary1}")
+        elif target == 2 and compact_predicates:
+            emit(f"xor {temporary0},{cells[0]},{cells[1]}")
+            emit(f"xor {temporary1},{temporary0},{cells[2]}")
+            emit(f"and {temporary2},{cells[0]},{cells[1]}")
+            emit(f"and {temporary},{temporary0},{cells[2]}")
+            emit(f"or {temporary2},{temporary}")
+
+            emit(f"sub {popcount_tmp},{temporary1},{one}")
+            emit(f"and {popcount(0)},{temporary1},{popcount_tmp}")
+            emit(f"sub {popcount_tmp},{popcount(0)},{one}")
+            emit(f"and {popcount(1)},{popcount(0)},{popcount_tmp}")
+            emit(f"or {popcount(1)},{temporary2}")
+            emit(
+                f"select {candidate_ok},{popcount(1)},{zero},{popcount(0)}"
+            )
+
+            emit(f"sub {popcount_tmp},{temporary2},{one}")
+            emit(f"and {popcount(0)},{temporary2},{popcount_tmp}")
+            emit(f"or {popcount(0)},{temporary1}")
+            emit(
+                f"select {popcount(0)},{popcount(0)},{zero},{temporary2}"
+            )
+            emit(f"or {candidate_ok},{popcount(0)}")
         elif target == 2:
             # Let p be the per-bit parity across chunks and m the majority.
             # Total weight two means either popcount(p)=2,m=0 or p=0 and
@@ -1030,6 +1142,33 @@ def generate_packed_scan(
             emit(f"cmp {popcount(0)},{popcount(0)},{zero},eq")
             emit(f"mul {popcount(0)},{popcount(0)},{temporary2}")
             emit(f"or {candidate_ok},{popcount(0)}")
+        elif target == 3 and compact_predicates:
+            emit(f"xor {temporary0},{cells[0]},{cells[1]}")
+            emit(f"xor {temporary1},{temporary0},{cells[2]}")
+            emit(f"and {temporary2},{cells[0]},{cells[1]}")
+            emit(f"and {temporary},{temporary0},{cells[2]}")
+            emit(f"or {temporary2},{temporary}")
+
+            emit(f"sub {popcount_tmp},{temporary1},{one}")
+            emit(f"and {popcount(0)},{temporary1},{popcount_tmp}")
+            emit(f"sub {popcount_tmp},{popcount(0)},{one}")
+            emit(f"and {popcount(1)},{popcount(0)},{popcount_tmp}")
+            emit(f"sub {popcount_tmp},{popcount(1)},{one}")
+            emit(f"and {weight_sum},{popcount(1)},{popcount_tmp}")
+            emit(f"or {weight_sum},{temporary2}")
+            emit(
+                f"select {candidate_ok},{weight_sum},{zero},{popcount(1)}"
+            )
+
+            # popcount(0) still holds parity & (parity - 1) from case 3a.
+            emit(f"sub {popcount_tmp},{temporary2},{one}")
+            emit(f"and {popcount(1)},{temporary2},{popcount_tmp}")
+            emit(f"or {popcount(0)},{popcount(1)}")
+            emit(f"select {popcount(1)},{temporary1},{temporary2},{zero}")
+            emit(
+                f"select {popcount(1)},{popcount(0)},{zero},{popcount(1)}"
+            )
+            emit(f"or {candidate_ok},{popcount(1)}")
         elif target == 3:
             # With parity p and majority m, total weight three is either
             # popcount(p)=3,m=0 or popcount(p)=1,popcount(m)=1.
@@ -1072,7 +1211,12 @@ def generate_packed_scan(
             )
 
         if target != 0:
-            if low_byte:
+            if state == 0 and compact_flow:
+                emit(
+                    f"select {best_high},{candidate_ok},"
+                    f"{current_high},{best_high}"
+                )
+            elif low_byte:
                 emit(f"select {best_low},{candidate_ok},{current_low},{best_low}")
             if high_byte:
                 emit(f"select {best_high},{candidate_ok},{current_high},{best_high}")
@@ -1104,12 +1248,26 @@ def generate_packed_scan(
             emit(f"mul {temporary},{basis(j, chunk)},{best_coeff(j)}")
             emit(f"xor {best_pivot(chunk)},{temporary}")
 
-    # If no state was captured, the checkpoint is still zero.  Rechecking the
-    # final total weight distinguishes that case from a legitimate state zero.
-    emit_packed_popcount([best_pivot(chunk) for chunk in range(chunks)])
-    for j in range(free_dimension):
-        emit(f"add {weight_sum},{best_coeff(j)}")
-    emit(f"cmp {valid},{weight_sum},{target_constant(0)},eq")
+    if compact_flow:
+        # Any accepted nonzero coefficient state has a nonzero checkpoint
+        # byte; accepted state zero carries the reserved bit-14 sentinel.
+        emit(f"or {valid},{best_low},{best_high}")
+        emit(f"cmp {valid},{valid},{zero},ne")
+
+        # Apply validity once to the packed candidate representation.  This
+        # is equivalent to masking all 32 decoded outputs, but costs five
+        # operations instead of one per output cell.
+        for chunk in range(chunks):
+            emit(f"mul {best_pivot(chunk)},{valid}")
+        emit(f"mul {best_low},{valid}")
+        emit(f"mul {best_high},{valid}")
+    else:
+        # If no state was captured, the checkpoint is still zero.  Rechecking
+        # total weight distinguishes that case from legitimate state zero.
+        emit_packed_popcount([best_pivot(chunk) for chunk in range(chunks)])
+        for j in range(free_dimension):
+            emit(f"add {weight_sum},{best_coeff(j)}")
+        emit(f"cmp {valid},{weight_sum},{target_constant(0)},eq")
 
     for column in range(n):
         emit(f"and {temporary0},{best_pivot(0)},{matrix(column, 0)}")
@@ -1137,7 +1295,8 @@ def generate_packed_scan(
         emit(f"cmp {temporary},{temporary},{zero},ne")
         emit(f"select {output(column)},{rank_bit(4)},"
              f"{output(column)},{temporary}")
-        emit(f"and {output(column)},{valid}")
+        if not compact_flow:
+            emit(f"and {output(column)},{valid}")
 
     lines.append(",".join(str(output(column)) for column in range(n)))
     raw = "\n".join(lines)
@@ -1147,7 +1306,12 @@ def generate_packed_scan(
         )
 
     ir = (
-        _optimize_two_phase_ir(raw, walk_start_destination=current_low)
+        _optimize_two_phase_ir(
+            raw,
+            walk_start_destination=current_low,
+            walk_order_bias=walk_order_bias,
+            remove_self_copies=compact_flow,
+        )
         if optimize_layout
         else raw
     )
