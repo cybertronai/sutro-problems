@@ -637,7 +637,7 @@
           </article>
           <article class="note-card">
             <h3>The grid result is almost tied</h3>
-            <p>With weights and the 60k-image input held in one epoch-wide address space, batch 16 is only <strong>0.60% above</strong> full batch. The batch-local sensitivity is 0.126846 J because it models compact reusable buffers and free external staging. It still counts repeated reads. Neither version prices the 45,000 GPU launches, elapsed time, idle power, or physical row padding.</p>
+            <p>With weights and all 60,000 inputs held in one epoch-wide address space, batch 16 is only <strong>0.60% above</strong> full batch. The model prices reads from every image’s distinct resident cells; it does not multiply a 16-row input calculation. It still omits GPU launches, elapsed time, idle power, and physical row padding.</p>
           </article>
           <article class="note-card">
             <h3>MAC-only sensitivity</h3>
@@ -649,10 +649,10 @@
       <section id="grid-batching">
         <p class="section-kicker">Table 3</p>
         <h2>Batching in one persistent 2D grid</h2>
-        <p class="section-lede">Every row performs the same 717.9 billion logical MACs over the same 60,000 images. What changes is the schedule: smaller batches reread weights more often and have less row reuse, while larger batches occupy a wider activation footprint. The primary calculation allocates weights, all source images, and all 600,000 final logits once, then reuses layer-specific batch-local scratch and intermediate buffers across invocations.</p>
+        <p class="section-lede">Every row performs the same 717.9 billion logical MACs over the same 60,000 images. All <strong>47,040,000 input cells</strong> (60,000 × 784) and one copy of every weight are resident at distinct addresses before execution; 600,000 final-logit output cells are preallocated. The initial materialization energy is outside the boundary, while every subsequent input read is charged from that epoch-wide storage. Only computed hidden activations and scratch use layer-specific batch-row buffers that can be overwritten by the next invocation.</p>
         <div class="table-wrap">
           <table>
-            <caption>Movement energy is summed directly at 1 fJ per source-operand grid step and converted with 10¹⁵ fJ = 1 J. Each row is the exact evaluation of the best schedule found from three deterministic coordinate-descent starts, not a global lower bound. “Batch-local” evaluates one compact reusable buffer layout and multiplies by its call count; repeated reads are still counted, but external staging is free. The endpoint column is an illustrative same-schedule sensitivity, not part of the movement-only model.</caption>
+            <caption>Movement energy is summed directly at 1 fJ per source-operand grid step and converted with 10¹⁵ fJ = 1 J. Each row is the exact evaluation of the best schedule found from three deterministic coordinate-descent starts, not a global lower bound. Resident regions are frequency-packed once before each counterfactual run, so absolute addresses may differ between batch-size rows. The endpoint column is an illustrative same-schedule sensitivity, not part of the movement-only model.</caption>
             <thead>
               <tr>
                 <th scope="col">Logical batch</th>
@@ -660,7 +660,6 @@
                 <th scope="col" class="num">Paid source reads <span class="mono">R</span></th>
                 <th scope="col" class="num">Persistent-grid movement energy @ 1 fJ / operand-grid-step</th>
                 <th scope="col" class="num">Vs. full batch</th>
-                <th scope="col" class="num">Earlier batch-local sensitivity</th>
                 <th scope="col" class="num">Same schedule + 400 fJ/read sensitivity</th>
               </tr>
             </thead>
@@ -671,7 +670,6 @@
                 <td class="num"><span class="primary">2.888892 T</span><span class="subvalue">46.21 steps/read average</span></td>
                 <td class="num"><span class="primary">133,502,855,653,573 fJ</span><span class="subvalue">0.133503 J</span></td>
                 <td class="num"><span class="primary">1.000×</span></td>
-                <td class="num"><span class="primary">0.133503 J</span></td>
                 <td class="num"><span class="primary">1.289060 J</span></td>
               </tr>
               <tr>
@@ -680,7 +678,6 @@
                 <td class="num"><span class="primary">2.909029 T</span><span class="subvalue">25.11 steps/read average</span></td>
                 <td class="num"><span class="primary">73,034,299,138,466 fJ</span><span class="subvalue">0.073034 J</span></td>
                 <td class="num"><span class="primary">0.547×</span></td>
-                <td class="num"><span class="primary">0.064150 J</span></td>
                 <td class="num"><span class="primary">1.236646 J</span></td>
               </tr>
               <tr>
@@ -689,7 +686,6 @@
                 <td class="num"><span class="primary">2.943519 T</span><span class="subvalue">45.63 steps/read average</span></td>
                 <td class="num"><span class="primary">134,309,615,592,699 fJ</span><span class="subvalue">0.134310 J</span></td>
                 <td class="num"><span class="primary">1.006×</span></td>
-                <td class="num"><span class="primary">0.126846 J</span></td>
                 <td class="num"><span class="primary">1.311717 J</span></td>
               </tr>
               <tr>
@@ -698,7 +694,6 @@
                 <td class="num"><span class="primary">3.081125 T</span><span class="subvalue">141.40 steps/read average</span></td>
                 <td class="num"><span class="primary">435,668,465,318,037 fJ</span><span class="subvalue">0.435668 J</span></td>
                 <td class="num"><span class="primary">3.263×</span></td>
-                <td class="num"><span class="primary">0.430160 J</span></td>
                 <td class="num"><span class="primary">1.668119 J</span></td>
               </tr>
               <tr>
@@ -707,7 +702,6 @@
                 <td class="num"><span class="primary">3.626300 T</span><span class="subvalue">461.52 steps/read average</span></td>
                 <td class="num"><span class="primary">1,673,597,885,020,609 fJ</span><span class="subvalue">1.673598 J</span></td>
                 <td class="num"><span class="primary">12.536×</span></td>
-                <td class="num"><span class="primary">1.668527 J</span></td>
                 <td class="num"><span class="primary">3.124118 J</span></td>
               </tr>
             </tbody>
@@ -716,8 +710,8 @@
 
         <div class="notes-grid">
           <article class="note-card">
-            <h3>Batching now matters</h3>
-            <p>Starting at the spatial sweet spot of batch 64, movement energy rises <strong>1.84×</strong> at batch 16, <strong>5.97×</strong> at batch 4, and <strong>22.9×</strong> at batch 1. Those increases come from explicit lost reuse and repeated weight reads—not an imposed utilization multiplier.</p>
+            <h3>Batch-64 input storage</h3>
+            <p>The first 937 calls address <strong>47,014,912 distinct input cells</strong> (937 × 64 × 784); the final 32-example call addresses another <strong>25,088</strong>. All 47,040,000 cells exist before execution and each is read 20 times by the first layer. They are frequency-packed in the epoch-wide grid, not copied through or replaced by one reusable 64-row input buffer.</p>
           </article>
           <article class="note-card">
             <h3>Why 64 beats the monolithic batch</h3>
@@ -776,8 +770,8 @@
             <ul>
               <li>Six rectangular GEMMs are jointly packed by read frequency.</li>
               <li>Tile search keeps the best of three deterministic coordinate-descent starts: independent per-layer optima, all-minimum tiles, and all-maximum tiles.</li>
-              <li>Primary batching comparison uses one persistent epoch address space: weights, 60k source images, and 60k outputs are allocated once; local activation and scratch buffers are reused.</li>
-              <li>The separate batch-local sensitivity evaluates one compact invocation and multiplies by the exact call decomposition.</li>
+              <li>Primary batching comparison uses one persistent epoch address space: 47,040,000 distinct source-image cells and one copy of all weights are resident; 600,000 output cells are allocated before execution.</li>
+              <li>Computed hidden activations and scratch use layer-specific batch-row buffers; input examples do not pass through a reusable batch-sized staging buffer.</li>
               <li>Logical dimensions only; Tensor Core padding, bias, ReLU, saturation, writes, and launches are omitted.</li>
             </ul>
           </article>

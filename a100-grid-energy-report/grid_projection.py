@@ -139,110 +139,6 @@ def initial_tiles(batch_size: int) -> list[tuple[int, int]]:
     return choices
 
 
-def forward_score(
-    batch_size: int, tiles: list[tuple[int, int]]
-) -> tuple[int, int]:
-    """Jointly pack and score all six logical forward matmuls."""
-    activation_regions = []
-    weight_regions = []
-    sb_specs = []
-    sc_specs = []
-    sa_reads = 0
-    tmp_reads = 0
-
-    for layer, (input_width, output_width) in enumerate(
-        zip(NETWORK_DIMS, NETWORK_DIMS[1:])
-    ):
-        tile_i, tile_j = tiles[layer]
-        macs = batch_size * input_width * output_width
-        sa_reads += macs
-        tmp_reads += batch_size * output_width * (input_width - 1)
-        sb_specs.append((tile_j, macs // tile_j))
-        sc_specs.append((tile_i * tile_j, macs // (tile_i * tile_j)))
-        activation_regions.append(
-            (
-                f"x{layer}",
-                batch_size * input_width,
-                output_width // tile_j,
-            )
-        )
-        weight_regions.append(
-            (
-                f"W{layer}",
-                input_width * output_width,
-                batch_size // tile_i,
-            )
-        )
-
-    regions = [("sa", 1, sa_reads), ("tmp", 1, tmp_reads)]
-    regions += scratch_tiers("sb", sb_specs)
-    regions += scratch_tiers("sc", sc_specs)
-    regions += activation_regions
-    regions += weight_regions
-    regions.append(("out", batch_size * NETWORK_DIMS[-1], 1))
-    return pack_regions(regions)
-
-
-def optimize_forward(
-    batch_size: int,
-) -> tuple[int, int, list[tuple[int, int]], int, str]:
-    """Three-start coordinate-descent search for one batch-local layout."""
-    row_tiles = divisors(batch_size)
-    starts = [
-        ("independent_layer_optima", initial_tiles(batch_size)),
-        ("all_minimum_tiles", [(1, 1) for _width in NETWORK_DIMS[1:]]),
-        (
-            "all_maximum_tiles",
-            [
-                (batch_size, output_width)
-                for output_width in NETWORK_DIMS[1:]
-            ],
-        ),
-    ]
-    best_result = None
-
-    for start_name, tiles in starts:
-        score, paid_reads = forward_score(batch_size, tiles)
-        for sweep in range(1, 101):
-            changed = 0
-            for layer, output_width in enumerate(NETWORK_DIMS[1:]):
-                old_tile = tiles[layer]
-                best_score = score
-                best_reads = paid_reads
-                best_tile = old_tile
-                for tile_i in row_tiles:
-                    for tile_j in divisors(output_width):
-                        tiles[layer] = (tile_i, tile_j)
-                        candidate_score, candidate_reads = forward_score(
-                            batch_size, tiles
-                        )
-                        if candidate_score < best_score:
-                            best_score = candidate_score
-                            best_reads = candidate_reads
-                            best_tile = (tile_i, tile_j)
-                tiles[layer] = best_tile
-                if best_tile != old_tile:
-                    score = best_score
-                    paid_reads = best_reads
-                    changed += 1
-            if not changed:
-                candidate = (
-                    score,
-                    paid_reads,
-                    list(tiles),
-                    sweep,
-                    start_name,
-                )
-                if best_result is None or candidate[0] < best_result[0]:
-                    best_result = candidate
-                break
-        else:
-            raise RuntimeError("tile search did not converge")
-
-    assert best_result is not None
-    return best_result
-
-
 def epoch_decomposition(batch_size: int) -> list[tuple[int, int]]:
     """Return ``(rows, invocation_count)`` pairs for one 60k-image epoch."""
     if batch_size < 1 or batch_size > TRAINING_EXAMPLES:
@@ -257,52 +153,6 @@ def epoch_decomposition(batch_size: int) -> list[tuple[int, int]]:
     return calls
 
 
-def batch_local_case(batch_size: int) -> dict:
-    """Legacy sensitivity: score one compact reusable batch-local layout."""
-    decomposition = epoch_decomposition(batch_size)
-    calls = []
-    epoch_score = 0
-    epoch_reads = 0
-    for rows, invocation_count in decomposition:
-        score, paid_reads, tiles, sweeps, winning_start = optimize_forward(rows)
-        epoch_score += score * invocation_count
-        epoch_reads += paid_reads * invocation_count
-        calls.append(
-            {
-                "rows": rows,
-                "invocation_count": invocation_count,
-                "movement_energy_fJ_per_invocation": score,
-                "paid_reads_per_invocation": paid_reads,
-                "coordinate_descent_sweeps": sweeps,
-                "coordinate_descent_starts": 3,
-                "winning_start": winning_start,
-                "tiles": [
-                    {
-                        "layer": layer,
-                        "input_width": input_width,
-                        "output_width": output_width,
-                        "tile_i": tiles[layer][0],
-                        "tile_j": tiles[layer][1],
-                    }
-                    for layer, (input_width, output_width) in enumerate(
-                        zip(NETWORK_DIMS, NETWORK_DIMS[1:])
-                    )
-                ],
-            }
-        )
-    return {
-        "batch_size": batch_size,
-        "batch_invocations": sum(count for _rows, count in decomposition),
-        "decomposition": calls,
-        "epoch_movement_energy_fJ": epoch_score,
-        "epoch_paid_reads": epoch_reads,
-        "average_grid_steps_per_paid_read": epoch_score / epoch_reads,
-        "epoch_movement_energy_J": (
-            epoch_score / SCORE_UNITS_PER_JOULE
-        ),
-    }
-
-
 def epoch_persistent_score(
     decomposition: list[tuple[int, int]],
     tiles_by_rows: dict[int, list[tuple[int, int]]],
@@ -312,9 +162,7 @@ def epoch_persistent_score(
     Weights, the 60k-image input, and the 60k-image output are allocated once.
     Scratch and intermediate activation buffers are reused across invocations.
     This makes the spatial footprint of all source images and final outputs
-    visible.  The legacy batch-local calculation already counts repeated
-    weight reads, but assumes that external data can stream through compact
-    reusable buffers for free.
+    visible while allowing computed transient values to overwrite dead values.
     """
     activation_regions = []
     weight_regions = []
@@ -536,11 +384,6 @@ def audit() -> dict:
         persistent_case(batch_size)
         for batch_size in batch_sizes
     }
-    batch_local_cases = {
-        ("full" if batch_size == TRAINING_EXAMPLES else str(batch_size)):
-        batch_local_case(batch_size)
-        for batch_size in batch_sizes
-    }
     full_persistent_energy = persistent_cases["full"][
         "epoch_movement_energy_fJ"
     ]
@@ -548,26 +391,15 @@ def audit() -> dict:
         result["movement_energy_ratio_to_full_batch"] = (
             result["epoch_movement_energy_fJ"] / full_persistent_energy
         )
-    full_batch_local_energy = batch_local_cases["full"][
-        "epoch_movement_energy_fJ"
-    ]
-    for result in batch_local_cases.values():
-        result["movement_energy_ratio_to_full_batch"] = (
-            result["epoch_movement_energy_fJ"] / full_batch_local_energy
-        )
-    assert persistent_cases["full"][
-        "epoch_movement_energy_fJ"
-    ] == batch_local_cases["full"]["epoch_movement_energy_fJ"]
     assert persistent_cases["64"]["decomposition"] == [
         {"rows": 64, "invocation_count": 937},
         {"rows": 32, "invocation_count": 1},
     ]
-    for cases in (persistent_cases, batch_local_cases):
-        for result in cases.values():
-            assert sum(
-                call["rows"] * call["invocation_count"]
-                for call in result["decomposition"]
-            ) == TRAINING_EXAMPLES
+    for result in persistent_cases.values():
+        assert sum(
+            call["rows"] * call["invocation_count"]
+            for call in result["decomposition"]
+        ) == TRAINING_EXAMPLES
 
     return {
         "report_date": "2026-09-02",
@@ -609,16 +441,40 @@ def audit() -> dict:
                     "scratch and intermediate activation buffers are reused "
                     "across invocations"
                 ),
-                "cases": persistent_cases,
-            },
-            "batch_local_reusable_buffer_sensitivity": {
-                "description": (
-                    "legacy calculation that evaluates one compact reusable "
-                    "batch-local layout and multiplies by the invocation "
-                    "count; repeated reads are counted, while external data "
-                    "staging is free"
+                "input_storage": {
+                    "materialized_before_modeled_run": True,
+                    "examples": TRAINING_EXAMPLES,
+                    "features_per_example": NETWORK_DIMS[0],
+                    "distinct_input_cells": (
+                        TRAINING_EXAMPLES * NETWORK_DIMS[0]
+                    ),
+                    "reusable_64_row_input_buffer": False,
+                    "batch64_partition": [
+                        {
+                            "calls": 937,
+                            "rows_per_call": 64,
+                            "distinct_input_cells": 937 * 64 * NETWORK_DIMS[0],
+                        },
+                        {
+                            "calls": 1,
+                            "rows_per_call": 32,
+                            "distinct_input_cells": 32 * NETWORK_DIMS[0],
+                        },
+                    ],
+                    "address_assignment": (
+                        "all input cells are jointly frequency-packed in the "
+                        "persistent epoch address space"
+                    ),
+                    "initial_materialization_energy": (
+                        "excluded; inputs exist at their assigned addresses "
+                        "before modeled execution begins"
+                    ),
+                },
+                "transient_storage": (
+                    "computed hidden-layer activations use layer-specific "
+                    "batch-row buffers that are overwritten across invocations"
                 ),
-                "cases": batch_local_cases,
+                "cases": persistent_cases,
             },
             "dally_2023_endpoint_sensitivity": {
                 "formula": (
@@ -657,7 +513,8 @@ def audit() -> dict:
             "destination writes",
             "arithmetic, bias, ReLU, saturation, and quantization",
             "Tensor Core shape padding",
-            "full-dataset storage and batch gather",
+            "energy to initially materialize the resident dataset and any "
+            "batch-gather or copy operation",
             "kernel launch, control, clocking, leakage, and elapsed time",
             "physical cache, SRAM, HBM, and host-transfer behavior",
             "GPU occupancy and underfilled-kernel efficiency",

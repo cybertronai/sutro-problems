@@ -31,6 +31,28 @@
   "batching_analysis": {
     "persistent_epoch_address_space": {
       "description": "weights, the 60k-image source, and the 60k-image output are allocated once and retained; layer-specific batch-local scratch and intermediate activation buffers are reused across invocations",
+      "input_storage": {
+        "materialized_before_modeled_run": true,
+        "examples": 60000,
+        "features_per_example": 784,
+        "distinct_input_cells": 47040000,
+        "reusable_64_row_input_buffer": false,
+        "batch64_partition": [
+          {
+            "calls": 937,
+            "rows_per_call": 64,
+            "distinct_input_cells": 47014912
+          },
+          {
+            "calls": 1,
+            "rows_per_call": 32,
+            "distinct_input_cells": 25088
+          }
+        ],
+        "address_assignment": "all input cells are jointly frequency-packed in the persistent epoch address space",
+        "initial_materialization_energy": "excluded; inputs exist at their assigned addresses before modeled execution begins"
+      },
+      "transient_storage": "computed hidden-layer activations use layer-specific batch-row buffers that are overwritten across invocations",
       "cases": {
         "full": {
           "batch_size": 60000,
@@ -407,384 +429,6 @@
         }
       }
     },
-    "batch_local_reusable_buffer_sensitivity": {
-      "description": "legacy calculation that evaluates one compact reusable batch-local layout and multiplies by the invocation count; repeated reads are counted, while external data staging is free",
-      "cases": {
-        "full": {
-          "batch_size": 60000,
-          "batch_invocations": 1,
-          "decomposition": [
-            {
-              "rows": 60000,
-              "invocation_count": 1,
-              "movement_energy_fJ_per_invocation": 133502855653573,
-              "paid_reads_per_invocation": 2888892000000,
-              "coordinate_descent_sweeps": 4,
-              "coordinate_descent_starts": 3,
-              "winning_start": "all_minimum_tiles",
-              "tiles": [
-                {
-                  "layer": 0,
-                  "input_width": 784,
-                  "output_width": 2500,
-                  "tile_i": 96,
-                  "tile_j": 125
-                },
-                {
-                  "layer": 1,
-                  "input_width": 2500,
-                  "output_width": 2000,
-                  "tile_i": 60,
-                  "tile_j": 250
-                },
-                {
-                  "layer": 2,
-                  "input_width": 2000,
-                  "output_width": 1500,
-                  "tile_i": 48,
-                  "tile_j": 375
-                },
-                {
-                  "layer": 3,
-                  "input_width": 1500,
-                  "output_width": 1000,
-                  "tile_i": 30,
-                  "tile_j": 500
-                },
-                {
-                  "layer": 4,
-                  "input_width": 1000,
-                  "output_width": 500,
-                  "tile_i": 16,
-                  "tile_j": 500
-                },
-                {
-                  "layer": 5,
-                  "input_width": 500,
-                  "output_width": 10,
-                  "tile_i": 250,
-                  "tile_j": 10
-                }
-              ]
-            }
-          ],
-          "epoch_movement_energy_fJ": 133502855653573,
-          "epoch_paid_reads": 2888892000000,
-          "average_grid_steps_per_paid_read": 46.21247718972291,
-          "epoch_movement_energy_J": 0.133502855653573,
-          "movement_energy_ratio_to_full_batch": 1.0
-        },
-        "64": {
-          "batch_size": 64,
-          "batch_invocations": 938,
-          "decomposition": [
-            {
-              "rows": 64,
-              "invocation_count": 937,
-              "movement_energy_fJ_per_invocation": 68417043094,
-              "paid_reads_per_invocation": 3105149000,
-              "coordinate_descent_sweeps": 2,
-              "coordinate_descent_starts": 3,
-              "winning_start": "independent_layer_optima",
-              "tiles": [
-                {
-                  "layer": 0,
-                  "input_width": 784,
-                  "output_width": 2500,
-                  "tile_i": 64,
-                  "tile_j": 20
-                },
-                {
-                  "layer": 1,
-                  "input_width": 2500,
-                  "output_width": 2000,
-                  "tile_i": 64,
-                  "tile_j": 25
-                },
-                {
-                  "layer": 2,
-                  "input_width": 2000,
-                  "output_width": 1500,
-                  "tile_i": 64,
-                  "tile_j": 30
-                },
-                {
-                  "layer": 3,
-                  "input_width": 1500,
-                  "output_width": 1000,
-                  "tile_i": 64,
-                  "tile_j": 25
-                },
-                {
-                  "layer": 4,
-                  "input_width": 1000,
-                  "output_width": 500,
-                  "tile_i": 64,
-                  "tile_j": 25
-                },
-                {
-                  "layer": 5,
-                  "input_width": 500,
-                  "output_width": 10,
-                  "tile_i": 64,
-                  "tile_j": 10
-                }
-              ]
-            },
-            {
-              "rows": 32,
-              "invocation_count": 1,
-              "movement_energy_fJ_per_invocation": 43323040125,
-              "paid_reads_per_invocation": 1559197000,
-              "coordinate_descent_sweeps": 3,
-              "coordinate_descent_starts": 3,
-              "winning_start": "independent_layer_optima",
-              "tiles": [
-                {
-                  "layer": 0,
-                  "input_width": 784,
-                  "output_width": 2500,
-                  "tile_i": 32,
-                  "tile_j": 20
-                },
-                {
-                  "layer": 1,
-                  "input_width": 2500,
-                  "output_width": 2000,
-                  "tile_i": 32,
-                  "tile_j": 25
-                },
-                {
-                  "layer": 2,
-                  "input_width": 2000,
-                  "output_width": 1500,
-                  "tile_i": 32,
-                  "tile_j": 25
-                },
-                {
-                  "layer": 3,
-                  "input_width": 1500,
-                  "output_width": 1000,
-                  "tile_i": 32,
-                  "tile_j": 25
-                },
-                {
-                  "layer": 4,
-                  "input_width": 1000,
-                  "output_width": 500,
-                  "tile_i": 32,
-                  "tile_j": 25
-                },
-                {
-                  "layer": 5,
-                  "input_width": 500,
-                  "output_width": 10,
-                  "tile_i": 32,
-                  "tile_j": 10
-                }
-              ]
-            }
-          ],
-          "epoch_movement_energy_fJ": 64150092419203,
-          "epoch_paid_reads": 2911083810000,
-          "average_grid_steps_per_paid_read": 22.03649795269996,
-          "epoch_movement_energy_J": 0.064150092419203,
-          "movement_energy_ratio_to_full_batch": 0.48051475831847584
-        },
-        "16": {
-          "batch_size": 16,
-          "batch_invocations": 3750,
-          "decomposition": [
-            {
-              "rows": 16,
-              "invocation_count": 3750,
-              "movement_energy_fJ_per_invocation": 33825483405,
-              "paid_reads_per_invocation": 785581000,
-              "coordinate_descent_sweeps": 3,
-              "coordinate_descent_starts": 3,
-              "winning_start": "independent_layer_optima",
-              "tiles": [
-                {
-                  "layer": 0,
-                  "input_width": 784,
-                  "output_width": 2500,
-                  "tile_i": 16,
-                  "tile_j": 20
-                },
-                {
-                  "layer": 1,
-                  "input_width": 2500,
-                  "output_width": 2000,
-                  "tile_i": 16,
-                  "tile_j": 25
-                },
-                {
-                  "layer": 2,
-                  "input_width": 2000,
-                  "output_width": 1500,
-                  "tile_i": 16,
-                  "tile_j": 25
-                },
-                {
-                  "layer": 3,
-                  "input_width": 1500,
-                  "output_width": 1000,
-                  "tile_i": 16,
-                  "tile_j": 25
-                },
-                {
-                  "layer": 4,
-                  "input_width": 1000,
-                  "output_width": 500,
-                  "tile_i": 16,
-                  "tile_j": 25
-                },
-                {
-                  "layer": 5,
-                  "input_width": 500,
-                  "output_width": 10,
-                  "tile_i": 16,
-                  "tile_j": 10
-                }
-              ]
-            }
-          ],
-          "epoch_movement_energy_fJ": 126845562768750,
-          "epoch_paid_reads": 2945928750000,
-          "average_grid_steps_per_paid_read": 43.0579194316054,
-          "epoch_movement_energy_J": 0.12684556276875,
-          "movement_energy_ratio_to_full_batch": 0.95013370424002
-        },
-        "4": {
-          "batch_size": 4,
-          "batch_invocations": 15000,
-          "decomposition": [
-            {
-              "rows": 4,
-              "invocation_count": 15000,
-              "movement_energy_fJ_per_invocation": 28677325368,
-              "paid_reads_per_invocation": 206161000,
-              "coordinate_descent_sweeps": 3,
-              "coordinate_descent_starts": 3,
-              "winning_start": "independent_layer_optima",
-              "tiles": [
-                {
-                  "layer": 0,
-                  "input_width": 784,
-                  "output_width": 2500,
-                  "tile_i": 4,
-                  "tile_j": 10
-                },
-                {
-                  "layer": 1,
-                  "input_width": 2500,
-                  "output_width": 2000,
-                  "tile_i": 4,
-                  "tile_j": 20
-                },
-                {
-                  "layer": 2,
-                  "input_width": 2000,
-                  "output_width": 1500,
-                  "tile_i": 4,
-                  "tile_j": 20
-                },
-                {
-                  "layer": 3,
-                  "input_width": 1500,
-                  "output_width": 1000,
-                  "tile_i": 4,
-                  "tile_j": 20
-                },
-                {
-                  "layer": 4,
-                  "input_width": 1000,
-                  "output_width": 500,
-                  "tile_i": 4,
-                  "tile_j": 20
-                },
-                {
-                  "layer": 5,
-                  "input_width": 500,
-                  "output_width": 10,
-                  "tile_i": 4,
-                  "tile_j": 10
-                }
-              ]
-            }
-          ],
-          "epoch_movement_energy_fJ": 430159880520000,
-          "epoch_paid_reads": 3092415000000,
-          "average_grid_steps_per_paid_read": 139.10160199067718,
-          "epoch_movement_energy_J": 0.43015988052,
-          "movement_energy_ratio_to_full_batch": 3.222102466753395
-        },
-        "1": {
-          "batch_size": 1,
-          "batch_invocations": 60000,
-          "decomposition": [
-            {
-              "rows": 1,
-              "invocation_count": 60000,
-              "movement_energy_fJ_per_invocation": 27808776621,
-              "paid_reads_per_invocation": 60576500,
-              "coordinate_descent_sweeps": 2,
-              "coordinate_descent_starts": 3,
-              "winning_start": "independent_layer_optima",
-              "tiles": [
-                {
-                  "layer": 0,
-                  "input_width": 784,
-                  "output_width": 2500,
-                  "tile_i": 1,
-                  "tile_j": 10
-                },
-                {
-                  "layer": 1,
-                  "input_width": 2500,
-                  "output_width": 2000,
-                  "tile_i": 1,
-                  "tile_j": 16
-                },
-                {
-                  "layer": 2,
-                  "input_width": 2000,
-                  "output_width": 1500,
-                  "tile_i": 1,
-                  "tile_j": 20
-                },
-                {
-                  "layer": 3,
-                  "input_width": 1500,
-                  "output_width": 1000,
-                  "tile_i": 1,
-                  "tile_j": 20
-                },
-                {
-                  "layer": 4,
-                  "input_width": 1000,
-                  "output_width": 500,
-                  "tile_i": 1,
-                  "tile_j": 20
-                },
-                {
-                  "layer": 5,
-                  "input_width": 500,
-                  "output_width": 10,
-                  "tile_i": 1,
-                  "tile_j": 10
-                }
-              ]
-            }
-          ],
-          "epoch_movement_energy_fJ": 1668526597260000,
-          "epoch_paid_reads": 3634590000000,
-          "average_grid_steps_per_paid_read": 459.0687250171271,
-          "epoch_movement_energy_J": 1.66852659726,
-          "movement_energy_ratio_to_full_batch": 12.498059229456972
-        }
-      }
-    },
     "dally_2023_endpoint_sensitivity": {
       "formula": "E_fJ = movement_energy_fJ + 400*paid_source_reads for INT8",
       "source": "https://aha.stanford.edu/sites/g/files/sbiybj20066/files/media/file/aha-retreat-2023_dally_keynote_en_eff_ai_hw_0.pdf",
@@ -805,7 +449,7 @@
     "destination writes",
     "arithmetic, bias, ReLU, saturation, and quantization",
     "Tensor Core shape padding",
-    "full-dataset storage and batch gather",
+    "energy to initially materialize the resident dataset and any batch-gather or copy operation",
     "kernel launch, control, clocking, leakage, and elapsed time",
     "physical cache, SRAM, HBM, and host-transfer behavior",
     "GPU occupancy and underfilled-kernel efficiency"
