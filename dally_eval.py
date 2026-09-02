@@ -1,11 +1,10 @@
 """Thin wrapper around the dally-eval Rust engine for fast IR scoring.
 
-The engine lives at ~/sutro/dally-eval (github.com/cybertronai/dally-eval);
-it scores the same Bill Dally read-cost model as this repo's Python
-evaluators, bit-exactly, ~500x faster on batches. This shim shells out
-to its `verify`/`run` CLI so Python callers get native-speed scoring
-with a transparent fallback to the local Python evaluator when the
-binary is unavailable.
+The engine (github.com/cybertronai/dally-eval) scores the same Bill
+Dally read-cost model as this repo's Python evaluators, bit-exactly,
+with ~500x faster batch execution. This shim shells out to its `verify`
+CLI so Python callers get native-speed static-cost scoring. Callers can
+fall back to the local Python parser when the binary is unavailable.
 
 Usage:
     import dally_eval
@@ -41,12 +40,24 @@ def available() -> bool:
     return _binary() is not None
 
 
+def _parse_cost(output: str) -> int:
+    """Validate the machine-readable contract of ``dally-eval verify``."""
+    try:
+        payload = json.loads(output)
+    except json.JSONDecodeError as exc:
+        raise ValueError("dally-eval returned invalid JSON") from exc
+    cost = payload.get("cost") if isinstance(payload, dict) else None
+    if type(cost) is not int or cost < 0:
+        raise ValueError("dally-eval response is missing a valid integer cost")
+    return cost
+
+
 def static_cost(ir: str) -> Optional[int]:
     """Static read-cost of an IR program via the Rust engine.
 
     Returns None when the engine binary is not built (callers should
-    fall back to the native Python scorer). Raises ValueError on
-    malformed IR.
+    fall back to the native Python scorer). Raises ValueError when the
+    IR is rejected or the CLI returns a malformed response.
     """
     binary = _binary()
     if binary is None:
@@ -60,4 +71,4 @@ def static_cost(ir: str) -> Optional[int]:
     )
     if proc.returncode != 0:
         raise ValueError(f"dally-eval rejected IR: {proc.stderr.strip()}")
-    return json.loads(proc.stdout)["cost"]
+    return _parse_cost(proc.stdout)
