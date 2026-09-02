@@ -1,0 +1,127 @@
+{
+  "report_date": "2026-09-01",
+  "hardware": {
+    "gpu_name": "NVIDIA A100-SXM4-40GB",
+    "gpu_memory_bytes": 42405855232,
+    "compute_capability": [8, 0],
+    "power_limit_W": 400.0,
+    "driver_version": "580.95.05",
+    "torch_version": "2.5.1+cu124",
+    "cuda_version": "12.4",
+    "cupy_version": "13.6.0"
+  },
+  "measurement": {
+    "authoritative_counter": "nvmlDeviceGetTotalEnergyConsumption",
+    "counter_unit": "millijoules",
+    "reported_quantity": "GPU board energy above paired loaded-idle baseline",
+    "scope": "GPU board including HBM; excludes host and facility",
+    "trials_per_stage": 5,
+    "target_seconds_per_trial": 5.0,
+    "idle_window_seconds": 5.0,
+    "nvidia_smi_supporting_telemetry_interval_ms": 100,
+    "synchronization": "device synchronization at aggregate boundaries",
+    "excluded": [
+      "Modal startup and image pull",
+      "CUDA and library initialization",
+      "allocation and warmup",
+      "host-to-device transfer",
+      "datatype conversion, quantization, and bit packing",
+      "CPU, host RAM, cooling, and facility overhead"
+    ]
+  },
+  "gemm_8192": {
+    "timestamp_utc": "2026-09-02T04:41:15Z",
+    "source_artifact": "matmul/a100_8192_dtype_energy_results.json",
+    "source_artifact_sha256": "fc5b20621d8eea98f848ed70a8a21d5bfa736a5638fd7f24d9b1c0de26c74aa6",
+    "shape": [8192, 8192, 8192],
+    "MAC": 549755813888,
+    "conventional_operations": 1099511627776,
+    "stages": {
+      "strict_fp32": {
+        "semantics": "FP32 x FP32 -> FP32; TF32 disabled; cuBLAS",
+        "aggregate_repetitions": 435,
+        "seconds_per_GEMM": 0.05794544174942529,
+        "raw_board_energy_J_per_GEMM": 19.693367816091953,
+        "idle_baseline_W": 67.92575465007738,
+        "idle_adjusted_board_energy_J_per_GEMM": 15.75737995673014,
+        "idle_adjusted_baseline_range_J": [15.649922490504519, 15.86483742295576],
+        "trial_energy_stdev_J": 0.4767938572220191
+      },
+      "fp16_tensor_core": {
+        "semantics": "FP16 x FP16 -> FP16; cuBLAS Tensor Core path",
+        "aggregate_repetitions": 5805,
+        "seconds_per_GEMM": 0.004362116411197246,
+        "raw_board_energy_J_per_GEMM": 1.7315273040482346,
+        "idle_baseline_W": 70.02403715665636,
+        "idle_adjusted_board_energy_J_per_GEMM": 1.4260743023888982,
+        "idle_adjusted_baseline_range_J": [1.4201229387177092, 1.4320256660600867],
+        "trial_energy_stdev_J": 0.014895978187781414
+      },
+      "int8_tensor_core": {
+        "semantics": "signed INT8 x signed INT8 -> INT32; torch._int_mm Tensor Core path",
+        "aggregate_repetitions": 9055,
+        "seconds_per_GEMM": 0.002778655073881832,
+        "raw_board_energy_J_per_GEMM": 1.1010936499171728,
+        "idle_baseline_W": 70.90474813364872,
+        "idle_adjusted_board_energy_J_per_GEMM": 0.9040738117532965,
+        "idle_adjusted_baseline_range_J": [0.9012033779795702, 0.9069442455270227],
+        "trial_energy_stdev_J": 0.010205490085370857
+      },
+      "b1_and_popcount_tensor_core": {
+        "semantics": "packed B1 AND + population count -> INT32; native SM80 WMMA BMMA",
+        "aggregate_repetitions": 8510,
+        "seconds_per_GEMM": 0.0029437698970622805,
+        "raw_board_energy_J_per_GEMM": 0.8542057579318448,
+        "idle_baseline_W": 70.01477899648175,
+        "idle_adjusted_board_energy_J_per_GEMM": 0.6480983591725333,
+        "idle_adjusted_baseline_range_J": [0.6456478051091342, 0.6505489132359326],
+        "trial_energy_stdev_J": 0.02046552860227184
+      }
+    }
+  },
+  "ciresan_mnist_int8_inference": {
+    "timestamp_utc": "2026-09-02T05:15:16Z",
+    "modal_app_id": "ap-6tbqDsQQ2rxZ6Z32HEcN05",
+    "source_artifact": "ciresan_a100/a100_40gb_int8_batch16_results.json",
+    "source_artifact_sha256": "73b221fb089fb1216ab8bb160eda90e3e3dca60a89f99f5b4c6f443a558cf037",
+    "logical_dimensions": [784, 2500, 2000, 1500, 1000, 500, 10],
+    "physical_width_padded_dimensions": [784, 2512, 2000, 1504, 1008, 512, 16],
+    "examples": 60000,
+    "logical_MAC_per_example": 11965000,
+    "logical_MAC_per_epoch": 717900000000,
+    "weights": "deterministic synthetic dense signed INT8",
+    "input": "real MNIST training images, uint8 minus 128 then signed INT8",
+    "epilogue": "INT32 bias + ReLU + saturation to [0,127] + INT8 write after every layer",
+    "stages": {
+      "logical_batch16": {
+        "calls_per_epoch": 3750,
+        "physical_rows_per_call": 32,
+        "row_padding_reason": "torch._int_mm rejects M=16 on this A100/PyTorch build",
+        "physical_padded_MAC_per_epoch": 1445007360000,
+        "aggregate_repetitions": 35,
+        "seconds_per_epoch": 0.780364251971429,
+        "raw_board_energy_J_per_epoch": 61.033371428571435,
+        "idle_baseline_W": 62.69807690575121,
+        "idle_adjusted_board_energy_J_per_epoch": 12.106033543967767,
+        "idle_adjusted_baseline_range_J": [11.42979997406332, 12.782267113872201],
+        "trial_energy_stdev_J": 0.5154639408925056
+      },
+      "single_full_batch60000": {
+        "calls_per_epoch": 1,
+        "physical_padded_MAC_per_epoch": 722503680000,
+        "aggregate_repetitions": 3260,
+        "seconds_per_epoch": 0.007773678443865031,
+        "raw_board_energy_J_per_epoch": 3.0642294478527603,
+        "idle_baseline_W": 63.641640426835274,
+        "idle_adjusted_board_energy_J_per_epoch": 2.5694997995344617,
+        "idle_adjusted_baseline_range_J": [2.5486108185709284, 2.590388780497995],
+        "trial_energy_stdev_J": 0.041068117246861116
+      }
+    },
+    "excluded_additionally": [
+      "labels, loss, accuracy, backward, and optimizer",
+      "initial uint8-to-signed-int8 conversion",
+      "model and workspace allocation"
+    ]
+  }
+}

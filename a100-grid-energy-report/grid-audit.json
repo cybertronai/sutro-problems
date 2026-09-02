@@ -1,0 +1,154 @@
+{
+  "report_date": "2026-09-01",
+  "coefficient_J_per_score_unit": 1e-15,
+  "score_unit": "one source operand times one abstract address-grid step",
+  "distance": "d(address) = ceil(sqrt(address))",
+  "network": {
+    "dimensions": [
+      784,
+      2500,
+      2000,
+      1500,
+      1000,
+      500,
+      10
+    ],
+    "examples_per_inference_epoch": 60000,
+    "logical_MAC_per_example": 11965000,
+    "logical_MAC_per_epoch": 717900000000
+  },
+  "schedule": {
+    "family": "jointly packed generalized rectangular sa_cache",
+    "tile_search": "coordinate descent from independently optimal per-layer tiles",
+    "qualification": "best found within this schedule family; not a global lower bound"
+  },
+  "cases": {
+    "batch16_epoch": {
+      "batch_size": 16,
+      "batch_invocations": 3750,
+      "logical_MAC_per_invocation": 191440000,
+      "score_per_invocation": 33825483405,
+      "paid_reads_per_invocation": 785581000,
+      "epoch_score": 126845562768750,
+      "epoch_paid_reads": 2945928750000,
+      "epoch_energy_J_at_1_fJ_per_score_unit": 0.12684556276875,
+      "coordinate_descent_sweeps": 3,
+      "tiles": [
+        {
+          "layer": 0,
+          "input_width": 784,
+          "output_width": 2500,
+          "tile_i": 16,
+          "tile_j": 20
+        },
+        {
+          "layer": 1,
+          "input_width": 2500,
+          "output_width": 2000,
+          "tile_i": 16,
+          "tile_j": 25
+        },
+        {
+          "layer": 2,
+          "input_width": 2000,
+          "output_width": 1500,
+          "tile_i": 16,
+          "tile_j": 25
+        },
+        {
+          "layer": 3,
+          "input_width": 1500,
+          "output_width": 1000,
+          "tile_i": 16,
+          "tile_j": 25
+        },
+        {
+          "layer": 4,
+          "input_width": 1000,
+          "output_width": 500,
+          "tile_i": 16,
+          "tile_j": 25
+        },
+        {
+          "layer": 5,
+          "input_width": 500,
+          "output_width": 10,
+          "tile_i": 16,
+          "tile_j": 10
+        }
+      ]
+    },
+    "single_full_batch_epoch": {
+      "batch_size": 60000,
+      "batch_invocations": 1,
+      "logical_MAC_per_invocation": 717900000000,
+      "score_per_invocation": 134090296696172,
+      "paid_reads_per_invocation": 2888127050000,
+      "epoch_score": 134090296696172,
+      "epoch_paid_reads": 2888127050000,
+      "epoch_energy_J_at_1_fJ_per_score_unit": 0.134090296696172,
+      "coordinate_descent_sweeps": 2,
+      "tiles": [
+        {
+          "layer": 0,
+          "input_width": 784,
+          "output_width": 2500,
+          "tile_i": 96,
+          "tile_j": 125
+        },
+        {
+          "layer": 1,
+          "input_width": 2500,
+          "output_width": 2000,
+          "tile_i": 60,
+          "tile_j": 250
+        },
+        {
+          "layer": 2,
+          "input_width": 2000,
+          "output_width": 1500,
+          "tile_i": 48,
+          "tile_j": 300
+        },
+        {
+          "layer": 3,
+          "input_width": 1500,
+          "output_width": 1000,
+          "tile_i": 40,
+          "tile_j": 250
+        },
+        {
+          "layer": 4,
+          "input_width": 1000,
+          "output_width": 500,
+          "tile_i": 20,
+          "tile_j": 250
+        },
+        {
+          "layer": 5,
+          "input_width": 500,
+          "output_width": 10,
+          "tile_i": 240,
+          "tile_j": 10
+        }
+      ]
+    }
+  },
+  "mac_count_only_sensitivity": {
+    "reference": "retuned 8192^3 sa_cache score",
+    "reference_score": 118953083721334,
+    "reference_MAC": 549755813888,
+    "reference_energy_J": 0.118953083721334,
+    "energy_J_per_MAC": 2.1637439880820965e-13,
+    "projected_MNIST_epoch_energy_J_for_either_batching": 0.1553351809044137
+  },
+  "precision_semantics": "The scorer has unbounded scalar cells and no bit width; these grid scores do not change between FP32, FP16, INT8, or one-bit values.",
+  "omitted_terms": [
+    "destination writes",
+    "arithmetic, bias, ReLU, saturation, and quantization",
+    "Tensor Core shape padding",
+    "full-dataset storage and batch gather",
+    "kernel launch, control, clocking, leakage, and elapsed time",
+    "physical cache, SRAM, HBM, and host-transfer behavior"
+  ]
+}

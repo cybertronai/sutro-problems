@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Measured A100 and modeled grid energy for an exact 8192 cubed GEMM and a Ciresan-style MNIST inference epoch.">
+  <title>A100 and Grid Energy: 8192³ GEMM + Ciresan MNIST</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f7f4ec;
+      --paper-deep: #ebe5d7;
+      --ink: #172337;
+      --muted: #5e6876;
+      --line: #d2cab9;
+      --navy: #102a43;
+      --blue: #285c7f;
+      --teal: #19736f;
+      --amber: #a86312;
+      --rose: #9b4559;
+      --white: #fffdf8;
+      --measured-bg: #dcecf5;
+      --modeled-bg: #dceee8;
+      --literature-bg: #f4e7c9;
+      --shadow: 0 18px 45px rgba(29, 38, 50, .10);
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 15% 0%, rgba(40, 92, 127, .08), transparent 32rem),
+        var(--paper);
+      color: var(--ink);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.58;
+    }
+
+    a { color: var(--blue); text-underline-offset: .16em; }
+    a:hover { color: var(--navy); }
+    code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    code { font-size: .92em; }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 72px;
+    }
+
+    .hero {
+      overflow: hidden;
+      position: relative;
+      padding: clamp(28px, 5vw, 58px);
+      border: 1px solid rgba(16, 42, 67, .12);
+      border-radius: 28px;
+      background: linear-gradient(135deg, #fffdf8 0%, #f2ede1 68%, #e8e3d7 100%);
+      box-shadow: var(--shadow);
+    }
+
+    .hero::after {
+      content: "2¹³";
+      position: absolute;
+      right: clamp(18px, 5vw, 64px);
+      top: -34px;
+      color: rgba(16, 42, 67, .055);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(9rem, 23vw, 18rem);
+      font-weight: 700;
+      line-height: 1;
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      position: relative;
+      z-index: 1;
+      margin: 0 0 12px;
+      color: var(--teal);
+      font-size: .78rem;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3 {
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--navy);
+      line-height: 1.08;
+    }
+
+    h1 {
+      position: relative;
+      z-index: 1;
+      max-width: 860px;
+      margin: 0;
+      font-size: clamp(2.25rem, 6.2vw, 5.25rem);
+      font-weight: 650;
+      letter-spacing: -.035em;
+    }
+
+    .deck {
+      position: relative;
+      z-index: 1;
+      max-width: 790px;
+      margin: 22px 0 0;
+      color: #3f4b58;
+      font-size: clamp(1rem, 2vw, 1.24rem);
+    }
+
+    .hero-meta {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      margin-top: 24px;
+      color: var(--muted);
+      font-size: .88rem;
+    }
+
+    .headline-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .metric {
+      min-width: 0;
+      padding: 16px 17px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: rgba(255, 253, 248, .72);
+    }
+
+    .metric-label {
+      display: block;
+      color: var(--muted);
+      font-size: .73rem;
+      font-weight: 750;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .metric-value {
+      display: block;
+      margin-top: 4px;
+      color: var(--navy);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.25rem, 2.3vw, 1.75rem);
+      font-variant-numeric: tabular-nums lining-nums;
+      white-space: nowrap;
+    }
+
+    .metric-note {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    .toc {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin: 22px 0 0;
+    }
+
+    .toc a {
+      padding: 7px 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 253, 248, .7);
+      color: var(--navy);
+      font-size: .82rem;
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    main { margin-top: 56px; }
+
+    section { scroll-margin-top: 24px; }
+    section + section { margin-top: 64px; }
+
+    .section-kicker {
+      margin: 0 0 7px;
+      color: var(--teal);
+      font-size: .75rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      margin: 0;
+      font-size: clamp(1.75rem, 4vw, 2.8rem);
+      letter-spacing: -.02em;
+    }
+
+    h3 {
+      margin: 0 0 10px;
+      font-size: 1.28rem;
+    }
+
+    .section-lede {
+      max-width: 890px;
+      margin: 13px 0 22px;
+      color: var(--muted);
+      font-size: 1.02rem;
+    }
+
+    .callout {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 24px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--teal);
+      border-radius: 15px;
+      background: rgba(255, 253, 248, .78);
+    }
+
+    .callout p { margin: 0; }
+    .callout p + p { margin-top: 9px; }
+
+    .formula {
+      align-self: center;
+      padding: 16px;
+      border-radius: 12px;
+      background: var(--navy);
+      color: #f8f5eb;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: clamp(.82rem, 1.5vw, .98rem);
+      font-variant-numeric: tabular-nums lining-nums;
+      overflow-wrap: anywhere;
+    }
+
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 0 0 12px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 3px 8px;
+      border-radius: 999px;
+      color: var(--navy);
+      font-size: .69rem;
+      font-weight: 800;
+      letter-spacing: .045em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .tag.measured { background: var(--measured-bg); }
+    .tag.modeled { background: var(--modeled-bg); }
+    .tag.literature { background: var(--literature-bg); }
+
+    .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--white);
+      box-shadow: 0 9px 25px rgba(29, 38, 50, .055);
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      min-width: 1020px;
+      border-collapse: collapse;
+      font-size: .9rem;
+      font-variant-numeric: tabular-nums lining-nums;
+    }
+
+    caption {
+      padding: 13px 15px 9px;
+      color: var(--muted);
+      font-size: .76rem;
+      text-align: left;
+      caption-side: bottom;
+    }
+
+    th, td {
+      padding: 14px 13px;
+      border-bottom: 1px solid #ded8ca;
+      vertical-align: top;
+      text-align: left;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: var(--navy);
+      color: #fbf8ef;
+      font-size: .72rem;
+      font-weight: 800;
+      letter-spacing: .045em;
+      line-height: 1.35;
+      text-transform: uppercase;
+    }
+
+    tbody tr:nth-child(even) { background: #faf7f0; }
+    tbody tr:last-child th, tbody tr:last-child td { border-bottom: 0; }
+    tbody th { color: var(--navy); font-size: .94rem; }
+
+    .num { text-align: right; white-space: nowrap; }
+    .primary { color: var(--navy); font-weight: 800; }
+    .subvalue { display: block; margin-top: 3px; color: var(--muted); font-size: .74rem; line-height: 1.35; white-space: normal; }
+    .dash { color: #87909b; }
+
+    .notes-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 16px;
+    }
+
+    .note-card {
+      padding: 17px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 253, 248, .64);
+    }
+
+    .note-card p { margin: 0; color: var(--muted); font-size: .88rem; }
+    .note-card strong { color: var(--ink); }
+
+    .dally {
+      display: grid;
+      grid-template-columns: .9fr 1.1fr;
+      gap: 24px;
+      padding: clamp(20px, 4vw, 34px);
+      border-radius: 19px;
+      background: var(--navy);
+      color: #e8edf1;
+      box-shadow: var(--shadow);
+    }
+
+    .dally h2, .dally h3 { color: #fffaf0; }
+    .dally .section-kicker { color: #78cec2; }
+    .dally p { margin: 0; }
+    .dally p + p { margin-top: 12px; }
+    .dally a { color: #9fdcd5; }
+
+    .dally-list {
+      display: grid;
+      gap: 10px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .dally-list li {
+      padding: 12px 14px;
+      border: 1px solid rgba(255,255,255,.14);
+      border-radius: 11px;
+      background: rgba(255,255,255,.055);
+    }
+
+    .dally-list strong { color: #fffaf0; }
+
+    .provenance-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .provenance-card {
+      padding: 19px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: var(--white);
+    }
+
+    .provenance-card p, .provenance-card ul { margin: 0; color: var(--muted); font-size: .87rem; }
+    .provenance-card ul { padding-left: 19px; }
+    .provenance-card li + li { margin-top: 6px; }
+
+    .downloads {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 18px;
+    }
+
+    .download {
+      display: inline-flex;
+      padding: 9px 12px;
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--white);
+      color: var(--navy);
+      font-size: .82rem;
+      font-weight: 750;
+      text-decoration: none;
+    }
+
+    .sources {
+      columns: 2 340px;
+      column-gap: 34px;
+      margin: 0;
+      padding-left: 21px;
+    }
+
+    .sources li {
+      break-inside: avoid;
+      margin-bottom: 11px;
+      color: var(--muted);
+      font-size: .86rem;
+    }
+
+    footer {
+      margin-top: 58px;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .78rem;
+    }
+
+    @media (max-width: 880px) {
+      .headline-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .callout, .dally { grid-template-columns: 1fr; }
+      .notes-grid, .provenance-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 540px) {
+      .page { width: min(100% - 20px, 1180px); padding-top: 10px; }
+      .hero { padding: 24px 18px; border-radius: 19px; }
+      .hero::after { right: -20px; top: -10px; }
+      .headline-grid { grid-template-columns: 1fr; }
+      .metric { padding: 13px 14px; }
+      main { margin-top: 44px; }
+      section + section { margin-top: 50px; }
+      .callout { padding: 17px; }
+    }
+
+    @media print {
+      body { background: #fff; }
+      .page { width: 100%; padding: 0; }
+      .hero, .dally, .table-wrap { box-shadow: none; }
+      .toc, .downloads { display: none; }
+      a { color: inherit; text-decoration: none; }
+      section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <p class="eyebrow">Measured board energy · movement model · literature</p>
+      <h1>A100 and grid energy for 8192³ GEMM and Ciresan MNIST</h1>
+      <p class="deck">A controlled comparison of exact <span class="mono">8192 × 8192 × 8192</span> matrix multiplication across four arithmetic formats, followed by one INT8 forward-only pass over all 60,000 MNIST training images.</p>
+      <div class="hero-meta">
+        <span>Report date: September 1, 2026</span>
+        <span>GPU: NVIDIA A100-SXM4-40GB, 400 W cap</span>
+        <span>Energy: idle-adjusted NVML board counter</span>
+      </div>
+      <nav class="toc" aria-label="Report sections">
+        <a href="#contract">Scope</a>
+        <a href="#gemm">8192³ GEMM</a>
+        <a href="#mnist">MNIST epoch</a>
+        <a href="#dally">Dally cross-check</a>
+        <a href="#methods">Methods</a>
+        <a href="#sources">Sources</a>
+      </nav>
+    </header>
+
+    <div class="headline-grid" aria-label="Headline results">
+      <div class="metric">
+        <span class="metric-label">Exact workload</span>
+        <span class="metric-value">2⁴⁰ ops</span>
+        <span class="metric-note">549.756 billion MACs</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">8K A100 range</span>
+        <span class="metric-value">0.648–15.757 J</span>
+        <span class="metric-note">B1 through strict FP32</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">MNIST, full batch</span>
+        <span class="metric-value">7.774 ms · 2.569 J</span>
+        <span class="metric-note">all 60k examples at once</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">MNIST, batch 16</span>
+        <span class="metric-value">780.364 ms · 12.106 J</span>
+        <span class="metric-note">3,750 logical batches</span>
+      </div>
+    </div>
+
+    <main>
+      <section id="contract">
+        <p class="section-kicker">Comparison contract</p>
+        <h2>What is—and is not—being compared</h2>
+        <p class="section-lede">Measured A100 values are physical GPU-board observations. Grid values are scores converted at exactly 1 femtojoule per score unit. Literature values are estimates derived from the cited experiments. They are three different evidence classes, not interchangeable measurements.</p>
+        <div class="callout">
+          <div>
+            <p><strong>A100 boundary.</strong> Operands, outputs, weights, activations, and workspaces are already resident on the GPU. Allocation, warm-up, host transfer, input conversion, quantization, and B1 packing are outside the measured window. The result includes GPU-board and HBM activity, then subtracts the mean of paired loaded-idle measurements.</p>
+            <p><strong>Grid boundary.</strong> The v0 scorer charges each source read by <span class="mono">ceil(sqrt(address))</span>. Arithmetic, destination writes, bit width, physical memory hierarchy, clocks, control, leakage, and elapsed time cost zero. Its scalar cells are unbounded, so changing FP32 to FP16, INT8, or B1 does not change the score.</p>
+          </div>
+          <div class="formula" aria-label="Exact operation and grid energy formulas">
+            N = 8192 = 2¹³<br>
+            MAC = N³ = 2³⁹ = 549,755,813,888<br>
+            ops = 2N³ = 2⁴⁰ = 1,099,511,627,776<br><br>
+            E_grid = score × 10⁻¹⁵ J
+          </div>
+        </div>
+      </section>
+
+      <section id="gemm">
+        <p class="section-kicker">Table 1</p>
+        <h2>Exact 8192³ matrix multiplication</h2>
+        <p class="section-lede">All four rows execute the same 549,755,813,888 pair contributions. The A100 paths differ in arithmetic and output semantics; the grid proxy deliberately does not.</p>
+        <div class="legend" aria-label="Evidence classes">
+          <span class="tag measured">Measured A100</span>
+          <span class="tag modeled">Modeled grid</span>
+          <span class="tag literature">Literature-derived</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <caption>Times and A100 energies are five-trial aggregate results. “Baseline range” varies only the two paired idle estimates; trial-to-trial standard deviation is also shown. Literature entries are not direct replicas of this benchmark.</caption>
+            <thead>
+              <tr>
+                <th scope="col">Arithmetic path and semantics</th>
+                <th scope="col" class="num">A100 time</th>
+                <th scope="col" class="num">A100 idle-adjusted energy</th>
+                <th scope="col" class="num">Grid @ 1 fJ / score unit</th>
+                <th scope="col">Literature energy estimate</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Strict FP32<span class="subvalue">FP32 × FP32 → FP32; TF32 disabled; cuBLAS</span></th>
+                <td class="num"><span class="primary">57.945 ms</span></td>
+                <td class="num"><span class="primary">15.757 J</span><span class="subvalue">trial SD 0.477 J<br>baseline 15.650–15.865 J</span></td>
+                <td class="num"><span class="primary">0.118953 J</span><span class="subvalue">same score for every row</span></td>
+                <td><span class="primary">13.04–13.26 J</span><span class="subvalue">cubic interpolation between measured 4096³ and 16384³ A100 cases; 16.41 J from a separate efficiency result</span></td>
+              </tr>
+              <tr>
+                <th scope="row">FP16 Tensor Core<span class="subvalue">FP16 × FP16 → FP16; cuBLAS</span></th>
+                <td class="num"><span class="primary">4.362 ms</span></td>
+                <td class="num"><span class="primary">1.426 J</span><span class="subvalue">trial SD 0.0149 J<br>baseline 1.420–1.432 J</span></td>
+                <td class="num"><span class="primary">0.118953 J</span></td>
+                <td><span class="primary">1.04–1.28 J</span><span class="subvalue">cubic interpolation between measured adjacent-size A100 cases</span></td>
+              </tr>
+              <tr>
+                <th scope="row">INT8 Tensor Core<span class="subvalue">signed INT8 × INT8 → INT32; <code>torch._int_mm</code></span></th>
+                <td class="num"><span class="primary">2.779 ms</span></td>
+                <td class="num"><span class="primary">0.904 J</span><span class="subvalue">trial SD 0.0102 J<br>baseline 0.901–0.907 J</span></td>
+                <td class="num"><span class="primary">0.118953 J</span></td>
+                <td><span class="primary">≈0.5–0.9 J</span><span class="subvalue">cross-benchmark planning band; no paired exact-shape energy result</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Packed B1 Tensor Core<span class="subvalue">one-bit AND + population count → INT32; native SM80 WMMA BMMA</span></th>
+                <td class="num"><span class="primary">2.944 ms</span></td>
+                <td class="num"><span class="primary">0.648 J</span><span class="subvalue">trial SD 0.0205 J<br>baseline 0.646–0.651 J</span></td>
+                <td class="num"><span class="primary">0.118953 J</span><span class="subvalue">one bit per abstract scalar cell</span></td>
+                <td><span class="primary">≈0.089 J†</span><span class="subvalue">aggressive extrapolation from a much larger nonsquare binary beamformer with different useful-op semantics</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="notes-grid">
+          <article class="note-card">
+            <h3>Precision helps, but not monotonically in time</h3>
+            <p>Relative to strict FP32, measured energy falls 11.0× for FP16, 17.4× for INT8, and 24.3× for B1. The custom B1 kernel is slightly slower than the mature INT8 path, yet draws less incremental board power.</p>
+          </article>
+          <article class="note-card">
+            <h3>The model is intentionally widthless</h3>
+            <p>The exact retuned score is <strong>118,953,083,721,334</strong> for every row. Multiplying it by 1 fJ gives 0.118953 J. Scaling that number by 32, 16, 8, or 1 bits would be an extra assumption, not the current scorer.</p>
+          </article>
+          <article class="note-card">
+            <h3>No 8192³ instruction file</h3>
+            <p>The grid result is evaluated in closed form for a retuned <code>sa_cache</code> schedule with <span class="mono">Ti=256, Tj=128</span>. No enormous unrolled 8K IR is materialized; the downloadable script and audit JSON are the complete projection artifacts.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="mnist">
+        <p class="section-kicker">Table 2</p>
+        <h2>One INT8 forward pass over the 60k MNIST training set</h2>
+        <p class="section-lede">The recovered local network has logical dimensions <span class="mono">784–2500–2000–1500–1000–500–10</span>: 11,965,000 MACs per image and 717.9 billion logical MACs per full-dataset inference epoch. This is inference only—no labels, loss, backward pass, or optimizer.</p>
+        <div class="table-wrap">
+          <table>
+            <caption>Weights are deterministic dense synthetic INT8 values, and real MNIST bytes are centered into signed INT8. After each of six layers, an INT32 bias is added, ReLU is applied, and the result is saturated to [0,127] and written as INT8. This measures shape and execution cost, not classifier accuracy.</caption>
+            <thead>
+              <tr>
+                <th scope="col">Batch strategy</th>
+                <th scope="col" class="num">GEMM + epilogue launches</th>
+                <th scope="col" class="num">Physical MACs</th>
+                <th scope="col" class="num">A100 time</th>
+                <th scope="col" class="num">A100 idle-adjusted energy</th>
+                <th scope="col" class="num">Grid @ 1 fJ / score unit</th>
+                <th scope="col">Comparable literature</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Logical batch 16<span class="subvalue">3,750 calls; each M=16 input is pre-padded to physical M=32 for this PyTorch A100 INT8 path</span></th>
+                <td class="num"><span class="primary">22,500 + 22,500</span></td>
+                <td class="num"><span class="primary">1.445 T</span><span class="subvalue">2.01× logical, including row and width padding</span></td>
+                <td class="num"><span class="primary">780.364 ms</span></td>
+                <td class="num"><span class="primary">12.106 J</span><span class="subvalue">trial SD 0.515 J<br>baseline 11.430–12.782 J</span></td>
+                <td class="num"><span class="primary">0.126846 J</span><span class="subvalue">3,750 independently scored layouts</span></td>
+                <td class="dash">—<span class="subvalue">no comparable published A100 INT8 epoch-energy result found</span></td>
+              </tr>
+              <tr>
+                <th scope="row">One full batch<span class="subvalue">all 60,000 images in a single forward call</span></th>
+                <td class="num"><span class="primary">6 + 6</span></td>
+                <td class="num"><span class="primary">722.504 G</span><span class="subvalue">0.641% width padding</span></td>
+                <td class="num"><span class="primary">7.774 ms</span></td>
+                <td class="num"><span class="primary">2.569 J</span><span class="subvalue">trial SD 0.0411 J<br>baseline 2.549–2.590 J</span></td>
+                <td class="num"><span class="primary">0.134090 J</span><span class="subvalue">one jointly packed layout</span></td>
+                <td class="dash">—<span class="subvalue">no comparable published A100 INT8 epoch-energy result found</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="notes-grid">
+          <article class="note-card">
+            <h3>The A100 bottleneck is tiny launches</h3>
+            <p>Batch 16 is <strong>100.4× slower</strong> and <strong>4.71× more energy</strong> than the full batch. The main causes are 22,500 small GEMMs plus 22,500 epilogues and the native-path M=32 padding—not a change in logical network work.</p>
+          </article>
+          <article class="note-card">
+            <h3>The grid ordering reverses</h3>
+            <p>The model scores batch 16 about <strong>5.4% lower</strong> because each invocation resets to a smaller abstract address footprint. It prices none of the 45,000 launches, elapsed time, idle power, or physical row padding that dominate the GPU result.</p>
+          </article>
+          <article class="note-card">
+            <h3>MAC-only sensitivity</h3>
+            <p>Simply multiplying 717.9B MACs by the 8K grid energy per MAC gives <strong>0.155335 J</strong> for either batching. The main table uses the more informative shape-aware rectangular schedule instead.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="dally" class="dally">
+        <div>
+          <p class="section-kicker">Heuristic cross-check</p>
+          <h2>How this squares with Bill Dally’s 2022 argument</h2>
+          <p>Dally’s central point survives the comparison: communication and location dominate arithmetic. His example says a 32-bit add costs 20 fJ, moving its two 32-bit inputs 1 mm costs 1.9 pJ, and fetching two words from main memory costs 1.3 nJ. The stated 40 mm in 16 ns corresponds to about 2.5×10⁶ m/s—roughly <strong>c/120</strong>.</p>
+          <p>His MLP recomputation example uses <strong>160 fJ/MAC</strong>. Applied mechanically, that is 0.087961 J for 8192³ and 0.114864 J for this 60k-image network. Those figures sit near the 0.118953 J and 0.126846–0.134090 J grid projections, but the agreement is only an order-of-magnitude cross-check: the score unit is abstract, and neither estimate is A100 board energy.</p>
+          <p>The article does not identify a semiconductor node for all of these heuristic numbers. The A100 is a 7 nm device, but a 2022 publication date alone does not make Dally’s examples A100- or 7 nm-calibrated.</p>
+        </div>
+        <ul class="dally-list">
+          <li><strong>Grid vs. Dally, 8192³:</strong> 0.118953 J is 1.35× the 160 fJ/MAC heuristic.</li>
+          <li><strong>A100 vs. grid, 8192³:</strong> measured board energy is 5.45× grid for B1, 7.60× for INT8, 11.99× for FP16, and 132.47× for strict FP32.</li>
+          <li><strong>A100 vs. grid, MNIST:</strong> 19.16× for the full batch and 95.44× for logical batch 16.</li>
+          <li><strong>Interpretation:</strong> the gaps are where real data paths, HBM, output traffic, control, launches, clocking, and leakage enter. That is evidence for Dally’s hierarchy, not a contradiction.</li>
+        </ul>
+      </section>
+
+      <section id="methods">
+        <p class="section-kicker">Methods and reproducibility</p>
+        <h2>Measurement and projection details</h2>
+        <p class="section-lede">The numbers below are sufficient to reproduce the grid calculation and to interpret the A100 energy boundary without treating nvidia-smi samples as a high-rate wattmeter.</p>
+        <div class="provenance-grid">
+          <article class="provenance-card">
+            <h3>A100 measurement</h3>
+            <ul>
+              <li>A100-SXM4-40GB; 400 W cap; driver 580.95.05; CUDA 12.4; PyTorch 2.5.1.</li>
+              <li>Authoritative counter: <code>nvmlDeviceGetTotalEnergyConsumption</code>.</li>
+              <li>Five approximately five-second trials per stage, synchronized only at aggregate boundaries.</li>
+              <li>Idle adjustment uses the mean of loaded-idle windows measured immediately before and after each stage.</li>
+              <li><code>nvidia-smi</code> at 100 ms records supporting power, utilization, clocks, and temperature telemetry.</li>
+            </ul>
+          </article>
+          <article class="provenance-card">
+            <h3>8K grid projection</h3>
+            <ul>
+              <li>Retuned generalized <code>sa_cache</code> schedule, <span class="mono">Ti=256, Tj=128</span>.</li>
+              <li>Exact score: 118,953,083,721,334.</li>
+              <li>Score unit: one source operand times one abstract address-grid step.</li>
+              <li>Best among all 196 ordered divisor-tile pairs for this schedule family, not a proof over every algorithm.</li>
+            </ul>
+          </article>
+          <article class="provenance-card">
+            <h3>MNIST grid projection</h3>
+            <ul>
+              <li>Six rectangular GEMMs are jointly packed by read frequency.</li>
+              <li>Coordinate-descent tile search starts from independently optimal per-layer tiles.</li>
+              <li>Batch-16 score is evaluated per invocation and multiplied by 3,750.</li>
+              <li>Logical dimensions only; Tensor Core padding, bias, ReLU, saturation, writes, and launches are omitted.</li>
+            </ul>
+          </article>
+        </div>
+        <div class="downloads" aria-label="Reproducibility downloads">
+          <a class="download" href="results.csv">Download result table (CSV)</a>
+          <a class="download" href="measurement-audit.json">Inspect A100 measurement audit (JSON)</a>
+          <a class="download" href="grid_projection.py">Run grid projection (Python)</a>
+          <a class="download" href="grid-audit.json">Inspect grid audit (JSON)</a>
+        </div>
+      </section>
+
+      <section id="sources">
+        <p class="section-kicker">Primary references</p>
+        <h2>Sources and literature classification</h2>
+        <p class="section-lede">“Literature estimate” means a calculation anchored to published measurements. None of the cited papers directly reproduces every datatype, shape, output type, software path, and energy boundary used here.</p>
+        <ol class="sources">
+          <li><a href="https://chatgpt.com/share/6a97ac21-aec0-83e8-8af9-ee481dacb21f">Shared research report: “Estimate A100 GEMM Energy.”</a> Used as the supplied research map; primary sources below were checked separately.</li>
+          <li><a href="https://lca.ece.utexas.edu/pubs/ma_cal26.pdf">Ma et al., “GEMM the New Gem.”</a> A100 time and energy at 4096³ and 16384³; the FP32 and FP16 values in Table 1 are cubic interpolations to 8192³.</li>
+          <li><a href="https://arxiv.org/pdf/2203.03341">Ootomo and Yokota, “Recovering single precision accuracy from Tensor Cores.”</a> The 67 GFLOP/J cuBLAS FP32 result gives the 16.41 J cross-shape estimate.</li>
+          <li><a href="https://arxiv.org/html/2402.13499v1">Luo et al., “Benchmarking and Dissecting the NVIDIA Hopper GPU Architecture.”</a> A100 INT8 instruction-level throughput and power anchor.</li>
+          <li><a href="https://github.com/bcacdwk/vllmbench/blob/92a8ca495b1c8cfe9ae5b1fc31badeb48a47ea65/slidesparse/benchmark_kernel/cuBLASLt/alg_search_results/A100_cc80_py312_cu129_x86_64/INT8/alg_search_SQUARE.csv">vllmbench A100 cuBLASLt INT8 exact-shape CSV.</a> Timing anchor used by the supplied research report; output-type caveat applies.</li>
+          <li><a href="https://arxiv.org/html/2505.03269v1">Oostrum et al., “The Tensor-Core Beamformer.”</a> Binary A100 TOP/J anchor on a much larger nonsquare workload; the 0.089 J row is deliberately marked aggressive and non-comparable.</li>
+          <li><a href="https://doi.org/10.1145/3548783">William Dally, “On the Model of Computation: Point,” CACM 65(9), 2022.</a> Communication-distance and 160 fJ/MAC MLP heuristics. <a href="https://www.cs.mun.ca/~harold/Courses/Old/CS3600.W23/Diary/3548783.pdf">Accessible PDF.</a></li>
+          <li><a href="https://developer.nvidia.com/blog/nvidia-ampere-architecture-in-depth/">NVIDIA Ampere architecture overview.</a> A100 process and arithmetic-mode context.</li>
+          <li><a href="https://docs.nvidia.com/deploy/nvml-api/group__nvmlDeviceQueries.html">NVIDIA NVML device-query reference.</a> Cumulative energy-counter definition.</li>
+          <li><a href="https://people.idsia.ch/~ciresan/data/NNtricks.pdf">Cireșan et al., “Deep Big Multilayer Perceptrons.”</a> Historical architecture context; it does not report A100 INT8 inference energy.</li>
+        </ol>
+      </section>
+    </main>
+
+    <footer>
+      Dense resident-data benchmark; GPU-board scope only. Values should not be read as facility energy or classifier-quality results. †The B1 literature figure is a cross-workload extrapolation, not a comparable measurement.
+    </footer>
+  </div>
+</body>
+</html>
