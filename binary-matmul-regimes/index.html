@@ -1,0 +1,793 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A matched-semantics A100 benchmark and theory report on native 1-bit Tensor Core matrix multiplication versus INT8, including a Bill Dally physical-distance calibration of the Sutro grid model.">
+  <meta property="og:title" content="When one bit wins: native A100 B1 versus INT8">
+  <meta property="og:description" content="Measured timing, idle-adjusted energy, roofline regimes, packing costs, cache effects, and a physical calibration of 1 fJ grid steps.">
+  <title>When one bit wins — native A100 B1 vs INT8</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f1e9;
+      --surface: #fffdf7;
+      --surface-2: #ebe7dc;
+      --ink: #18242f;
+      --muted: #5f6c73;
+      --line: #cdc7b8;
+      --navy: #122b39;
+      --cyan: #0d7781;
+      --cyan-soft: #d9efee;
+      --amber: #b46112;
+      --amber-soft: #f6e6ca;
+      --coral: #a13d42;
+      --coral-soft: #f3dddc;
+      --green: #27694d;
+      --green-soft: #dcecdf;
+      --shadow: 0 20px 52px rgba(25, 38, 45, .10);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background:
+        linear-gradient(rgba(18, 43, 57, .035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(18, 43, 57, .035) 1px, transparent 1px),
+        var(--bg);
+      background-size: 28px 28px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    a { color: var(--cyan); text-underline-offset: .16em; }
+    a:hover { color: var(--navy); }
+    code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    code { font-size: .91em; }
+
+    .page {
+      width: min(1200px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 80px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(30px, 6vw, 68px);
+      border: 1px solid rgba(18, 43, 57, .17);
+      border-radius: 28px;
+      color: #f8f4e9;
+      background:
+        radial-gradient(circle at 88% 16%, rgba(28, 184, 189, .27), transparent 20rem),
+        linear-gradient(145deg, #102a38 0%, #163e49 56%, #0f2932 100%);
+      box-shadow: var(--shadow);
+    }
+
+    .hero::after {
+      content: "01";
+      position: absolute;
+      right: -18px;
+      bottom: -72px;
+      color: rgba(255, 255, 255, .055);
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+      font-size: clamp(12rem, 34vw, 28rem);
+      font-weight: 800;
+      line-height: 1;
+      letter-spacing: -.13em;
+      pointer-events: none;
+    }
+
+    .eyebrow, .section-kicker {
+      margin: 0 0 10px;
+      color: #50c8c5;
+      font-size: .76rem;
+      font-weight: 800;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3 {
+      margin-top: 0;
+      color: var(--navy);
+      font-family: Georgia, "Times New Roman", serif;
+      line-height: 1.08;
+    }
+
+    h1 {
+      position: relative;
+      z-index: 1;
+      max-width: 870px;
+      margin-bottom: 0;
+      color: #fffaf0;
+      font-size: clamp(2.4rem, 6.6vw, 5.7rem);
+      font-weight: 620;
+      letter-spacing: -.045em;
+    }
+
+    .deck {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+      margin: 24px 0 0;
+      color: #d8e5e3;
+      font-size: clamp(1rem, 2vw, 1.24rem);
+    }
+
+    .hero-meta, .toc {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    .hero-meta { margin-top: 26px; }
+    .hero-meta span, .toc a {
+      padding: 7px 11px;
+      border: 1px solid rgba(255, 255, 255, .18);
+      border-radius: 999px;
+      color: #dcebea;
+      background: rgba(255, 255, 255, .07);
+      font-size: .8rem;
+      text-decoration: none;
+    }
+    .toc { margin-top: 12px; }
+    .toc a { font-weight: 700; }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .metric {
+      min-width: 0;
+      padding: 17px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: rgba(255, 253, 247, .88);
+    }
+    .metric-label {
+      display: block;
+      color: var(--muted);
+      font-size: .71rem;
+      font-weight: 800;
+      letter-spacing: .07em;
+      text-transform: uppercase;
+    }
+    .metric-value {
+      display: block;
+      margin-top: 4px;
+      color: var(--navy);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.4rem, 2.7vw, 2rem);
+      font-variant-numeric: tabular-nums;
+      line-height: 1.05;
+      white-space: nowrap;
+    }
+    .metric-note { display: block; margin-top: 5px; color: var(--muted); font-size: .77rem; }
+
+    main { margin-top: 60px; }
+    section { scroll-margin-top: 24px; }
+    section + section { margin-top: 72px; }
+    .section-kicker { color: var(--cyan); }
+    h2 { margin-bottom: 0; font-size: clamp(1.9rem, 4vw, 3.1rem); letter-spacing: -.025em; }
+    h3 { margin-bottom: 10px; font-size: 1.33rem; }
+    .section-lede { max-width: 900px; margin: 14px 0 24px; color: var(--muted); font-size: 1.03rem; }
+
+    .verdict {
+      display: grid;
+      grid-template-columns: 1.05fr .95fr;
+      gap: 18px;
+    }
+    .verdict-main, .panel, .note-card, .source-card {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: rgba(255, 253, 247, .9);
+    }
+    .verdict-main { padding: clamp(22px, 4vw, 34px); border-left: 5px solid var(--cyan); }
+    .verdict-main p { margin: 0; }
+    .verdict-main p + p { margin-top: 12px; }
+
+    .decision-list { display: grid; gap: 10px; }
+    .decision {
+      display: grid;
+      grid-template-columns: 88px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: rgba(255, 253, 247, .82);
+    }
+    .decision strong { color: var(--navy); }
+    .signal {
+      display: inline-flex;
+      justify-content: center;
+      padding: 4px 7px;
+      border-radius: 999px;
+      font-size: .68rem;
+      font-weight: 850;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+    .signal.win { color: var(--green); background: var(--green-soft); }
+    .signal.mixed { color: var(--amber); background: var(--amber-soft); }
+    .signal.lose { color: var(--coral); background: var(--coral-soft); }
+
+    .equations {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 22px;
+    }
+    .equation {
+      padding: 19px;
+      border-radius: 16px;
+      color: #eef7f5;
+      background: var(--navy);
+    }
+    .equation .label { display: block; color: #8ed6d1; font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .equation .math { display: block; margin-top: 8px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: clamp(.88rem, 1.8vw, 1.08rem); overflow-wrap: anywhere; }
+    .equation p { margin: 9px 0 0; color: #cbdad8; font-size: .86rem; }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin-top: 18px;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: var(--surface);
+      box-shadow: 0 10px 28px rgba(25, 38, 45, .055);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: .89rem; }
+    th, td { padding: 12px 13px; border-bottom: 1px solid #ddd7ca; vertical-align: top; }
+    th { color: var(--navy); background: #e9e5da; font-size: .72rem; font-weight: 850; letter-spacing: .055em; text-align: left; text-transform: uppercase; }
+    tr:last-child td { border-bottom: 0; }
+    tbody tr:hover { background: rgba(13, 119, 129, .035); }
+    .num { text-align: right; font-variant-numeric: tabular-nums lining-nums; white-space: nowrap; }
+    .good { color: var(--green); font-weight: 750; }
+    .bad { color: var(--coral); font-weight: 750; }
+    .muted { color: var(--muted); }
+    .row-focus td { background: rgba(13, 119, 129, .07); }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 7px; margin: 0 0 13px; }
+    .tag { padding: 4px 8px; border-radius: 999px; font-size: .7rem; font-weight: 800; letter-spacing: .045em; text-transform: uppercase; }
+    .tag.measured { color: #174e6a; background: #dcecf4; }
+    .tag.derived { color: var(--green); background: var(--green-soft); }
+    .tag.literature { color: #86510e; background: var(--amber-soft); }
+
+    .notes-grid, .sources-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .note-card, .source-card { padding: 19px; }
+    .note-card p, .source-card p { margin: 0; color: var(--muted); font-size: .9rem; }
+
+    .regime-map {
+      margin-top: 20px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+    .rail {
+      display: grid;
+      grid-template-columns: 1.1fr 2.1fr 1.4fr;
+      overflow: hidden;
+      min-height: 96px;
+      border-radius: 13px;
+    }
+    .rail > div { padding: 15px; }
+    .rail strong { display: block; color: var(--navy); }
+    .rail span { display: block; margin-top: 4px; color: #384a50; font-size: .8rem; }
+    .rail-memory { background: var(--amber-soft); }
+    .rail-transition { background: var(--cyan-soft); }
+    .rail-compute { background: var(--green-soft); }
+    .rail-axis { display: flex; justify-content: space-between; gap: 10px; margin-top: 8px; color: var(--muted); font-size: .72rem; }
+
+    .bars { display: grid; gap: 10px; margin-top: 18px; }
+    .bar-row { display: grid; grid-template-columns: 76px 1fr 62px; gap: 11px; align-items: center; }
+    .bar-track { height: 20px; overflow: hidden; border-radius: 999px; background: #e2ddd1; }
+    .bar-fill { height: 100%; border-radius: inherit; background: linear-gradient(90deg, #168791, #37aaa9); }
+    .bar-row .num { font-size: .84rem; font-weight: 750; }
+
+    .cache-compare {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+    .panel { padding: 21px; }
+    .panel p { margin: 0; color: var(--muted); }
+    .big-ratio { display: block; margin: 10px 0 4px; color: var(--cyan); font-family: Georgia, "Times New Roman", serif; font-size: 2.45rem; line-height: 1; }
+
+    .dally-box {
+      display: grid;
+      grid-template-columns: .9fr 1.1fr;
+      gap: 18px;
+      margin-top: 21px;
+      padding: clamp(22px, 4vw, 34px);
+      border: 1px solid rgba(13, 119, 129, .28);
+      border-radius: 21px;
+      background: linear-gradient(135deg, #e4f2ef, #fffaf0 72%);
+    }
+    .dally-box p { margin: 0; }
+    .dally-box p + p { margin-top: 11px; }
+    .formula-box { align-self: center; padding: 20px; border-radius: 15px; color: #f2f7f6; background: var(--navy); }
+    .formula-box .math { display: block; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .98rem; }
+    .formula-box .math + .math { margin-top: 11px; }
+
+    .size-diagram {
+      display: grid;
+      grid-template-columns: 1.23fr 1fr;
+      gap: 24px;
+      align-items: end;
+      margin-top: 21px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--surface);
+    }
+    .shape { position: relative; min-height: 188px; }
+    .grid-triangle {
+      position: absolute;
+      left: 4%;
+      right: 4%;
+      bottom: 0;
+      height: 148px;
+      clip-path: polygon(50% 0, 100% 100%, 0 100%);
+      background: linear-gradient(180deg, rgba(13, 119, 129, .92), rgba(13, 119, 129, .38));
+    }
+    .a100-square {
+      width: 148px;
+      height: 148px;
+      margin: 0 auto;
+      border: 3px solid #a85212;
+      background: repeating-linear-gradient(45deg, rgba(180, 97, 18, .13) 0 8px, rgba(180, 97, 18, .04) 8px 16px);
+    }
+    .shape-label { position: absolute; inset: auto 0 -27px; color: var(--muted); font-size: .78rem; text-align: center; }
+
+    .downloads { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 20px; }
+    .download { padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); font-size: .83rem; font-weight: 750; text-decoration: none; }
+    .fineprint { margin: 16px 0 0; color: var(--muted); font-size: .82rem; }
+
+    footer { margin-top: 68px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: .8rem; }
+
+    @media (max-width: 900px) {
+      .metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .verdict, .dally-box, .size-diagram { grid-template-columns: 1fr; }
+      .notes-grid, .sources-grid { grid-template-columns: 1fr; }
+      .shape { margin-bottom: 18px; }
+    }
+    @media (max-width: 620px) {
+      .page { width: min(100% - 20px, 1200px); padding-top: 10px; }
+      .hero { border-radius: 19px; }
+      .metrics, .equations, .cache-compare { grid-template-columns: 1fr; }
+      .decision { grid-template-columns: 76px 1fr; }
+      .rail { grid-template-columns: 1fr; }
+      .rail-axis { display: none; }
+      th, td { padding: 10px 11px; }
+      .bar-row { grid-template-columns: 58px 1fr 50px; }
+    }
+    @media print {
+      body { background: #fff; }
+      .page { width: 100%; padding: 0; }
+      .hero, .table-wrap, .panel, .note-card, .source-card { box-shadow: none; }
+      a { color: inherit; }
+      section { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="hero">
+      <p class="eyebrow">Native Tensor Core experiment · theory · physical calibration</p>
+      <h1>When one bit wins</h1>
+      <p class="deck">A matched-semantics comparison of A100 binary matrix multiply against INT8: where the <span class="mono">m16n8k256 AND+POPC</span> instruction is genuinely faster, where packing and output traffic erase the win, and what Bill Dally’s “10&nbsp;µm per add” rule says about a 1&nbsp;fJ grid step.</p>
+      <div class="hero-meta">
+        <span>A100-SXM4-80GB</span>
+        <span>CUTLASS 3.8.0</span>
+        <span>identical random {0,1} inputs</span>
+        <span>idle-adjusted NVML energy</span>
+      </div>
+      <nav class="toc" aria-label="Report sections">
+        <a href="#verdict">Verdict</a>
+        <a href="#semantics">Exact operation</a>
+        <a href="#eightk">8192³ result</a>
+        <a href="#regimes">Regime sweeps</a>
+        <a href="#systems">System effects</a>
+        <a href="#dally">Dally calibration</a>
+        <a href="#sources">Sources</a>
+      </nav>
+    </header>
+
+    <div class="metrics" aria-label="Headline results">
+      <div class="metric">
+        <span class="metric-label">8192³ time</span>
+        <span class="metric-value">6.74× faster</span>
+        <span class="metric-note">B1 prepacked vs matched INT8</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">8192³ energy</span>
+        <span class="metric-value">4.90× lower</span>
+        <span class="metric-note">0.123 J vs 0.601 J above idle</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">Output-heavy case</span>
+        <span class="metric-value">1.25× faster</span>
+        <span class="metric-note">K = 256 leaves little leverage</span>
+      </div>
+      <div class="metric">
+        <span class="metric-label">Grid ↔ Dally</span>
+        <span class="metric-value">1.25 µm</span>
+        <span class="metric-note">per 1 fJ whole-INT8 operand step</span>
+      </div>
+    </div>
+
+    <main>
+      <section id="verdict">
+        <p class="section-kicker">01 · Bottom line</p>
+        <h2>It is an excellent binary dot-product engine—not a tiny INT8 multiplier</h2>
+        <p class="section-lede">The instruction wins when the application naturally has one-bit values, reuses or pre-packs its weights, and gives each output enough reduction work. It loses its magic when it is asked to emulate wider arithmetic, repeatedly packs one-shot operands, or writes far more 32-bit output than it reads packed input.</p>
+
+        <div class="verdict">
+          <div class="verdict-main">
+            <h3>Practical rule</h3>
+            <p><strong>Use B1</strong> for native binary networks, Hamming similarity, sign correlation, binary attention, and other AND/XOR-plus-popcount algorithms. Store static weights in their packed layout and fuse the threshold or next-layer bit pack when possible.</p>
+            <p><strong>Keep INT8</strong> when values need more than two states. A generic <em>p</em>-bit by <em>q</em>-bit product needs roughly <em>pq</em> binary bit-plane products; the ideal 8× hardware advantage becomes only <span class="mono">8/(pq)</span> before packing and reconstruction overhead.</p>
+          </div>
+          <div class="decision-list" aria-label="Decision regimes">
+            <div class="decision"><span class="signal win">Strong win</span><div><strong>Prepacked, long reductions.</strong><br><span class="muted">Measured 6.74× at 8192³ and 8.63× at M=N=4096, K=32768.</span></div></div>
+            <div class="decision"><span class="signal mixed">Conditional</span><div><strong>Dynamic activations, static weights.</strong><br><span class="muted">Packing A crossed break-even between 1024³ and 2048³.</span></div></div>
+            <div class="decision"><span class="signal lose">Usually lose</span><div><strong>Pack both, small or one-shot.</strong><br><span class="muted">At 1024³ this path was 0.55× INT8; it crossed break-even near 2048³.</span></div></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="semantics">
+        <p class="section-kicker">02 · Exact operation</p>
+        <h2>Match the mathematics before comparing the clocks</h2>
+        <p class="section-lede">The experiment feeds the same pseudorandom 0/1 matrices to both paths. For this domain, signed INT8 multiplication and B1 AND+population-count produce exactly the same S32 dot products; sampled outputs were checked at every shape.</p>
+
+        <div class="equations">
+          <div class="equation">
+            <span class="label">0 / 1 dot product used here</span>
+            <span class="math">Σₖ aₖbₖ = popc(A AND B)</span>
+            <p>One native binary tensor instruction accumulates a 16×8×256 fragment: 32,768 pair contributions per warp instruction.</p>
+          </div>
+          <div class="equation">
+            <span class="label">−1 / +1 sign dot product</span>
+            <span class="math">a·b = K − 2·popc(A XOR B)</span>
+            <p>This common BNN interpretation needs XOR plus a scale-and-offset epilogue; it is related, but not the exact kernel measured below.</p>
+          </div>
+        </div>
+
+        <div class="notes-grid">
+          <article class="note-card">
+            <h3>Native fast path</h3>
+            <p>The compiled SASS contains <code>BMMA.168256.AND.POPC</code>. This is the larger Ampere fragment exposed by inline PTX and CUTLASS, not the older high-level WMMA <span class="mono">m8n8k128</span> path.</p>
+          </article>
+          <article class="note-card">
+            <h3>Eightfold compute ceiling</h3>
+            <p>NVIDIA’s dense peaks are 624 TOPS for INT8 and 4,992 TOPS for B1 under the same <span class="mono">2MNK</span> operation convention—an exact 8× ratio before memory and launch costs.</p>
+          </article>
+          <article class="note-card">
+            <h3>Layout is part of the contract</h3>
+            <p>A is row-major packed, B is column-major packed, and the CUTLASS output is column-major S32. A consumer requiring another layout must pay for or fuse that conversion.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="eightk">
+        <p class="section-kicker">03 · Anchor experiment</p>
+        <h2>Exact 8192³ matrix multiplication</h2>
+        <p class="section-lede"><span class="mono">8192 = 2¹³</span>. Each row performs 549,755,813,888 matched pair contributions (1,099,511,627,776 operations by NVIDIA’s multiply-plus-add convention). Timings are three-trial CUDA-event medians; energy is GPU-board energy above paired loaded-idle baselines, amortized over three approximately three-second windows.</p>
+
+        <div class="tags">
+          <span class="tag measured">Measured A100</span>
+          <span class="tag derived">Derived ratios</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Path</th>
+                <th scope="col" class="num">Time</th>
+                <th scope="col" class="num">Useful throughput</th>
+                <th scope="col" class="num">Speed vs INT8</th>
+                <th scope="col" class="num">Idle-adjusted energy</th>
+                <th scope="col" class="num">Energy reduction</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>INT8 → S32</strong><br><span class="muted">matched 0/1 operands</span></td>
+                <td class="num">2.4998 ms</td>
+                <td class="num">439.84 TOPS</td>
+                <td class="num">1.00×</td>
+                <td class="num">0.60125 J</td>
+                <td class="num">1.00×</td>
+              </tr>
+              <tr class="row-focus">
+                <td><strong>B1 prepacked → S32</strong><br><span class="muted">kernel only; static packed inputs</span></td>
+                <td class="num">0.37083 ms</td>
+                <td class="num">2,964.99 TOPS</td>
+                <td class="num good">6.74×</td>
+                <td class="num">0.12269 J</td>
+                <td class="num good">4.90×</td>
+              </tr>
+              <tr>
+                <td><strong>B1 + pack dynamic A</strong><br><span class="muted">weight B remains prepacked</span></td>
+                <td class="num">0.62424 ms</td>
+                <td class="num">1,761.37 TOPS</td>
+                <td class="num good">4.00×</td>
+                <td class="num">0.17064 J</td>
+                <td class="num good">3.52×</td>
+              </tr>
+              <tr>
+                <td><strong>B1 + pack both inputs</strong><br><span class="muted">one-shot conversion cost</span></td>
+                <td class="num">0.88272 ms</td>
+                <td class="num">1,245.64 TOPS</td>
+                <td class="num good">2.83×</td>
+                <td class="num">—</td>
+                <td class="num">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="fineprint">Energy ranges caused solely by choosing the before- or after-idle baseline were 0.60046–0.60203 J (INT8), 0.12241–0.12296 J (prepacked B1), and 0.16969–0.17160 J (B1 plus A packing). Allocation, initialization, host transfer, Modal startup, CPU, cooling, and facility energy are excluded.</p>
+
+        <div class="notes-grid">
+          <article class="note-card">
+            <h3>59.4% of B1 peak</h3>
+            <p>The prepacked kernel sustains 2.965 POPS/s, 59.4% of the 4.992 POPS/s dense peak. INT8 sustains 70.5% of its 624 TOPS/s peak.</p>
+          </article>
+          <article class="note-card">
+            <h3>Output dominates bytes</h3>
+            <p>Minimum traffic is 384 MiB for INT8 versus 272 MiB for B1. The unchanged 256 MiB S32 output is 94% of the B1 byte floor.</p>
+          </article>
+          <article class="note-card">
+            <h3>Grid coincidence</h3>
+            <p>The existing scorer gives 0.118953 J at 1 fJ per score unit—only 3.1% below measured B1 board energy. This numerical agreement is useful, but not a physical validation of the widthless grid model.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="regimes">
+        <p class="section-kicker">04 · Theory and sweeps</p>
+        <h2>The reduction dimension is the throttle</h2>
+        <p class="section-lede">The simplified roofline below assumes each operand is read and the S32 output written once, perfect internal reuse, and no packing. On the actual A100-80GB, use 2,039 GB/s HBM2e—not the 1,555 GB/s constant for the requested 40GB product that remained in the raw run’s provisional roofline fields.</p>
+
+        <div class="regime-map" role="img" aria-label="Theoretical square GEMM regimes on A100-80GB. Below N about 918 both paths are memory limited. From N about 918 to 5203 INT8 is compute limited while B1 is memory limited. Above about 5203 both can be compute limited and the peak ratio is eight.">
+          <div class="rail">
+            <div class="rail-memory"><strong>Both memory / launch limited</strong><span>N ≲ 918. Packed inputs help, but S32 output and launch cost dominate.</span></div>
+            <div class="rail-transition"><strong>INT8 compute-bound; B1 still feeding</strong><span>918 ≲ N ≲ 5,203. The speed gap grows with reuse and reduction length.</span></div>
+            <div class="rail-compute"><strong>Both compute-capable</strong><span>N ≳ 5,203. Ideal ceiling approaches the native 8× throughput ratio.</span></div>
+          </div>
+          <div class="rail-axis"><span>small square</span><span>increasing N and arithmetic intensity →</span><span>large square</span></div>
+        </div>
+
+        <div class="equations">
+          <div class="equation">
+            <span class="label">Minimum byte traffic, S32 output</span>
+            <span class="math">Q₈ = MK + KN + 4MN</span>
+            <span class="math">Q₁ = (MK + KN)/8 + 4MN</span>
+            <p>If both paths are purely memory-bound on a square, the ideal byte-ratio win is only <span class="mono">6/4.25 = 1.41×</span>.</p>
+          </div>
+          <div class="equation">
+            <span class="label">Roofline floor</span>
+            <span class="math">T ≥ max(2MNK / peak, Q / bandwidth)</span>
+            <p>Packing, launch, padding, layouts, and epilogues sit above this lower bound and determine the small-problem crossover.</p>
+          </div>
+        </div>
+
+        <h3 style="margin-top:30px">Square sweep</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">N</th><th scope="col" class="num">INT8</th><th scope="col" class="num">B1 prepacked</th><th scope="col" class="num">Prepacked speedup</th><th scope="col" class="num">+ pack A</th><th scope="col" class="num">+ pack both</th></tr></thead>
+            <tbody>
+              <tr><td class="num">256</td><td class="num">9.901 µs</td><td class="num">5.856 µs</td><td class="num good">1.69×</td><td class="num bad">0.60×</td><td class="num bad">0.37×</td></tr>
+              <tr><td class="num">512</td><td class="num">9.389 µs</td><td class="num">5.374 µs</td><td class="num good">1.75×</td><td class="num bad">0.60×</td><td class="num bad">0.38×</td></tr>
+              <tr><td class="num">1,024</td><td class="num">14.395 µs</td><td class="num">7.140 µs</td><td class="num good">2.02×</td><td class="num bad">0.86×</td><td class="num bad">0.55×</td></tr>
+              <tr><td class="num">2,048</td><td class="num">56.539 µs</td><td class="num">18.453 µs</td><td class="num good">3.06×</td><td class="num good">1.66×</td><td class="num good">1.08×</td></tr>
+              <tr><td class="num">4,096</td><td class="num">0.3673 ms</td><td class="num">0.0723 ms</td><td class="num good">5.08×</td><td class="num good">2.57×</td><td class="num good">1.72×</td></tr>
+              <tr class="row-focus"><td class="num">8,192</td><td class="num">2.4998 ms</td><td class="num">0.3708 ms</td><td class="num good">6.74×</td><td class="num good">4.00×</td><td class="num good">2.83×</td></tr>
+              <tr><td class="num">16,384</td><td class="num">20.6016 ms</td><td class="num">2.7086 ms</td><td class="num good">7.61×</td><td class="num good">5.67×</td><td class="num good">4.43×</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="margin-top:30px">Fixed M=N=4096, varying K</h3>
+        <p class="fineprint">Holding the output size fixed exposes the transition directly: more reduction work amortizes the same S32 output.</p>
+        <div class="bars" aria-label="Measured prepacked B1 speedup over INT8 by K">
+          <div class="bar-row"><span>K=256</span><div class="bar-track"><div class="bar-fill" style="width:14%"></div></div><span class="num">1.21×</span></div>
+          <div class="bar-row"><span>K=512</span><div class="bar-track"><div class="bar-fill" style="width:19%"></div></div><span class="num">1.65×</span></div>
+          <div class="bar-row"><span>K=1K</span><div class="bar-track"><div class="bar-fill" style="width:27%"></div></div><span class="num">2.34×</span></div>
+          <div class="bar-row"><span>K=2K</span><div class="bar-track"><div class="bar-fill" style="width:39%"></div></div><span class="num">3.38×</span></div>
+          <div class="bar-row"><span>K=4K</span><div class="bar-track"><div class="bar-fill" style="width:56%"></div></div><span class="num">4.80×</span></div>
+          <div class="bar-row"><span>K=8K</span><div class="bar-track"><div class="bar-fill" style="width:75%"></div></div><span class="num">6.49×</span></div>
+          <div class="bar-row"><span>K=16K</span><div class="bar-track"><div class="bar-fill" style="width:96%"></div></div><span class="num">8.31×</span></div>
+          <div class="bar-row"><span>K=32K</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="num">8.63×</span></div>
+        </div>
+        <p class="fineprint">A measured ratio slightly above the nominal 8× compute ratio is possible because the compared kernels have different instruction, cache, scheduling, and power behavior; 8× is a dense-peak specification ratio, not a universal latency bound.</p>
+      </section>
+
+      <section id="systems">
+        <p class="section-kicker">05 · System-level effects</p>
+        <h2>Pack once, reuse often, and do not spill 32-bit intermediates</h2>
+        <p class="section-lede">A fast tensor instruction is only one piece of a useful binary system. The cache experiment uses M=64 and N=K=8192, where one INT8 weight matrix is 64 MiB and one packed B1 matrix is 8 MiB against A100’s 40 MiB L2.</p>
+
+        <div class="cache-compare">
+          <article class="panel">
+            <span class="signal win">One static weight</span>
+            <span class="big-ratio">6.19× time</span>
+            <p><strong>10.00× less energy.</strong> The 8 MiB packed weight fits in L2; the 64 MiB INT8 weight does not. Measured calls were about 9.1 µs / 0.00106 J for B1 and 57.2 µs / 0.01063 J for INT8.</p>
+          </article>
+          <article class="panel">
+            <span class="signal mixed">Eight rotating weights</span>
+            <span class="big-ratio">5.20× time</span>
+            <p><strong>5.45× less energy.</strong> The packed bank is now 64 MiB and the INT8 bank 512 MiB, so neither full bank fits L2. B1 remains much faster, but loses the exceptional hot-weight energy advantage.</p>
+          </article>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">M for M×8192×8192</th><th scope="col" class="num">Prepacked B1 speedup</th><th scope="col" class="num">Including A pack</th><th scope="col" class="num">Including both packs</th><th scope="col">Interpretation</th></tr></thead>
+            <tbody>
+              <tr><td class="num">32</td><td class="num good">5.67×</td><td class="num good">3.27×</td><td class="num bad">0.19×</td><td>Repacking the huge static weight for every call is catastrophic.</td></tr>
+              <tr><td class="num">64</td><td class="num good">6.33×</td><td class="num good">3.51×</td><td class="num bad">0.21×</td><td>Good inference regime when weights are prepacked.</td></tr>
+              <tr><td class="num">128</td><td class="num good">6.25×</td><td class="num good">4.27×</td><td class="num bad">0.28×</td><td>Dynamic activation packing is well amortized.</td></tr>
+              <tr><td class="num">256</td><td class="num good">5.86×</td><td class="num good">4.12×</td><td class="num bad">0.42×</td><td>Static-weight preprocessing is still essential.</td></tr>
+              <tr><td class="num">512</td><td class="num good">5.69×</td><td class="num good">3.57×</td><td class="num bad">0.58×</td><td>Both-pack path is still slower than INT8.</td></tr>
+              <tr><td class="num">1,024</td><td class="num good">6.29×</td><td class="num good">3.74×</td><td class="num bad">0.94×</td><td>Near break-even even after needlessly repacking weights.</td></tr>
+              <tr><td class="num">2,048</td><td class="num good">6.42×</td><td class="num good">3.79×</td><td class="num good">1.49×</td><td>Enough reuse to overcome both conversions.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="notes-grid">
+          <article class="note-card">
+            <h3>Fuse the output boundary</h3>
+            <p>For 8192×8192×256, prepacked B1 is only 1.25× faster and 1.41× lower energy. A fused threshold plus packed next-layer output can remove the 32-bit writeback that causes this ceiling.</p>
+          </article>
+          <article class="note-card">
+            <h3>Choose the large fragment</h3>
+            <p>The first exploratory kernel used the slower <span class="mono">m8n8k128</span> interface and made B1 look roughly INT8-speed. The final path combines tuned tiling with <span class="mono">m16n8k256</span>, which the closest A100 microbenchmark finds at roughly twice the B1 throughput of the smaller fragment.</p>
+          </article>
+          <article class="note-card">
+            <h3>Quantization has a model cost</h3>
+            <p>Kernel speed does not guarantee accuracy or end-to-end speed. Binary representations often need quantization-aware training, scaling, masks, or selected higher-precision first/last layers.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="literature">
+        <p class="section-kicker">06 · External checks</p>
+        <h2>The measurements land where the literature says they should</h2>
+        <p class="section-lede">The closest public A100 study independently measures the same large fragment, while recent end-to-end work shows why packing and fusion decide whether raw BMMA throughput survives at model level.</p>
+
+        <div class="tags"><span class="tag literature">Published / preprint results</span><span class="tag measured">This experiment</span></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Evidence</th><th scope="col">A100 result</th><th scope="col">What it tests</th><th scope="col">Comparison</th></tr></thead>
+            <tbody>
+              <tr><td><strong>NVIDIA specification</strong></td><td>4,992 B1 TOPS; 624 INT8 TOPS</td><td>Dense peak throughput</td><td>8× hardware ceiling.</td></tr>
+              <tr><td><strong>Tensor-Core Beamformer, 2025</strong></td><td>4,942 TOPS register microbenchmark; 3,080 TOPS tuned kernel; 12.3 TOPS/J</td><td>Native <span class="mono">m16n8k256</span> and a memory-touching application kernel</td><td>This 8192³ kernel reaches 2,965 TOPS—96.3% of their tuned result.</td></tr>
+              <tr><td><strong>This report</strong></td><td>2,965 TOPS; 0.123 J at 8192³</td><td>Matched 0/1 GEMM, prepacked inputs, S32 output</td><td>59.4% of peak, 6.74× faster and 4.90× lower energy than INT8.</td></tr>
+              <tr><td><strong>BinaryAttention, 2026 preprint</strong></td><td>~2× kernel speed vs FlashAttention2; 1.5× end-to-end at 1024²</td><td>B1 QK plus INT8 PV attention</td><td>At low image resolution, quantization overhead makes it slightly slower—same crossover pattern.</td></tr>
+              <tr><td><strong>MBU-Net, 2026 preprint</strong></td><td>2.04× average speed and 3.54× energy reduction vs FP16 across tested GPUs</td><td>Fused binary/masked U-Net execution</td><td>Model-level gains remain smaller than raw GEMM gains but are still material.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="dally">
+        <p class="section-kicker">07 · Physical interpretation</p>
+        <h2>One 1 fJ INT8 grid step corresponds to about 1.25 µm of on-chip travel</h2>
+        <p class="section-lede">The later source is Bill Dally’s <em>Energy Efficiency and AI Hardware</em> keynote at Stanford’s AHA Retreat on August 31, 2023—not a later-2022 summer school. Its rough constants are approximately 100 fJ per bit per millimetre for on-chip communication and 1 fJ per bit for an add, summarized by the slide line “An add is worth 10um of movement.”</p>
+
+        <div class="dally-box">
+          <div>
+            <h3>The current scorer uses a whole-value unit</h3>
+            <p>One score unit is one <em>source operand</em> times one abstract address-grid step. If we declare that operand to be INT8 and map one score unit to 1 fJ, the distance that costs 1 fJ is:</p>
+            <p><strong>1 fJ ÷ (8 bits × 100 fJ/bit/mm) = 0.00125 mm = 1.25 µm.</strong></p>
+            <p>If “1 fJ” were instead charged <em>per bit per step</em>, an INT8 step would cost 8 fJ and correspond to 10 µm. That is not the current scorer convention.</p>
+          </div>
+          <div class="formula-box">
+            <span class="math">E_move = 100 · b · d_mm fJ</span>
+            <span class="math">d_step = 10 · ε_fJ / b µm</span>
+            <span class="math">b = 8, ε = 1  ⇒  d_step = 1.25 µm</span>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Interpretation</th><th scope="col" class="num">INT8 energy / step</th><th scope="col" class="num">Distance / step</th><th scope="col" class="num">N7 min-metal pitches / step</th><th scope="col" class="num">8192³ max reach</th><th scope="col" class="num">Idealized area</th></tr></thead>
+            <tbody>
+              <tr class="row-focus"><td><strong>Current grid: 1 fJ per whole INT8 operand-step</strong></td><td class="num">1 fJ</td><td class="num">1.25 µm</td><td class="num">31.25</td><td class="num">17.739 mm</td><td class="num">314.6 mm²</td></tr>
+              <tr><td><strong>Alternative: 1 fJ per bit-step</strong></td><td class="num">8 fJ</td><td class="num">10 µm</td><td class="num">250</td><td class="num">141.91 mm</td><td class="num">20,135.9 mm²</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="size-diagram" role="img" aria-label="Idealized upper-half-diamond grid footprint at the whole INT8 mapping has a 35.48 millimetre base and 17.74 millimetre reach, compared with an A100 equal-area square side of 28.74 millimetres.">
+          <div class="shape">
+            <div class="grid-triangle"></div>
+            <div class="shape-label">Grid envelope · 35.48 mm base × 17.74 mm reach</div>
+          </div>
+          <div class="shape">
+            <div class="a100-square"></div>
+            <div class="shape-label">GA100 · 826 mm² · equal-area side 28.74 mm</div>
+          </div>
+        </div>
+
+        <div class="notes-grid">
+          <article class="note-card">
+            <h3>How “big” the grid computer is</h3>
+            <p>The 8192³ schedule occupies 201,359,490 abstract cells, ending at distance ring 14,191. At 1.25 µm per step, the farthest cell is 17.739 mm from compute, the upper-half-diamond base is 35.48 mm, and its idealized area is 38.1% of GA100’s 826 mm².</p>
+          </article>
+          <article class="note-card">
+            <h3>“7 nm” is not a ruler</h3>
+            <p>GA100 is TSMC N7, but the node name is not a physical wire pitch. TSMC’s N7 platform paper reports roughly 40 nm minimum metal pitch: one 1.25 µm energy-equivalent step spans 31.25 such pitches (or 179 merely nominal “7 nm” labels).</p>
+          </article>
+          <article class="note-card">
+            <h3>This is an energy equivalence</h3>
+            <p>It is not an SRAM-cell pitch or an A100 wire extraction. Dally’s small-RAM estimate alone is about 50 fJ/bit—400 fJ for INT8—before routers, drivers, clocks, leakage, arithmetic, HBM, and cooling.</p>
+          </article>
+        </div>
+
+        <p class="fineprint">Dally’s 2022 CACM antecedent uses 20 fJ for a 32-bit add and 1.9 pJ to move both 32-bit inputs 1 mm, giving 10.53 µm when both move. The later 2023 slide’s rounded 1 fJ/bit and 100 fJ/(bit·mm) constants are not exactly consistent with that two-input calculation. Treat 10 µm as an order-of-magnitude crossover, not a foundry-calibrated law; neither source assigns the rule to a process node.</p>
+      </section>
+
+      <section id="method">
+        <p class="section-kicker">08 · Measurement boundary</p>
+        <h2>What was—and was not—measured</h2>
+        <div class="notes-grid">
+          <article class="note-card">
+            <h3>Hardware</h3>
+            <p>Modal supplied an NVIDIA A100-SXM4-80GB, compute capability 8.0, 400 W limit, driver 580.95.05. The request named A100-40GB; timing and energy identify the actual 80GB device.</p>
+          </article>
+          <article class="note-card">
+            <h3>Software</h3>
+            <p>PyTorch 2.5.1 + CUDA 12.4 supplies <code>torch._int_mm</code>. B1 uses NVIDIA CUTLASS 3.8.0 at pinned commit <span class="mono">afa1772…</span>, fourteen candidate threadblock shapes, and a per-shape best choice.</p>
+          </article>
+          <article class="note-card">
+            <h3>Energy</h3>
+            <p>The authoritative counter is NVML cumulative board energy. Each stage subtracts the mean of loaded-idle measurements immediately before and after. Results include GPU and HBM, but exclude host and facility energy.</p>
+          </article>
+        </div>
+        <p class="fineprint">The initial m8-path experiment is not mixed into the tables because it used a slower instruction path, different random INT8 value range, and an A100-40GB. It remains useful as a warning: choosing the wrong fragment can hide essentially all of B1’s compute advantage. All final matched tables use identical {0,1} data and the native m16 path.</p>
+        <div class="downloads" aria-label="Report data downloads">
+          <a class="download" href="a100_b1_vs_int8_results.json">Raw A100 result (JSON)</a>
+          <a class="download" href="derived.json">Derived audit (JSON)</a>
+          <a class="download" href="results.csv">Timing sweep (CSV)</a>
+          <a class="download" href="build_report_data.py">Rebuild derived tables</a>
+          <a class="download" href="modal_b1_int8_sweep.py">Modal benchmark</a>
+          <a class="download" href="cutlass_b1_wrapper.cu">CUTLASS wrapper</a>
+        </div>
+      </section>
+
+      <section id="sources">
+        <p class="section-kicker">09 · Primary sources</p>
+        <h2>Documentation and external evidence</h2>
+        <div class="sources-grid">
+          <article class="source-card"><h3>Instruction and hardware</h3><p><a href="https://docs.nvidia.com/cuda/parallel-thread-execution/#matrix-fragments-for-mma-m16n8k256">NVIDIA PTX ISA: m16n8k256 fragments</a><br><a href="https://docs.nvidia.com/cuda/archive/12.6.0/cuda-c-programming-guide/index.html#sub-byte-operations">CUDA sub-byte WMMA API</a><br><a href="https://github.com/NVIDIA/cutlass/blob/v3.8.0/test/unit/gemm/device/gemm_b1t_b1n_s32n_tensor_op_s32_sm80.cu">CUTLASS 3.8.0 B1 SM80 test</a><br><a href="https://developer.nvidia.com/blog/nvidia-ampere-architecture-in-depth/">NVIDIA Ampere architecture and GA100 specifications</a></p></article>
+          <article class="source-card"><h3>Binary systems</h3><p><a href="https://arxiv.org/html/2505.03269">Oostrum et al., Tensor-Core Beamformer</a><br><a href="https://arxiv.org/html/2006.16578">Li &amp; Su, Bit-Tensor-Cores for BNNs</a><br><a href="https://arxiv.org/html/2603.09582">Xiao et al., BinaryAttention</a><br><a href="https://arxiv.org/html/2601.11660">Masked Binary U-Net preprint</a></p></article>
+          <article class="source-card"><h3>Energy and geometry</h3><p><a href="https://aha.stanford.edu/affiliates/aha-retreat-august-2023">Stanford AHA Retreat, August 2023</a><br><a href="https://aha.stanford.edu/sites/g/files/sbiybj20066/files/media/file/aha-retreat-2023_dally_keynote_en_eff_ai_hw_0.pdf">Dally, Energy Efficiency and AI Hardware</a><br><a href="https://doi.org/10.1145/3548783">Dally, On the Model of Computation: Point</a><br><a href="https://doi.org/10.1109/IEDM.2016.7838333">TSMC N7 platform paper</a></p></article>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      Report generated September 2026. Measured quantities, modeled quantities, and literature values are kept distinct; all derived calculations are downloadable above.
+    </footer>
+  </div>
+</body>
+</html>
