@@ -37,7 +37,7 @@ import packed_sparse_parity as packed
 
 _SUB = os.path.join(os.path.dirname(HERE), "submissions")
 sys.path.insert(0, _SUB)
-import packedsis, packedwalk, septwalk  # noqa: E402
+import packed_frontier, packedsis, packedwalk, septwalk  # noqa: E402
 
 OUT_PNG = os.path.join(HERE, "mask32_energy_vs_recovery.png")
 OUT_SVG = os.path.join(HERE, "mask32_energy_vs_recovery.svg")
@@ -126,6 +126,12 @@ def collect() -> List[Series]:
                 _eval_raw(packed.generate_packed_route60()),
                 _eval_raw(packed.generate_packed_route80()),
             ],
+        ),
+        Series(
+            "Compact packed frontier", "#006d77", "target",
+            list(packed_frontier.CONFIGS), list(packed_frontier.CONFIGS),
+            [_eval_raw(packed_frontier.generate_packed_frontier(target))
+             for target in packed_frontier.CONFIGS],
         ),
         Series(
             "Packed-column scan", SERIES["red"], "cap",
@@ -284,6 +290,10 @@ def band_table(series: List[Series]):
                               by_label["Packed static IS"]),
         "Packed Gray prefix": ("generate_packed_route40",
                                 by_label["Packed Gray prefix"]),
+        "Compact packed frontier": (
+            "packed_frontier.generate_packed_frontier",
+            by_label["Compact packed frontier"],
+        ),
         "Packed-column scan": ("generate_packed_scan",
                                 by_label["Packed-column scan"]),
         "Gray scan": ("generate_scan", by_label["Gray scan"]),
@@ -311,6 +321,9 @@ def band_table(series: List[Series]):
     fmt_call = {
         "Packed static IS": lambda _kn: "generate_packed_static20()",
         "Packed Gray prefix": lambda kn: f"generate_packed_route{kn}()",
+        "Compact packed frontier": lambda kn: (
+            f"packed_frontier.generate_packed_frontier({kn})"
+        ),
         "Packed-column scan": lambda kn: f"generate_packed_scan({kn})",
         "Weight-ordered scan": lambda kn: f"generate_scan(0, walk='weight',"
                                           f" weight_cap={kn})",
@@ -335,9 +348,9 @@ def band_table(series: List[Series]):
     ]
     adjudicated_calls = {
         0.2: "generate_packed_static20()",
-        0.4: "generate_packed_route40()",
-        0.6: "generate_packed_route60()",
-        0.8: "generate_packed_route80()",
+        0.4: "packed_frontier.generate_packed_frontier(40)",
+        0.6: "packed_frontier.generate_packed_frontier(60)",
+        0.8: "packed_frontier.generate_packed_frontier(80)",
         1.0: "generate_packed_scan(5)",
     }
     bands = []

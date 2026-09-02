@@ -205,8 +205,8 @@ def test_packedwalk_matches_reference_recovery():
     assert packed.cost < ref.cost
 
 
-def test_packedwalk_seed5_record_and_generated_band_data_agree():
-    """The historical 40% packed-walk record remains the seed-5 point."""
+def test_packedwalk_seed5_history_and_generated_frontier_agree():
+    """The historical seed-5 point remains plotted below the new frontier."""
     seed0 = mp.evaluate_mask(packedwalk.generate(1, 2, seed=0))
     seed5 = mp.evaluate_mask(packedwalk.generate(1, 2, seed=5))
     assert seed5.cost == seed0.cost == 163_378
@@ -216,7 +216,10 @@ def test_packedwalk_seed5_record_and_generated_band_data_agree():
     payload = json.loads(bands_path.read_text())
     bands = payload["bands"]
     band40 = next(b for b in bands if b["target"] == 0.4)
-    assert band40["adjudicated_best"]["call"] == "generate_packed_route40()"
+    assert band40["adjudicated_best"]["call"] == (
+        "packed_frontier.generate_packed_frontier(40)"
+    )
+    assert band40["adjudicated_best"]["cost"] < 147_000
     assert any(
         point["call"] == "packedwalk.generate(1, 2, seed=5)"
         and point["cost"] == seed5.cost
