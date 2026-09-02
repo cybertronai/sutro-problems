@@ -503,17 +503,18 @@
       <section id="contract">
         <p class="section-kicker">Comparison contract</p>
         <h2>What is—and is not—being compared</h2>
-        <p class="section-lede">Measured A100 values are physical GPU-board observations. Grid values are scores converted at exactly 1 femtojoule per score unit. Literature values are estimates derived from the cited experiments. They are three different evidence classes, not interchangeable measurements.</p>
+        <p class="section-lede">Measured A100 values are physical GPU-board observations. Grid values are movement-energy estimates using exactly 1 femtojoule per source-operand grid step. Literature values are estimates derived from the cited experiments. They are three different evidence classes, not interchangeable measurements.</p>
         <div class="callout">
           <div>
             <p><strong>A100 boundary.</strong> Operands, outputs, weights, activations, and workspaces are already resident on the GPU. Allocation, warm-up, host transfer, input conversion, quantization, and B1 packing are outside the measured window. The result includes GPU-board and HBM activity, then subtracts the mean of paired loaded-idle measurements.</p>
-            <p><strong>Grid boundary.</strong> The v0 scorer charges each source read by <span class="mono">ceil(sqrt(address))</span>. Arithmetic, destination writes, bit width, physical memory hierarchy, clocks, control, leakage, and elapsed time cost zero. Its scalar cells are unbounded, so changing FP32 to FP16, INT8, or B1 does not change the score.</p>
+            <p><strong>Grid boundary.</strong> Each source read travels <span class="mono">ceil(sqrt(address))</span> abstract grid steps, each priced at 1 fJ. Arithmetic, destination writes, bit width, physical memory hierarchy, clocks, control, leakage, and elapsed time cost zero. Its scalar cells are unbounded, so changing FP32 to FP16, INT8, or B1 does not change the modeled movement energy.</p>
           </div>
           <div class="formula" aria-label="Exact operation and grid energy formulas">
             N = 8192 = 2¹³<br>
             MAC = N³ = 2³⁹ = 549,755,813,888<br>
             ops = 2N³ = 2⁴⁰ = 1,099,511,627,776<br><br>
-            E_grid = score × 10⁻¹⁵ J
+            E_grid = Σ(reads × grid steps) fJ<br>
+            10¹⁵ fJ = 1 J
           </div>
         </div>
       </section>
@@ -535,7 +536,7 @@
                 <th scope="col">Arithmetic path and semantics</th>
                 <th scope="col" class="num">A100 time</th>
                 <th scope="col" class="num">A100 idle-adjusted energy</th>
-                <th scope="col" class="num">Grid @ 1 fJ / score unit</th>
+                <th scope="col" class="num">Grid energy @ 1 fJ / operand-grid-step</th>
                 <th scope="col">Literature energy estimate</th>
               </tr>
             </thead>
@@ -544,7 +545,7 @@
                 <th scope="row">Strict FP32<span class="subvalue">FP32 × FP32 → FP32; TF32 disabled; cuBLAS</span></th>
                 <td class="num"><span class="primary">57.945 ms</span></td>
                 <td class="num"><span class="primary">15.757 J</span><span class="subvalue">trial SD 0.477 J<br>baseline 15.650–15.865 J</span></td>
-                <td class="num"><span class="primary">0.118953 J</span><span class="subvalue">same score for every row</span></td>
+                <td class="num"><span class="primary">118,953,083,721,334 fJ</span><span class="subvalue">0.118953 J; same movement energy for every row</span></td>
                 <td><span class="primary">13.04–13.26 J</span><span class="subvalue">cubic interpolation between measured 4096³ and 16384³ A100 cases; 16.41 J from a separate efficiency result</span></td>
               </tr>
               <tr>
@@ -579,7 +580,7 @@
           </article>
           <article class="note-card">
             <h3>The model is intentionally widthless</h3>
-            <p>The exact retuned score is <strong>118,953,083,721,334</strong> for every row. Multiplying it by 1 fJ gives 0.118953 J. Scaling that number by 32, 16, 8, or 1 bits would be an extra assumption, not the current scorer.</p>
+            <p>The retuned modeled movement is <strong>118,953,083,721,334 fJ</strong>, or 0.118953 J, for every row. Scaling that energy by 32, 16, 8, or 1 bits would be an extra assumption, not part of the current widthless model.</p>
           </article>
           <article class="note-card">
             <h3>No 8192³ instruction file</h3>
@@ -602,7 +603,7 @@
                 <th scope="col" class="num">Physical MACs</th>
                 <th scope="col" class="num">A100 time</th>
                 <th scope="col" class="num">A100 idle-adjusted energy</th>
-                <th scope="col" class="num">Grid @ 1 fJ / score unit</th>
+                <th scope="col" class="num">Grid energy @ 1 fJ / operand-grid-step</th>
                 <th scope="col">Comparable literature</th>
               </tr>
             </thead>
@@ -648,16 +649,16 @@
       <section id="grid-batching">
         <p class="section-kicker">Table 3</p>
         <h2>Batching in one persistent 2D grid</h2>
-        <p class="section-lede">Every row performs the same 717.9 billion logical MACs over the same 60,000 images. What changes is the schedule: smaller batches reread weights more often and have less row reuse, while larger batches occupy a wider activation footprint. The primary score allocates weights, all source images, and all 600,000 final logits once, then reuses layer-specific batch-local scratch and intermediate buffers across invocations.</p>
+        <p class="section-lede">Every row performs the same 717.9 billion logical MACs over the same 60,000 images. What changes is the schedule: smaller batches reread weights more often and have less row reuse, while larger batches occupy a wider activation footprint. The primary calculation allocates weights, all source images, and all 600,000 final logits once, then reuses layer-specific batch-local scratch and intermediate buffers across invocations.</p>
         <div class="table-wrap">
           <table>
-            <caption>Each displayed <span class="mono">S</span> is the exact evaluation of the best schedule found from three deterministic coordinate-descent starts, converted with <span class="mono">E = S × 1 fJ</span>; it is not a global lower bound. “Batch-local” scores one compact reusable buffer layout and multiplies by its call count; repeated reads are still counted, but external staging is free. The endpoint column is an illustrative same-schedule sensitivity, not part of the v0 grid score.</caption>
+            <caption>Movement energy is summed directly at 1 fJ per source-operand grid step and converted with 10¹⁵ fJ = 1 J. Each row is the exact evaluation of the best schedule found from three deterministic coordinate-descent starts, not a global lower bound. “Batch-local” evaluates one compact reusable buffer layout and multiplies by its call count; repeated reads are still counted, but external staging is free. The endpoint column is an illustrative same-schedule sensitivity, not part of the movement-only model.</caption>
             <thead>
               <tr>
                 <th scope="col">Logical batch</th>
                 <th scope="col">Exact epoch decomposition</th>
                 <th scope="col" class="num">Paid source reads <span class="mono">R</span></th>
-                <th scope="col" class="num">Persistent-grid score and energy</th>
+                <th scope="col" class="num">Persistent-grid movement energy @ 1 fJ / operand-grid-step</th>
                 <th scope="col" class="num">Vs. full batch</th>
                 <th scope="col" class="num">Earlier batch-local sensitivity</th>
                 <th scope="col" class="num">Same schedule + 400 fJ/read sensitivity</th>
@@ -668,7 +669,7 @@
                 <th scope="row">Full: 60,000</th>
                 <td>1 × 60,000</td>
                 <td class="num"><span class="primary">2.888892 T</span><span class="subvalue">46.21 steps/read average</span></td>
-                <td class="num"><span class="primary">0.133503 J</span><span class="subvalue">133.502856 T score units = fJ</span></td>
+                <td class="num"><span class="primary">133,502,855,653,573 fJ</span><span class="subvalue">0.133503 J</span></td>
                 <td class="num"><span class="primary">1.000×</span></td>
                 <td class="num"><span class="primary">0.133503 J</span></td>
                 <td class="num"><span class="primary">1.289060 J</span></td>
@@ -677,7 +678,7 @@
                 <th scope="row">64</th>
                 <td>937 × 64 + 1 × 32</td>
                 <td class="num"><span class="primary">2.909029 T</span><span class="subvalue">25.11 steps/read average</span></td>
-                <td class="num"><span class="primary">0.073034 J</span><span class="subvalue">73.034299 T score units = fJ</span></td>
+                <td class="num"><span class="primary">73,034,299,138,466 fJ</span><span class="subvalue">0.073034 J</span></td>
                 <td class="num"><span class="primary">0.547×</span></td>
                 <td class="num"><span class="primary">0.064150 J</span></td>
                 <td class="num"><span class="primary">1.236646 J</span></td>
@@ -686,7 +687,7 @@
                 <th scope="row">16</th>
                 <td>3,750 × 16</td>
                 <td class="num"><span class="primary">2.943519 T</span><span class="subvalue">45.63 steps/read average</span></td>
-                <td class="num"><span class="primary">0.134310 J</span><span class="subvalue">134.309616 T score units = fJ</span></td>
+                <td class="num"><span class="primary">134,309,615,592,699 fJ</span><span class="subvalue">0.134310 J</span></td>
                 <td class="num"><span class="primary">1.006×</span></td>
                 <td class="num"><span class="primary">0.126846 J</span></td>
                 <td class="num"><span class="primary">1.311717 J</span></td>
@@ -695,7 +696,7 @@
                 <th scope="row">4</th>
                 <td>15,000 × 4</td>
                 <td class="num"><span class="primary">3.081125 T</span><span class="subvalue">141.40 steps/read average</span></td>
-                <td class="num"><span class="primary">0.435668 J</span><span class="subvalue">435.668465 T score units = fJ</span></td>
+                <td class="num"><span class="primary">435,668,465,318,037 fJ</span><span class="subvalue">0.435668 J</span></td>
                 <td class="num"><span class="primary">3.263×</span></td>
                 <td class="num"><span class="primary">0.430160 J</span></td>
                 <td class="num"><span class="primary">1.668119 J</span></td>
@@ -704,7 +705,7 @@
                 <th scope="row">1</th>
                 <td>60,000 × 1</td>
                 <td class="num"><span class="primary">3.626300 T</span><span class="subvalue">461.52 steps/read average</span></td>
-                <td class="num"><span class="primary">1.673598 J</span><span class="subvalue">1,673.597885 T score units = fJ</span></td>
+                <td class="num"><span class="primary">1,673,597,885,020,609 fJ</span><span class="subvalue">1.673598 J</span></td>
                 <td class="num"><span class="primary">12.536×</span></td>
                 <td class="num"><span class="primary">1.668527 J</span></td>
                 <td class="num"><span class="primary">3.124118 J</span></td>
@@ -720,11 +721,11 @@
           </article>
           <article class="note-card">
             <h3>Why 64 beats the monolithic batch</h3>
-            <p>The grid model trades weight reuse against distance. Batch 64 reuses compact activation buffers; the 60k schedule materializes very large layer activations farther from the single processor. An unrestricted streaming full-batch program could imitate the batch-64 schedule, so 0.073034 J is a schedule-family result, not a lower-bound theorem.</p>
+            <p>Full batch actually performs <strong>0.69% fewer paid reads</strong> than batch 64 (2.8889T versus 2.9090T), but those reads travel <strong>46.21 versus 25.11 grid steps on average</strong>—45.7% less travel per read at batch 64. The 60k schedule materializes layer-specific activation arrays as large as 60,000 × 2,500 cells; batch 64 repeatedly uses buffers no larger than 64 × 2,500, keeping hot operands much nearer the single processor. Distance wins over the full batch’s extra weight reuse, making its modeled movement energy <strong>1.83×, or 82.8%, higher</strong>. An unrestricted streaming full-batch program could internally imitate the batch-64 schedule, so this is a schedule-family result, not a lower-bound theorem.</p>
           </article>
           <article class="note-card">
             <h3>What “harder to make efficient” means here</h3>
-            <p>The scorer has no GPU lanes, occupancy, launch latency, clock, or leakage. It can express batch inefficiency only when the program performs more reads or moves operands farther. A hardware-efficiency penalty belongs in the A100 model, not as an unexplained surcharge on the grid score.</p>
+            <p>The grid model has no GPU lanes, occupancy, launch latency, clock, or leakage. It can express batch inefficiency only when the program performs more reads or moves operands farther. A hardware-efficiency penalty belongs in the A100 model, not as an unexplained surcharge on modeled grid energy.</p>
           </article>
         </div>
       </section>
@@ -734,7 +735,7 @@
           <p class="section-kicker">Heuristic cross-check</p>
           <h2>How this squares with Dally’s 2022–2023 heuristics</h2>
           <p>Dally’s central point survives the comparison: communication and location dominate arithmetic. His example says a 32-bit add costs 20 fJ, moving its two 32-bit inputs 1 mm costs 1.9 pJ, and fetching two words from main memory costs 1.3 nJ. The stated 40 mm in 16 ns corresponds to about 2.5×10⁶ m/s—roughly <strong>c/120</strong>.</p>
-          <p>His MLP recomputation example uses <strong>160 fJ/MAC</strong>. Applied mechanically, that is 0.087961 J for 8192³ and 0.114864 J for this 60k-image network. That network estimate is near the persistent full-batch and batch-16 grid scores, but the agreement is only an order-of-magnitude cross-check: the score unit is abstract, and neither estimate is A100 board energy.</p>
+          <p>His MLP recomputation example uses <strong>160 fJ/MAC</strong>. Applied mechanically, that is 0.087961 J for 8192³ and 0.114864 J for this 60k-image network. That network estimate is near the persistent full-batch and batch-16 grid energies, but the agreement is only an order-of-magnitude cross-check: the 1 fJ/grid-step coefficient is abstract, and neither estimate is A100 board energy.</p>
           <p>Dally’s later 2023 AHA talk rounds on-chip communication to <strong>100 fJ/(bit·mm)</strong> and a small-RAM access to <strong>50 fJ/bit</strong>. At that calibration, 1 fJ per whole INT8 operand-step is energy-equivalent to only <strong>1.25 μm</strong> of wire; adding 400 fJ for every paid read produces the last column of Table 3. That is only a what-if: it overprices reads served by registers and underprices any 32-bit accumulator read.</p>
           <p>The article does not identify a semiconductor node for all of these heuristic numbers. The A100 is a 7 nm device, but a 2022 publication date alone does not make Dally’s examples A100- or 7 nm-calibrated.</p>
         </div>
@@ -765,8 +766,8 @@
             <h3>8K grid projection</h3>
             <ul>
               <li>Retuned generalized <code>sa_cache</code> schedule, <span class="mono">Ti=256, Tj=128</span>.</li>
-              <li>Exact score: 118,953,083,721,334.</li>
-              <li>Score unit: one source operand times one abstract address-grid step.</li>
+              <li>Movement energy: 118,953,083,721,334 fJ = 0.118953 J.</li>
+              <li>Unit: 1 fJ for one source operand moving one abstract address-grid step.</li>
               <li>Best among all 196 ordered divisor-tile pairs for this schedule family, not a proof over every algorithm.</li>
             </ul>
           </article>
@@ -776,7 +777,7 @@
               <li>Six rectangular GEMMs are jointly packed by read frequency.</li>
               <li>Tile search keeps the best of three deterministic coordinate-descent starts: independent per-layer optima, all-minimum tiles, and all-maximum tiles.</li>
               <li>Primary batching comparison uses one persistent epoch address space: weights, 60k source images, and 60k outputs are allocated once; local activation and scratch buffers are reused.</li>
-              <li>The separate batch-local sensitivity scores one compact invocation and multiplies by the exact call decomposition.</li>
+              <li>The separate batch-local sensitivity evaluates one compact invocation and multiplies by the exact call decomposition.</li>
               <li>Logical dimensions only; Tensor Core padding, bias, ReLU, saturation, writes, and launches are omitted.</li>
             </ul>
           </article>

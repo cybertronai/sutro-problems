@@ -1,7 +1,7 @@
 {
   "report_date": "2026-09-02",
-  "coefficient_J_per_score_unit": 1e-15,
-  "score_unit": "one source operand times one abstract address-grid step",
+  "joules_per_operand_grid_step": 1e-15,
+  "movement_energy_unit": "1 fJ per source operand per abstract address-grid step",
   "distance": "d(address) = ceil(sqrt(address))",
   "int8_step_interpretation": {
     "dally_2023_on_chip_communication_fJ_per_bit_mm": 100,
@@ -41,10 +41,10 @@
               "invocation_count": 1
             }
           ],
-          "epoch_score": 133502855653573,
+          "epoch_movement_energy_fJ": 133502855653573,
           "epoch_paid_reads": 2888892000000,
           "average_grid_steps_per_paid_read": 46.21247718972291,
-          "epoch_energy_J_at_1_fJ_per_score_unit": 0.133502855653573,
+          "epoch_movement_energy_J": 0.133502855653573,
           "dally_2023_all_reads_small_RAM_same_schedule_sensitivity_J": 1.2890596556535732,
           "coordinate_descent_sweeps": 4,
           "coordinate_descent_starts": 3,
@@ -110,10 +110,10 @@
               "invocation_count": 1
             }
           ],
-          "epoch_score": 73034299138466,
+          "epoch_movement_energy_fJ": 73034299138466,
           "epoch_paid_reads": 2909028890000,
           "average_grid_steps_per_paid_read": 25.106075566841827,
-          "epoch_energy_J_at_1_fJ_per_score_unit": 0.073034299138466,
+          "epoch_movement_energy_J": 0.073034299138466,
           "dally_2023_all_reads_small_RAM_same_schedule_sensitivity_J": 1.236645855138466,
           "coordinate_descent_sweeps": 2,
           "coordinate_descent_starts": 3,
@@ -219,10 +219,10 @@
               "invocation_count": 3750
             }
           ],
-          "epoch_score": 134309615592699,
+          "epoch_movement_energy_fJ": 134309615592699,
           "epoch_paid_reads": 2943519150000,
           "average_grid_steps_per_paid_read": 45.6289253605498,
-          "epoch_energy_J_at_1_fJ_per_score_unit": 0.134309615592699,
+          "epoch_movement_energy_J": 0.134309615592699,
           "dally_2023_all_reads_small_RAM_same_schedule_sensitivity_J": 1.3117172755926991,
           "coordinate_descent_sweeps": 3,
           "coordinate_descent_starts": 3,
@@ -284,10 +284,10 @@
               "invocation_count": 15000
             }
           ],
-          "epoch_score": 435668465318037,
+          "epoch_movement_energy_fJ": 435668465318037,
           "epoch_paid_reads": 3081125400000,
           "average_grid_steps_per_paid_read": 141.39913465321374,
-          "epoch_energy_J_at_1_fJ_per_score_unit": 0.435668465318037,
+          "epoch_movement_energy_J": 0.435668465318037,
           "dally_2023_all_reads_small_RAM_same_schedule_sensitivity_J": 1.6681186253180371,
           "coordinate_descent_sweeps": 3,
           "coordinate_descent_starts": 3,
@@ -349,10 +349,10 @@
               "invocation_count": 60000
             }
           ],
-          "epoch_score": 1673597885020609,
+          "epoch_movement_energy_fJ": 1673597885020609,
           "epoch_paid_reads": 3626300400000,
           "average_grid_steps_per_paid_read": 461.51661484542456,
-          "epoch_energy_J_at_1_fJ_per_score_unit": 1.673597885020609,
+          "epoch_movement_energy_J": 1.673597885020609,
           "dally_2023_all_reads_small_RAM_same_schedule_sensitivity_J": 3.1241180450206087,
           "coordinate_descent_sweeps": 3,
           "coordinate_descent_starts": 3,
@@ -408,7 +408,7 @@
       }
     },
     "batch_local_reusable_buffer_sensitivity": {
-      "description": "legacy calculation that scores one compact reusable batch-local layout and multiplies by the invocation count; repeated reads are counted, while external data staging is free",
+      "description": "legacy calculation that evaluates one compact reusable batch-local layout and multiplies by the invocation count; repeated reads are counted, while external data staging is free",
       "cases": {
         "full": {
           "batch_size": 60000,
@@ -417,7 +417,7 @@
             {
               "rows": 60000,
               "invocation_count": 1,
-              "score_per_invocation": 133502855653573,
+              "movement_energy_fJ_per_invocation": 133502855653573,
               "paid_reads_per_invocation": 2888892000000,
               "coordinate_descent_sweeps": 4,
               "coordinate_descent_starts": 3,
@@ -468,10 +468,10 @@
               ]
             }
           ],
-          "epoch_score": 133502855653573,
+          "epoch_movement_energy_fJ": 133502855653573,
           "epoch_paid_reads": 2888892000000,
           "average_grid_steps_per_paid_read": 46.21247718972291,
-          "epoch_energy_J_at_1_fJ_per_score_unit": 0.133502855653573,
+          "epoch_movement_energy_J": 0.133502855653573,
           "movement_energy_ratio_to_full_batch": 1.0
         },
         "64": {
@@ -481,7 +481,7 @@
             {
               "rows": 64,
               "invocation_count": 937,
-              "score_per_invocation": 68417043094,
+              "movement_energy_fJ_per_invocation": 68417043094,
               "paid_reads_per_invocation": 3105149000,
               "coordinate_descent_sweeps": 2,
               "coordinate_descent_starts": 3,
@@ -534,7 +534,7 @@
             {
               "rows": 32,
               "invocation_count": 1,
-              "score_per_invocation": 43323040125,
+              "movement_energy_fJ_per_invocation": 43323040125,
               "paid_reads_per_invocation": 1559197000,
               "coordinate_descent_sweeps": 3,
               "coordinate_descent_starts": 3,
@@ -585,10 +585,10 @@
               ]
             }
           ],
-          "epoch_score": 64150092419203,
+          "epoch_movement_energy_fJ": 64150092419203,
           "epoch_paid_reads": 2911083810000,
           "average_grid_steps_per_paid_read": 22.03649795269996,
-          "epoch_energy_J_at_1_fJ_per_score_unit": 0.064150092419203,
+          "epoch_movement_energy_J": 0.064150092419203,
           "movement_energy_ratio_to_full_batch": 0.48051475831847584
         },
         "16": {
@@ -598,7 +598,7 @@
             {
               "rows": 16,
               "invocation_count": 3750,
-              "score_per_invocation": 33825483405,
+              "movement_energy_fJ_per_invocation": 33825483405,
               "paid_reads_per_invocation": 785581000,
               "coordinate_descent_sweeps": 3,
               "coordinate_descent_starts": 3,
@@ -649,10 +649,10 @@
               ]
             }
           ],
-          "epoch_score": 126845562768750,
+          "epoch_movement_energy_fJ": 126845562768750,
           "epoch_paid_reads": 2945928750000,
           "average_grid_steps_per_paid_read": 43.0579194316054,
-          "epoch_energy_J_at_1_fJ_per_score_unit": 0.12684556276875,
+          "epoch_movement_energy_J": 0.12684556276875,
           "movement_energy_ratio_to_full_batch": 0.95013370424002
         },
         "4": {
@@ -662,7 +662,7 @@
             {
               "rows": 4,
               "invocation_count": 15000,
-              "score_per_invocation": 28677325368,
+              "movement_energy_fJ_per_invocation": 28677325368,
               "paid_reads_per_invocation": 206161000,
               "coordinate_descent_sweeps": 3,
               "coordinate_descent_starts": 3,
@@ -713,10 +713,10 @@
               ]
             }
           ],
-          "epoch_score": 430159880520000,
+          "epoch_movement_energy_fJ": 430159880520000,
           "epoch_paid_reads": 3092415000000,
           "average_grid_steps_per_paid_read": 139.10160199067718,
-          "epoch_energy_J_at_1_fJ_per_score_unit": 0.43015988052,
+          "epoch_movement_energy_J": 0.43015988052,
           "movement_energy_ratio_to_full_batch": 3.222102466753395
         },
         "1": {
@@ -726,7 +726,7 @@
             {
               "rows": 1,
               "invocation_count": 60000,
-              "score_per_invocation": 27808776621,
+              "movement_energy_fJ_per_invocation": 27808776621,
               "paid_reads_per_invocation": 60576500,
               "coordinate_descent_sweeps": 2,
               "coordinate_descent_starts": 3,
@@ -777,30 +777,30 @@
               ]
             }
           ],
-          "epoch_score": 1668526597260000,
+          "epoch_movement_energy_fJ": 1668526597260000,
           "epoch_paid_reads": 3634590000000,
           "average_grid_steps_per_paid_read": 459.0687250171271,
-          "epoch_energy_J_at_1_fJ_per_score_unit": 1.66852659726,
+          "epoch_movement_energy_J": 1.66852659726,
           "movement_energy_ratio_to_full_batch": 12.498059229456972
         }
       }
     },
     "dally_2023_endpoint_sensitivity": {
-      "formula": "E = 1e-15*S + 400e-15*R joules for INT8",
+      "formula": "E_fJ = movement_energy_fJ + 400*paid_source_reads for INT8",
       "source": "https://aha.stanford.edu/sites/g/files/sbiybj20066/files/media/file/aha-retreat-2023_dally_keynote_en_eff_ai_hw_0.pdf",
       "source_values": "100 fJ/(bit mm) on-chip communication and 50 fJ/bit small-RAM access",
-      "qualification": "illustrative sensitivity only: it treats every abstract paid source read, including scratch reads, as an 8-bit small-RAM access and evaluates the movement-optimized tiles without retuning; it is not part of the v0 scorer"
+      "qualification": "illustrative sensitivity only: it treats every abstract paid source read, including scratch reads, as an 8-bit small-RAM access and evaluates the movement-optimized tiles without retuning; it is not part of the movement-only model"
     }
   },
   "mac_count_only_sensitivity": {
-    "reference": "retuned 8192^3 sa_cache score",
-    "reference_score": 118953083721334,
+    "reference": "retuned 8192^3 sa_cache movement energy",
+    "reference_movement_energy_fJ": 118953083721334,
     "reference_MAC": 549755813888,
     "reference_energy_J": 0.118953083721334,
     "energy_J_per_MAC": 2.1637439880820965e-13,
     "projected_MNIST_epoch_energy_J_for_either_batching": 0.1553351809044137
   },
-  "precision_semantics": "The scorer has unbounded scalar cells and no bit width; these grid scores do not change between FP32, FP16, INT8, or one-bit values.",
+  "precision_semantics": "The model has unbounded scalar cells and no bit width; its movement energy does not change between FP32, FP16, INT8, or one-bit values.",
   "omitted_terms": [
     "destination writes",
     "arithmetic, bias, ReLU, saturation, and quantization",

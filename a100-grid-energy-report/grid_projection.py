@@ -271,7 +271,7 @@ def batch_local_case(batch_size: int) -> dict:
             {
                 "rows": rows,
                 "invocation_count": invocation_count,
-                "score_per_invocation": score,
+                "movement_energy_fJ_per_invocation": score,
                 "paid_reads_per_invocation": paid_reads,
                 "coordinate_descent_sweeps": sweeps,
                 "coordinate_descent_starts": 3,
@@ -294,10 +294,10 @@ def batch_local_case(batch_size: int) -> dict:
         "batch_size": batch_size,
         "batch_invocations": sum(count for _rows, count in decomposition),
         "decomposition": calls,
-        "epoch_score": epoch_score,
+        "epoch_movement_energy_fJ": epoch_score,
         "epoch_paid_reads": epoch_reads,
         "average_grid_steps_per_paid_read": epoch_score / epoch_reads,
-        "epoch_energy_J_at_1_fJ_per_score_unit": (
+        "epoch_movement_energy_J": (
             epoch_score / SCORE_UNITS_PER_JOULE
         ),
     }
@@ -486,10 +486,10 @@ def persistent_case(batch_size: int) -> dict:
             {"rows": rows, "invocation_count": count}
             for rows, count in decomposition
         ],
-        "epoch_score": score,
+        "epoch_movement_energy_fJ": score,
         "epoch_paid_reads": paid_reads,
         "average_grid_steps_per_paid_read": score / paid_reads,
-        "epoch_energy_J_at_1_fJ_per_score_unit": (
+        "epoch_movement_energy_J": (
             score / SCORE_UNITS_PER_JOULE
         ),
         "dally_2023_all_reads_small_RAM_same_schedule_sensitivity_J": (
@@ -541,19 +541,23 @@ def audit() -> dict:
         batch_local_case(batch_size)
         for batch_size in batch_sizes
     }
-    full_persistent_score = persistent_cases["full"]["epoch_score"]
+    full_persistent_energy = persistent_cases["full"][
+        "epoch_movement_energy_fJ"
+    ]
     for result in persistent_cases.values():
         result["movement_energy_ratio_to_full_batch"] = (
-            result["epoch_score"] / full_persistent_score
+            result["epoch_movement_energy_fJ"] / full_persistent_energy
         )
-    full_batch_local_score = batch_local_cases["full"]["epoch_score"]
+    full_batch_local_energy = batch_local_cases["full"][
+        "epoch_movement_energy_fJ"
+    ]
     for result in batch_local_cases.values():
         result["movement_energy_ratio_to_full_batch"] = (
-            result["epoch_score"] / full_batch_local_score
+            result["epoch_movement_energy_fJ"] / full_batch_local_energy
         )
-    assert persistent_cases["full"]["epoch_score"] == batch_local_cases[
-        "full"
-    ]["epoch_score"]
+    assert persistent_cases["full"][
+        "epoch_movement_energy_fJ"
+    ] == batch_local_cases["full"]["epoch_movement_energy_fJ"]
     assert persistent_cases["64"]["decomposition"] == [
         {"rows": 64, "invocation_count": 937},
         {"rows": 32, "invocation_count": 1},
@@ -567,8 +571,10 @@ def audit() -> dict:
 
     return {
         "report_date": "2026-09-02",
-        "coefficient_J_per_score_unit": JOULES_PER_SCORE_UNIT,
-        "score_unit": "one source operand times one abstract address-grid step",
+        "joules_per_operand_grid_step": JOULES_PER_SCORE_UNIT,
+        "movement_energy_unit": (
+            "1 fJ per source operand per abstract address-grid step"
+        ),
         "distance": "d(address) = ceil(sqrt(address))",
         "int8_step_interpretation": {
             "dally_2023_on_chip_communication_fJ_per_bit_mm": 100,
@@ -607,7 +613,7 @@ def audit() -> dict:
             },
             "batch_local_reusable_buffer_sensitivity": {
                 "description": (
-                    "legacy calculation that scores one compact reusable "
+                    "legacy calculation that evaluates one compact reusable "
                     "batch-local layout and multiplies by the invocation "
                     "count; repeated reads are counted, while external data "
                     "staging is free"
@@ -615,7 +621,10 @@ def audit() -> dict:
                 "cases": batch_local_cases,
             },
             "dally_2023_endpoint_sensitivity": {
-                "formula": "E = 1e-15*S + 400e-15*R joules for INT8",
+                "formula": (
+                    "E_fJ = movement_energy_fJ + 400*paid_source_reads "
+                    "for INT8"
+                ),
                 "source": (
                     "https://aha.stanford.edu/sites/g/files/sbiybj20066/"
                     "files/media/file/aha-retreat-2023_dally_keynote_en_eff_ai_hw_0.pdf"
@@ -628,21 +637,21 @@ def audit() -> dict:
                     "illustrative sensitivity only: it treats every abstract "
                     "paid source read, including scratch reads, as an 8-bit "
                     "small-RAM access and evaluates the movement-optimized "
-                    "tiles without retuning; it is not part of the v0 scorer"
+                    "tiles without retuning; it is not part of the movement-only model"
                 ),
             },
         },
         "mac_count_only_sensitivity": {
-            "reference": "retuned 8192^3 sa_cache score",
-            "reference_score": EIGHTK_SCORE,
+            "reference": "retuned 8192^3 sa_cache movement energy",
+            "reference_movement_energy_fJ": EIGHTK_SCORE,
             "reference_MAC": EIGHTK_N**3,
             "reference_energy_J": reference_energy,
             "energy_J_per_MAC": reference_energy / EIGHTK_N**3,
             "projected_MNIST_epoch_energy_J_for_either_batching": mac_only_energy,
         },
         "precision_semantics": (
-            "The scorer has unbounded scalar cells and no bit width; these grid "
-            "scores do not change between FP32, FP16, INT8, or one-bit values."
+            "The model has unbounded scalar cells and no bit width; its movement "
+            "energy does not change between FP32, FP16, INT8, or one-bit values."
         ),
         "omitted_terms": [
             "destination writes",
