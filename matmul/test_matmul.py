@@ -237,6 +237,30 @@ def test_best_66300_cost_matches_record_history():
     assert matmul.score_16x16(generate_best_66300()) == 66_300
 
 
+def test_best_65084_cost_matches_record_history():
+    import hashlib
+    from collections import Counter
+
+    from matmul.submissions.best_65084 import (
+        EXPECTED_SHA256,
+        generate_best_65084,
+    )
+
+    ir = generate_best_65084()
+    assert hashlib.sha256(ir.encode()).hexdigest() == EXPECTED_SHA256
+    assert matmul.score_16x16(ir) == 65_084
+
+    inputs, ops, outputs = matmul._parse(ir)
+    assert len(inputs) == 512 and len(set(inputs)) == 512
+    assert len(outputs) == 256 and len(set(outputs)) == 256
+    assert all(address > 0 for address in inputs + outputs)
+    assert Counter(opcode for opcode, _ in ops) == {
+        "mul": 4_096,
+        "add": 3_840,
+        "copy": 1_649,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Newline / semicolon line separators are interchangeable
 # ---------------------------------------------------------------------------
