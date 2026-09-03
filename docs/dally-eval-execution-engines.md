@@ -42,6 +42,17 @@ The Sutro benchmark suite supports three distinct execution implementations:
 
 *Additional measurement (sparse-parity siswalk program, 73,293 ops, the search-workload shape): CPU 63-86k inst/s vs GPU LDS 160-165k inst/s — here the GPU WINS ~2x, because the program's cells fit entirely in LDS while its op stream is mid-sized. The crossover is program-shape-dependent: short-cell programs favor LDS, long-op programs favor CPU.*
 
+### 2.1 Benchmark Fairness & Search Workload Asymmetry (MCTS Ahead)
+
+The table above is strictly fair for the **Judge's task** (evaluating a single static record program across 100,000 test instances). In that setting, the 5.7 GHz Zen 5 CPU core's deep out-of-order execution window and high single-thread clock speed execute sequential instruction dependency chains with lower latency than GPU compute units.
+
+However, the **Solver's task (Program Search / MCTS)** has fundamentally different characteristics:
+1. **Candidate Parallelism vs. Test Case Parallelism**: Search evaluates **thousands of distinct candidate programs in parallel**, rather than one program repeatedly.
+2. **LDS Occupancy on Compact Search ASTs**: Candidate schedules in active search (such as 4x4 GEMM or wavefront ASTs) have small memory footprints ($\le 256$ cells). Because 256-byte working sets allow 256 concurrent instances inside each Compute Unit's 64 KB LDS, **20,480+ distinct candidate schedules can execute simultaneously across the 80 CUs** of the RX 6900 XT.
+3. **Hardware Scaling Ceiling**: While a 32-thread CPU hits a hardware ceiling at 32 concurrent schedule rollouts, the GPU evaluates tens of thousands of candidate schedules in a single 20 ms dispatch.
+
+A dedicated benchmark measuring batched MCTS candidate rollout throughput across the three engines is in development as part of the `s1-dally` search integration.
+
 ---
 
 ## 3. The Tripartite Architecture Matrix
