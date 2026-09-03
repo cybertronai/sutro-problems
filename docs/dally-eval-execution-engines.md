@@ -30,13 +30,13 @@ The Sutro benchmark suite supports three distinct execution implementations:
 
 *Measured on AMD Ryzen 9 9950X CPU & AMD Radeon RX 6900 XT GPU (16 GB):*
 
-| Benchmark Program | Ops / Instance | Python Reference | Rust CPU (Rayon) | Rust GPU (LDS Runner) | GPU vs. CPU Speedup | Net Speedup vs. Python |
+| Benchmark Program | Ops / Instance | Python CPU (Reference) | Rust CPU (Rayon) | **Rust CPU Speedup (vs. Python)** | Rust GPU (LDS Runner) | **GPU vs. Rust CPU** |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: |
-| **20% packedsis** | 15,390 | 15.2k inst/s | 1,093k inst/s | 658k inst/s | 0.60x | 43x |
-| **40% packedwalk** | 17,815 | 13.7k inst/s | 944k inst/s | 629k inst/s | 0.67x | 46x |
-| **60% packedsis** | 30,555 | 7.0k inst/s | 538k inst/s | 485k inst/s | 0.90x | 69x |
-| **80% weightscan** | 266,185 | 937 inst/s | 66k inst/s | 25k inst/s | 0.38x | 27x |
-| **100% weightscan**| 709,513 | 313 inst/s | 23k inst/s | 10k inst/s | 0.43x | 31x |
+| **20% packedsis** | 15,390 | 15.2k inst/s | 1,093k inst/s | **72×** | 658k inst/s | 0.60× *(sub-1×)* |
+| **40% packedwalk** | 17,815 | 13.7k inst/s | 944k inst/s | **69×** | 629k inst/s | 0.67× *(sub-1×)* |
+| **60% packedsis** | 30,555 | 7.0k inst/s | 538k inst/s | **77×** | 485k inst/s | 0.90× *(sub-1×)* |
+| **80% weightscan** | 266,185 | 937 inst/s | 66k inst/s | **70×** | 25k inst/s | 0.38× *(sub-1×)* |
+| **100% weightscan**| 709,513 | 313 inst/s | 23k inst/s | **74×** | 10k inst/s | 0.43× *(sub-1×)* |
 
 *GPU column: measured at 100k-instance batches (the GPU's best case, amortizing dispatch overhead). CPU column: same batch size. All engines bit-exact on the golden fixtures; all runs under `training.slice` on the RX 6900 XT. The CPU engine leads at every program size on this host — the GPU path's value is its 768 MiB-bounded multi-tenant envelope and headroom on machines where CPU cores are contended.*
 
