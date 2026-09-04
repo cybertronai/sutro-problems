@@ -39,7 +39,8 @@ rejected, which admits the usual bilinear matmul algorithms.
 | 2026-04-30 |   800 | [ir](submissions/outer_product_4x4.ir), [report](submissions/outer_product_4x4.md)  | [@sjbaebae](https://github.com/sjbaebae)     | `generate_outer_product_4x4` (size-1 sA) |
 | 2026-09-01 |   689 | [ir](submissions/best_689.ir), [report](submissions/best_689.md), [py](submissions/best_689.py) | [@jurajselep](https://github.com/jurajselep) | row-wise lifetime fusion + dead-A output reuse + exact tier allocation |
 | 2026-09-01 |   683 | [ir](submissions/hkkk_ilp_4x4.ir), [report](submissions/hkkk_ilp_4x4.md), [py](submissions/hkkk_ilp_4x4.py) | [@npow](https://github.com/npow) | HKKK + one deferred output add + exact fixed-schedule allocation |
-| 2026-09-01 |   681 | [ir](submissions/best_681.ir), [report](submissions/best_681.md), [py](submissions/best_681.py) | [@jurajselep](https://github.com/jurajselep) | hybrid row-0 schedule + JIT A staging + interleaved final adds ★ best |
+| 2026-09-01 |   681 | [ir](submissions/best_681.ir), [report](submissions/best_681.md), [py](submissions/best_681.py) | [@jurajselep](https://github.com/jurajselep) | hybrid row-0 schedule + JIT A staging + interleaved final adds |
+| 2026-09-04 |   678 | [ir](submissions/best_678.ir), [report](submissions/best_678.md), [py](submissions/best_678.py) | [@jurajselep](https://github.com/jurajselep) | split `B[0,0]` lifetime + dependency-safe rescheduling + tier allocation ★ best |
 
 ## 16×16 Record History
 
