@@ -239,7 +239,52 @@ search already showed carry the win (1633 -> 1309 by recycling alone).
 - **Spatial-model analysis** (docs/spatial-model-analysis.html): the
   fJ / physical-distance grounding this language operationalizes.
 
-## 8. Open questions
+## 8. Static dataflow scoring and physical calibration
+
+Two refinements from the 2026-09-04 discussion (Yaroslav / Mitchell):
+
+### 8.1 Static dataflow semantics
+
+Materializing an entire dataset in SRAM is unrealistic; the model
+moves to **static dataflow** scoring. A program is a dataflow graph
+with explicit placement: nodes are compute moments, edges carry
+movement cost by the placed distance, and the score is the summed edge
+costs - no SRAM materialization assumption. The SDL placement
+primitives already carry this structure (`stage` IS a dataflow edge
+with a priced movement; `tile`/`place` pin node locations; `release`
+ends an edge's lifetime). What changes:
+
+- Scoring is defined over the dataflow graph, not a trace walk: each
+  edge is charged `ceil(sqrt(distance))` once, matching how the
+  closed-form analyzer already sums affine address forms.
+- The score is an upper bound on achievable energy (dataflow with
+  fixed placement cannot exploit opportunistic locality that a
+  dynamic schedule might find). That trade is accepted: static
+  dataflow "makes scoring easy and maps to GPUs."
+- GPU mapping falls out directly: tiles become shared-memory
+  allocations, edges become transfers, the graph schedules statically
+  - the same discipline dally-eval's LDS runner already uses for its
+  per-workgroup cell slices.
+
+### 8.2 Physical calibration table
+
+The abstract model converts to silicon-realizable projections with
+Yaroslav's constants (validated against Bill Dally's CACM article on a
+256 MB array, where he used c/120; c/160 is the conservative choice):
+
+| Constant | Value | Meaning |
+| - | - | - |
+| Movement energy | 1 fJ / byte | per unit of charged distance |
+| Cell pitch | 1 micron | address distance -> physical distance |
+| Propagation | c/160 | effective signal velocity on-die |
+
+With these, a schedule's score yields energy (fJ), die area (mm^2 at
+1um pitch), and critical-path time (propagation-limited) directly.
+The earlier nvidia-smi cross-check (a Ciresan-scale MNIST epoch
+predicted within an order of magnitude of measured power) anchors the
+model at system scale; the CACM 256 MB anchor pins it at device scale.
+
+## 9. Open questions
 
 1. Should MNIST data load as a special tile type with fixed placement,
    or as explicit per-value placement statements (compositional but
