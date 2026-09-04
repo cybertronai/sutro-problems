@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fixed or Moving I/O Order: Dataflow Semantics for the Dally Model</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #fcfcfb; --plane: #f9f9f7; --ink: #0b0b0b; --ink2: #52514e;
+    --muted: #898781; --grid: #e1e0d9; --line: #c3c2b7;
+    --accent: #2a78d6; --code-bg: #f2f1ed; --good: #006300; --bad: #a33a3a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a19; --plane: #0d0d0d; --ink: #ffffff; --ink2: #c3c2b7;
+      --muted: #898781; --grid: #2c2c2a; --line: #383835;
+      --accent: #3987e5; --code-bg: #242422; --good: #0ca30c; --bad: #e66767;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.65 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 52rem; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+  h1 { font-size: 1.9rem; line-height: 1.25; margin: 0 0 .4rem; }
+  .sub { color: var(--ink2); margin: 0 0 2rem; }
+  h2 { font-size: 1.35rem; margin: 2.8rem 0 .7rem; padding-top: .6rem;
+       border-top: 1px solid var(--grid); }
+  h3 { font-size: 1.05rem; margin: 1.6rem 0 .4rem; }
+  .note { color: var(--ink2); font-size: .92rem; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre { font-family: ui-monospace, "SF Mono", Menlo, monospace;
+              font-size: .88em; background: var(--code-bg); border-radius: 4px; }
+  code { padding: .1em .35em; }
+  pre { padding: .8rem 1rem; overflow-x: auto; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+  .tblwrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0;
+          font-size: .9rem; font-variant-numeric: tabular-nums; }
+  th { text-align: left; color: var(--ink2); font-weight: 600;
+       border-bottom: 1px solid var(--line); padding: .35rem .6rem .35rem 0; }
+  td { border-bottom: 1px solid var(--grid); padding: .35rem .6rem .35rem 0;
+       vertical-align: top; }
+  td.num, th.num { text-align: right; }
+  .toc { background: var(--plane); border: 1px solid var(--grid);
+         border-radius: 8px; padding: .9rem 1.2rem; font-size: .92rem; }
+  .toc a { display: inline-block; margin-right: 1.1rem; }
+  .box { background: var(--plane); border: 1px solid var(--grid);
+         border-radius: 8px; padding: .9rem 1.2rem; margin: 1rem 0; }
+  .good { color: var(--good); font-weight: 600; }
+  .bad { color: var(--bad); font-weight: 600; }
+  ol.refs { font-size: .88rem; color: var(--ink2); }
+  ol.refs li { margin-bottom: .4rem; }
+  footer { margin-top: 3.5rem; padding-top: 1rem; border-top: 1px solid var(--grid);
+           color: var(--muted); font-size: .85rem; }
+  var { font-style: italic; }
+</style>
+</head>
+<body>
+<main>
+
+<div style="text-align: right;"><a href="https://github.com/cybertronai/sutro-problems/blob/main/docs/dataflow-io-order.html" target="_blank" rel="noopener noreferrer" aria-label="View this page on GitHub">GitHub &#8599;</a></div>
+
+<h1>Fixed or moving I/O order?</h1>
+<p class="sub">A design note on how data should enter a submission: which dataflow class
+the current model already belongs to, what a stream interface would add, and what fixing
+the I/O order costs and buys in relevance to hardware that can be built today.
+Companion to the <a href="spatial-model-analysis.html">spatial-model analysis</a> and the
+<a href="index.html">benchmark report</a>. September 3, 2026.</p>
+
+<nav class="toc">
+<a href="#question">The question</a>
+<a href="#lattice">Where the model sits</a>
+<a href="#determinacy">Determinacy</a>
+<a href="#interface">Two instructions</a>
+<a href="#working-set">Pricing the working set</a>
+<a href="#relevance">Hardware relevance</a>
+<a href="#against">The case against</a>
+<a href="#cliff">The scoring cliff</a>
+<a href="#recommendation">Recommendation</a>
+<a href="#open">Open questions</a>
+<a href="#refs">References</a>
+</nav>
+
+<h2 id="question">1. The question</h2>
+
+<p>Submissions to the simplified Dally model are currently straight-line programs over
+8-bit cells: no loops, no branches, <em>no data-dependent addressing</em>. The grader writes
+the instance's inputs into cells whose addresses the submission declares on line 1, and
+energy is the program's static read cost &mdash; every operand read of address <var>a</var>
+costs &lceil;&radic;<var>a</var>&rceil;.</p>
+
+<p>Two things are missing from that picture, and they turn out to be the same question asked
+twice:</p>
+
+<ol>
+<li><strong>How does data enter at scale?</strong> Declaring 594 input cells works for an
+18&times;32 parity instance. It does not work for a 47 MB training set, and the scheduled-language
+RFC (<a href="https://github.com/cybertronai/sutro-problems/pull/48">#48</a>) explicitly excludes
+I/O, leaving data representation as an open fork.</li>
+<li><strong>Should a submission be allowed to decide what to read next based on what it has
+already read?</strong> Today it may not. The question is whether that restriction should be
+kept, relaxed, or made a division of the competition.</li>
+</ol>
+
+<p>This note argues that the restriction should be <strong>kept as the default</strong>, that it is
+better motivated than it looks, and that the honest way to buy back the relevance it costs is a
+second, separately-scored division rather than a weakening of the core model.</p>
+
+<h2 id="lattice">2. Where the model already sits</h2>
+
+<p>A natural interface for streaming data in: the program declares an order of bytes to read
+and an order of bytes to write; each <code>recv</code> makes the next input byte appear, each
+<code>send</code> appends to the output; the order is fixed in advance but the <em>timing</em> of
+each operation is free.</p>
+
+<p>This is frequently described as a <strong>Kahn Process Network</strong> (KPN) [1]. It is not,
+and the difference matters. A Kahn process may choose what to read next <em>based on what it has
+just read</em>. Fixing the order in advance removes exactly that freedom, which places the model
+one rung lower &mdash; and in a strictly more tractable place:</p>
+
+<div class="tblwrap">
+<table>
+<tr><th>Property</th><th>Present?</th><th>Established name</th></tr>
+<tr><td>Order declared ahead of time, data-independent</td><td>yes</td><td><strong>Synchronous Dataflow</strong> [4] &mdash; in fact its degenerate case, a fully static (oblivious) I/O schedule</td></tr>
+<tr><td>Timing free; behaviour depends on order alone</td><td>yes</td><td><strong>Latency-insensitive design</strong> [10]</td></tr>
+<tr><td>Blocking receive, non-blocking send, FIFO channels</td><td>yes</td><td>the <strong>Kahn process</strong> interface [1]</td></tr>
+<tr><td>Read order may depend on data read</td><td class="bad">no, deliberately</td><td>full KPN / Boolean dataflow [6]</td></tr>
+</table>
+</div>
+
+<p>The restriction is load-bearing rather than merely convenient. Buck [6] showed that adding
+data-dependent routing makes dataflow Turing-complete, and with it <strong>boundedness and
+deadlock become undecidable</strong>. Undecidable boundedness means a submission's memory
+footprint &mdash; and therefore its cost &mdash; cannot in general be computed without running it.
+Closed-form scoring, the property that lets the judge cost an 8192&sup3; program in microseconds,
+is precisely what is lost on the other side of that line.</p>
+
+<div class="box">
+<strong>The framing worth keeping:</strong> the order is fixed not because dynamic order is
+uninteresting, but because the price of allowing it is undecidability &mdash; and the benchmark's
+scalability is built on decidability.
+</div>
+
+<h2 id="determinacy">3. What determinacy buys, and the one prohibition</h2>
+
+<p>Kahn's theorem [1] states that the output history of such a network depends only on the input
+histories, <em>never on the schedule</em>. For an energy benchmark this is the enabling result:
+<strong>a scheduler may reorder work arbitrarily to reduce energy and cannot change the
+answer.</strong> It is what makes "score energy, ignore time" a principled choice rather than an
+arbitrary one.</p>
+
+<p>Determinacy survives only under one condition, which must be written into the instruction set
+as a prohibition rather than left as a convention:</p>
+
+<div class="box">
+<strong>A program must never be able to test whether input is available, nor observe a clock.</strong>
+Blocking receive only. Given an emptiness test, output ceases to be a function of input alone
+(the Brock&ndash;Ackerman anomaly [9]); two runs of the same submission can then score differently,
+and a leaderboard of such scores is noise.
+</div>
+
+<h2 id="interface">4. The interface: two instructions</h2>
+
+<pre><code>recv d        # the next byte of the input stream appears in cell d
+send s        # the byte in cell s is appended to the output stream</code></pre>
+
+<p>Costs, staying inside the existing "reads are charged" discipline:</p>
+
+<ul>
+<li><code>recv d</code> &mdash; charge a fixed constant <var>E</var><sub>in</sub>, the off-chip
+crossing. Deliberately <em>not</em> &lceil;&radic;<var>d</var>&rceil;: physically the price of a
+fresh sample is the crossing, not the destination.</li>
+<li><code>send s</code> &mdash; charge &lceil;&radic;<var>s</var>&rceil; as an ordinary operand
+read, plus a constant <var>E</var><sub>out</sub>.</li>
+</ul>
+
+<p>Four consequences:</p>
+
+<ul>
+<li><strong>The input declaration line disappears.</strong> Submissions are straight-line, so the
+textual order of <code>recv</code> and <code>send</code> <em>is</em> the declared order. No new
+syntax is required to specify it.</li>
+<li><strong>Epochs become explicitly priced.</strong> To use a sample twice a program must either
+<code>recv</code> it twice (paying <var>E</var><sub>in</sub> again) or retain it (paying
+&lceil;&radic;<var>a</var>&rceil; on every read). Both roads are charged; neither is free; the
+search chooses. The current model prices neither.</li>
+<li><strong>Static scoring is untouched.</strong> The I/O word is fixed, so the added cost is
+<code>n_recv&middot;E_in + n_send&middot;E_out + &Sigma;&lceil;&radic;s&rceil;</code> &mdash; still
+closed-form, still cross-validatable against the reference evaluator.</li>
+<li><strong>Train/test needs no new concept.</strong> The harness owns the stream contents; test
+labels are simply never in it. Predictions are the <code>send</code>s at positions where labels
+were withheld.</li>
+</ul>
+
+<h2 id="working-set">5. What it changes: the working set stops being free</h2>
+
+<p>Under the current rules a submission chooses where its inputs land, so they land near the origin
+where reads are cheap; all of them are co-present for the whole program; and they may be re-read
+without limit. Under a stream, a byte arrives once, at a port, and retaining it is priced by the
+address it is retained at.</p>
+
+<p>That turns a property of the cost function into a binding constraint. Since a read of address
+<var>a</var> costs &lceil;&radic;<var>a</var>&rceil;, the cells reachable at per-read cost
+&le; <var>c</var> are exactly those with <var>a</var> &le; <var>c</var>&sup2;:</p>
+
+<div class="box">
+<strong>Only <var>c</var>&sup2; cells lie within per-read cost <var>c</var>. A working set of
+<var>W</var> cells therefore costs at least &radic;<var>W</var> per access, and a single sweep
+across it costs &Sigma;<sub><var>a</var>&lt;<var>W</var></sub>
+&lceil;&radic;<var>a</var>&rceil; &asymp; (2/3)&middot;<var>W</var><sup>3/2</sup>.</strong>
+</div>
+
+<p>No memory hierarchy was assumed; the address-cost function <em>derives</em> one, with an
+exponent. This also shows where a stream interface does and does not bite:</p>
+
+<div class="tblwrap">
+<table>
+<tr><th>Task</th><th class="num">Input size</th><th>Effect of streaming</th></tr>
+<tr><td>Sparse parity (18&times;32 + 18 parities)</td><td class="num">594 cells</td><td>Negligible &mdash; the whole instance fits near the origin. Existing records should not move.</td></tr>
+<tr><td>MNIST training set (60,000&times;784)</td><td class="num">4.70&times;10<sup>7</sup> cells</td><td>Decisive &mdash; see below.</td></tr>
+</table>
+</div>
+
+<p>Holding the MNIST training set resident costs
+(2/3)(4.70&times;10<sup>7</sup>)<sup>3/2</sup> &asymp; <strong>2.2&times;10<sup>11</sup> cost units
+per sweep</strong>, purely to read it. Re-streaming it each epoch costs
+4.70&times;10<sup>7</sup>&middot;<var>E</var><sub>in</sub>. Resident storage therefore wins if and
+only if <var>E</var><sub>in</sub> &gtrsim; <strong>4.6&times;10<sup>3</sup></strong>. Anchoring
+<var>E</var><sub>in</sub> in published DRAM-vs-SRAM energy ratios [19][20] rather than choosing it
+by taste makes the caching question something the benchmark <em>answers</em> instead of assumes.</p>
+
+<h3>An aside on feasibility</h3>
+
+<p>A recurring objection to a full training task is that writing out its instruction list is
+prohibitive &mdash; a fully-connected MNIST network expands to a trace far beyond what can be
+stored. That is a statement about the <em>trace</em>, not the <em>algorithm</em>. Two facts
+follow:</p>
+
+<ul>
+<li><strong>SGD is oblivious.</strong> Its control flow and its addresses are data-independent;
+only its <em>values</em> depend on data. An SGD training loop is therefore expressible in a
+straight-line, no-data-dependent-addressing IR, using <code>select</code> for anything
+branch-like. Training does not require leaving the static class.</li>
+<li>The trace blow-up is what hierarchical schedules remove, by submitting an affine loop nest
+rather than an unrolled trace.</li>
+</ul>
+
+<p>A scheduled language says how a program is <em>written</em>; a stream says how data
+<em>enters</em>. They are complementary halves of the same extension.</p>
+
+<h2 id="relevance">6. Hardware relevance: the case for a fixed order</h2>
+
+<p>If the target is a model that says something true about chips that can be built now, the fixed
+order is not a simplifying concession &mdash; it is the closer match.</p>
+
+<ul>
+<li><strong>Contemporary GPUs are statically ordered where the energy is.</strong> Since Kepler,
+NVIDIA moved instruction scheduling into the compiler, with control information embedded in the
+instruction stream; there is no out-of-order execution engine inside a warp. What remains dynamic
+is <em>which ready warp issues next</em> &mdash; interleaving, not reordering. Per-thread
+instruction order is fixed and execution timing is free, which is exactly the
+order-fixed/latency-insensitive pair.</li>
+<li><strong>Structured sparsity is the industry's own admission.</strong> 2:4 structured sparsity
+exists because unstructured sparsity's dynamism cannot be made efficient in hardware; the
+shipped feature is the one that restores static structure.</li>
+<li><strong>The static extreme is buildable and built.</strong> TPU-class designs use
+compiler-managed scratchpads in place of caches [20]; at least one commercial inference
+architecture is fully deterministic and statically scheduled, and markets that as the
+differentiator rather than the compromise.</li>
+<li><strong>The software stack is moving toward static, not away.</strong> Captured execution
+graphs, compiled schedule languages in the Halide [17] lineage, and ahead-of-time fused kernels
+all replace runtime decisions with compile-time ones.</li>
+<li><strong>It matches the cost model's own thesis.</strong> The argument for
+movement-dominated cost models [19] is that fetch, decode and scheduling overhead dwarfs the
+arithmetic. A benchmark that permits dynamic ordering permits precisely the overhead the cost
+model exists to indict.</li>
+</ul>
+
+<p>Against the workloads that consume the most accelerator-hours today:</p>
+
+<div class="tblwrap">
+<table>
+<tr><th>Workload</th><th>Faithfully modelled by a fixed order?</th></tr>
+<tr><td>GEMM / convolution / MLP training</td><td class="good">yes &mdash; affine, compile-time tiling</td></tr>
+<tr><td>Dense transformer forward/backward</td><td class="good">yes</td></tr>
+<tr><td>Fused attention (tiled, online softmax)</td><td class="good">yes &mdash; static tiles, fixed recurrence</td></tr>
+<tr><td>2:4 structured sparsity</td><td class="good">yes &mdash; made static by design</td></tr>
+<tr><td>Unstructured sparsity, graph networks</td><td class="bad">no</td></tr>
+<tr><td>Mixture-of-experts routing</td><td class="bad">no</td></tr>
+<tr><td>KV-cache paging, dynamic batching</td><td class="bad">no</td></tr>
+<tr><td>Embedding lookups, recommendation</td><td class="bad">no</td></tr>
+</table>
+</div>
+
+<h2 id="against">7. The case against, stated honestly</h2>
+
+<p>The four rows marked <span class="bad">no</span> are where a large share of current deployment
+energy is actually spent. A fixed-order model has nothing to say about them, and that should be
+conceded rather than argued around.</p>
+
+<p>The sharper objection is internal to the research question. <strong>The largest available energy
+win in learning may itself be data-dependent.</strong> A learner that adapts what it looks at next
+&mdash; active learning, curricula, importance sampling, conditional computation &mdash; can reduce
+sample count by a factor that no amount of locality optimisation will match, and sample count is
+multiplied by <var>E</var><sub>in</sub> in the cost model above. Locality is a static property and
+fixing the order does not cap that win; sample-adaptivity is not, and fixing the order does cap
+it. A benchmark that forbids adaptivity risks returning a confident answer to "what is the most
+energy-efficient way to learn this task" that is wrong in the direction that matters most.</p>
+
+<h2 id="cliff">8. The scoring cliff</h2>
+
+<p>The choice is not binary. There are six rungs, and the property that matters &mdash; whether cost
+can be computed without executing the submission on data &mdash; breaks at one specific place:</p>
+
+<div class="tblwrap">
+<table>
+<tr><th>Rung</th><th>What may vary with data</th><th>Closed-form cost?</th></tr>
+<tr><td>a. Static / oblivious</td><td>nothing</td><td class="good">yes &mdash; the current model</td></tr>
+<tr><td>b. Cyclo-static [5]</td><td>rates, on a fixed period</td><td class="good">yes &mdash; cheap to add</td></tr>
+<tr><td>c. Static structure, masked values</td><td>values only; predication, as GPUs handle divergence</td><td class="good">yes &mdash; masked-off work is paid for, as in hardware</td></tr>
+<tr><td>d. Finite modes + data-dependent selector</td><td>which of <var>k</var> static schedules runs</td><td class="good">yes &mdash; score each mode statically, weight by measured selection frequency</td></tr>
+<tr><td>e. Bounded dynamic dataflow</td><td>addresses, with capped buffers</td><td class="bad">no &mdash; requires simulation on the adjudication data</td></tr>
+<tr><td>f. Full KPN</td><td>everything</td><td class="bad">no, and unbounded [6][8]</td></tr>
+</table>
+</div>
+
+<p>Rungs (a) through (d) all preserve O(1) judging. Rung (d) is already enough to express
+mixture-of-experts routing with a capacity factor, which is the most commercially relevant
+data-dependent behaviour there is. The cliff is between (d) and (e), not between "static" and
+"dynamic".</p>
+
+<h2 id="recommendation">9. Recommendation</h2>
+
+<ol>
+<li><strong>Keep the order fixed in the main competition</strong>, and state the reason as
+decidability rather than simplicity.</li>
+<li><strong>Adopt a closed/open division split.</strong> A <em>closed division</em> with fixed
+order, closed-form scoring, comparable numbers and no execution of submitted code; an <em>open
+division</em> where order may move, scored by simulation at small scale, explicitly labelled as
+not comparable and expensive to judge. This is the established resolution of exactly this tension
+in machine-learning benchmarking, it costs one paragraph of rules, and it removes the need to
+litigate each new dynamic strategy as it appears.</li>
+<li><strong>Reserve syntax for rung (d) now, implement it later.</strong> A <code>mode</code> or
+<code>guard</code> construct that is specified but unimplemented means adding conditional
+computation later is an extension rather than a redesign.</li>
+<li><strong>Let the harness permute the stream.</strong> Real training shuffles each epoch; a
+harness-chosen permutation is not adaptivity, costs nothing to allow, and defends against
+submissions that index by position and memorise a fixed order.</li>
+</ol>
+
+<p>A useful side effect of pricing rather than prohibiting: retention and re-reading move from
+<em>policy</em> to <em>price</em>. A priced strategy is not a reward hack, which shrinks the
+subjective surface of adjudication without changing rules mid-competition.</p>
+
+<h2 id="open">10. Open questions</h2>
+
+<ol>
+<li><strong>Port-fixed or program-named arrival address?</strong> Letting the program name the
+destination is friendlier; a fixed port cell is physically honest and forces an explicit,
+chargeable copy. The latter is the difference between modelling a pad and modelling a wish.</li>
+<li><strong>Online or transductive?</strong> Because the submission declares the order, it may
+<code>recv</code> every test input before emitting any label. That is legitimate transduction but
+a different problem. Requiring the label <code>send</code> for example <var>i</var> before the
+<code>recv</code> of example <var>i</var>+1 makes it online, and brings regret bounds in as a
+second source of provable limits.</li>
+<li><strong>What is <var>E</var><sub>in</sub>?</strong> Section 5 shows it decides the winning
+strategy; it should be derived from published memory-energy figures at a stated process node.</li>
+<li><strong>Nothing rewards parallelism.</strong> Order-fixed, time-free, energy-only scoring never
+penalises an arbitrarily serial submission &mdash; an odd property for a benchmark about a spatial
+machine. A static schedule yields the critical path for free; reporting makespan as an unscored
+second axis is the cheap fix.</li>
+<li><strong>Lower bounds as the normaliser.</strong> Scores are more legible against a proven
+floor than in isolation: red-blue pebbling [11] for the I/O complexity of dense linear algebra, and
+memory-versus-samples bounds for streaming parity learning [13][14]. The constants in the sparse-<var>k</var>
+regime differ from the dense case and should be checked before being quoted.</li>
+</ol>
+
+<h2 id="refs">11. References</h2>
+
+<ol class="refs">
+<li>G. Kahn, "The semantics of a simple language for parallel programming," IFIP Congress, 1974.</li>
+<li>G. Kahn and D. MacQueen, "Coroutines and networks of parallel processes," IFIP, 1977.</li>
+<li>J. B. Dennis, "First version of a data flow procedure language," Symposium on Programming, 1974.</li>
+<li>E. A. Lee and D. G. Messerschmitt, "Synchronous data flow," Proc. IEEE 75(9), 1987.</li>
+<li>G. Bilsen, M. Engels, R. Lauwereins, J. Peperstraete, "Cyclo-static dataflow," IEEE Trans. Signal Processing, 1996.</li>
+<li>J. T. Buck, "Scheduling dynamic dataflow graphs with bounded memory using the token flow model," PhD thesis, UC Berkeley, 1993.</li>
+<li>E. A. Lee and T. M. Parks, "Dataflow process networks," Proc. IEEE 83(5), 1995.</li>
+<li>T. M. Parks, "Bounded scheduling of process networks," PhD thesis, UC Berkeley, 1995.</li>
+<li>J. D. Brock and W. B. Ackerman, "Scenarios: a model of non-determinate computation," Formalization of Programming Concepts, 1981.</li>
+<li>L. Carloni, K. McMillan, A. Sangiovanni-Vincentelli, "Theory of latency-insensitive design," IEEE TCAD 20(9), 2001.</li>
+<li>J.-W. Hong and H. T. Kung, "I/O complexity: the red-blue pebble game," STOC, 1981.</li>
+<li>H. T. Kung and C. E. Leiserson, "Systolic arrays for VLSI," 1978/79.</li>
+<li>R. Raz, "Fast learning requires good memory: a time-space lower bound for parity learning," FOCS, 2016.</li>
+<li>G. Kol, R. Raz, A. Tal, "Time-space hardness of learning sparse parities," STOC, 2017.</li>
+<li>S. Garg, R. Raz, A. Tal, "Extractor-based time-space lower bounds for learning," STOC, 2018.</li>
+<li>W. Thies, M. Karczmarek, S. Amarasinghe, "StreamIt: a language for streaming applications," CC, 2002.</li>
+<li>J. Ragan-Kelley et al., "Halide: a language and compiler for optimizing parallelism, locality, and recomputation in image processing pipelines," PLDI, 2013.</li>
+<li>D. Koeplinger et al., "Spatial: a language and compiler for application accelerators," PLDI, 2018.</li>
+<li>W. J. Dally, "On the model of computation: point," Communications of the ACM 65(9), 2022.</li>
+<li>N. Jouppi et al., "Ten lessons from three generations that shaped Google's TPUv4i," ISCA, 2021.</li>
+<li>Ptolemy II, UC Berkeley &mdash; reference implementations of the models of computation above, side by side.</li>
+</ol>
+
+<footer>
+Design note, September 3, 2026. Part of the
+<a href="https://github.com/cybertronai/sutro-problems">sutro-problems</a> benchmark suite.
+</footer>
+
+</main>
+</body>
+</html>
