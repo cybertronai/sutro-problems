@@ -65,6 +65,7 @@ rejected, which admits the usual bilinear matmul algorithms.
 | 2026-05-26 |  66,400 | [ir](submissions/motif_bundle_66400.ir), [report](submissions/motif_bundle_66400.md), [py](submissions/motif_bundle_66400.py) | [@cosminscn](https://github.com/cosminscn) | late copy-schedule motif bundle + value-lifetime coloring |
 | 2026-05-28 |  66,300 | [ir](submissions/best_66300.ir), [report](submissions/best_66300.md), [py](submissions/best_66300.py) | [@cosminscn](https://github.com/cosminscn) | Claude-assisted simulated annealing over a leaderboard physical-address IR |
 | 2026-08-29 |  66,199 | [ir](submissions/best_66199.ir), [report](submissions/best_66199.md), [py](submissions/best_66199.py) | [@sigkillme0](https://github.com/sigkillme0) | dependency-safe rescheduling + exact tier allocation |
-| 2026-08-30 |  66,178 | [ir](submissions/best_66178.ir), [report](submissions/best_66178.md), [py](submissions/best_66178.py) | [@sigkillme0](https://github.com/sigkillme0) | exact LP-optimal address assignment (provably optimal for this operation order) ★ best |
+| 2026-08-30 |  66,178 | [ir](submissions/best_66178.ir), [report](submissions/best_66178.md), [py](submissions/best_66178.py) | [@sigkillme0](https://github.com/sigkillme0) | exact LP-optimal address assignment (provably optimal for this operation order) |
+| 2026-09-04 |  65,084 | [ir](submissions/best_65084.ir), [report](submissions/best_65084.md), [py](submissions/best_65084.py) | [@jurajselep](https://github.com/jurajselep) | newest-first snake passes + JIT A staging + local exact tier allocation ★ best |
 
 [access_distance](doc/access_distance/) — read-distance histograms for the plotted submission set.
