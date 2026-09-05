@@ -14,9 +14,3 @@ To add a new problem, create a new directory and add a `README.md` at its root.
 
 - [`matmul/`](matmul/) — 4x4 and 16x16 matmul
 - [`sparse-parity/`](sparse-parity/) — approximate sparse parity: recover the k secret bit positions at the lowest energy
-
-## Design notes
-
-- [The expressivity–scorability ladder](https://cybertronai.github.io/sutro-problems/docs/expressivity-scorability-ladder.html) — what a submission's generator may express (loops, recursion, index maps, modes), what each rung costs to score, and which rungs modern silicon uses
-- [Fixed or moving I/O order?](https://cybertronai.github.io/sutro-problems/docs/dataflow-io-order.html) — how data should enter a submission, which dataflow class the model already belongs to, and what fixing the I/O order costs and buys in relevance to buildable hardware
-- [Sparse parity under the spatial cost model](https://cybertronai.github.io/sutro-problems/docs/spatial-model-analysis.html) — literature anchors, and the effect of distance-priced memory on the implemented decoders
