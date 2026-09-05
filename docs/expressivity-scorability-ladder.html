@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Expressivity&ndash;Scorability Ladder</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #fcfcfb; --plane: #f9f9f7; --ink: #0b0b0b; --ink2: #52514e;
+    --muted: #898781; --grid: #e1e0d9; --line: #c3c2b7;
+    --accent: #2a78d6; --code-bg: #f2f1ed; --good: #006300; --bad: #a33a3a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a19; --plane: #0d0d0d; --ink: #ffffff; --ink2: #c3c2b7;
+      --muted: #898781; --grid: #2c2c2a; --line: #383835;
+      --accent: #3987e5; --code-bg: #242422; --good: #0ca30c; --bad: #e66767;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.65 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 52rem; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+  h1 { font-size: 1.9rem; line-height: 1.25; margin: 0 0 .4rem; }
+  .sub { color: var(--ink2); margin: 0 0 2rem; }
+  h2 { font-size: 1.35rem; margin: 2.8rem 0 .7rem; padding-top: .6rem;
+       border-top: 1px solid var(--grid); }
+  h3 { font-size: 1.05rem; margin: 1.6rem 0 .4rem; }
+  .note { color: var(--ink2); font-size: .92rem; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre { font-family: ui-monospace, "SF Mono", Menlo, monospace;
+              font-size: .88em; background: var(--code-bg); border-radius: 4px; }
+  code { padding: .1em .35em; }
+  pre { padding: .8rem 1rem; overflow-x: auto; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+  .tblwrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0;
+          font-size: .9rem; font-variant-numeric: tabular-nums; }
+  th { text-align: left; color: var(--ink2); font-weight: 600;
+       border-bottom: 1px solid var(--line); padding: .35rem .6rem .35rem 0; }
+  td { border-bottom: 1px solid var(--grid); padding: .35rem .6rem .35rem 0;
+       vertical-align: top; }
+  td.num, th.num { text-align: right; }
+  .toc { background: var(--plane); border: 1px solid var(--grid);
+         border-radius: 8px; padding: .9rem 1.2rem; font-size: .92rem; }
+  .toc a { display: inline-block; margin-right: 1.1rem; }
+  .box { background: var(--plane); border: 1px solid var(--grid);
+         border-radius: 8px; padding: .9rem 1.2rem; margin: 1rem 0; }
+  .good { color: var(--good); font-weight: 600; }
+  .bad { color: var(--bad); font-weight: 600; }
+  ol.refs { font-size: .88rem; color: var(--ink2); }
+  ol.refs li { margin-bottom: .4rem; }
+  footer { margin-top: 3.5rem; padding-top: 1rem; border-top: 1px solid var(--grid);
+           color: var(--muted); font-size: .85rem; }
+  var { font-style: italic; }
+</style>
+</head>
+<body>
+<main>
+
+<div style="text-align: right;"><a href="https://github.com/cybertronai/sutro-problems/blob/main/docs/expressivity-scorability-ladder.html" target="_blank" rel="noopener noreferrer" aria-label="View this page on GitHub">GitHub &#8599;</a></div>
+
+<h1>The expressivity&ndash;scorability ladder</h1>
+<p class="sub">What a submission&rsquo;s generator may express, what each rung costs to score,
+and which rungs modern silicon actually uses &mdash; with the design decisions for the
+episodic MNIST task. Companion to
+<a href="dataflow-io-order.html">Fixed or moving I/O order?</a> and the
+<a href="https://github.com/cybertronai/sutro-problems/pull/48">scheduled-language RFC (#48)</a>.
+September 4, 2026.</p>
+
+<nav class="toc">
+<a href="#question">The question</a>
+<a href="#tracks">Two tracks</a>
+<a href="#ladder">The ladder</a>
+<a href="#scoring">Scoring technology</a>
+<a href="#silicon">Silicon relevance</a>
+<a href="#parametric">Parametric scoring</a>
+<a href="#fetch">The fetch fork</a>
+<a href="#mnist">The MNIST task</a>
+<a href="#proscons">Decisions, pros, cons</a>
+<a href="#refs">References</a>
+</nav>
+
+<h2 id="question">1. The question</h2>
+
+<p>Submissions to the simplified Dally model are straight-line programs: no loops, no branches,
+no data-dependent addressing. That choice makes energy a <em>syntactic</em> property &mdash; the
+judge scores by reading the program, never by running it &mdash; and it is defended at length in
+the <a href="dataflow-io-order.html">I/O-order note</a>. But it has a hard consequence:
+<strong>program length is proportional to work.</strong> A 10<sup>12</sup>-operation computation
+is a 10<sup>12</sup>-line program; full-scale benchmarks are unwritable as traces (the
+&ldquo;27&nbsp;TB wall&rdquo; that motivated RFC&nbsp;#48).</p>
+
+<p>The obvious fix is to let submitters send the <em>generator</em> of the straight-line program
+rather than its expansion. The question is what the generator language may contain. Every
+construct added buys expressivity and costs scorability, and the costs arrive in a specific
+order. This note lays out that ladder, one rung at a time, and records which rungs this
+project&rsquo;s tasks stand on and why.</p>
+
+<h2 id="tracks">2. Two tracks, one principle</h2>
+
+<p>A prior distinction dissolves half the problem. There are two different reasons to want loops,
+and they get different answers:</p>
+
+<ul>
+<li><strong>Episodic-scale tasks</strong> (a few thousand stream bytes, programs under a few
+hundred thousand lines): the expansion fits in a file. Submitters may use any generator they
+like &mdash; Python, an LLM, anything Turing-complete &mdash; because <em>the organizer never
+runs it</em>. The submission is the expanded trace; the generator is the submitter&rsquo;s
+private business. This is already how the sparse-parity leaderboard works in practice: entries
+are <code>.ir</code> files produced by <code>generate_*</code> functions that live outside the
+trust boundary.</li>
+<li><strong>At-scale tasks</strong> (8192&sup3; matmul, full-dataset training): the expansion
+cannot be materialized, so the schedule itself must be the submission &mdash; and now its
+language must be restricted. The restriction motive is <strong>scorability, not
+sandboxing</strong>: the judge must be able to compute the expansion&rsquo;s exact energy
+without expanding it.</li>
+</ul>
+
+<div class="box">
+<strong>The principle:</strong> generators are unrestricted wherever the expansion is scored,
+and restricted exactly where the schedule is scored. Loops are never a semantic addition to the
+machine &mdash; the machine stays a circuit &mdash; they are a compression format for circuits,
+and the question is which compression formats admit O(1) cost evaluation.
+</div>
+
+<h2 id="ladder">3. The ladder</h2>
+
+<div class="tblwrap">
+<table>
+<tr><th>Rung</th><th>Generator may contain</th><th>Scoring</th><th>Unlocks</th><th>Silicon analogue</th></tr>
+<tr><td>a</td><td>nothing (straight-line trace)</td><td class="good">O(L) summation</td><td>episodic-scale tasks</td><td>a circuit; an unrolled datapath</td></tr>
+<tr><td>b</td><td><strong>affine loop nests</strong>: static bounds, affine index expressions</td><td class="good">closed form (&sect;4)</td><td>GEMM, convolution, dense transformer forward/backward</td><td>the polyhedral model; MLIR affine dialect; Halide schedules; Timeloop mappings</td></tr>
+<tr><td>c</td><td>+ <strong>static recursion</strong>: divide-and-conquer with compile-time depth</td><td class="good">recurrence relations</td><td><strong>Strassen</strong>, recursive FFT, fractal tiling</td><td>cache-oblivious algorithms; RFC&nbsp;#48&rsquo;s die &rarr; cluster &rarr; register tiling</td></tr>
+<tr><td>d</td><td>+ <strong>static bijective index maps</strong> from a fixed library: bit-reversal, stride permutations, XOR offsets</td><td class="good">free (&sect;4, permutation invariance)</td><td>FFT butterflies, bitonic sorting networks, shuffle exchanges</td><td>butterfly/omega networks; warp shuffles</td></tr>
+<tr><td>e</td><td>+ <strong>modes</strong>: a data-dependent selector among <var>k</var> static schedules</td><td>worst-case over modes stays static; expected-case needs measured frequencies</td><td>mixture-of-experts routing with a capacity factor; early-exit ensembles</td><td>coarse-grained predication; MoE routers</td></tr>
+<tr><td>f</td><td>+ <code>while</code> / data-dependent trip counts</td><td class="bad">undecidable &mdash; simulation only</td><td>convergence-based iteration (&ldquo;train until loss &lt; &epsilon;&rdquo;)</td><td>dynamic scheduling &mdash; the overhead the cost model exists to indict</td></tr>
+</table>
+</div>
+
+<p>The cliff is between (e) and (f), and it is a theorem, not a taste: once trip counts depend on
+data, boundedness &mdash; and with it cost &mdash; is undecidable (Buck). Rungs (a)&ndash;(d)
+preserve exact, closed-form, execution-free scoring; rung (e) preserves it in the worst-case
+reading; rung (f) does not preserve it in any reading.</p>
+
+<h2 id="scoring">4. Scoring technology, rung by rung</h2>
+
+<p><strong>(b) Affine nests.</strong> Every operand read inside an affine nest has address
+<var>b</var> + <var>s</var><sub>1</sub><var>i</var><sub>1</sub> + &hellip; +
+<var>s</var><sub>d</sub><var>i</var><sub>d</sub> over a product of static ranges, so total read
+cost is a sum of &lceil;&radic;x&rceil; over arithmetic progressions. That sum evaluates in O(1)
+per (loop, operand) pair via the closed-form antiderivative of &lceil;&radic;x&rceil; &mdash;
+the mechanism of RFC&nbsp;#48, cross-validated bit-exact against the trace scorer on every
+expandable program. Judge time is microseconds at any scale.</p>
+
+<p><strong>(c) Static recursion.</strong> Cost obeys the recurrence the recursion defines:
+<var>C</var>(<var>n</var>) = <var>a</var>&middot;<var>C</var>(<var>n</var>/<var>b</var>) +
+<var>f</var>(<var>n</var>) with a straight-line base case, unrolled numerically in
+O(log&nbsp;<var>n</var>) steps since depth is compile-time. Nothing is estimated; the recurrence
+is exact.</p>
+
+<p><strong>(d) Bijective maps.</strong> The observation that makes this rung free: if
+&sigma; is a bijection on a static range, then
+&Sigma;&nbsp;&lceil;&radic;&sigma;(i)&rceil; = &Sigma;&nbsp;&lceil;&radic;i&rceil; &mdash;
+permuting which iteration touches which address cannot change the multiset of addresses touched.
+Bit-reversal, stride permutation and XOR indexing therefore cost exactly what the identity map
+costs, and FFT and bitonic networks score as cheaply as dense loops. The verifier&rsquo;s
+obligation is only to check bijectivity, which is why the maps come from a fixed library rather
+than as arbitrary expressions: for the library members bijectivity is a lemma, not an analysis.</p>
+
+<p><strong>(e) Modes.</strong> Score each of the <var>k</var> schedules statically. Charging the
+<em>maximum</em> keeps the score execution-free and gives hardware-honest semantics (provision
+for the worst path); charging the <em>expectation</em> requires measured selection frequencies
+from adjudication data and should be deferred until a task actually needs it. Reserving the
+syntax now costs one paragraph; retrofitting it later costs a redesign.</p>
+
+<h2 id="silicon">5. Is the restriction relevant to modern silicon?</h2>
+
+<p>Three observations say the static-bounds restriction is not a toy simplification but the
+constraint production ML compilers already live under:</p>
+
+<ul>
+<li><strong>XLA lives on rung (b)&ndash;(c).</strong> TPU compilation requires static shapes and
+static trip counts; training steps compile to fixed-length loops; dynamic shapes are the
+documented exception, not the rule. CUDA Graphs likewise capture a fixed kernel DAG and replay
+it. The generator language proposed here imposes on submitters what these toolchains impose on
+themselves.</li>
+<li><strong>The polyhedral school is rung (b) as a research field.</strong> Affine loop nests
+with static bounds are precisely the domain of polyhedral compilation (Pluto, MLIR&rsquo;s
+affine dialect), of Halide&rsquo;s algorithm/schedule split, and of Timeloop&rsquo;s mapping
+spaces &mdash; the standard vocabulary for describing how accelerators walk loop nests. A
+schedule submission in this language is legible to anyone in that community on sight.</li>
+<li><strong>Rung (c) is required for honesty about matmul.</strong> Affine nests alone cannot
+express Strassen &mdash; recursion with additions at each level is structurally outside a single
+nest &mdash; and an energy leaderboard for matrix multiplication that cannot express the
+sub-cubic algorithms would prejudge the very question it poses. Recursive tiling is also how
+RFC&nbsp;#48 maps schedules onto the physical hierarchy, so the construct pays twice.</li>
+</ul>
+
+<p>What rungs (a)&ndash;(d) still cannot express is data-dependent <em>work</em>: unstructured
+sparsity harvesting, adaptive sampling, convergence tests. That exclusion is deliberate and
+priced (see the closed/open division argument in the
+<a href="dataflow-io-order.html">I/O-order note</a>); rung (e) is the reserved escape hatch for
+the commercially important middle case (MoE with a fixed capacity factor), and rung (f) belongs
+to an open division scored by simulation at small scale.</p>
+
+<h2 id="parametric">6. What generators buy beyond feasibility: parametric scoring</h2>
+
+<p>A trace has one size. A schedule with the problem size as a formal parameter has a cost
+<em>formula</em>: energy as a function of <var>n</var>, evaluated exactly at any size without
+re-scoring. Two consequences:</p>
+
+<ul>
+<li><strong>Floors at every size.</strong> Known lower bounds (red&ndash;blue pebbling for dense
+linear algebra I/O; the &Omega;(<var>n</var>&sup3;/&radic;<var>M</var>) family) are also
+formulas in <var>n</var>. A parametric submission can be reported as a <em>ratio to the floor
+across the whole size range</em> &mdash; &ldquo;3.4&times; above the pebbling bound at every
+<var>n</var>&rdquo; &mdash; which is a categorically stronger statement than a point
+comparison at one size.</li>
+<li><strong>Asymptotic honesty.</strong> Whether a trick&rsquo;s advantage grows, shrinks or
+vanishes with scale is visible in the formula. Trace leaderboards systematically overfit
+constants at the benchmarked size; parametric ones cannot hide the exponent.</li>
+</ul>
+
+<h2 id="fetch">7. The instruction-fetch fork</h2>
+
+<p>A separate design note&rsquo;s red-team result forces one refinement. If program text is
+unpriced, the instruction stream is free ROM: a lookup table encoded as immediates costs
+&Theta;(K) tiny units instead of the &Theta;(K<sup>3/2</sup>) that the same table pays in priced
+memory, so memorization is priced <em>linearly</em> rather than priced <em>out</em>. The fix is
+to charge instruction fetch. Precedent: the Hutter Prize has counted the decompressor&rsquo;s
+size in the score for twenty years; and fetch/decode overhead dominating arithmetic is the
+canonical energy argument for specialization in the first place &mdash; a cost model with free
+fetch contradicts its own thesis.</p>
+
+<p>But the ladder splits the right charge in two, and this is a genuine fork with physics on both
+sides:</p>
+
+<div class="tblwrap">
+<table>
+<tr><th>Track</th><th>Charge</th><th>What it models</th><th>Why</th></tr>
+<tr><td>Episodic (trace)</td><td>~1 unit per <em>executed</em> line</td><td>a scalar core fetching every instruction</td><td>kills table-bombs: a 720k-line memorizer pays +720k, an honest ~10k-line program pays noise; also lets the line cap drop to ~200k and stop being load-bearing</td></tr>
+<tr><td>At-scale (schedule)</td><td>per <em>static</em> line + a small per-iteration term</td><td>an instruction cache / loop buffer amortizing fetch over trips</td><td>real accelerators amortize instruction overhead across loops and SIMD width &mdash; that amortization is the argument <em>for</em> specialization, so the schedule track should reward exactly it</td></tr>
+</table>
+</div>
+
+<p>Two constants, one per track, each stated with its physical reading. Leaving fetch unpriced
+is the one option the red-team result forecloses.</p>
+
+<h2 id="mnist">8. Where the episodic MNIST task stands on the ladder</h2>
+
+<p>The proposed MNIST task (in design; parameters from a separate empirical calibration) is
+deliberately a <strong>rung-(a) competition</strong>: 10-way 4-shot episodes at 8&times;8
+grayscale arrive as a ~3,240-byte stream through the ports defined in the
+<a href="dataflow-io-order.html">I/O-order note</a>; a submission is an expanded trace of at
+most ~200,000 lines with per-executed-line fetch pricing; energy is a static property of the
+text. Consequences of that placement:</p>
+
+<ul>
+<li><strong>No schedule language is needed at all.</strong> Submitters generate with whatever
+they like; the barrier to entry is a text file of thirteen opcodes plus <code>recv</code>/<code>send</code>.
+This serves the goal of a simple competition more than any language feature could.</li>
+<li><strong>The interesting algorithms fit.</strong> An honest nearest-centroid or 1-NN
+episode program is ~10&ndash;30k lines &mdash; an order of magnitude under the cap &mdash; and
+the measured strategy spread (majority 10% &rarr; linear ~54% &rarr; centroid ~56% at 32
+examples, against a ~93% resolution ceiling) leaves room for genuinely smarter circuits.</li>
+<li><strong>Scale is someone else&rsquo;s rung by design.</strong> Full-dataset MNIST training
+(~4.7&times;10<sup>7</sup> input bytes) is exactly where the trace format dies and rungs
+(b)&ndash;(d) take over; that is the scheduled-language track of RFC&nbsp;#48, and the episodic
+task is its calibration corpus, not its competitor.</li>
+</ul>
+
+<h2 id="proscons">9. The decisions, with their pros and cons</h2>
+
+<div class="tblwrap">
+<table>
+<tr><th>Decision</th><th>Pro</th><th>Con</th><th>Verdict</th></tr>
+<tr><td>Trace submissions for episodic tasks</td><td>simplest possible entry; any offline generator; organizer never runs submitted code</td><td>caps scale; program length &prop; work</td><td class="good">keep, with fetch pricing</td></tr>
+<tr><td>Affine nests only, at scale</td><td>closed-form scoring; polyhedral legibility</td><td>cannot express Strassen, FFT, sorting networks</td><td class="bad">insufficient alone</td></tr>
+<tr><td>+ static recursion</td><td>Strassen and fractal tiling; exact recurrence scoring</td><td>more scorer code; recursion depth must be compile-time</td><td class="good">add</td></tr>
+<tr><td>+ bijective index-map library</td><td>FFT/bitonic score for free (permutation invariance)</td><td>library must be curated; arbitrary index expressions stay banned</td><td class="good">add as a fixed library</td></tr>
+<tr><td>+ modes (data-dependent selector)</td><td>expresses MoE-with-capacity-factor; worst-case reading stays static</td><td>expected-case scoring needs measured frequencies; enlarges spec</td><td>reserve syntax now, score worst-case, implement when a task needs it</td></tr>
+<tr><td><code>while</code> / data-dependent bounds</td><td>convergence-based training; adaptive methods</td><td>cost undecidable; scoring requires execution on data</td><td class="bad">open division only</td></tr>
+<tr><td>Charge instruction fetch</td><td>prices memorization out; Hutter precedent; consistent with the fetch-overhead thesis</td><td>two constants to justify; episodic and schedule tracks need different readings</td><td class="good">adopt, one constant per track</td></tr>
+</table>
+</div>
+
+<p>Summarized in one sentence: <strong>the machine stays a circuit at every rung; loops,
+recursion and index maps are compression formats for circuits, admitted exactly as far as
+compression stays exactly scorable; and the one construct that would make cost depend on data is
+the one construct excluded from the closed division.</strong></p>
+
+<h2 id="refs">10. References</h2>
+
+<ol class="refs">
+<li>RFC #48, &ldquo;The Scheduled Dally Language,&rdquo; this repository &mdash; hierarchical affine schedules, recursive tiling, closed-form read-cost summation.</li>
+<li>&ldquo;Fixed or moving I/O order?&rdquo; &mdash; companion note: stream ports, determinacy, the closed/open division split.</li>
+<li>J. T. Buck, &ldquo;Scheduling dynamic dataflow graphs with bounded memory using the token flow model,&rdquo; PhD thesis, UC Berkeley, 1993 &mdash; undecidability past static rates.</li>
+<li>U. Bondhugula et al., &ldquo;A practical automatic polyhedral parallelizer and locality optimizer&rdquo; (Pluto), PLDI 2008.</li>
+<li>C. Lattner et al., &ldquo;MLIR: Scaling compiler infrastructure for domain specific computation,&rdquo; CGO 2021 &mdash; the affine dialect.</li>
+<li>J. Ragan-Kelley et al., &ldquo;Halide: a language and compiler for optimizing parallelism, locality, and recomputation in image processing pipelines,&rdquo; PLDI 2013 &mdash; the algorithm/schedule split.</li>
+<li>A. Parashar et al., &ldquo;Timeloop: A systematic approach to DNN accelerator evaluation,&rdquo; ISPASS 2019 &mdash; mappings as first-class scored artifacts.</li>
+<li>V. Strassen, &ldquo;Gaussian elimination is not optimal,&rdquo; Numerische Mathematik 13, 1969.</li>
+<li>J. Cooley and J. Tukey, &ldquo;An algorithm for the machine calculation of complex Fourier series,&rdquo; Math. Comp. 19, 1965.</li>
+<li>K. Batcher, &ldquo;Sorting networks and their applications,&rdquo; AFIPS 1968.</li>
+<li>M. Frigo, C. Leiserson, H. Prokop, S. Ramachandran, &ldquo;Cache-oblivious algorithms,&rdquo; FOCS 1999 &mdash; static divide-and-conquer as the hierarchy-friendly discipline.</li>
+<li>J.-W. Hong and H. T. Kung, &ldquo;I/O complexity: the red-blue pebble game,&rdquo; STOC 1981.</li>
+<li>A. Aggarwal, B. Alpern, A. Chandra, M. Snir, &ldquo;A model for hierarchical memory,&rdquo; STOC 1987 &mdash; the distance-priced RAM (HMM) this cost model instantiates with f(a) = &lceil;&radic;a&rceil;.</li>
+<li>W. J. Dally, &ldquo;On the model of computation: point,&rdquo; CACM 65(9), 2022 &mdash; fetch/decode overhead as the energy argument for specialization.</li>
+<li>M. Hutter, the Hutter Prize (prize.hutter1.net) &mdash; program size counted in the score.</li>
+<li>OpenXLA / TensorFlow XLA documentation &mdash; static shapes and trip counts as compilation requirements; NVIDIA CUDA Graphs &mdash; captured static kernel DAGs.</li>
+<li>N. Shazeer et al., &ldquo;Outrageously large neural networks: the sparsely-gated mixture-of-experts layer,&rdquo; ICLR 2017; W. Fedus et al., &ldquo;Switch Transformers,&rdquo; JMLR 2022 &mdash; capacity-factor routing, the rung-(e) target.</li>
+<li>C. Yadav and L. Bottou, &ldquo;Cold case: the lost MNIST digits&rdquo; (QMNIST), NeurIPS 2019 &mdash; the held-out adjudication pool for the episodic task.</li>
+<li>S. Greydanus and D. Kobak, &ldquo;Scaling down deep learning with MNIST-1D,&rdquo; ICML 2024 &mdash; procedural generation as a memorization defense.</li>
+</ol>
+
+<footer>
+Design note, September 4, 2026. Part of the
+<a href="https://github.com/cybertronai/sutro-problems">sutro-problems</a> benchmark suite.
+</footer>
+
+</main>
+</body>
+</html>
