@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Grid VM: Competition Design and Feasibility</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #fcfcfb; --plane: #f9f9f7; --ink: #0b0b0b; --ink2: #52514e;
+    --muted: #898781; --grid: #e1e0d9; --line: #c3c2b7;
+    --accent: #2a78d6; --code-bg: #f2f1ed; --good: #006300; --bad: #a33a3a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a19; --plane: #0d0d0d; --ink: #ffffff; --ink2: #c3c2b7;
+      --muted: #898781; --grid: #2c2c2a; --line: #383835;
+      --accent: #3987e5; --code-bg: #242422; --good: #0ca30c; --bad: #e66767;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.65 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 52rem; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+  h1 { font-size: 1.9rem; line-height: 1.25; margin: 0 0 .4rem; }
+  .sub { color: var(--ink2); margin: 0 0 2rem; }
+  h2 { font-size: 1.35rem; margin: 2.8rem 0 .7rem; padding-top: .6rem;
+       border-top: 1px solid var(--grid); }
+  h3 { font-size: 1.05rem; margin: 1.6rem 0 .4rem; }
+  .note { color: var(--ink2); font-size: .92rem; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre { font-family: ui-monospace, "SF Mono", Menlo, monospace;
+              font-size: .88em; background: var(--code-bg); border-radius: 4px; }
+  code { padding: .1em .35em; }
+  pre { padding: .8rem 1rem; overflow-x: auto; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+  .tblwrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0;
+          font-size: .9rem; font-variant-numeric: tabular-nums; }
+  th { text-align: left; color: var(--ink2); font-weight: 600;
+       border-bottom: 1px solid var(--line); padding: .35rem .6rem .35rem 0; }
+  td { border-bottom: 1px solid var(--grid); padding: .35rem .6rem .35rem 0;
+       vertical-align: top; }
+  td.num, th.num { text-align: right; }
+  .toc { background: var(--plane); border: 1px solid var(--grid);
+         border-radius: 8px; padding: .9rem 1.2rem; font-size: .92rem; }
+  .toc a { display: inline-block; margin-right: 1.1rem; }
+  .box { background: var(--plane); border: 1px solid var(--grid);
+         border-radius: 8px; padding: .9rem 1.2rem; margin: 1rem 0; }
+  .good { color: var(--good); font-weight: 600; }
+  .bad { color: var(--bad); font-weight: 600; }
+  ol.refs { font-size: .88rem; color: var(--ink2); }
+  ol.refs li { margin-bottom: .4rem; }
+  footer { margin-top: 3.5rem; padding-top: 1rem; border-top: 1px solid var(--grid);
+           color: var(--muted); font-size: .85rem; }
+  var { font-style: italic; }
+</style>
+</head>
+<body>
+<main>
+
+<div style="text-align: right;"><a href="https://github.com/cybertronai/sutro-problems/blob/main/docs/grid-vm-competition-design.html" target="_blank" rel="noopener noreferrer" aria-label="View this page on GitHub">GitHub &#8599;</a></div>
+
+<h1>The Grid VM: competition design and feasibility</h1>
+<p class="sub">A concrete design for the rung-(a)&ndash;(e) machine &mdash; language, scoring
+function, adjudication protocol &mdash; and what it costs to judge episodic MNIST at three
+tiers on a laptop. Companion to
+<a href="expressivity-scorability-ladder.html">the expressivity&ndash;scorability ladder</a>
+and <a href="dataflow-io-order.html">Fixed or moving I/O order?</a>
+September 4, 2026.</p>
+
+<nav class="toc">
+<a href="#brief">The brief</a>
+<a href="#routes">Three routes</a>
+<a href="#stack">The stack</a>
+<a href="#language">The language</a>
+<a href="#scoring">Scoring</a>
+<a href="#adjudication">Adjudication</a>
+<a href="#weights">Embedded weights</a>
+<a href="#judgecost">Judge cost</a>
+<a href="#magnitudes">Magnitudes</a>
+<a href="#targets">Targets</a>
+<a href="#decisions">Open decisions</a>
+<a href="#refs">References</a>
+</nav>
+
+<h2 id="brief">1. The brief, and how this note was produced</h2>
+
+<p>The <a href="expressivity-scorability-ladder.html">ladder note</a> ends with a decision:
+take the generator language all the way down to rung (e) &mdash; straight-line code, affine
+loop nests, static recursion, a bijective index-map library, and data-dependent
+<em>modes</em> &mdash; on a von Neumann machine: one sequential control unit at the origin of
+a 2-D grid of byte cells (1&nbsp;&micro;m pitch, 1&nbsp;fJ per byte-micron moved,
+<var>c</var>/160 propagation), one serial input port, one serial output port. The task is
+episodic MNIST at three tiers &mdash; 3&times;3 images with 600 train / 600 test, 9&times;9
+with 6,000/6,000, 28&times;28 with 60,000/60,000 (QMNIST supplying the extras) &mdash;
+resampled from the pooled corpus at every evaluation. The harness streams the training set
+(images and labels &mdash; whether blocked or interleaved per example is itself a scoring
+lever, decision D6 of &sect;11), then the test images; the program must emit test-label
+predictions through the output port; a fixed accuracy target gates entry, and separate
+leaderboards rank <b>energy</b>, <b>time</b>, and <b>area</b>.</p>
+
+<div class="box"><p class="note" style="margin:0"><b>Provenance.</b> This note synthesizes a
+fourteen-agent design run: four independent design artifacts (an assembly-level language, a
+structured DSL, a reuse-existing-technology survey, and a formal scoring-function spec) and
+three quantitative estimates (competitor-side magnitudes, judge-side cost, red-team), each
+followed by an adversarial reviewer instructed to break it. Reviewers re-derived every
+load-bearing number; several accuracy claims were <em>measured</em> on real MNIST episodes
+rather than estimated, and two of those measurements overturned draft recommendations
+(&sect;10). Findings that survived review are stated plainly; corrections are attributed
+where they changed a conclusion.</p></div>
+
+<h2 id="routes">2. Three implementation routes</h2>
+
+<p><b>Route A &mdash; assembly level (&ldquo;GridASM&rdquo;).</b> Flat opcode text, a strict
+superset of today&rsquo;s trace IR, plus structured <code>repeat</code>/<code>proc</code>/<code>mode</code>
+blocks. The address <em>is</em> the cost: every line&rsquo;s price is visible to the writing
+LLM and the reviewing human, and no compiler sits inside the trust boundary. Its review
+found the continuity claim overstated &mdash; once ports are priced, legacy free-input
+records are not score-comparable anyway &mdash; and tier-3 networks in hand-placed assembly
+are laborious.</p>
+
+<p><b>Route B &mdash; structured DSL.</b> Placed arrays
+(<code>place W : i8[10][9] at (4,0)</code>), affine <code>for</code>, recursive
+<code>def</code>s with compile-time <code>size</code> parameters (compile-time-ness enforced
+by a <em>kind system</em>, not analysis &mdash; <code>if</code> may only test
+<code>size</code> expressions, so it is specialization, not branching), <code>mode</code>
+blocks, <code>recv()/send</code>. The DSL lowers to a one-page Schedule IR; the lowering is
+untrusted, and the SIR is the scored artifact, differentially tested by expanding to traces
+at tiny sizes &mdash; the RFC&nbsp;#48 methodology.</p>
+
+<p><b>Route C &mdash; reuse survey.</b> The decisive negative result: <em>no existing system
+computes this scoring function</em>, so reuse only ever buys the front end. MLIR&rsquo;s
+affine dialect is the right vocabulary but an unacceptable dependency (a multi-GB LLVM build
+to parse 40-line files); Halide and TVM cannot express static recursion, and a matmul
+leaderboard that cannot express Strassen prejudges its own question; WebAssembly and RISC-V
+solve a sandboxing problem this design does not have (the only native code that ever runs is
+emitted by the judge itself from the validated schedule, so Wasm&rsquo;s sandbox buys nothing)
+while creating a polyhedral-raising problem it cannot afford. The winner
+inside route C: an <b>embedded Python builder library emitting canonical schedule text</b>.
+Agents author in Python with eager validation &mdash; a non-affine index is a
+<code>TypeError</code> on the submitter&rsquo;s machine &mdash; and the judge parses only the
+text. This formalizes what the repo already does with <code>generate_*()</code> functions.</p>
+
+<div class="tblwrap"><table>
+<tr><th>Route</th><th>Trust boundary</th><th>LLM writability</th><th>Rung enforcement</th><th>Verdict</th></tr>
+<tr><td>A: GridASM</td><td>submitted text only</td><td>error-prone address arithmetic</td><td>grammar</td><td>keep as the SIR level</td></tr>
+<tr><td>B: structured DSL</td><td>SIR; lowering untrusted</td><td>good (restricted C shape)</td><td>kind system + grammar</td><td>adopt surface ideas</td></tr>
+<tr><td>C: reuse</td><td>&mdash;</td><td>Python builder: best available</td><td><b>by construction</b></td><td>adopt authoring layer</td></tr>
+</table></div>
+
+<h2 id="stack">3. The recommended stack</h2>
+
+<p>Converge B and C: a <b>Python builder</b> (authoring layer, outside the trust boundary)
+emits a <b>canonical schedule text</b> styled after MLIR-affine notation (the reviewed and
+scored artifact), consumed by a <b>Rust judge</b> of roughly 2&ndash;3k new lines atop
+dally-eval. In every route surveyed, the grammar itself is the rung enforcement:
+<code>while</code> is unrepresentable &mdash; verification by absence, the cheapest verifier
+there is. Hand-written schedule text remains a legal submission, so the trace-tuning culture
+is not orphaned. Tier-1 flavor of the scored text:</p>
+
+<pre><code>schedule tier1_centroid          # episodic MNIST tier 1 (3x3, 600/600)
+                                 # assumes per-example interleaved train records (D6);
+                                 # blocked framing instead forces retaining all 5.4 kB
+                                 # of train images until the labels arrive
+param NTRAIN=600, NTEST=600, P=9, K=10
+alloc img : u8[P]      @ 2       # current example, hottest cells
+alloc cnt : u16[K]     @ 16
+alloc sum : u16[K,P]   @ 40
+
+for t in 0..NTRAIN:
+  for p in 0..P: recv img[p]
+  recv lbl
+  mode lbl -&gt; c in 0..K:         # rung (e): the label routes the update
+    add  cnt[c], cnt[c], 1
+    for p in 0..P: add sum[c,p], sum[c,p], img[p]
+
+# ... centroids, then classify the test stream, send NTEST predictions
+</code></pre>
+
+<p>The <code>mode</code> here is load-bearing, not decorative: labels index accumulators,
+which pure rung (b) can only emulate by touching all <var>K</var> classes with indicator
+multiplies &mdash; several times the energy of one dispatched arm.</p>
+
+<h2 id="language">4. The language: constructs and the four load-bearing constraints</h2>
+
+<div class="tblwrap"><table>
+<tr><th>Construct</th><th>Rung</th><th>Scoring mechanism</th></tr>
+<tr><td>~13 trace opcodes + <code>recv</code>/<code>send</code></td><td>(a)</td><td>O(L) summation; identical to trace track</td></tr>
+<tr><td><code>for i in 0..N</code>, affine indices</td><td>(b)</td><td>closed-form lattice sums (&sect;5)</td></tr>
+<tr><td><code>def f[n: size](views&hellip;)</code>, decreasing measure</td><td>(c)</td><td>memoized recurrence over the instance DAG</td></tr>
+<tr><td><code>bitrev</code>, <code>stride</code> (gcd 1), <code>xorc</code> library</td><td>(d)</td><td>free: address multiset invariant</td></tr>
+<tr><td><code>mode sel -&gt; c in 0..K</code></td><td>(e)</td><td>worst case over arms, priced dispatch</td></tr>
+</table></div>
+
+<p>Adversarial review produced four constraints that must be in the v1 grammar &mdash; each
+has a concrete exploit or a scoring breakdown without it:</p>
+
+<ol>
+<li><b>Port balance.</b> Every arm of every mode must have identical (recv, send) counts.
+Necessity: one unbalanced selector makes the number of consumed stream bytes data-dependent,
+and every later <code>recv</code> then reads a data-dependent tape position &mdash;
+Boolean-dataflow territory, the undecidable side of
+<a href="dataflow-io-order.html">the I/O-order note&rsquo;s</a> cliff. Sufficiency: by
+induction on block structure, balanced modes keep whole-program (recv, send) counts static,
+so every recv&rsquo;s tape index is fixed and all scoring stays execution-free.</li>
+<li><b>Mode dispatch must be priced</b> &mdash; as a read at distance
+&lceil;&radic;(total static bytes of all arms)&rceil;. Unpriced, a nested 512-leaf mode is a
+free associative memory: a hardcoded pattern&rarr;label table wins the tier-1 energy board
+50&ndash;100&times; over honest centroid. This is the ladder&rsquo;s &sect;7 ROM attack
+tunneling through control flow; the price restores the &radic;<var>K</var>-per-access
+discipline of priced memory. Cap total arms (~64) and nesting (&le;3).</li>
+<li><b>Index maps are banned inside mode arms.</b> Max-over-arms does not commute with the
+permutation-invariance rewrite; a four-iteration counterexample undercharges 8&nbsp;&rarr;&nbsp;5.
+(Outside arms the invariance is exact and maps stay free.)</li>
+<li><b>Recursion must be offset-affine.</b> Per-instance cost must be affine in the view
+base offset, propagated as (<var>a</var>,&nbsp;<var>b</var>) coefficient vectors through the
+instance DAG. Na&iuml;ve &ldquo;memoize on the size tuple&rdquo; is wrong: Strassen at 8192
+has ~14 memo nodes but 7<sup>13</sup>&nbsp;&asymp;&nbsp;10<sup>11</sup> call sites at
+distinct offsets.</li>
+</ol>
+
+<p class="note">Semantics that must be pinned before anyone writes a program (every worked
+example produced during the design run had at least one overflow bug until these were fixed):
+<code>u8/i16/i32</code> widths as adjacent cells, little-endian; wrap mod 256 (two&rsquo;s
+complement); widen-before-op; <code>x/0 = 0</code>; all cells zero at program start; one
+fresh run per episode (no cross-episode state); out-of-range mode selector traps and the
+episode scores zero; blocking <code>recv</code> only &mdash; no emptiness test, no clock.</p>
+
+<h2 id="scoring">5. The scoring function</h2>
+
+<p><b>Distance metric.</b> Cells are 2-D; distance is <b>Chebyshev</b>,
+d(<var>x</var>,<var>y</var>) = max(<var>x</var>,<var>y</var>). Roughly <var>c</var>&sup2;
+cells lie within cost <var>c</var>, reproducing the 1-D model&rsquo;s
+&lceil;&radic;<var>a</var>&rceil; shells &mdash; roughly, because the boundary counts differ
+(the quadrant shell holds 2<var>c</var>+1 cells against the 1-D shell&rsquo;s
+2<var>c</var>&minus;1), which is why a canonical <code>lin(a)</code> embedding published with
+the spec, not a slogan, is normative for legacy-compatible 1-D addressing. The payoff: max of affine coordinates is piecewise-affine,
+so rung-(b) sums become lattice sums of affine forms rather than &radic;-staircases.</p>
+
+<p><b>Energy.</b>
+E = &Sigma;<sub>reads</sub> d(p)
+&nbsp;+&nbsp; 4&nbsp;fJ &middot; static lines &nbsp;+&nbsp; 0.1&ndash;1&nbsp;fJ &middot; issued instructions
+&nbsp;+&nbsp; n<sub>recv</sub>&middot;E<sub>in</sub>
+&nbsp;+&nbsp; &Sigma;<sub>sends</sub> (d(s) + E<sub>out</sub>).
+Writes are free in v1 (the write of op <var>k</var> is typically the read of op
+<var>k</var>&prime;; the calibration constant absorbs the round trip) &mdash; owner decision
+D2. The per-issued-instruction fetch floor is load-bearing: with a per-iteration-only charge,
+compute parked at the origin becomes essentially free and the episodic track&rsquo;s
+executed-line floor vanishes. <b>E<sub>in</sub> matters enormously and 1,000&nbsp;fJ is
+wrong:</b> the I/O-order note&rsquo;s own resident-vs-restream break-even sits at
+&asymp;4.6&times;10&sup3;&nbsp;fJ/byte, and DRAM-interface figures run higher still.
+Recommendation: <b>E<sub>in</sub> = E<sub>out</sub> &asymp; 5,000 fJ</b>, fixed and published
+before launch &mdash; it sets the economics of every attack in &sect;7.</p>
+
+<p><b>Closed forms, honestly stated.</b> Single-variable progressions use the
+&lceil;&radic;&rceil; antiderivative of RFC&nbsp;#48. Multi-coefficient affine addresses
+give <em>quasi</em>-polynomials with floor-sum corrections (Ehrhart of rational polytopes),
+not pure polynomials &mdash; still exact and fast via banded lattice counting,
+O(&radic;A<sub>max</sub>) bands &asymp; 10<sup>4</sup> integer evaluations at
+A<sub>max</sub> = 10<sup>8</sup> &mdash; but the spec must name the floor-sum evaluator as
+normative rather than claim &ldquo;O(1) polynomial.&rdquo; Recursion scores by the memoized
+recurrence over offset-affine instances (&sect;4.4). Modes score
+&Sigma;<sub>encounters</sub> max<sub>arm</sub>, composed inside-out through loops; where arm
+cost depends on enclosing indices, the judge enumerates encounters up to 10<sup>6</sup>,
+beyond which arms must be cost-balanced &mdash; a declared v1 restriction, not a silent
+one.</p>
+
+<p><b>Time (v1): sequential issue.</b>
+T = N<sub>issued</sub> &middot; 1&nbsp;ns + &Sigma; d(p)/1.875&nbsp;&micro;m&middot;ns<sup>&minus;1</sup>
++ port terms. Same summation engine as energy, closed-form at every rung, bijection-invariant.
+The honest consequence: TIME correlates with ENERGY and tier-3 sequential time is measured in
+<em>days</em> (&sect;9) &mdash; the leaderboards diverge only through the port and fetch
+weightings, and the issue/flight-overlap rule must be stated explicitly.
+<b>Time (v2): dataflow critical path</b> &mdash; affine schedules via Karp&ndash;Miller&ndash;Winograd,
+a small LP per nest, max-plus recurrences for recursion &mdash; is well-posed and closed-form,
+but bijection invariance <em>fails</em> there (a bit-reversal stretches wires; physically
+real), so library maps would need per-map dilation lemmas. Run v2 as a separately-scored
+spatial division; do not blend it into v1.</p>
+
+<p><b>Area.</b> Origin-anchored bounding square of touched cells, in &micro;m&sup2;
+(touched-cell <em>count</em> is gameable by scatter). Union over mode arms &mdash; hardware
+provisions every arm. Max of an affine form over a box sits at a corner:
+O(2<sup>d</sup>) evaluations per operand.</p>
+
+<h2 id="adjudication">6. Adjudication: running the program for accuracy</h2>
+
+<p>Cost scoring never executes anything; accuracy requires actually running the program on
+resampled episodes. The executor is an <b>embedded Cranelift JIT</b> in a prebuilt universal
+judge binary (no toolchain needed on the judge laptop; the switch-dispatch interpreter is
+retained as a differential-testing oracle, and transpile-to-C via the macOS CLT clang is the
+fallback). Loops, recursion and modes emit as native loops, functions and bounds-checked
+switches; the grid is a lazily-zeroed mmap sized by the area bound.</p>
+
+<p><b>Fuel is free.</b> For rungs (a)&ndash;(e) the executed-op count is itself closed-form
+(static trip counts; worst arm for modes), so over-budget submissions are rejected
+<em>without being run</em> &mdash; evaluation denial-of-service is structurally impossible. A
+per-block runtime fuel counter (&lt;1% overhead) remains as defense-in-depth against judge
+bugs.</p>
+
+<p><b>Episode protocol.</b> Seeds are derived, not drawn &mdash; but keyed:
+seed<sub>j</sub> = SHA-256(<b>server secret</b> &Verbar; submission bytes &Verbar; tier &Verbar; j).
+Without the secret term a submitter simulates all episodes offline and ships the answer
+sequence as immediates &mdash; 100% accuracy at near-zero energy; this was found as a fatal
+hole in the first draft of the spec. Pooled accuracy over K episodes against the target,
+with train/test disjoint within each episode and exactly n<sub>test</sub> sends required.
+Per-episode binomial noise is &plusmn;2.0 / &plusmn;0.5 / &plusmn;0.09 percentage points at
+the three tiers, and one dead <code>set</code> line yields 256 minable seeds worth
++5.5&nbsp;pp at K=1 on tier 1 &mdash; so <b>K = 50 / 10 / 3</b> per tier, which shrinks the
+mined maximum to about +0.8&nbsp;pp at tier 1 while costing the judge nothing material
+(&sect;8).</p>
+
+<h2 id="weights">7. The embedded-weights decision</h2>
+
+<p>The red team&rsquo;s central finding: <b>the attack that defines this competition is not a
+scoring exploit but a training-data exploit.</b> The pool is public; a submitter pretrains
+offline and ships int8 weights as immediates &mdash; 100&nbsp;B for a tier-1 linear head,
+~80&nbsp;KB for a tier-3 MLP at ~98%. Embedding cost is a ~10<sup>&minus;5</sup> tax; what it
+skips is in-episode training, roughly <b>15/16 of tier-3 energy</b>. Unmitigated, the
+&ldquo;learning&rdquo; axis is dead code and the benchmark measures inference circuits.
+Mitigation triage, with review-corrected taxes:</p>
+
+<div class="tblwrap"><table>
+<tr><th>Mitigation</th><th>Fate</th><th>Bypass / cost</th></tr>
+<tr><td>Held-out QMNIST pool</td><td class="bad">fails</td><td>public since 2019; attacker pretrains on the union</td></tr>
+<tr><td>Fetch-priced immediates</td><td class="bad">fails</td><td>kills &Theta;(K) table bombs, not 80 KB of compressed hypothesis</td></tr>
+<tr><td>Program-length caps</td><td class="bad">fails</td><td>any cap excluding 8 KB of <code>set</code>s excludes honest inference</td></tr>
+<tr><td>Per-episode label permutation</td><td class="good">keep (insufficient alone)</td><td>recoverable in-program by vote-table matching: 25&ndash;30% tax at tier 1, &lt;1% at tier 3; but it forces &Omega;(100) train reads, killing zero-read programs</td></tr>
+<tr><td>Per-episode pixel permutation</td><td class="bad">bypassable</td><td>embedded class-conditional moments + one-time weight-routing crossbar &asymp; 8% tax &mdash; while taxing honest convs ~2&times;</td></tr>
+</table></div>
+
+<p>The three options that actually work, to be chosen explicitly: <b>(a)</b> accept it &mdash;
+rename the closed division <em>episodic inference energy</em> and run in-episode learning as
+a separate division; <b>(b)</b> <b>procedural episode generation</b> (MNIST-1D-style
+generative parameters redrawn per episode, so no finite pool exists to pretrain on);
+<b>(c)</b> per-episode invertible mixing (GF(2)-affine on pixel bytes), which makes
+recovering the transform equivalent to learning but destroys spatial priors and every
+calibration number. Recommendation: (b) for tiers 1&ndash;2, decide tier 3 after deciding
+whether convolutional architectures are a protected species. Label permutation is layered
+under all of them.</p>
+
+<p class="note">Two attacks recorded as dead: the tier-1 &ldquo;Bayes table&rdquo;
+(<em>measured</em>: 59,725 of 60,000 3&times;3 images are distinct at 8-bit depth, so a
+top-1000-pattern table scores ~12%), and pool-lookup by linear scan (arithmetic: ~6&times;10<sup>12</sup>
+trace lines at tier 3, fetch-priced into oblivion).</p>
+
+<h2 id="judgecost">8. Judge cost per tier</h2>
+
+<p><b>Cost scoring is 0.1&ndash;4 ms per submission at every tier</b> (parse + corner checks
++ &le;~36,000 closed-form evaluations at 50&ndash;200 ns each), anchored by the measured
+scoring-at-scale result: 0.3&ndash;3 ms to score a 1.1&times;10<sup>12</sup>-instruction
+schedule. Even a pure-Python fallback judge scores in 5&ndash;100 ms. Tier changes the
+integers, not the cost. Adjudication is the only real expense
+(Intel MBP &asymp; 3&times;10<sup>8</sup> op/s interpreted, &asymp;1.2&times;10<sup>9</sup>
+JIT single-stream, derived from the dally-eval anchor of ~1.55&times;10<sup>10</sup> op/s
+aggregate under multi-instance batching &mdash; batching that is unavailable here because one
+training run is a sequential dependence chain):</p>
+
+<div class="tblwrap"><table>
+<tr><th>Tier</th><th class="num">Honest ops/episode</th><th class="num">K</th><th>Adjudication wall (Intel MBP, 8 cores)</th><th class="num">Fuel cap</th></tr>
+<tr><td>1 (3&times;3, 600/600)</td><td class="num">10<sup>7</sup>&ndash;10<sup>8</sup></td><td class="num">50</td><td>&asymp;0.5&ndash;4 s interpreted; ~0.1&ndash;0.7 s JIT</td><td class="num">10<sup>9</sup></td></tr>
+<tr><td>2 (9&times;9, 6k/6k)</td><td class="num">10<sup>9</sup>&ndash;10<sup>10</sup></td><td class="num">10</td><td>&asymp;10&ndash;20 s (JIT)</td><td class="num">10<sup>11</sup></td></tr>
+<tr><td>3 (28&times;28, 60k/60k)</td><td class="num">10<sup>11</sup>&ndash;10<sup>12</sup> (MLP); ~2&times;10<sup>12</sup> LeNet-scale</td><td class="num">3</td><td>&asymp;2&ndash;18 min (JIT); LeNet worst &asymp;1 h</td><td class="num">3&times;10<sup>12</sup> laptop / 10<sup>13</sup> CI</td></tr>
+</table></div>
+
+<p>Memory stays under ~1.5 GB worst case (lazily-zeroed grid caps of 1 MB / 16 MB / 256 MB
+per tier plus one shared ~110 MB corpus). A 20-finalist tier-3 leaderboard re-score is a
+~3&nbsp;h overnight job on any 8-core machine; <b>a cluster is never needed</b>. One flag to
+set consciously: the tier-3 laptop cap has ~3&times; headroom over the plain-MLP upper bound,
+~1.5&times; over LeNet-scale at 3 byte-ops/MAC, and <em>below 1&times;</em> at a realistic
+4&ndash;6 byte-ops/MAC &mdash; as drafted it can exclude honest LeNet training, unlike the
+10&times; margins of the other tiers.</p>
+
+<h2 id="magnitudes">9. What winning programs look like</h2>
+
+<p>Working-set model: average operand distance ~&radic;W for the live <em>hot</em> working
+set W; each MAC &asymp; 2 reads + fetch. Energies are <b>compute-only</b>; the port floors
+below are additive (dominant at tier 1: the 57 nJ in-stream floor is ~11&times; centroid
+compute). Areas assume the train section is either consumed in one pass or replayed by the
+harness on static request (decision D6); if instead the stream arrives exactly once,
+multi-epoch training must buffer the train set on-grid, and the tier-3 area floor becomes
+~4.7&times;10<sup>7</sup> cells (the 1-NN row&rsquo;s figure) with a ~1% energy surcharge per
+resident sweep. At E<sub>in</sub> = 5,000 fJ the two r&eacute;gimes are within ~10% in
+energy at tier 3 (2.2&times;10<sup>11</sup> fJ per resident sweep vs
+2.35&times;10<sup>11</sup> fJ per re-streamed epoch) &mdash; the resident-vs-restream lever
+of the I/O-order note, genuinely contested. All rows re-derived by an independent
+reviewer.</p>
+
+<div class="tblwrap"><table>
+<tr><th>Tier / strategy</th><th class="num">Ops</th><th class="num">Area (cells)</th><th class="num">Energy</th><th class="num">Sequential time</th></tr>
+<tr><td>1: centroid</td><td class="num">1.2&times;10<sup>5</sup></td><td class="num">~400</td><td class="num">~5 nJ</td><td class="num">~3 ms</td></tr>
+<tr><td>1: int8 softmax, 20 ep</td><td class="num">5&times;10<sup>6</sup></td><td class="num">~500</td><td class="num">~0.2 &micro;J</td><td class="num">~0.1 s</td></tr>
+<tr><td>2: warm softmax, 3 ep</td><td class="num">5&times;10<sup>7</sup></td><td class="num">~1.5k</td><td class="num">~4 &micro;J</td><td class="num">~2 s</td></tr>
+<tr><td>2: MLP 81-64-10, 20 ep</td><td class="num">3&times;10<sup>9</sup></td><td class="num">~8k</td><td class="num">~0.6 mJ</td><td class="num">~5 min</td></tr>
+<tr><td>3: 14&times;14-input MLP, 10 ep</td><td class="num">5&times;10<sup>10</sup></td><td class="num">~33k</td><td class="num">~18 mJ</td><td class="num">~2.7 h</td></tr>
+<tr><td>3: MLP 784-128-10, 20 ep</td><td class="num">5.2&times;10<sup>11</sup></td><td class="num">~131k</td><td class="num">~0.38 J</td><td class="num">~2.3 days</td></tr>
+<tr><td>3: MLP 784-256-10, 30 ep</td><td class="num">1.5&times;10<sup>12</sup></td><td class="num">~262k</td><td class="num">~1.5 J</td><td class="num">~9.5 days</td></tr>
+<tr><td>3: 1-NN (anti-strategy)</td><td class="num">2.8&times;10<sup>12</sup></td><td class="num">4.7&times;10<sup>7</sup></td><td class="num">~39 J</td><td class="num">~240 days</td></tr>
+</table></div>
+
+<p><b>Anchors.</b> The measured A100 point (this repo,
+<code>matmul/a100_8192_dtype_energy_results.json</code>): 8192&sup3; int8 GEMM =
+<b>0.904 J</b> board energy above idle = 1.64 pJ/MAC at 5.5&times;10<sup>11</sup> MACs
+&mdash; note the factor-of-exactly-2 convention hazard against the
+1.1&times;10<sup>12</sup> multiply-plus-add count; pin one convention in the rules. Tier-3
+MLP training (5.2&times;10<sup>11</sup> MACs) scores <b>0.38 J</b> in the grid model against
+<b>0.86 J</b> of A100 int8 arithmetic for the same MAC count &mdash; agreement within
+2.3&times; &mdash; and the judge-scored <em>blocked</em> 8192&sup3; schedule lands at 0.119 J
+(216 fJ/MAC), 7.6&times; below the A100. The femtojoule story holds. The hazard: applying
+the &radic;W rule <em>unblocked</em> to the A100&rsquo;s 384 MiB resident set predicts ~22 J,
+24&times; over measurement &mdash; publish the working-set convention with the task, or
+self-estimates and official scores will disagree by an order of magnitude at tier 3.</p>
+
+<p>Stream floors never decide a ranking: 11.4 kB / 0.98 MB / 94 MB in-streams cost
+5.7&times;10<sup>7</sup> / 4.9&times;10<sup>9</sup> / 4.7&times;10<sup>11</sup> fJ at
+E<sub>in</sub> = 5,000 &mdash; at tier 3 that is ~10<sup>&minus;3</sup> of MLP training
+energy. The floor makes &ldquo;read everything at least once&rdquo; well-defined and prices
+ingest, no more: as the red team notes, a <code>recv</code> into a dead cell launders
+nothing, so what actually polices the embedded-weights attack is the &sect;7 protocol, not
+E<sub>in</sub>.</p>
+
+<h2 id="targets">10. Accuracy targets: what measurement corrected</h2>
+
+<p>An adversarial reviewer ran real 600/600 MNIST episodes (20 draws, block-mean
+downsampling) rather than trusting literature extrapolations. Two draft recommendations
+flipped outright, and a third was conditioned by an analytic re-derivation:</p>
+
+<ol>
+<li><b>Tier-1 centroid is 48.2 &plusmn; 2.1%</b>, not ~56%; linear@600 is 50.5%; 1-NN@600 is
+54.0%. A 50% target would kill centroid; <b>set tier 1 at ~45%</b> so at least three cheap
+families clear it.</li>
+<li><b>9&times;9 linear measures 84.8%</b> (full data), so the drafted 88% tier-2 target
+would exclude linear entirely; <b>set tier 2 at ~80&ndash;82%</b> if the cheapest learner
+should stay in play.</li>
+<li><b>Tier 3 at 97.3%</b> works only because the task pins a 60k test set
+(&sigma; = 0.07 pp); at MNIST&rsquo;s usual 10k test set 1-NN (96.9%) sits 2.4&sigma; from
+threshold and passes ~1% of draws. Never place a target at 97.0.</li>
+</ol>
+
+<p>One structural consequence falls out of the trace arithmetic: tier 2 is
+~1.2&times;10<sup>7</sup> trace lines and tier 3 is ~10<sup>9</sup> lines (a 10&ndash;19 GB
+file) &mdash; <b>tiers 2 and 3 are schedule-track only</b>, declared in the rules from day
+one; tier 1 runs dual-track and serves as the trace-vs-schedule cross-validation corpus, per
+RFC&nbsp;#48&rsquo;s discipline.</p>
+
+<h2 id="decisions">11. Open decisions</h2>
+
+<div class="tblwrap"><table>
+<tr><th>#</th><th>Decision</th><th>Recommendation</th></tr>
+<tr><td>D1</td><td>Embedded-weights stance (&sect;7) &mdash; defines the competition</td><td>procedural episodes for tiers 1&ndash;2; decide tier 3 with the conv question</td></tr>
+<tr><td>D2</td><td>E<sub>in</sub>/E<sub>out</sub>; writes priced or free</td><td>&asymp;5,000 fJ; writes free in v1 (record continuity)</td></tr>
+<tr><td>D3</td><td>Addressing surface</td><td>native 2-D Chebyshev with canonical <code>lin</code> legacy embedding</td></tr>
+<tr><td>D4</td><td>TIME semantics</td><td>sequential v1 now; critical-path as a later spatial division</td></tr>
+<tr><td>D5</td><td>Targets and episode counts</td><td>45% / ~81% / 97.3% with K = 50 / 10 / 3, secret-keyed seeds</td></tr>
+<tr><td>D6</td><td>Stream framing and epoch supply (blocked vs per-example interleaved; may the harness replay the train section on a statically declared count?)</td><td>interleaved train records; allow declared replay &mdash; at E<sub>in</sub> &asymp; 5,000 fJ resident-vs-restream is genuinely contested (&sect;9)</td></tr>
+</table></div>
+
+<p>Summarized in one sentence: <b>the machine can go to rung (e) without giving up
+execution-free scoring &mdash; milliseconds to score, minutes to adjudicate, laptop
+throughout &mdash; and the one decision that actually shapes the competition is not in the
+language at all, but in where the episodes come from.</b></p>
+
+<h2 id="refs">12. References</h2>
+
+<ol class="refs">
+<li><a href="expressivity-scorability-ladder.html">&ldquo;The expressivity&ndash;scorability ladder,&rdquo;</a> this repository &mdash; rungs (a)&ndash;(f), the fetch fork, the episodic MNIST placement.</li>
+<li><a href="dataflow-io-order.html">&ldquo;Fixed or moving I/O order?&rdquo;</a> &mdash; ports, determinacy, the resident-vs-restream break-even, the closed/open division split.</li>
+<li><a href="https://github.com/cybertronai/sutro-problems/pull/48">RFC #48, &ldquo;The Scheduled Dally Language&rdquo;</a> &mdash; closed-form read-cost summation, trace cross-validation methodology.</li>
+<li>J. T. Buck, &ldquo;Scheduling dynamic dataflow graphs with bounded memory using the token flow model,&rdquo; PhD thesis, UC Berkeley, 1993 &mdash; undecidability past static rates; the port-balance rule&rsquo;s justification.</li>
+<li>R. M. Karp, R. E. Miller, S. Winograd, &ldquo;The organization of computations for uniform recurrence equations,&rdquo; JACM 14(3), 1967 &mdash; affine schedules for the v2 time division.</li>
+<li>V. Strassen, &ldquo;Gaussian elimination is not optimal,&rdquo; Numerische Mathematik 13, 1969 &mdash; the rung-(c) flagship and the offset-affine recursion requirement.</li>
+<li>M. Hutter, the Hutter Prize &mdash; program size in the score; precedent for priced fetch.</li>
+<li>S. Greydanus and D. Kobak, &ldquo;Scaling down deep learning with MNIST-1D,&rdquo; ICML 2024 &mdash; procedural generation as the memorization defense (option b of &sect;7).</li>
+<li>C. Yadav and L. Bottou, &ldquo;Cold case: the lost MNIST digits&rdquo; (QMNIST), NeurIPS 2019 &mdash; the extra examples; also why a &ldquo;held-out&rdquo; pool is public.</li>
+<li>M. Horowitz, &ldquo;Computing&rsquo;s energy problem (and what we can do about it),&rdquo; ISSCC 2014 &mdash; off-chip access energy grounding E<sub>in</sub>.</li>
+<li>W. J. Dally, &ldquo;On the model of computation: point,&rdquo; CACM 65(9), 2022 &mdash; the physical calibration&rsquo;s source model.</li>
+<li>This repository: <code>matmul/a100_8192_dtype_energy_results.json</code> (measured A100 anchor), <code>scoring-at-scale/</code> (measured 0.3&ndash;3 ms closed-form scorer; blocked-GEMM judge score), <code>sparse-parity/README.md</code> (dally-eval throughput anchor).</li>
+</ol>
+
+<footer>Design report, September 4, 2026. Synthesis of a fourteen-agent adversarially-reviewed
+design run. Part of the <a href="https://github.com/cybertronai/sutro-problems">sutro-problems</a>
+benchmark suite.</footer>
+
+</main>
+</body>
+</html>
