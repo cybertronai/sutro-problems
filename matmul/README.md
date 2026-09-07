@@ -68,6 +68,7 @@ rejected, which admits the usual bilinear matmul algorithms.
 | 2026-08-29 |  66,199 | [ir](submissions/best_66199.ir), [report](submissions/best_66199.md), [py](submissions/best_66199.py) | [@sigkillme0](https://github.com/sigkillme0) | dependency-safe rescheduling + exact tier allocation |
 | 2026-08-30 |  66,178 | [ir](submissions/best_66178.ir), [report](submissions/best_66178.md), [py](submissions/best_66178.py) | [@sigkillme0](https://github.com/sigkillme0) | exact LP-optimal address assignment (provably optimal for this operation order) |
 | 2026-09-04 |  65,084 | [ir](submissions/best_65084.ir), [report](submissions/best_65084.md), [py](submissions/best_65084.py) | [@jurajselep](https://github.com/jurajselep) | newest-first snake passes + JIT A staging + local exact tier allocation |
-| 2026-09-04 |  64,431 | [ir](submissions/best_64431.ir), [report](submissions/best_64431.md), [py](submissions/best_64431.py) | [@cosminscn](https://github.com/cosminscn) | asymmetric panel schedule + persistent B captures + dependency-safe order search ★ best |
+| 2026-09-04 |  64,431 | [ir](submissions/best_64431.ir), [report](submissions/best_64431.md), [py](submissions/best_64431.py) | [@cosminscn](https://github.com/cosminscn) | asymmetric panel schedule + persistent B captures + dependency-safe order search |
+| 2026-09-07 |  64,075 | [ir](submissions/best_64075.ir), [report](submissions/best_64075.md), [py](submissions/best_64075.py) | [@SecurityQQ](https://github.com/SecurityQQ) | temporary input captures + cheapest surviving replica reads ★ best |
 
 [access_distance](doc/access_distance/) — read-distance histograms for the plotted submission set.
