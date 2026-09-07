@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Multiprocessors on the Grid VM: Four Scenarios</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #fcfcfb; --plane: #f9f9f7; --ink: #0b0b0b; --ink2: #52514e;
+    --muted: #898781; --grid: #e1e0d9; --line: #c3c2b7;
+    --accent: #2a78d6; --code-bg: #f2f1ed; --good: #006300; --bad: #a33a3a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a19; --plane: #0d0d0d; --ink: #ffffff; --ink2: #c3c2b7;
+      --muted: #898781; --grid: #2c2c2a; --line: #383835;
+      --accent: #3987e5; --code-bg: #242422; --good: #0ca30c; --bad: #e66767;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.65 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 52rem; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+  h1 { font-size: 1.9rem; line-height: 1.25; margin: 0 0 .4rem; }
+  .sub { color: var(--ink2); margin: 0 0 2rem; }
+  h2 { font-size: 1.35rem; margin: 2.8rem 0 .7rem; padding-top: .6rem;
+       border-top: 1px solid var(--grid); }
+  h3 { font-size: 1.05rem; margin: 1.6rem 0 .4rem; }
+  .note { color: var(--ink2); font-size: .92rem; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre { font-family: ui-monospace, "SF Mono", Menlo, monospace;
+              font-size: .88em; background: var(--code-bg); border-radius: 4px; }
+  code { padding: .1em .35em; }
+  pre { padding: .8rem 1rem; overflow-x: auto; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+  .tblwrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0;
+          font-size: .9rem; font-variant-numeric: tabular-nums; }
+  th { text-align: left; color: var(--ink2); font-weight: 600;
+       border-bottom: 1px solid var(--line); padding: .35rem .6rem .35rem 0; }
+  td { border-bottom: 1px solid var(--grid); padding: .35rem .6rem .35rem 0;
+       vertical-align: top; }
+  td.num, th.num { text-align: right; }
+  .toc { background: var(--plane); border: 1px solid var(--grid);
+         border-radius: 8px; padding: .9rem 1.2rem; font-size: .92rem; }
+  .toc a { display: inline-block; margin-right: 1.1rem; }
+  .box { background: var(--plane); border: 1px solid var(--grid);
+         border-radius: 8px; padding: .9rem 1.2rem; margin: 1rem 0; }
+  .good { color: var(--good); font-weight: 600; }
+  .bad { color: var(--bad); font-weight: 600; }
+  ol.refs { font-size: .88rem; color: var(--ink2); }
+  ol.refs li { margin-bottom: .4rem; }
+  footer { margin-top: 3.5rem; padding-top: 1rem; border-top: 1px solid var(--grid);
+           color: var(--muted); font-size: .85rem; }
+  var { font-style: italic; }
+  .anim { margin: 1.2rem 0 1.6rem; }
+  .anim .totals { font-size: .88rem; color: var(--ink2); margin-top: .4rem; }
+  .scen { border-left: 3px solid var(--accent); padding-left: 1rem; margin: 1rem 0; }
+  .kv { display: grid; grid-template-columns: max-content 1fr; gap: .2rem 1rem; font-size: .92rem; }
+  .kv b { color: var(--ink2); font-weight: 600; }
+  .ascii { font-size: .8em; line-height: 1.3; }
+</style>
+</head>
+<body>
+<main>
+
+<div style="text-align: right;"><a href="https://github.com/cybertronai/sutro-problems/blob/main/docs/grid-vm-multiprocessor.html" target="_blank" rel="noopener noreferrer" aria-label="View this page on GitHub">GitHub &#8599;</a></div>
+
+<h1>Multiprocessors on the Grid VM: four scenarios</h1>
+<p class="sub">Four concrete ways to put more than one control unit on the 1&nbsp;&micro;m byte grid
+&mdash; a message-passing multicore, a SIMT lane array, a systolic coprocessor, and a static SPMD
+replica machine &mdash; judged for physical realism, scorability and expressivity, with animated
+examples of a parallel reduction and a parallel matrix multiply. Companion to
+<a href="grid-vm-competition-design.html">The Grid VM: competition design</a>. September 7, 2026.</p>
+
+<nav class="toc">
+<a href="#brief">The brief</a>
+<a href="#single">The settled machine</a>
+<a href="#sources">What the sources say</a>
+<a href="#axes">Three axes</a>
+<a href="#s1">Scenario 1</a>
+<a href="#s2">Scenario 2</a>
+<a href="#s3">Scenario 3</a>
+<a href="#s4">Scenario 4</a>
+<a href="#compare">Comparison</a>
+<a href="#recommend">Recommendation</a>
+<a href="#anim">Animations</a>
+<a href="#decisions">Open decisions</a>
+<a href="#refs">References</a>
+</nav>
+
+<h2 id="brief">1. The brief, and how this note was produced</h2>
+
+<p>The single-core machine is settled: a 2-D grid of byte cells at 1&nbsp;&micro;m pitch, one
+sequential control unit at the origin, 1&nbsp;fJ for every byte moved one micron, signals at
+<var>c</var>/160, and three serial tapes carrying input, output and instructions. The
+<a href="grid-vm-competition-design.html">design report</a> shows what that machine leaves on
+the table: its sequential-time leaderboard measures tier-3 MNIST training in <em>days</em>, and
+the <a href="dataflow-io-order.html">I/O-order note</a> already remarked that nothing in the
+model rewards parallelism. The question here is how to add more than one control unit
+<em>realistically</em> &mdash; anchored to what silicon actually does and free of free lunches
+&mdash; while keeping the grid model: cells, distances, tapes, and cost as a static property of
+the submitted schedule.</p>
+
+<div class="box"><p class="note" style="margin:0"><b>Provenance.</b> This note synthesizes a
+multi-agent design run of September 6&ndash;7, 2026: six independent designs from six
+architectural angles (a PECM-faithful shared grid, a tiled message-passing multicore, a SIMT
+lane array, a systolic mesh, an explicit memory hierarchy, and a minimal static-SPMD delta), each
+attacked by three adversarial reviewers (physical realism, scorability and exploits, expressivity
+and algorithm fit) who re-derived the designs' numbers independently; a synthesis into four
+scenarios; two skeptics instructed to refute the synthesis; and a revision. Twenty findings
+recurred across designs and were resolved once, the same way, for all four scenarios
+(&sect;4). The animations in &sect;11 are driven by event-level schedules whose energy and
+makespan counters were cross-checked against an independent Python simulator. Where a
+reviewer's recomputation overturned a design's number, the reviewer's value is used and the
+change is noted.</p></div>
+
+<h2 id="single">2. The settled single-core machine</h2>
+
+<p>Every scenario below must reduce to this machine at <var>P</var>&nbsp;=&nbsp;1. The constants
+are the ones the competition design fixed; the multiprocessor extensions add to them and never
+change them.</p>
+
+<div class="tblwrap"><table>
+<tr><th>Quantity</th><th>Value</th><th>Reading</th></tr>
+<tr><td>Cell</td><td>one byte at a lattice site, 1&nbsp;&micro;m pitch</td><td>bytes in nodes; multi-byte values are adjacent cells, little-endian</td></tr>
+<tr><td>Movement</td><td>1&nbsp;fJ per byte per micron of Manhattan path</td><td>the only priced quantity; arithmetic is free (Dally: a 32-bit add is 20&nbsp;fJ against 1.9&nbsp;pJ to move its operands 1&nbsp;mm)</td></tr>
+<tr><td>Propagation</td><td><var>c</var>/160 = 1,874&nbsp;&micro;m/ns</td><td>0.53&nbsp;ns per millimetre (Dally's global-wire figure is 0.4&nbsp;ns/mm, i.e. <var>c</var>/120)</td></tr>
+<tr><td>Issue</td><td>1&nbsp;ns per instruction, no overlap with flight (time v1)</td><td>decision D4; the critical-path reading is a separate division</td></tr>
+<tr><td>Tapes</td><td>input at (&minus;1,0), output at (1,0), instructions at (0,&minus;1); memory above the origin</td><td>serial, data-independent order, blocking receive only; each byte crossing pays 1&nbsp;&micro;m plus <var>E</var><sub>in</sub> = <var>E</var><sub>out</sub> &asymp; 5,000&nbsp;fJ</td></tr>
+<tr><td>Fetch</td><td>4&nbsp;fJ per static line + 1&nbsp;fJ per issued instruction (schedule track)</td><td>a loop buffer amortising fetch; unpriced instruction text is free ROM</td></tr>
+<tr><td>Writes</td><td>free in v1 (D2)</td><td>the write of one op is the read of the next; the constant absorbs the round trip</td></tr>
+<tr><td>Area</td><td>origin-anchored bounding square of touched cells, &micro;m&sup2;</td><td>union over mode arms</td></tr>
+<tr><td>Language</td><td>rungs (a)&ndash;(e): straight-line, affine loops, static recursion, bijective index maps, modes</td><td>cost is execution-free: closed-form lattice sums, worst arm for modes</td></tr>
+</table></div>
+
+<p>Two consequences of these constants drive everything that follows. First, a working set of
+<var>W</var> bytes costs about &radic;<var>W</var> per access, so the energy of a sweep is
+&asymp;&nbsp;T&middot;&radic;<var>W</var>: distributing <var>W</var> over <var>P</var> cores cuts
+the mean distance by &radic;<var>P</var>. Second, at 1&nbsp;B/ns a tape delivers 2<sup>20</sup> bytes in
+1.05&nbsp;ms whatever the core count, while one core consumes them at 2&nbsp;ns per byte
+(<code>recv</code> + <code>add</code>): a second core doubles throughput and a third does
+nothing. Both facts are physics, not artefacts, but the second one hides an unstated
+calibration (one byte per nanosecond is a single wire at 1&nbsp;GHz, not a memory interface), and
+&sect;4 says what to do about it.</p>
+
+<h2 id="sources">3. What the sources say</h2>
+
+<h3>Dally: a parallel model with a distance function</h3>
+
+<p>Dally's CACM point [1] is usually read as an argument about single-processor cost, but the
+model it proposes is explicitly parallel. His PECM (parallel explicit communication model) is
+PRAM with two changes: arithmetic stays unit cost, and &ldquo;each processing element and each
+memory is assigned a location <var>l</var>&nbsp;&isin;&nbsp;<var>L</var> and a distance function
+<var>D</var>: <var>L</var>&times;<var>L</var>&nbsp;&rArr;&nbsp;R is defined to determine the cost of
+sending a message or making a memory access between two locations,&rdquo; with 2-D Manhattan
+distance for on-chip communication and extra distance when a coordinate crosses a chip
+boundary. Multiple PEs at locations are native to it; the settled Grid VM is its
+<var>P</var>&nbsp;=&nbsp;1 case with the distance function made literal.</p>
+
+<p>His numbers, verbatim: a 32-bit add is 20&nbsp;fJ and 150&nbsp;ps; moving its two operands
+1&nbsp;mm is 1.9&nbsp;pJ and 400&nbsp;ps; 40&nbsp;mm corner to corner on a 400&nbsp;mm&sup2; chip
+is 77&nbsp;pJ and 16&nbsp;ns; going off chip is 320&nbsp;pJ per 64 bits with 6&nbsp;ns per metre.
+On-chip SRAM is built from 8&nbsp;KB sub-arrays: 64&nbsp;b from a sub-array costs 0.64&nbsp;pJ
+and 300&nbsp;ps; the same 64&nbsp;b from a 256&nbsp;MB memory (about 100&nbsp;mm&sup2;) costs
+58&nbsp;pJ and 12.3&nbsp;ns, of which 57.4&nbsp;pJ and 12&nbsp;ns are communication, 15&nbsp;mm
+each way. And the worked multiprocessor example that &sect;11 animates: summing a table held in
+the on-chip memory of a 4&times;4 array of 256-core chips, 16&nbsp;mm on a side, each core at the
+centre of a 2&nbsp;MB SRAM with a 1&nbsp;mm local round trip (1.9&nbsp;pJ, 400&nbsp;ps per
+64&nbsp;b access). A random access costs 21.3&nbsp;mm on chip for the 1/16 of accesses that stay
+local and an additional 640&nbsp;pJ&nbsp;+&nbsp;21.3&nbsp;mm for the 15/16 that leave, 680&nbsp;pJ
+on average; letting each core sum its own 256K words and forward the result up a tree is
+&ldquo;354&times;&rdquo; cheaper (230&times; elsewhere in the same article) &mdash; and PRAM
+cannot tell the two programs apart.</p>
+
+<h3>Roune: the AI CPU</h3>
+
+<p>Bjarke Roune's design document [2] argues from the other end &mdash; from what accelerators
+should look like &mdash; and lands on &ldquo;traditional-ish CPUs with big caches and systolic
+arrays, where the caches and systolic arrays take up most of the chip area and power.&rdquo; The
+facts that bear on a grid model: doubling a systolic array's vector width quadruples its work per
+cycle while less than doubling the cost of the core that drives it, so the controlling scalar
+and vector logic shrinks relative to the array (&ldquo;4<sup>5</sup> = 1024&times;&rdquo; in scalar
+work from Volta's 4&times;4 to TPUv3's 128&times;128); after configuration a systolic array fetches
+no instructions, which is where its energy advantage over a vector processor comes from; the
+reduction dimension <var>K</var> is the hard utilisation limit (attention at 16&ndash;128,
+feed-forward at 8,192), so mono-sized arrays are unbalanced; data should move SRAM &rarr; network
+&rarr; SRAM without a detour through a central store; a torus with neighbour-only traffic is
+100% link-efficient while any router caps at 50%; and all-reduce traffic per chip is
+2<var>X</var>(1&nbsp;&minus;&nbsp;1/<var>P</var>), so within-layer parallelism more than doubles per-chip
+bandwidth when <var>P</var> doubles. He is explicit that there are few numbers in the document,
+and that a 2-D plane is enough to understand most of it.</p>
+
+<h3>The calibration thread</h3>
+
+<p>A Codex thread on matmul energies [3] turned Dally's SRAM figures into a hierarchy the grid
+can represent: 256&nbsp;MiB is 32,768 sub-arrays of 8&nbsp;KiB; at 100&nbsp;mm&sup2; each sub-array
+gets a 55.2&nbsp;&micro;m square-equivalent pitch and each 64-bit word site a 1.73&nbsp;&micro;m pitch
+(0.61&nbsp;&micro;m per byte); an 8&nbsp;KiB sub-array laid out as 32 half-diamond shells has a mean
+one-way distance of 37.7&nbsp;&micro;m; Dally's 15&nbsp;mm needs a routing factor of about 2.24 over
+the 6.7&nbsp;mm mean of a flat 100&nbsp;mm&sup2; layout; and at the area-derived byte pitch and the
+AHA keynote's 100&nbsp;fJ per bit-mm, a byte-wide round trip over one grid step costs
+0.98&nbsp;fJ &mdash; the physical reading of &ldquo;1&nbsp;fJ per score step.&rdquo; Effective
+speeds: <var>c</var>/120 for global wires, <var>c</var>/1200 for a complete sub-array access.
+One slip in the thread's descendants is corrected here: 320&nbsp;pJ per 64&nbsp;b is 5&nbsp;pJ per
+<em>bit</em>, 40,000&nbsp;fJ per byte, a board-level crossing; the 5,000&nbsp;fJ per byte the
+competition uses for <var>E</var><sub>in</sub> is a chiplet- or HBM-class crossing (0.6&nbsp;pJ/bit),
+and the two must not be cited for each other.</p>
+
+<h2 id="axes">4. Three axes, and twenty rules applied to all four scenarios</h2>
+
+<p>Read together, the six designs and eighteen reviews say that multiprocessor extensions of
+the grid differ on exactly three axes, and that everything else is a constant to be calibrated
+once:</p>
+
+<ol>
+<li><b>Instruction delivery.</b> MIMD cores each fetch their own program (Dally's 80&nbsp;pJ
+&ldquo;add instruction&rdquo; on a CPU is this overhead); SIMT lanes share one fetch across a
+broadcast tree whose wire length grows with <var>P</var>; a systolic array fetches nothing after
+a priced configuration. A grid model that broadcasts instructions for free erases the axis
+that separates GPUs from TPUs from multicores.</li>
+<li><b>Memory ownership and geometry.</b> One shared plane read from anywhere at the distance
+from the reader (PECM literal), or private regions around each head with explicit messages
+(Dally's 256-core chip, Roune's SRAM-to-SRAM DMAs), or a hierarchy of tiles, dies and packages
+with a crossing constant at each boundary. Where the head sits and how large its footprint is
+decides the minimum distance a byte ever travels.</li>
+<li><b>Communication pricing.</b> Byte-microns of wire (the settled rule) plus, once routers
+exist, a per-hop constant and a link rate; whether idle silicon costs anything; and whether
+makespan is a closed form or a simulation.</li>
+</ol>
+
+<p>Twenty problems recurred across designs. Each is resolved once here and the resolution is
+applied to every scenario, so their numbers are comparable with each other and with the
+single-core leaderboard. The load-bearing ones:</p>
+
+<div class="tblwrap"><table>
+<tr><th>Problem</th><th>Where it bit</th><th>Rule adopted for all four scenarios</th></tr>
+<tr><td>Tape rate</td><td>every streamed example capped at 2&times;; 25 of 32&ndash;60&nbsp;&micro;s of the 64&times;64 matmul</td><td>8&nbsp;B/ns per tape for <var>P</var>&nbsp;&ge;&nbsp;2 (Dally's 64-bit quantum at 1&nbsp;GHz); <var>E</var><sub>in</sub> per byte unchanged; the <var>P</var>&nbsp;=&nbsp;1 port term is kept and the discontinuity declared</td></tr>
+<tr><td>Zero-footprint cores</td><td>radius-16 tiles whose controller and 5-port crossbar occupied five cells; 8&nbsp;&micro;m lanes with a dp4a datapath</td><td>every control unit occupies a declared block that holds no data: 128&times;128 cells for a scalar head with its router and buffers, 16&times;16 per SIMT lane, 16&times;16 per systolic PE; blocks count in area</td></tr>
+<tr><td>Idle silicon is free</td><td>a 4,096-core submission using one core scores the single-core energy</td><td>one clock rule for every scenario: 0.125&nbsp;fJ per bit-micron of the declared control structure's clock tree per nanosecond, gated or not (168&nbsp;fJ/ns per tile), scored for <var>P</var>&nbsp;&ge;&nbsp;2; plus a reported static column <var>A</var>&times;<var>T</var> at 1&nbsp;fJ per &micro;m&sup2; per &micro;s (scoring it is open decision P3)</td></tr>
+<tr><td>Router energy</td><td>8&nbsp;fJ per byte per hop; a 2.24&times; per-micron multiplier fitted to an H-tree</td><td>1&nbsp;fJ per byte-micron of wire plus 40&nbsp;fJ per byte per router traversed and 65&nbsp;fJ at the endpoint interface, 1&nbsp;ns per hop</td></tr>
+<tr><td>Makespan under modes</td><td>arms with equal port traffic but different lengths make time data-dependent; worst-arm does not compose across cores</td><td>arm padding: every arm is charged the mode's maximum issues and byte-microns in the time model; port balance counts bytes</td></tr>
+<tr><td>Deadlock as a timing property</td><td>shared network-interface buffers with in-network blocking</td><td>credit-based end-to-end flow control per ordered core pair; output port pulls from the owner of its current segment; single-signaller flags</td></tr>
+<tr><td>Straw-man baselines</td><td>naive triple-loop single core; resident tables that arrive for free</td><td>compare against a blocked single-core schedule; report Dally's table sum in both framings (streamed once, and resident with the load charged)</td></tr>
+<tr><td>Fetch rule across <var>P</var></td><td>resident instruction memory at ~5&nbsp;fJ per byte vs 4&nbsp;fJ/line + 1&nbsp;fJ/issue</td><td>keep the settled per-core fetch rule everywhere; add each scenario's delivery term on top</td></tr>
+</table></div>
+
+
+<h2 id="s1">5. Scenario 1: the SPMD tile mesh with a collective library</h2>
+
+<p><b>In one paragraph.</b> Add one header line, <code>replicate P</code>, to a settled schedule.
+The judge stamps <var>P</var> copies of the settled machine &mdash; head, three port cells, private
+half-diamond &mdash; each with a 128&times;128-cell core block under its head, on a
+<var>P<sub>x</sub></var>&times;<var>P<sub>y</sub></var> lattice at a derived pitch. All tiles run the
+same text with static <code>lane_x</code>, <code>lane_y</code>; bytes cross a tile boundary only inside
+a fixed library of scoped collectives whose energy and time are closed forms; the three tapes
+attach to tile (0,0) at 8&nbsp;B/ns and distribute by a static stripe library. It is Dally's
+256-core chip programmed the way GSPMD programs a TPU pod, priced by the PECM lattice plus a real
+network's constants. Adopt it first.</p>
+
+<pre class="ascii">
+   y ^      tile (0,1)                          tile (1,1)
+     |   .  .  .  ◊  .  .  .                 .  .  .  ◊  .  .  .      diamond: k shells, lin(a)
+     |   .  .  ◊  ◊  ◊  .  .                 .  .  ◊  ◊  ◊  .  .      reads cost ⌈√a⌉ fJ/byte
+     |   .  ◊  ◊  ◊  ◊  ◊  .                 .  ◊  ◊  ◊  ◊  ◊  .
+     |   I [H] O ═══════ 8 B/ns link, S µm ═══════ I [H] O            head row, ports at ±1
+     |   +----------------+                  +----------------+
+     |   | 128x128 block  |                  | 128x128 block  |       sequencer, 2 KiB I-buf,
+     |   | seq ibuf ALU   |                  | seq ibuf ALU   |       ALU, router, 4x1 KiB NI
+     |   | router  NI     |                  | router  NI     |       (no data cells; clock
+     |   +------║---------+                  +------║---------+        tree 1,344 µm, 168 fJ/ns)
+     |          ║ vertical link, S µm               ║
+     |   .  .  .  ◊  .  .  .                 .  .  .  ◊  .  .  .
+ in ═══► I [H] O ═════════════════════════════════════ I [H] O        tile (0,0): the settled
+ out ◄══ tile (0,0)    (0,-1) ◄═══ instr tape           tile (1,0)     machine + block; 3 tapes
+     |   +----------------+                  +----------------+
+     +----|&lt;----- S ----->|-------------------------------------------> x
+</pre>
+
+<h3>Geometry and constants</h3>
+
+<div class="kv">
+<b>Lattice</b><span><var>P</var> = 2<sup><var>j</var></sup> &le; 4,096; <var>P<sub>x</sub></var> = 2<sup>&lceil;<var>j</var>/2&rceil;</sup>, <var>P<sub>y</sub></var> = <var>P</var>/<var>P<sub>x</sub></var>; tile (<var>i</var>,<var>j</var>) has its head at (<var>S&middot;i</var>, <var>S&middot;j</var>); uniform radius <var>k</var> = max over tiles of &lceil;&radic;<var>a</var><sub>max</sub>&rceil;</span>
+<b>Pitch</b><span><var>S</var> = max(2<var>k</var>&nbsp;&minus;&nbsp;1, <var>k</var>&nbsp;+&nbsp;129) &micro;m: the block of the tile above must clear this tile's diamond. <var>k</var> = 33 &rarr; 162; 47 &rarr; 176; 57 &rarr; 186; 91 &rarr; 220; 257 &rarr; 513</span>
+<b>Core block</b><span>128&times;128 cells (16,384 &micro;m&sup2;) below the head: sequencer, 2&nbsp;KiB instruction buffer, loop stack, ALU, 5-port router, four 1&nbsp;KiB network-interface FIFOs. Derived at the model's own density (one cell = one byte of SRAM with overhead &asymp; 0.37 real &micro;m&sup2; at 7&nbsp;nm): 6,144 buffer cells + &asymp;5,400 for an Ibex-class core + &asymp;2,700 for the router &asymp; 14,250. Holds no data. <var>A</var><sub>block</sub> = 0 at <var>P</var> = 1</span>
+<b>Clock</b><span><var>E</var><sub>clk</sub> = 168&nbsp;fJ/ns per tile at <var>P</var> &ge; 2: 0.125&nbsp;fJ per bit-micron of the block's 1,344&nbsp;&micro;m clock H-tree per nanosecond, gated or not (the model's 1&nbsp;fJ per byte-micron applied to one clock bit). Inside the physical band: an idle clocked 7&nbsp;nm microcore burns 300&ndash;1,000&nbsp;fJ/ns, gated leakage 15&ndash;150&nbsp;fJ/ns</span>
+<b>Network</b><span>straight head-to-head links, 8&nbsp;B/ns per direction, XY routing; a byte over <var>h</var> hops costs <var>S&middot;h</var> + 40<var>h</var> + 65&nbsp;fJ (wire, routers, destination interface) and takes <var>h</var>(<var>S</var>/<var>v</var> + 1)&nbsp;ns plus &lceil;<var>m</var>/8&rceil; of serialisation</span>
+<b>Tapes</b><span>at tile (0,0), 8&nbsp;B/ns each; <var>E</var><sub>in</sub> = <var>E</var><sub>out</sub> = 5,000&nbsp;fJ per byte plus the port micron; the pad is a DMA engine that pushes stripe segments into the owning tile's FIFO, priced as network bytes, only when the FIFO has room</span>
+<b>Die</b><span>16,384&nbsp;&micro;m on a side (a judge constant); a lattice that does not fit is cut into dies and priced as Scenario 3</span>
+</div>
+
+<h3>Instruction delivery, tapes, memory</h3>
+
+<p>The text (<var>S</var><sub>text</sub> canonical bytes, up to 2&nbsp;KiB before the block grows)
+crosses the instruction tape once and is multicast over the XY spanning tree: <var>E</var><sub>text</sub> =
+4&middot;<var>L</var><sub>static</sub> + <var>S</var><sub>text</sub>&middot;(<var>P</var>&nbsp;&minus;&nbsp;1)&middot;(<var>S</var> + 105) fJ,
+arriving after <var>S</var><sub>text</sub>/8 + (<var>P<sub>x</sub></var> + <var>P<sub>y</sub></var> &minus; 2)(<var>S</var>/<var>v</var> + 1) ns.
+Each tile then issues from its own buffer at the settled 4&nbsp;fJ per static line and 1&nbsp;fJ
+per issue; the physical reading is a per-core loop buffer with a location, filled once from a
+shared instruction memory over the network. A reported, unscored column
+<var>E</var><sub>ctl</sub> = 1,000&nbsp;fJ per issued instruction records what a microcontroller-class
+sequencer would actually spend.</p>
+
+<p>Input is cut into segments by a declared stripe &mdash; <code>cyclic</code> (element
+<var>kP</var>+<var>l</var> to lane <var>l</var>), <code>block n</code>, <code>block2d(bx,by)</code>,
+<code>replicate</code> (one <var>E</var><sub>in</sub>, then a priced multicast with charged landings)
+&mdash; and output is the mirror under credit pull: the pad's 1&nbsp;KiB buffer is credit for the
+owners of the next segments in stream order, a <code>send</code> blocks until its tile holds
+credit, and the pad drains a segment only after it has arrived. Rule R9 makes this decidable:
+<code>cyclic</code> is safe by construction; <code>block</code> stripes are accepted only when no
+barrier separates two tape operations of the same block or the block fits the FIFO, and their
+phase time is a per-segment recurrence (push, arrival, receive-start, receive-end) that the judge
+evaluates in O(number of segments) with periodic extrapolation for long streams. Memory is
+private per tile at the settled <code>lin(a)</code> addresses; local writes stay free; the landing
+writes of collectives are charged, into a judge-allocated slot just above the program's own
+<var>a</var><sub>max</sub>.</p>
+
+<h3>Collectives</h3>
+
+<div class="tblwrap"><table>
+<tr><th>Collective</th><th>Pattern (fixed)</th><th>Energy</th><th>Time</th></tr>
+<tr><td><code>reduce.op.T a, n [.row|.col] [root]</code></td><td>recursive halving, X rounds then Y rounds, <var>m</var> = <var>n&middot;w</var> bytes per message; snapshot per round</td><td>per round: senders &times; [issue + read of <var>a</var> + <var>m</var>&middot;<var>e</var><sub>net</sub>(2<sup><var>r</var></sup><var>S</var>) + landing write] + receivers &times; <var>n</var> issued adds with their reads</td><td>per round: 1 + &lceil;<var>m</var>/8&rceil; + 2<sup><var>r</var></sup>(<var>S</var>/<var>v</var> + 1) + 1 + &lceil;<var>m</var>/8&rceil; + <var>n</var>&middot;(1 + flight)</td></tr>
+<tr><td><code>allreduce</code></td><td>reduce then bcast</td><td>sum</td><td>sum</td></tr>
+<tr><td><code>reduce_scatter</code>, <code>allgather</code></td><td>bidirectional chain along the line (<var>n<sub>L</sub></var>(<var>n<sub>L</sub></var>&minus;1) one-hop block moves)</td><td>block-hops &times; [issue + read + <var>m</var>&middot;<var>e</var><sub>net</sub>(<var>S</var>) + landing + issue] (+ <var>n</var> issued adds per landed block for reduce_scatter)</td><td>(<var>n<sub>L</sub></var>&minus;1) rounds of one hop plus two serialisations, with the sender's read flight charged</td></tr>
+<tr><td><code>bcast a, n [root]</code></td><td>XY spanning tree of the scope</td><td>read + <var>m</var>(scope&minus;1)(<var>S</var> + 105) + (scope&minus;1) landing writes</td><td>&lceil;<var>m</var>/8&rceil; + depth&middot;(<var>S</var>/<var>v</var> + 1) + 1</td></tr>
+<tr><td><code>alltoall</code>, <code>shift dx dy</code>, <code>roll dx dy</code></td><td>XY-routed, per-link load closed-form; dx = dy = 0 rejected</td><td>per message as above</td><td>max link load &times; &lceil;<var>m</var>/8&rceil; + flight + 2(1 + &lceil;<var>m</var>/8&rceil;)</td></tr>
+<tr><td><code>reduce.argmin.T a, n</code></td><td>key-value recursive halving, row-major ties</td><td>as reduce with two issued ops per element</td><td>as reduce</td></tr>
+</table></div>
+
+<p>Every collective is a barrier among the lanes in scope, every combine order is fixed, and every
+round snapshots its sources before any landing write, so values form a Kahn network with one actor
+class: determinism is syntactic. Element-wise arithmetic inside a collective is <em>issued</em>
+(one issue per element on the combining lane) and movement runs at DMA rate; a collective is not a
+free vector unit.</p>
+
+<h3>Makespan, area, and the ISA delta</h3>
+
+<p><b>Makespan</b> is MIMD-between-barriers: the prologue, plus for every barrier-to-barrier
+segment the maximum over lanes of that lane's settled time for the lines it executes, plus the
+collective rows, plus the tape phases of R9. Because lane coordinates are affine in addresses
+(rule R1&prime;), the lane maximum sits at a corner of each guard class and is found by evaluation, not
+search. Modes are padded segment-wise: every arm is charged the mode's maximum issues and
+byte-microns between consecutive blocking operations, so the timeline is data-independent by
+construction. Nothing is simulated. <b>Area</b> is
+<var>P</var>&middot;((2<var>k</var>&minus;1)&sup2; + 16,384) &micro;m&sup2; for <var>P</var> &ge; 2 and the settled
+(2<var>k</var>&minus;1)&sup2; at <var>P</var> = 1.</p>
+
+<div class="tblwrap"><table>
+<tr><th>Construct</th><th>Operands</th><th>Semantics</th><th>Bytes</th></tr>
+<tr><td><code>replicate P</code></td><td><var>P</var> = 2<sup><var>j</var></sup> &le; 4,096</td><td>header; fixes <var>P<sub>x</sub></var>, <var>P<sub>y</sub></var>, <var>S</var>; <code>lane</code> = <code>lane_y</code>&middot;<var>P<sub>x</sub></var> + <code>lane_x</code></td><td>6</td></tr>
+<tr><td><code>lane</code>, <code>lane_x</code>, <code>lane_y</code></td><td>&mdash;</td><td>static per-tile integers; affine in addresses; <code>mod</code>/<code>div</code> only in <code>set</code> immediates and <code>if_static</code> predicates</td><td>0</td></tr>
+<tr><td><code>lanes (x0..x1, y0..y1):</code></td><td>static, inclusive</td><td>rectangular guard; unguarded lanes skip to the next barrier</td><td>14</td></tr>
+<tr><td><code>stripe &lt;tape&gt; cyclic | block n | block2d(bx,by) | replicate</code></td><td><code>in</code> or <code>out</code></td><td>static distribution of the stream (R9)</td><td>8</td></tr>
+<tr><td><code>recv.T d</code> / <code>send.T a</code></td><td>as settled</td><td>collective tape operations under the stripe; 1 + <var>w</var>/8 ns each</td><td>6</td></tr>
+<tr><td>collectives</td><td><var>a</var>, <var>n</var>, op, T, scope, root</td><td>table above; the head is blocked &lceil;<var>m</var>/8&rceil; ns per endpoint</td><td>10 (18 for shift/roll)</td></tr>
+<tr><td><code>mode sel -&gt; c in 0..K</code></td><td>as settled</td><td>worst arm for energy, segment-wise padding for time; arms carry identical barrier tuples and byte-balanced ports</td><td>as settled</td></tr>
+</table></div>
+
+<h3>Worked examples</h3>
+
+<p><b>(a1) The streamed 2<sup>20</sup>-byte sum.</b> <code>stripe in cyclic</code>, one
+<code>recv.i32</code> and four adds per trip per lane, one <code>reduce</code>, one
+<code>send</code>. The body is 5.52&nbsp;ns per trip, the tape 4<var>P</var>/8&nbsp;ns, so the program is
+issue-bound to <var>P</var> = 8 and tape-bound from <var>P</var> = 16. Speed-ups are given against the
+settled 1&nbsp;B/ns machine and against a same-tape single core (8&nbsp;B/ns), because the first
+number mixes an eight-fold tape change with parallelism.</p>
+
+<div class="tblwrap"><table>
+<tr><th><var>P</var></th><th>mesh, <var>S</var></th><th class="num">E (fJ)</th><th class="num">of which clock</th><th class="num">T (ns)</th><th>speed-up settled / same-tape</th><th class="num">A (&micro;m&sup2;)</th></tr>
+<tr><td>1 (settled)</td><td>&mdash;</td><td class="num">5,255,745,092</td><td class="num">0 (353.3&nbsp;MfJ if charged)</td><td class="num">2,102,751 (same-tape 1,447,809)</td><td>1</td><td class="num">25</td></tr>
+<tr><td>2</td><td>2&times;1, 132</td><td class="num">5,623,260,828</td><td class="num">243,238,103</td><td class="num">723,923</td><td>2.90 / 2.00</td><td class="num">32,818</td></tr>
+<tr><td>4</td><td>2&times;2, 132</td><td class="num">5,730,531,803</td><td class="num">243,249,428</td><td class="num">361,978</td><td>5.81 / 4.00</td><td class="num">65,636</td></tr>
+<tr><td>8</td><td>4&times;2, 132</td><td class="num">5,919,523,775</td><td class="num">243,279,764</td><td class="num">181,012</td><td>11.62 / 8.00</td><td class="num">131,272</td></tr>
+<tr><td>16</td><td>4&times;4, 132</td><td class="num">6,213,474,881</td><td class="num">352,442,878</td><td class="num">131,117</td><td>16.04 / 11.04</td><td class="num">262,544</td></tr>
+<tr><td>64</td><td>8&times;8, 132</td><td class="num">7,996,764,222</td><td class="num">1,410,063,435</td><td class="num">131,144</td><td>16.03 / 11.04</td><td class="num">1,050,176</td></tr>
+</table></div>
+
+<p>Energy rises 18% at <var>P</var> = 16 (12% distribution, 7% clock) for an 11&times; time gain, and
+then the tape is the wall: the streamed sum is where a parallel machine buys time only.</p>
+
+<p><b>(a2) The resident sum, Dally's framing.</b> Each lane holds <var>N</var>/<var>P</var> bytes,
+sums them, then one <code>reduce</code>. The load phase (a cyclic stripe) is reported separately
+and added for the end-to-end row, because Dally's example charges it.</p>
+
+<div class="tblwrap"><table>
+<tr><th><var>P</var></th><th><var>k</var>, <var>S</var></th><th class="num">E resident (fJ)</th><th class="num">of which clock</th><th>ratio</th><th class="num">T (ns)</th><th>speed-up</th><th class="num">A (&micro;m&sup2;)</th><th class="num">E end-to-end (fJ)</th><th>ratio</th><th>T end-to-end, speed-up</th></tr>
+<tr><td>1</td><td>1,025</td><td class="num">724,764,725</td><td class="num">0 (241.0&nbsp;MfJ if charged)</td><td>1</td><td class="num">1,434,757</td><td>1</td><td class="num">4,198,401</td><td class="num">5,968,955,445</td><td>1</td><td>2,483,333 ns</td></tr>
+<tr><td>4</td><td>513, 1,025</td><td class="num">575,978,693</td><td class="num">208,969,246</td><td>1.26</td><td class="num">310,966</td><td>4.6</td><td class="num">4,268,036</td><td class="num">7,076,103,397</td><td>0.84</td><td>442,041; 5.6 / 4.1</td></tr>
+<tr><td>16</td><td>257, 513</td><td class="num">381,364,918</td><td class="num">193,027,875</td><td>1.90</td><td class="num">71,811</td><td>20.0</td><td class="num">4,472,848</td><td class="num">7,781,382,901</td><td>0.77</td><td>202,891; 12.2 / 9.0</td></tr>
+<tr><td>64</td><td>129, 258</td><td class="num">285,163,248</td><td class="num">185,640,403</td><td>2.54</td><td class="num">17,266</td><td>83</td><td class="num">5,275,712</td><td class="num">9,193,233,380</td><td>0.65</td><td>148,354; 16.7 / 12.3</td></tr>
+<tr><td>256</td><td>65, 194</td><td class="num">243,111,814</td><td class="num">185,767,881</td><td>2.98</td><td class="num">4,319</td><td>332</td><td class="num">8,454,400</td><td class="num">14,874,263,878</td><td>0.40</td><td>135,424; 18.3 / 13.5</td></tr>
+<tr><td>1,024</td><td>33, 162</td><td class="num">256,353,600</td><td class="num">211,862,595</td><td>2.83</td><td class="num">1,232</td><td>1,165</td><td class="num">21,103,616</td><td class="num">34.69&nbsp;&micro;J</td><td>0.17</td><td>132,371; 18.8 / 13.8</td></tr>
+<tr><td>4,096</td><td>17, 146</td><td class="num">481,118,176</td><td class="num">410,727,043</td><td>1.51</td><td class="num">597</td><td>2,404</td><td class="num">71,569,408</td><td class="num">108.4&nbsp;&micro;J</td><td>0.06</td><td>131,805; 18.8 / 13.9</td></tr>
+</table></div>
+
+<p>Three readings. The &radic;<var>P</var> locality dividend is real (mean read distance 683&nbsp;&micro;m
+at <var>P</var> = 1, 171 at <var>P</var> = 16) but the clock caps it near 3&times; at <var>P</var> = 256 and it
+falls again at 4,096, so the energy board's optimum is finite. Speed-ups above <var>P</var> are a
+v1 artefact the reader must know: the settled machine charges operand flight serially (386,177 of
+its 1,434,757&nbsp;ns is unpipelined flight over a 683&nbsp;&micro;m mean path) and the &radic;<var>P</var>
+shrinkage of that path is booked as speed-up; real SRAM pipelines it. And a once-swept table that
+had to be loaded over the tape is <em>worse</em> in energy at every <var>P</var> &ge; 4 &mdash;
+Dally's 354&times; needs a table produced in place, which is exactly what the MNIST tiers' resident
+weights are.</p>
+
+<p><b>(b) The 64&times;64 int8 matmul.</b> Tile (<var>x</var>,<var>y</var>) owns a block of C;
+<code>stripe in block2d</code> delivers its blocks of A and B; <code>allgather.row</code> and
+<code>allgather.col</code> give it its block-row of A and block-column of B; the settled 4&times;4
+register-block kernel does the MACs; output leaves row-major under credit pull.</p>
+
+<div class="tblwrap"><table>
+<tr><th><var>P</var></th><th><var>k</var>, <var>S</var></th><th class="num">E (fJ)</th><th class="num">tapes</th><th class="num">allgather</th><th class="num">clock</th><th class="num">T (ns)</th><th>speed-up settled / same-tape</th><th class="num">A (&micro;m&sup2;)</th><th class="num">fJ/MAC (compute)</th></tr>
+<tr><td>1 (blocked)</td><td>97</td><td class="num">146,421,528</td><td class="num">124,454,160</td><td class="num">0</td><td class="num">0 (117.7&nbsp;MfJ if charged)</td><td class="num">700,320 (same-tape 684,960)</td><td>1</td><td class="num">37,249</td><td class="num">83.8</td></tr>
+<tr><td>4</td><td>91, 220</td><td class="num">271,650,182</td><td class="num">131,792,892</td><td class="num">3,387,456</td><td class="num">116,370,102</td><td class="num">173,170</td><td>4.04 / 3.96</td><td class="num">196,580</td><td class="num">75.1</td></tr>
+<tr><td>16</td><td>57, 186</td><td class="num">294,430,778</td><td class="num">141,918,896</td><td class="num">8,731,896</td><td class="num">123,843,206</td><td class="num">46,073</td><td>15.20 / 14.87</td><td class="num">466,448</td><td class="num">69.1</td></tr>
+<tr><td>64</td><td>37, 166</td><td class="num">355,814,021</td><td class="num">160,503,872</td><td class="num">18,273,808</td><td class="num">152,853,721</td><td class="num">14,216</td><td>49.3 / 48.2</td><td class="num">1,389,632</td><td class="num">64.9</td></tr>
+</table></div>
+
+<p>Time falls 15&times; and energy doubles. The clock is 42% of the 16-tile energy, and it is honest:
+<var>P&middot;T</var> = 16 &times; 46&nbsp;&micro;s = 737 core-microseconds against 700 for the single core
+(95% parallel efficiency), and the single core pays no clock by rule. Like for like (the single
+core charged its 117.7&nbsp;MfJ), the 16-tile machine costs 1.11&times; the energy for 15&times; the
+time. The energy board rewards <var>P</var> only where locality beats <var>P&middot;T</var> &times; 168&nbsp;fJ;
+the time board rewards it outright.</p>
+
+<h3>Which machine, scoring, exploits</h3>
+
+<p>Dally's 256-core chip with per-core SRAM on a mesh, programmed as GSPMD does with
+<code>partition_id</code> and all-reduce, all-gather and collective-permute; the SRAM-plus-network
+half of Roune's AI CPU without the array. One honest mismatch: Dally's 2&nbsp;MB core does not fit
+256 to a 16&nbsp;mm die in this model (<var>k</var> = 1,449, <var>S</var> = 2,897&nbsp;&micro;m, five tiles per
+die side), because the byte pitch is 1&nbsp;&micro;m against his 0.61 and a half-diamond fills a
+quarter of its bounding square; 256 tiles per die are 243&nbsp;KiB tiles. Scoring is the settled
+closed forms with two more affine dimensions plus a table row per collective and the R9
+recurrence: about 2,600 new judge lines, 0.2&ndash;10&nbsp;ms per submission, no simulator. Exploits
+closed: huge <var>P</var> for free work (the clock, the block, the text delivery); a
+<code>replicate 2</code> shell with one idle lane, 1.45&times; faster than the settled streamed sum on
+the tape rate alone (it scores on the <var>P</var> &ge; 2 time board only); collectives as unissued
+vector units; FIFO deadlock through block stripes (R9); corner-rule under-estimation with
+<code>mod</code> addresses (R1&prime;); modes as free MIMD (segment padding); port balance by mnemonic
+(bytes); <code>shift</code> as a free memset (rejected at <var>P</var> = 1); the table bomb; head
+placement (fixed lattice). It rewards small per-tile working sets, neighbour chains, large messages,
+2-D decompositions (SUMMA's row and column scopes cost 0.4&times; the link energy of a 1-D
+allgather) and model parallelism for MLPs; it punishes streaming once-touched data, replication to
+all lanes, divergence, high <var>P</var> on small problems, and every rung-(a) trace (a 700k-line
+trace costs 323&nbsp;mm&sup2; of instruction buffer at <var>P</var> = 16, so rung (a) stays
+<var>P</var> = 1 only).</p>
+
+<p class="note"><b>Strongest surviving objection.</b> Collectives-only is a closed world: no
+overlap of a lane's own communication with its compute, no point-to-point, no data-dependent
+destinations. Roune's &ldquo;three-stage software pipeline you write every time&rdquo; has no
+expression, and the makespan is pessimistic against hardware that barriers only at collectives.
+That is the price of a judge with no simulator; Scenario 3 is the answer when it is too high.</p>
+
+<h2 id="s2">6. Scenario 2: the systolic MXU coprocessor with a vector pass</h2>
+
+<p><b>In one paragraph.</b> The settled head, or a Scenario-1 tile's head, gets a
+<var>K</var>&times;<var>K</var> mesh of 16&times;16-&micro;m processing elements in its otherwise empty lower
+half-plane, fed and drained through four edge buffers by <var>K</var>-lane vector loads and stores at
+min(4<var>K</var>, 16)&nbsp;B/ns. The PE program (up to eight four-byte micro-ops in up to four phases,
+including <code>shr/shl/cmp/select</code>) is loaded once at a priced configuration; afterwards
+there is no instruction traffic, only 1&nbsp;fJ per clocked PE-beat, the clock trunk of the declared
+array per beat, and the bytes moved. Time is a Kung&ndash;Leiserson wavefront: <code>mesh.run</code>
+starts a skewed phase sequence, the head keeps issuing, <code>mesh.wait</code> joins. It is a TPU
+matrix unit and vector unit attached to a scalar core, Roune's &ldquo;traditional CPU with extra
+vector compute and a systolic array.&rdquo; <var>K</var> = 0 is the settled machine bit for bit.
+Adopt it second, inside a Scenario-1 tile.</p>
+
+<pre class="ascii">
+              y ^      head memory: lin(a) half-diamond above the head (unchanged)
+                |               . . . . . . .
+   IN ─► (−1,0) [H] (0,0) ─► (1,0) OUT        (0,−1) instruction tape; core block, if a Scenario-1 tile,
+                |                              sits beside the array to the west
+  x = −w_buf−1 .. −1 │ x = 0 ................. K·s−1 │ K·s .. K·s+w_buf−1
+  ┌──────────────────┼────────────────────────────────┼──────────────────┐ y = −2
+  │                  │  NORTH buffer: K lanes, 2D B   │                  │  w_buf = 2D/s columns
+  ├──────────────────┼──┬──┬──┬──┬────────────────┬──┼──────────────────┤ y = −2−w_buf
+  │ WEST buffer      │PE│PE│PE│PE│ …              │  │ EAST buffer      │
+  │ lane l: s rows   ├──┼──┼──┼──┼────────────────┼──┤ (pass-through    │  PE: 16 x 16 cells,
+  │ slot (h,t) at    │PE│PE│PE│PE│                │  │  writes priced)  │  4x4 controller,
+  │ x = −1−c,        ├──┼──┼──┼──┼────────────────┼──┤                  │  32 data B, 64 prog B
+  │ y = y_top(l)−r   │ …                             │                  │  links: 4 B/beat,
+  ├──────────────────┼────────────────────────────────┼──────────────────┤  16 fJ per byte-hop
+  │                  │  SOUTH buffer (drain reads priced)                │
+  └──────────────────┴────────────────────────────────┴──────────────────┘ y = −2−2w_buf−K·s
+</pre>
+
+<h3>Constants and rules</h3>
+
+<div class="kv">
+<b>PE</b><span>16&times;16 cells: a 4&times;4 controller, 16 ring-1 data cells at 1&nbsp;fJ/byte, 16 ring-2 at 2&nbsp;fJ/byte, 64 program cells, the rest logic (a u8&times;u8&rarr;i32 MAC with link registers is about 90 real &micro;m&sup2; at 7&nbsp;nm). <var>s</var> = 8&nbsp;&micro;m is allowed only for a declared u8-multiply-only PE (5&nbsp;nm)</span>
+<b>Links</b><span>4 bytes per beat per direction to the four neighbours; the sender pays <var>s</var> fJ per byte; a beat is 1&nbsp;ns on the array's equal-path clock tree</span>
+<b>Per beat</b><span>1&nbsp;fJ per PE for every PE and every beat of a phase, skew beats included, plus 0.125&middot;<var>H</var><sub>tree</sub> fJ of clock trunk (<var>K</var> = 16: 5,760&nbsp;&micro;m of tree, 720&nbsp;fJ per beat), regardless of how many rows and columns the run uses</span>
+<b>Configuration</b><span><code>mesh.prog</code> once: 64&middot;(1 + <var>D</var><sub>00</sub> + <var>H</var><sub>tree</sub>) + 256&middot;<var>K</var>&sup2; fJ; go and done tokens one byte over the tree each way</span>
+<b>Feed</b><span>a byte reaches a PE by tape &rarr; head memory &rarr; head (&lceil;&radic;<var>a</var>&rceil;) &rarr; lane cell (head-to-lane distances of the diagram) &rarr; edge PE (&delta; = <var>s</var>/2 + column + |row offset|) &rarr; interior PEs at 16&nbsp;fJ per hop. Nothing is broadcast: a byte <var>K</var> lanes need is fetched <var>K</var> times. The head's memory port caps vector loads and stores at min(4<var>K</var>, 16)&nbsp;B/ns &mdash; the settled head moves about 13 bytes per issued nanosecond and inherits that width</span>
+<b>Makespan</b><span>a phase occupies <var>n<sub>p</sub></var> + |&sigma;<sub>r</sub>|(<var>R</var>&minus;1) + |&sigma;<sub>c</sub>|(<var>C</var>&minus;1) beats; the software-pipelined loop (wait, run, store, load, load) obeys &Delta; = 1 + max(<var>H</var> + 1, <var>T</var><sub>mesh</sub>) per iteration exactly, with <var>H</var> = <var>T</var><sub>store</sub> + 2<var>T</var><sub>load</sub>; the judge evaluates it at the box corners. Closed-form</span>
+<b>Area</b><span>the settled square of the head's diamond (with a <var>K</var>&sup2;-tile i32 C buffer, comparable to v1's 4-row buffer) plus (<var>K&middot;s</var> + 2<var>w</var><sub>buf</sub>)&sup2; for the array block</span>
+</div>
+
+<div class="tblwrap"><table>
+<tr><th>Mnemonic</th><th>Operands</th><th>Price</th></tr>
+<tr><td><code>mesh K, D</code></td><td>header; <var>K</var> &isin; {0, 1, 2, 4, &hellip;, 256}, <var>D</var> bytes per lane per half</td><td>area only</td></tr>
+<tr><td><code>mesh.prog P</code></td><td>a library program (<code>OS_MAC</code>, <code>WS_MAC</code>, <code>VPASS</code>) or up to 64 inline bytes; once, never during a run</td><td>64(1 + <var>D</var><sub>00</sub> + <var>H</var><sub>tree</sub>) + 256<var>K</var>&sup2; fJ; 8 + (<var>D</var><sub>00</sub> + <var>K&middot;s</var>)/<var>v</var> + 8 ns</td></tr>
+<tr><td><code>mesh.load.T side.h, base, sl, ss, n, lanes</code></td><td>typed vector load into a buffer half: lane stride, element stride, elements per lane</td><td>&Sigma; <var>d</var>(addr) + &Sigma; head-to-lane distance; 1 + &lceil;<var>K&middot;n&middot;w</var>/min(4<var>K</var>,16)&rceil; ns + flight</td></tr>
+<tr><td><code>mesh.store.T side.h, base, sl, ss, n, lanes</code></td><td>typed vector store from slot 0 upward</td><td>&Sigma; lane-to-head distance (head write free); same rate</td></tr>
+<tr><td><code>mesh.run pmask, n0..n3, &sigma;r, &sigma;c, rows, cols, cont</code></td><td>phases, beats per phase, skews, active sub-array, keep lane pointers</td><td>2<var>H</var><sub>tree</sub> + &Sigma;<sub>p</sub> <var>n<sub>p</sub></var>&middot;rows&middot;cols&middot;<var>c<sub>p</sub></var> + trunk per beat + edge terms; 1 ns on the head</td></tr>
+<tr><td><code>mesh.wait</code></td><td>&mdash;</td><td><var>t</var> &larr; max(<var>t</var> + 1, <var>t</var><sub>done</sub>)</td></tr>
+<tr><td>PE micro-ops</td><td><code>mac add sub mul and or xor min max copy set shr shl cmp select phase nop</code>, links <code>@W/@N/@E/@S</code>, accumulate <code>@X+</code></td><td>local 1&ndash;2&nbsp;fJ/B, link write <var>s</var> fJ/B, edge &delta;, 1&nbsp;fJ per beat; one beat each</td></tr>
+</table></div>
+
+<h3>Worked example: the 64&times;64 int8 matmul</h3>
+
+<p>Output-stationary <code>OS_MAC</code> (zero, then <code>mac.i32 acc, @W.u8, @N.u8</code> with the
+operands forwarded east and south, then a northward drain), tiles of <var>K</var>&times;<var>K</var>
+outputs over a reduction length of 64, software-pipelined halves. A MAC-beat at <var>s</var> = 16 is
+41&nbsp;fJ (1 + 8 + 16 + 16), a drain beat 73. Compute-only energies; the common I/O is
+124.45&nbsp;nJ. The baseline is the blocked single core: 21,967,280&nbsp;fJ compute-only in
+674,920&nbsp;ns.</p>
+
+<div class="tblwrap"><table>
+<tr><th><var>K</var> (PEs)</th><th><var>s</var> = 16: fJ/MAC (mesh, trunk, edge, load, store)</th><th class="num">E (fJ)</th><th class="num">T (ns)</th><th>speed-up</th><th class="num">A (&micro;m&sup2;)</th><th>mesh busy</th><th class="num"><var>s</var> = 8: fJ/MAC</th><th class="num">E (fJ)</th></tr>
+<tr><td>blocked v1</td><td>83.8</td><td class="num">21,967,280</td><td class="num">674,920</td><td>1</td><td class="num">37,249</td><td>&mdash;</td><td class="num">83.8</td><td class="num">21,967,280</td></tr>
+<tr><td>2 (4)</td><td>158.1 (45.0, 1.6, 16.6, 94.3, 1.8)</td><td class="num">41,439,521</td><td class="num">71,800</td><td>9.4</td><td class="num">36,857</td><td>0.99</td><td class="num">152.6</td><td class="num">40,014,113</td></tr>
+<tr><td>4 (16)</td><td>115.8 (48.4, 2.6, 8.6, 55.2, 3.0)</td><td class="num">30,363,569</td><td class="num">19,532</td><td>34.6</td><td class="num">41,977</td><td>0.98</td><td class="num">98.0</td><td class="num">25,692,081</td></tr>
+<tr><td>8 (64)</td><td>100.3 (54.0, 3.6, 4.8, 35.6, 4.9)</td><td class="num">26,298,041</td><td class="num">5,725</td><td>117.9</td><td class="num">59,089</td><td>0.97</td><td class="num">73.9</td><td class="num">19,377,593</td></tr>
+<tr><td>16 (256)</td><td>104.6 (64.7, 4.9, 3.0, 25.8, 8.8)</td><td class="num">27,432,749</td><td class="num">3,307</td><td>204.1</td><td class="num">119,425</td><td>0.54</td><td class="num">68.7</td><td class="num">17,997,741</td></tr>
+<tr><td>32 (1,024)</td><td>133.3 (85.8, 7.2, 2.5, 20.9, 16.6)</td><td class="num">34,936,739</td><td class="num">2,347</td><td>287.6</td><td class="num">344,777</td><td>0.27</td><td class="num">80.9</td><td class="num">21,206,243</td></tr>
+<tr><td>64 (4,096)</td><td>211.2 (127.8, 11.8, 3.0, 18.9, 33.1)</td><td class="num">55,372,781</td><td class="num">2,075</td><td>325.3</td><td class="num">1,281,713</td><td>0.12</td><td class="num">125.0</td><td class="num">32,780,173</td></tr>
+</table></div>
+
+<p class="note">The parenthetical components are the calculator's attribution and do not sum exactly to
+the totals (they leave out the one-time program load and head control at small <var>K</var> and overlap
+slightly at large <var>K</var>); the totals, <var>E</var> divided by 262,144 MACs, are the scored values.</p>
+
+<p>The coprocessor is a <em>time</em> engine: 35&ndash;325&times; faster than the blocked single core.
+On energy it beats the single core only with the declared 8-&micro;m PE (68.7&ndash;73.9&nbsp;fJ/MAC at
+<var>K</var> = 8&ndash;16, 1.13&ndash;1.22&times; below); at 16&nbsp;&micro;m the in-mesh floor is 41&nbsp;fJ of hops
+per MAC and the head's diamond feed adds 19&ndash;94, so <var>K</var> = 8 lands 1.20&times; above. Roune's
+forces appear correctly stated: issues per MAC fall 4&times; per doubling of <var>K</var>, but the
+head's <em>bytes</em> per MAC fall at most 2&times; on loads and not at all on stores (4<var>K</var>&sup2;
+i32 bytes per 64<var>K</var>&sup2; MACs at every <var>K</var>), the drain grows with <var>K</var>, and an array
+larger than the head port can feed idles &mdash; at <var>K</var> = 16 the mesh is 54% busy because a
+16&nbsp;B/ns port, not the array, sets the pace. The honest caveat: a TPU matrix unit is fed at
+<var>K</var> bytes per cycle per side from a banked vector memory, 16&ndash;32&times; wider than this
+inherited head port, so every <var>K</var> &ge; 16 row describes the port. The &ldquo;TPU beats CPU on
+energy&rdquo; story needs a banked head memory (deferrable), panel-resident buffers
+(<var>D</var> &ge; 8,192) and a reduction length far above <var>K</var>: the 8192&sup3; GEMM and the tier-3
+MLP, not 64&times;64. For the tier-2 SGD step the vector pass is load-bearing: without it the step is
+73&ndash;89% head-bound and saturates at 13&ndash;16&times; over v1; with it about 90&times;.</p>
+
+<p>On the 2<sup>20</sup>-byte sum the mesh is a <var>K</var>-lane SIMD strip: 960&nbsp;nJ (1.32&times; v1)
+in 67&nbsp;&micro;s at <var>K</var> = 16. It loses on energy at every <var>K</var> and cannot reach Dally's
+distributed-memory result at all, with 20&ndash;32 bytes per PE. Its scoring is entirely closed-form
+(static counts times per-beat costs, quasi-polynomial edge sums of period <var>s</var>, lattice sums
+for loads, the first-order recurrence for time); it cannot deadlock and determinism is a circuit
+property. Exploits closed: free head bandwidth (the port cap), the <var>K</var> = 1 relayout engine
+(4&nbsp;B/ns), free idle silicon (trunk and PE beats regardless of gating), the straw-man baseline,
+zero-footprint PEs, area absorption, modes reaching into the mesh, declared half flags,
+<code>mesh.prog</code> as a cheap broadcast, link registers as free storage, untyped stores that
+scatter bytes.</p>
+
+<p class="note"><b>Strongest surviving objection.</b> Its expressivity is one dataflow shape.
+Only the 4<var>K</var>&minus;4 edge PEs receive independent data, so anything that is not a
+rank-1-update wavefront runs at O(<var>K</var>) parallelism, and it answers one of the four target
+algorithms on its own. It is a component, ranked second as the first extension of a Scenario-1
+tile, not as a multiprocessor; its energy case rests on the PE pitch and on a head port the model
+inherited rather than designed.</p>
+
+<h2 id="s3">7. Scenario 3: the message-passing multicore with a chiplet level</h2>
+
+<p><b>In one paragraph.</b> Scenario 1's lattice, tiles, tapes and collective library (kept as
+primitives, so every Scenario-1 program scores identically here), plus explicit two-sided messages
+(<code>msend</code>/<code>mrecv</code>, <code>mxchg</code>), a one-sided <code>put</code> into declared
+landing windows with an explicit <code>release</code>, credit-based end-to-end flow control per ordered
+pair of tiles, and a die/package level with priced crossings. Values stay a Kahn network (per-pair
+FIFOs, blocking receive, no probe); energy and area stay closed-form; makespan needs a
+deterministic, data-free discrete-event simulation over message and tape-segment events. It is
+Epiphany-, SCC- or Cerebras-class manycore, Dally's 4&times;4 array of 16&nbsp;mm chips, and the
+SRAM-to-network-to-SRAM DMAs of Roune's AI CPU. Adopt it third, once the reference simulator
+exists and has been differentially tested against Scenario 1's closed forms.</p>
+
+<pre class="ascii">
+   die (0,1)                            die (1,1)
+   +-----------------------------+  gap  +-----------------------------+
+   | [t][t][t][t] ... C x C      |  ~~~  | [t][t][t][t] ...            |
+   | [t][t][t][t]  tiles, S µm   |═E_off═| [t][t][t][t]                |   ═ die-to-die link:
+   | ...                         |  ~~~  | ...                         |     5,000 fJ/B, +20 ns,
+   +-----------------------------+       +-----------------------------+     8 B/ns
+        ║ E_off                                ║
+   +-----------------------------+       +-----------------------------+
+   | [t][t][t][t] ...            |═E_off═| [t][t][t][t] ...            |
+ in═►[t]                         |       |                             |
+ out◄[t]  tile (0,0) has the     |       |                             |
+ instr►   three tapes            |       |                             |
+   +-----------------------------+       +-----------------------------+
+   die (0,0), 16,384 µm                  die (1,0)
+</pre>
+
+<div class="kv">
+<b>Dies</b><span>side 16,384&nbsp;&micro;m (judge constant); a lattice larger than one die is cut into <var>C</var>&times;<var>C</var> tiles per die; a route that crosses a die boundary pays <var>E</var><sub>off</sub> = 5,000&nbsp;fJ per byte + 20&nbsp;ns per crossing (chiplet, silicon-bridge or HBM-class, 0.625&nbsp;pJ/bit); a board crossing, if a task declares one, pays <var>E</var><sub>pkg</sub> = 40,000&nbsp;fJ per byte + 100&nbsp;ns (Dally's 320&nbsp;pJ per 64&nbsp;b)</span>
+<b>Packets</b><span>8-byte header (destination, source, length, sequence), up to 64&nbsp;KiB, priced on <var>n</var> + 8 per byte at <var>S&middot;h</var> + 40<var>h</var> + 65, latency 1 + &lceil;(<var>n</var>+8)/8&rceil; + flights + <var>h</var> ns; the landing write in the destination's diamond is charged; landing is cut-through, so the 1&nbsp;KiB network interface is a staging buffer, not a size bound</span>
+<b>Flow control</b><span>credits per ordered pair in bytes at the landing window (default double buffering); a packet is injected only when its bytes are reserved, so links never stall; the output pad pulls from the owner of its current segment; flags have exactly one signaller and one waiter</span>
+<b>Text</b><span>shared text multicast as Scenario 1; role-specialised blocks (<code>core (i,j):</code> or a quasi-affine predicate) are shipped per tile over their own XY path and cross the tape once each; a tape schedule (an affine list of tile, bytes segments) makes Cannon's skewed initial placement free</span>
+<b>Windows</b><span><code>window w: @b len n depth k</code> declares <var>k</var> slots that exactly one other tile may write by <code>put</code>; disjoint from everything the owner writes; a slot is readable only between its <code>wait</code> and its <code>release</code></span>
+</div>
+
+<div class="tblwrap"><table>
+<tr><th>Mnemonic</th><th>Operands</th><th>Semantics and price</th></tr>
+<tr><td><code>msend q, a, n</code></td><td>destination tile, local address, <var>n</var> &le; 65,536</td><td>next message in the (me, <var>q</var>) FIFO; blocks at the source until <var>q</var>'s window has <var>n</var>+8 bytes of credit; source read + (<var>n</var>+8)&middot;(<var>S&middot;h</var> + 40<var>h</var> + 65) [+ (<var>n</var>+8)&middot;<var>E</var><sub>off</sub> per crossing]</td></tr>
+<tr><td><code>mrecv p, b, n</code></td><td>source tile, local address, <var>n</var></td><td>wait for the next message from <var>p</var> (must be <var>n</var> bytes, checked statically); lands at [<var>b</var>, <var>b</var>+<var>n</var>); landing charged; 1 + &lceil;<var>n</var>/8&rceil; after the last byte</td></tr>
+<tr><td><code>mxchg q, a, b, n</code></td><td>pair exchange</td><td>send and receive as one instruction; the checker requires <var>q</var>'s matching <code>mxchg</code> in the same barrier position</td></tr>
+<tr><td><code>put w@q, a, n</code>; <code>wait w</code>; <code>release w</code></td><td>window of tile <var>q</var></td><td>one-sided write into the next slot; the owner's <code>wait</code> blocks until it has landed; <code>release</code> returns the credit</td></tr>
+<tr><td><code>sig f</code> / <code>wait f, m</code></td><td>flag cell, threshold</td><td>counting semaphore, one signaller and one waiter; priced as a 1-byte message</td></tr>
+<tr><td>Scenario-1 collectives</td><td>&mdash;</td><td>primitives, priced by Scenario 1's rows</td></tr>
+</table></div>
+
+<p><b>Determinism and deadlock.</b> Values are Kahn-determinate: per-pair FIFOs, blocking receives,
+no probe, single-signaller flags, single-writer disjoint windows, <code>put</code> snapshots its source
+at issue. Deadlock is decided by an <em>untimed</em> execution of the credit network (every tile
+run as a process with the declared credit depths and no clock; by the Kahn property the answer is
+schedule-independent), because FIFO-size matching alone is not enough: two tiles that each send
+twice before their first receive deadlock at depth one with perfectly matching sequences.
+<b>Makespan</b> is the discrete-event simulation of the rulebook: events are messages, tape
+segments, output-segment handovers and boot completions; between events each tile advances by the
+settled closed-form segment time; integer ticks of 1/(1,874&times;8)&nbsp;ns; oldest-head-flit
+arbitration with row-major ties; steady-state extrapolation of index-invariant outer loops. It
+is O(<var>M</var> log <var>M</var>) with <var>M</var> &le; 10<sup>7</sup> events, milliseconds for the worked
+examples and about 10<sup>4</sup> events for the 8192&sup3; GEMM and tier-3 MNIST after segment-level
+tape events and 64&nbsp;KiB messages. A closed-form lower bound (per-tile sums, per-link bytes/8) is
+reported beside it.</p>
+
+<p><b>What it adds, measured.</b> Cannon on the 64&times;64 matmul, which Scenario 1 cannot write
+(point-to-point shifts with wrap on a mesh without a torus): per tile two operand blocks
+double-buffered, &radic;<var>P</var> steps, a message of A left and of B up per step, C accumulated in
+place.</p>
+
+<div class="tblwrap"><table>
+<tr><th>Schedule</th><th><var>P</var></th><th><var>k</var>, <var>S</var></th><th class="num">E (fJ)</th><th class="num">T (ns)</th><th class="num">A (&micro;m&sup2;)</th><th class="num">fJ/MAC</th><th class="num">exchange E (fJ)</th><th>messages</th></tr>
+<tr><td>Scenario 1 SUMMA</td><td>4</td><td>91, 220</td><td class="num">271,650,182</td><td class="num">173,170</td><td class="num">196,580</td><td class="num">75.1</td><td class="num">3,387,456</td><td>8</td></tr>
+<tr><td>Scenario 3 Cannon</td><td>4</td><td>91, 220</td><td class="num">273,700,861</td><td class="num">175,279</td><td class="num">196,580</td><td class="num">77.2</td><td class="num">3,408,256</td><td>8</td></tr>
+<tr><td>Scenario 1 SUMMA</td><td>16</td><td>57, 186</td><td class="num">294,430,778</td><td class="num">46,073</td><td class="num">466,448</td><td class="num">69.1</td><td class="num">8,731,896</td><td>96</td></tr>
+<tr><td>Scenario 3 Cannon</td><td>16</td><td>47, 176</td><td class="num">299,910,734</td><td class="num">47,221</td><td class="num">400,528</td><td class="num">72.3</td><td class="num">11,029,776</td><td>96</td></tr>
+</table></div>
+
+<p>At 64&times;64 the model does not separate Cannon from SUMMA in energy (+1.9%) or time (+2.5%),
+because tapes and clock dominate; Cannon holds 4&times;256&nbsp;B of operands instead of a 1&nbsp;KiB
+block-row plus block-column and wins 14% of the area. At 8192&sup3;, where replication is 2&nbsp;MB per
+tile, only Cannon can be written. On Dally's 4&times;4 dies the partial-sum tree costs at most 15
+crossings &times; 4 bytes &times; 5,000 = 0.3&nbsp;nJ, while loading the table across dies costs three
+quarters of 2<sup>20</sup> bytes at 5,000 or more, at least 3.9&nbsp;&micro;J &mdash; which is his point
+about where the 640&nbsp;pJ goes. Scoring: energy and area closed-form (piecewise-affine hop counts
+and die floors through the settled floor-sum engine); about 4,700 new judge lines including an
+800-line simulator; 0.2&ndash;2&nbsp;s per submission at the event cap. It rewards pipelines and stages
+with different text, overlap of one tile's DMA with another's compute, coarse messages and skew by
+tape schedule; it punishes fine-grained messaging (a 1-byte message is a 9-byte packet at &ge;
+105&nbsp;fJ per payload byte), die crossings for anything but results, and out-of-order output.</p>
+
+<p class="note"><b>Strongest surviving objection.</b> The makespan is a simulation, and every
+tie-break in it is a rule of the competition: the published simulator <em>is</em> the definition of
+time on the general path. The closed-form lower bound lets a suspicious makespan be compared, but
+the time axis rests on 800 lines of simulator rather than on a formula.</p>
+
+<h2 id="s4">8. Scenario 4: the SIMT lane array</h2>
+
+<p><b>In one paragraph.</b> One instruction tape, one decoder at the port strip, <var>P</var>
+identical lanes at fixed sites on an <var>n<sub>x</sub></var>&times;<var>n<sub>y</sub></var> array at pitch
+<var>s</var>, every instruction executed by every lane in lockstep. The word is driven over an H-tree
+whose entire wire length is charged per issue; data reaches lanes by striped <code>recv</code> over a
+second tree; lanes exchange through a distance-priced shuffle library with a per-link rate term or
+through a 32-bank shared plane; <code>dp4a</code> and <code>dp2a</code> do four int8 or two int16 MACs
+per issue. Everything is closed-form. It is one GPU streaming multiprocessor. Adopt it fourth, on
+its own <var>P</var> &ge; 2 board, because on the energy board it loses to the single core for every
+instruction-bound task by construction.</p>
+
+<pre class="ascii">
+              SHARED PLANE  n_x·s wide × H_SH rows, 32 banks × 4 B (bank = ⌊q/4⌋ mod 32)
+   y=n_y·s  ┌──────────────────────────────────────────────────────────────┐
+            └──────────────────────────────────────────────────────────────┘
+            ┌───────────────┬───────────────┬───────────────┬───────────────┐
+            │  ◊◊◊ private  │  ◊◊◊          │  ◊◊◊          │  ◊◊◊          │  l_y = 1
+            │   H  head     │   H           │   H           │   H           │  head at local row 16
+            │ ┌────┐ 16x16  │ ┌────┐        │ ┌────┐        │ ┌────┐        │  head block rows 0..15
+            │ │blk │ ══╗    │ │blk │ ╔══    │ │blk │ ══╗    │ │blk │ ╔══    │  (decoder leaf, dp4a,
+            ├─┴────┴───╫────┼─┴────┴─╫──────┼─┴────┴───╫────┼─┴────┴─╫──────┤   predicate, ports)
+            │  ◊◊◊     ╚════╪════ROOT╩══════╪══════════╝    │        ║      │  l_y = 0
+            │   H           │   ║           │   H           │   H    ║      │
+            │ ┌────┐        │ ┌─╫──┐        │ ┌────┐        │ ┌────┐ ║      │  ═ H-tree (I and D
+            │ │blk │        │ │blk│ trunk   │ │blk │        │ │blk │═╝      │    trees, same shape)
+   y=0      └───────────────┴───╫───────────┴───────────────┴───────────────┘
+   y=−1      port strip      [in] [instr] [out]   decoder at the port; s ≥ 32
+</pre>
+
+<div class="kv">
+<b>Lanes</b><span><var>P</var> &isin; {2, 4, &hellip;, 1,024}; lane (<var>l<sub>x</sub></var>,<var>l<sub>y</sub></var>) is an <var>s</var>&times;<var>s</var> tile, <var>s</var> &ge; 32; rows 0&ndash;15 are the 16&times;16 head block, the head sits at local row 16, the private half-diamond hangs above with <var>k</var> &le; <var>s</var> &minus; 17 (private capacity 225&nbsp;B at <var>s</var> = 32, 1,024 at 64, 4,096 at 128)</span>
+<b>Trees</b><span>trunk <var>L<sub>t</sub></var> = (<var>n<sub>y</sub></var>&minus;1)<var>s</var>/2 + 17 from the port to the tree centroid; H-tree length <var>H</var> = 1.5&middot;<var>s</var>&middot;<var>n</var>(<var>n</var>&minus;1) for a square array; root-to-leaf <var>s</var>(<var>n</var>&minus;1), equidistant</span>
+<b>Instruction price</b><span>per issue <var>E</var><sub>instr</sub> = <var>B</var><sub>tape</sub>(1 + <var>L<sub>t</sub></var>) + <var>B</var><sub>word</sub>&middot;<var>H</var> + <var>P&middot;B</var><sub>word</sub> with an 8-byte lane word: 5,660&nbsp;fJ per issue (354 per lane) at <var>P</var> = 16, <var>s</var> = 32; 808,430&nbsp;fJ (789.5 per lane) at <var>P</var> = 1,024, <var>s</var> = 66. Per lane it tends to 1.5&middot;<var>s</var>&nbsp;fJ per word byte and never amortises: an H-tree is within 1.5&times; of the Steiner minimum (<var>P</var>&minus;1)<var>s</var> of wire, which is a theorem about wire, not a modelling choice</span>
+<b>Tapes</b><span>at the port strip, 8&nbsp;B/ns; <code>recv.T d</code> striped (element <var>l</var> to lane <var>l</var>, priced <var>P&middot;w</var>(<var>E</var><sub>in</sub> + 1 + trunk + root-to-leaf)); <code>recvrec</code> for un-transposed records; <code>brecv</code> one element to all lanes; <code>recv1</code>/<code>send1</code> single-lane forms; <code>send</code> coalesced in lane order; port balance in bytes</span>
+<b>Memory</b><span>private lane memory at identical addresses (writes free), a lane-affine private form <code>[a + &sigma;&middot;lane]</code>, a per-lane indexed window priced at its maximum (flagged as an upper bound), and the 32-bank plane with <var>q</var> = (<var>b</var> + &sigma;<sub>x</sub><var>l<sub>x</sub></var> + &sigma;<sub>y</sub><var>l<sub>y</sub></var>) mod <var>M</var>: one distinct address per bank per ns, same-address reads broadcast, conflicts serialised, plane writes charged</span>
+<b>Shuffles</b><span><code>shfl.T d, a, pat, k</code> with xor, up, down, bcast, rot within 32-lane warps and rotx, roty, shx, shy on rows and columns; energy per lane <var>w</var>(&lceil;&radic;<var>a</var>&rceil; + <var>s</var>(|&Delta;<var>l<sub>x</sub></var>| + |&Delta;<var>l<sub>y</sub></var>|) + 2); time max(flight, per-link bytes/8): a row rotation by <var>n<sub>x</sub></var>/2 at <var>P</var> = 1,024 puts 64&nbsp;B on one link, 8&nbsp;ns, not 0.56 of flight</span>
+<b>Predication</b><span><code>@p</code> costs two word bytes and <var>P</var>&lceil;&radic;<var>p</var>&rceil;; masked lanes pay everything and write nothing; not on sends, so tape consumption is static</span>
+<b>Makespan, area</b><span><var>T</var> = &Sigma; over issues of [1 + broadcast flight + max over lanes of operand flight + bytes/8 + conflicts], the lane maximum by an upper-envelope sweep over lane and loop boxes; closed-form at every rung. <var>A</var> = max(<var>n<sub>x</sub>s</var>, 1 + <var>n<sub>y</sub>s</var> + <var>H</var><sub>SH</sub>)&sup2;; the clock rider 0.125&middot;<var>H</var> fJ/ns is charged</span>
+</div>
+
+<h3>Worked examples</h3>
+
+<p><b>(a) The 2<sup>20</sup>-byte sum, streamed,</b> <var>P</var> = 16, <var>s</var> = 32: one striped
+<code>recv.i32</code> (333,132&nbsp;fJ, 9.09&nbsp;ns) and one <code>dp4a</code> (6,204&nbsp;fJ, 1.10&nbsp;ns) per
+iteration, 16,384 iterations: 5.572&nbsp;&micro;J in 166.95&nbsp;&micro;s, 12.6&times; the settled machine and
+8.7&times; a same-tape single core, on 16,384&nbsp;&micro;m&sup2;. <b>Resident</b> (the table in the lanes,
+<var>s</var> forced by capacity):</p>
+
+<div class="tblwrap"><table>
+<tr><th><var>P</var></th><th><var>s</var></th><th class="num">E (fJ)</th><th class="num">of which clock</th><th>ratio to v1</th><th class="num">T (ns)</th><th>speed-up</th><th class="num">A (&micro;m&sup2;)</th></tr>
+<tr><td>1</td><td>&mdash;</td><td class="num">724,764,725</td><td class="num">0</td><td>1</td><td class="num">1,434,757</td><td>1</td><td class="num">4,198,401</td></tr>
+<tr><td>16</td><td>514</td><td class="num">2,090,800,825</td><td class="num">53,134,584</td><td>0.35</td><td class="num">45,944</td><td>31</td><td class="num">4,231,249</td></tr>
+<tr><td>64</td><td>258</td><td class="num">894,375,437</td><td class="num">30,460,146</td><td>0.81</td><td class="num">11,244</td><td>128</td><td class="num">4,264,225</td></tr>
+<tr><td>256</td><td>130</td><td class="num">475,498,643</td><td class="num">16,402,014</td><td>1.52</td><td class="num">2,804</td><td>512</td><td class="num">4,330,561</td></tr>
+<tr><td>1,024</td><td>66</td><td class="num">265,853,655</td><td class="num">8,848,520</td><td>2.73</td><td class="num">721</td><td>1,991</td><td class="num">4,464,769</td></tr>
+</table></div>
+
+<p>Instruction delivery is 83&ndash;89% of the parallel machine's energy at every <var>P</var>: fat lanes
+lose 2.9&times;, thin lanes win 2.7&times;, the crossover is near <var>P</var> = 100. This is the GPU
+lesson in one table.</p>
+
+<p><b>(b) The 64&times;64 int8 matmul,</b> <var>P</var> = 16, <var>s</var> = 32, a 128&times;68 plane holding
+B<sup>T</sup> padded to bank-conflict-free rows, lane <var>l</var> owning columns <var>j</var> &equiv; <var>l</var>
+(mod 16), a 4-row register tile and <code>dp4a</code>:</p>
+
+<div class="tblwrap"><table>
+<tr><th>Configuration</th><th class="num">issues</th><th class="num">E (fJ)</th><th class="num">on-chip (fJ)</th><th class="num">on-chip fJ/MAC</th><th class="num">T (ns)</th><th class="num">A (&micro;m&sup2;)</th></tr>
+<tr><td>settled v1, blocked (2 issues per MAC)</td><td class="num">669,696</td><td class="num">146,421,528</td><td class="num">21,967,280</td><td class="num">83.8</td><td class="num">700,320 (same-tape 684,960)</td><td class="num">37,249</td></tr>
+<tr><td><var>P</var> = 4, <var>s</var> = 64</td><td class="num">24,576</td><td class="num">206,126,713</td><td class="num">83,246,713</td><td class="num">318</td><td class="num">30,773</td><td class="num">38,809</td></tr>
+<tr><td><var>P</var> = 16, <var>s</var> = 32</td><td class="num">6,912</td><td class="num">193,115,450</td><td class="num">70,235,450</td><td class="num">268</td><td class="num">11,021</td><td class="num">38,809</td></tr>
+<tr><td><var>P</var> = 16, <var>s</var> = 64</td><td class="num">6,912</td><td class="num">250,521,316</td><td class="num">127,641,316</td><td class="num">487</td><td class="num">11,792</td><td class="num">84,681</td></tr>
+</table></div>
+
+<p>64&times; faster than the blocked single core (62&times; same-tape) for 1.32&times; the energy; on-chip
+energy triples because instruction delivery, 56&ndash;68% of it, is priced honestly, and
+<code>dp4a</code> is the only thing that keeps it there. The comparison with Scenario 1 is confounded
+by an ISA choice (decision P7): a Scenario-1 tile granted <code>dp4a</code> would cut its compute
+phase about eight-fold and land near 9,300&nbsp;ns at <var>P</var> = 16, ahead of this array's 11,021 at
+0.9&times; the energy &mdash; an estimate, not a calculator output.</p>
+
+<p>Which machine: one streaming multiprocessor, with lane = CUDA core and register slice, decoder =
+warp scheduler, instruction tree = dispatch, data tree = operand collector, plane = shared memory
+with 32 banks, <code>shfl</code> = <code>SHFL</code>, predication = the SIMT mask, <code>dp4a</code> =
+<code>IDP4A</code>, <code>brecv</code> = the constant cache; 350&ndash;790&nbsp;fJ of delivery per
+lane-instruction is of the order of published per-lane overheads. Scoring: closed-form at every
+rung (lane sums are lattice sums of piecewise-affine forms; about 2,500 judge lines; 1&ndash;20&nbsp;ms
+per submission); deadlock impossible. Exploits closed: the <var>P</var>-ported plane and crossbar
+(32 banks, warp-scoped shuffles, a per-link rate), zero-footprint lanes (<var>s</var> &ge; 32 and the
+head block), data-dependent tape position across arms (bytes), data-dependent writer counts, the
+table bomb (immediates cost trunk plus tree per byte per issue), the unlabelled baseline. It rewards
+thin lanes with small private sets, coalesced striped I/O, register tiles, packed MACs, and
+ownership that makes lane order equal stream order; it punishes fat lanes, divergence, plane traffic
+without reuse, streaming, and scalar instruction-bound work (the sparse-parity search at
+<var>P</var> = 32 is 13&times; faster and 12.6&times; the energy).</p>
+
+<p class="note"><b>Strongest surviving objection.</b> On the energy board this scenario loses to
+<var>P</var> = 1 for every instruction-bound or streamed task, because the settled machine fetches a
+14-byte instruction for 1&nbsp;fJ and the thinnest legal lane array pays at least 110&nbsp;fJ per
+issue; only resident, read-bound, packable problems flip. Either SIMT is scored as its own
+<var>P</var> &ge; 2 board (the recommendation) or <var>P</var> = 1 gets a priced instruction store, which
+breaks the <var>P</var> = 1 exactness that everything else here depends on.</p>
+
+<h2 id="compare">9. Comparison</h2>
+
+<p>The rank is an adoption order under two constraints (the judge stays execution-free wherever
+possible; <var>P</var> = 1 stays exact) weighted by expressivity over the four target algorithms. No
+scenario is first on every criterion:</p>
+
+<div class="tblwrap"><table>
+<tr><th>Criterion</th><th>Best to worst</th></tr>
+<tr><td>Judge cost, closed-form purity</td><td>SIMT &asymp; systolic &gt; SPMD mesh &gt; message passing</td></tr>
+<tr><td>Determinism and deadlock, as specified</td><td>SIMT = systolic (structural) &gt; SPMD mesh (checker) &asymp; message passing (credits + untimed run)</td></tr>
+<tr><td>Expressivity over the four target algorithms</td><td>message passing (four, plus pipelines) &gt; SPMD mesh (four) = SIMT (four, bounded routing) &gt; systolic (one)</td></tr>
+<tr><td>Time on the 64&times;64 matmul</td><td>systolic (204&times; compute-only) &gt; SIMT (64&times;) &gt; SPMD mesh &asymp; message passing (15&times;)</td></tr>
+<tr><td>Realism against the Dally and Roune anchors</td><td>systolic (the AI-CPU array, fed 16&ndash;32&times; below a TPU) &asymp; message passing (Dally's die array, DMAs) &gt; SPMD mesh &gt; SIMT</td></tr>
+<tr><td>Smallest delta to the settled spec</td><td>SPMD mesh &gt; systolic &gt; SIMT &gt; message passing</td></tr>
+</table></div>
+
+<div class="tblwrap"><table>
+<tr><th></th><th>1. SPMD tile mesh</th><th>2. Systolic coprocessor</th><th>3. Message-passing multicore</th><th>4. SIMT lane array</th></tr>
+<tr><td>New constants beyond the rulebook</td><td>none (<var>S</var> from <var>k</var>; <var>P</var> &le; 4,096)</td><td><var>s</var> = 16 (8 declared), min(4<var>K</var>,16) B/ns, 1&nbsp;fJ per PE-beat, trunk per beat, edge distances</td><td>8-byte header, per-pair credits, 5,000&nbsp;fJ + 20&nbsp;ns per die crossing, 40,000 per board crossing</td><td><var>s</var> &ge; 32, 16&times;16 head block, tree and trunk lengths, 32&times;4&nbsp;B banks, 8- or 11-byte words</td></tr>
+<tr><td>Instruction axis</td><td>MIMD with shared text: multicast once, settled fetch per tile, 168&nbsp;fJ/ns clock</td><td>configured once; 1&nbsp;fJ per beat plus trunk</td><td>plus per-tile role text over its own path</td><td>one fetch, about 1.5&middot;<var>s</var> fJ per lane per word byte per issue</td></tr>
+<tr><td>Memory axis</td><td>private diamonds, fixed lattice, uniform <var>k</var></td><td>head diamond, edge buffers, 32&nbsp;B per PE</td><td>plus landing windows and dies</td><td>private, 32-bank plane, indexed window</td></tr>
+<tr><td>Communication axis</td><td>collectives only, statically scheduled DMA</td><td>16&nbsp;fJ hops, lanes at &delta;, the head port</td><td>plus packets with credits and crossings</td><td>shuffles at <var>s</var>&middot;hops + 2 with a link rate, plane, trees</td></tr>
+<tr><td>Closed-form</td><td>energy, area, makespan</td><td>energy, area, makespan</td><td>energy, area; makespan by simulation</td><td>energy, area, makespan</td></tr>
+<tr><td>Judge: new lines, per submission</td><td>&asymp;2,600; 0.2&ndash;10&nbsp;ms</td><td>&asymp;2,000&ndash;2,800; 0.5&ndash;5&nbsp;ms</td><td>&asymp;4,700; ms to 2&nbsp;s</td><td>&asymp;2,500; 1&ndash;20&nbsp;ms</td></tr>
+<tr><td>2<sup>20</sup> sum, streamed, <var>P</var> = 16 (settled 5.26&nbsp;&micro;J, 2,103&nbsp;&micro;s)</td><td>6.21&nbsp;&micro;J, 131&nbsp;&micro;s (16.0&times; / 11.0&times; same-tape)</td><td>0.96&nbsp;&micro;J + load, 67&nbsp;&micro;s (a <var>K</var>-lane strip)</td><td>as Scenario 1</td><td>5.57&nbsp;&micro;J, 167&nbsp;&micro;s (12.6&times; / 8.7&times;)</td></tr>
+<tr><td>2<sup>20</sup> sum, resident, <var>P</var> = 16 and best <var>P</var> (settled 725&nbsp;nJ, 1,435&nbsp;&micro;s)</td><td>381&nbsp;nJ, 71.8&nbsp;&micro;s; 243&nbsp;nJ at <var>P</var> = 256 (2.98&times;)</td><td>960&nbsp;nJ, 67&nbsp;&micro;s (loses)</td><td>as Scenario 1</td><td>2.09&nbsp;&micro;J, 45.9&nbsp;&micro;s; 266&nbsp;nJ at <var>P</var> = 1,024 (2.73&times;)</td></tr>
+<tr><td>64&times;64 matmul, best <var>P</var> (settled 146.4&nbsp;nJ, 700&nbsp;&micro;s)</td><td>294.4&nbsp;nJ, 46.1&nbsp;&micro;s at <var>P</var> = 16 (15.2&times;); like-for-like clock 1.11&times;</td><td>151.9&nbsp;nJ (<var>s</var> = 16) or 142.4 (<var>s</var> = 8), 27.9&nbsp;&micro;s at <var>K</var> = 16 with 1&nbsp;B/ns tapes; 6.4&nbsp;&micro;s inside a Scenario-1 tile</td><td>299.9&nbsp;nJ, 47.2&nbsp;&micro;s (Cannon, <var>P</var> = 16)</td><td>193.1&nbsp;nJ, 11.0&nbsp;&micro;s at <var>P</var> = 16 (64&times;)</td></tr>
+<tr><td>Which machine</td><td>Dally's 256-core chip, GSPMD</td><td>TPU matrix and vector unit, AI-CPU core, port-starved</td><td>Epiphany, SCC, Cerebras; a 16-die array; AI-CPU DMAs</td><td>one GPU SM</td></tr>
+<tr><td>Weakest point</td><td>barriers only at collectives; <var>P</var> = 1 pays no clock</td><td>the pitch decides the energy verdict; a 16&nbsp;B/ns feed</td><td>simulator tie-breaks are rules</td><td>the 1&nbsp;&micro;m wire model is 4&times; above CACM per bit-mm</td></tr>
+<tr><td>Fits</td><td>tree reductions, SUMMA, model-parallel MLPs, candidate search, per-lane arms via lane-static modes, rungs (b)&ndash;(e) per tile</td><td>rank-1-update wavefronts, im2col convolution, GF(2) matmul</td><td>plus Cannon, pipelines with overlap, halos, MoE as a static all-to-all, 8192&sup3;</td><td>SUMMA, reductions, oblivious search, packed inference</td></tr>
+<tr><td>Cannot</td><td>point-to-point, overlap of a lane's communication with its compute, data-dependent destinations</td><td>anything that is not a wavefront at <var>K</var>&sup2; parallelism</td><td>remote reads, dynamic routing, work stealing</td><td>per-lane data-dependent routing beyond a window, 2-D recursion over lanes</td></tr>
+<tr><td>Writability</td><td>best: MPI or <code>pmap</code> vocabulary, 5&ndash;40-line programs; R9 and the pitch rule are the traps</td><td>pick a PE program from a verified library of three, write strides; custom PE programs are an expert path</td><td>good for MPI-shaped authors once <code>mxchg</code> exists; the tape schedule is the trap</td><td>good for CUDA-shaped authors; <var>s</var> set by the largest private array is the trap</td></tr>
+<tr><td><var>P</var> = 1 exact</td><td>yes (E, T, A)</td><td>yes at <var>K</var> = 0</td><td>yes</td><td>yes; lane forms rejected by grammar at <var>P</var> = 1</td></tr>
+</table></div>
+
+<h2 id="recommend">10. Recommendation and migration path</h2>
+
+<p><b>Adopt the SPMD tile mesh first.</b> It is the smallest delta that makes the three invisible
+things visible &mdash; parallel makespan, cross-core locality, Dally's tree &mdash; while keeping the
+judge a formula: one header line, a stripe library with rule R9, seven scoped collectives, the
+128&times;128 block, the clock rule and 8&nbsp;B/ns tapes. Its scores are what the other three are compared
+against: every message-passing program that uses only collectives scores identically, the systolic
+array attaches to its tiles, SIMT is its own division. And it is the scenario in which the MNIST
+target reads correctly: the tier-3 MLP, whose weights are resident across epochs, is the
+&ldquo;table produced in place&rdquo; that makes the resident-sum dividend real rather than an artefact of
+dropping the load phase. Three things must be in its checker before it ships: R9 (stripe validity
+and the tape-phase recurrence), R1&prime; (affine lane addresses), and the <var>P</var> = 1 | <var>P</var> &ge; 2
+split of the time board.</p>
+
+<p><b>Then the systolic coprocessor inside a tile</b> (&ldquo;AI-CPU tile&rdquo;: <code>replicate P</code>
+plus <code>mesh K, D</code> per tile), because it is the only scenario that prices Roune's thesis and
+its scoring is closed-form; the per-challenge flag is the PE pitch, and its first honest showcase is
+the 8192&sup3; GEMM with panel-resident buffers. <b>Message passing third</b>, when the reference
+simulator exists and has been differentially tested against the closed forms on the collective
+primitives; its first user is the 8192&sup3; Cannon. <b>SIMT as a separate <var>P</var> &ge; 2
+division</b>, with decision P7 settling whether <code>dp4a</code> reaches the mesh's tiles.</p>
+
+<p><b>Migration from the settled spec.</b></p>
+<ol>
+<li>Pin two settled conventions the designs found unwritten, as decisions: the port term (a
+<code>recv.T</code> occupies sizeof(T) ns at 1&nbsp;B/ns with no issue slot; program-text transit is not in
+<var>T</var> at <var>P</var> = 1) and the area function ((2<var>k</var>&minus;1)&sup2; over the <code>lin(a)</code>
+half-diamond). Correct the &ldquo;5&nbsp;pJ per byte&rdquo; slip to per bit.</li>
+<li>The mesh: header, stripes with R9, collectives with charged landings, the block, the clock rule,
+8&nbsp;B/ns tapes, byte-based port balance and segment-wise arm padding (these two also tighten
+<var>P</var> = 1 modes: a settled program whose arms differ in <code>recv</code> width becomes invalid, a
+grammar change at no score change for programs that remain valid), and the reported columns
+<var>E</var><sub>static</sub>, <var>E</var><sub>ctl</sub>, <var>E</var><sub>clk</sub>-if-charged. Publish the resident-sum and
+matmul rows of &sect;5 as reference scores; split the time board. Rung (a) stays <var>P</var> = 1 only.</li>
+<li><code>mesh K, D</code> inside a tile, with the three PE programs shipped as a verified library
+and the vector pass.</li>
+<li><code>msend</code>/<code>mrecv</code>/<code>mxchg</code>/<code>put</code>/<code>release</code>, windows, dies, with the
+simulator and the untimed credit run published as normative.</li>
+<li><code>lanes P, s, H_SH</code> on its own leaderboard.</li>
+</ol>
+
+<p>Deferrable, with no worked number depending on them: scoring <var>E</var><sub>static</sub>; a banked
+head memory for the coprocessor; torus wrap links; asynchronous <code>msend</code> with a descriptor
+queue; heterogeneous tile radii and Roune-style mixed core kinds; per-die tape triples at
+<var>E</var><sub>pkg</sub>; a v2 critical-path time division.</p>
+
+<h2 id="anim">11. Animations</h2>
+
+<p>The three animations below are driven by event-level schedules, not by drawings. Every dot is a
+byte transfer along its Manhattan path, every filled region is a local phase, and the counters
+under each canvas accumulate the same energy and time the scorer would charge; the totals were
+cross-checked against an independent Python calculator to the femtojoule and nanosecond. Press
+play, drag the speed slider (log scale), or step from event to event. Long local phases are
+fast-forwarded while nothing visibly moves, and the readout says so.</p>
+
+<h3>Animation 1: Dally's table sum on a 4&times;4 tile lattice (Scenario 1, resident framing)</h3>
+
+<p>Sixteen tiles at a 162&nbsp;&micro;m pitch each hold 1&nbsp;KiB of the table in their private diamond
+(<var>k</var> = 33; the 128&times;128 blocks under the heads are the core footprints). The 38-byte program
+crosses the instruction tape once and is multicast over the spanning tree (152,206&nbsp;fJ,
+11.27&nbsp;ns); every tile sums its 1,024 bytes (30,669&nbsp;fJ and 1,039.82&nbsp;ns each: one issue per byte
+plus the accumulator round trip plus the read at &lceil;&radic;<var>a</var>&rceil;); then 4-byte partial sums
+climb a recursive-halving tree in four rounds (1,349&nbsp;fJ per one-hop message, 2,157 per two-hop,
+24,275&nbsp;fJ and 26.8&nbsp;ns in all); the result leaves by the output tape.</p>
+
+<div class="anim" id="anim1"></div>
+<div class="totals" id="anim1-totals"></div>
+
+<p>Counters: dynamic energy 687,197&nbsp;fJ; clock 168&nbsp;fJ/ns &times; 16 tiles &times; 1,079.40&nbsp;ns =
+2,901,436&nbsp;fJ; total 3,588,633&nbsp;fJ; makespan 1,079.40&nbsp;ns; area 16 &times; (65&sup2; + 16,384) =
+329,744&nbsp;&micro;m&sup2;. The same 16,384 bytes on the settled single core (<var>k</var> = 129, mean read
+distance 85.9&nbsp;&micro;m against 21.95 on the lattice): 1,557,877&nbsp;fJ in 17,199.88&nbsp;ns on 66,049&nbsp;&micro;m&sup2;.
+The lattice is <b>15.9&times; faster</b>; on dynamic energy it is 2.27&times; cheaper (the sixteen local
+sums alone 3.13&times;); with its clock it costs 2.30&times; more than the uncharged single core and
+1.24&times; less like for like. At 1&nbsp;KiB per core the clock is 4.2&times; the movement; the dividend
+grows with the table (&sect;5, resident rows). Streamed instead of resident, the same job is 0.82&times;
+the single core's energy and 10.7&times; faster, because the 16&nbsp;KiB has to cross the tape and be
+distributed either way.</p>
+
+<h3>Animation 2: 32&times;32 int8 SUMMA on a 2&times;2 tile lattice (Scenario 1)</h3>
+
+<p>Four tiles at a 176&nbsp;&micro;m pitch (<var>k</var> = 47). The 420-byte program is multicast (354,180&nbsp;fJ,
+54.7&nbsp;ns). The input tape streams 128 sixteen-byte segments of A and B in stream order into the
+owning tiles under the <code>block2d</code> stripe (the tape at 8&nbsp;B/ns, each tile receiving
+16&nbsp;B per 6&nbsp;ns); each tile all-gathers its row of A and column of B in eight 256-byte messages
+(673,068&nbsp;fJ, 141&nbsp;ns); four register-blocked sweeps of 20,992 issues compute C (535,084&nbsp;fJ and
+21,266&nbsp;ns each); then 64 sixty-four-byte rows of C leave under the credit rule, and the pad is
+visibly starved for its first half by the 24-ns injection cadence of the two tiles that own the
+first rows.</p>
+
+<div class="anim" id="anim2"></div>
+<div class="totals" id="anim2-totals"></div>
+
+<p>Counters: dynamic energy 35,687,672&nbsp;fJ (text 354,180; input 10,784,768; allgather 673,068;
+compute 2,140,336; output 21,735,320); clock 168 &times; 4 &times; 22,411.90 = 15,060,797&nbsp;fJ; total
+50,748,469&nbsp;fJ; makespan 22,411.90&nbsp;ns; area 4 &times; (93&sup2; + 16,384) = 100,132&nbsp;&micro;m&sup2;; compute
+65.3&nbsp;fJ/MAC. The settled single core with the same blocked kernel: 33,206,376&nbsp;fJ in
+91,389.82&nbsp;ns on 10,609&nbsp;&micro;m&sup2;. The lattice is <b>4.08&times; faster</b> (3.91&times; against a same-tape
+single core) for 1.53&times; the energy (1.05&times; like for like); the two tapes are 64% of its energy
+and the clock 30%. The picture shows why: eight block messages and four long sweeps, with the input
+and output tapes as the only serial resources.</p>
+
+<h3>Animation 3: a Kung&ndash;Leiserson wavefront on a 4&times;4 systolic mesh (Scenario 2)</h3>
+
+<p>A 4&times;4 mesh of 16-&micro;m processing elements hangs below the head in the Scenario-2 geometry, with the west and north edge buffers beside it and the head's memory diamond above holding A, B and C at <code>lin(a)</code> addresses. The 64-byte <code>OS_MAC</code> program is loaded once over the array's H-tree (23,873&nbsp;fJ, 16.0&nbsp;ns); the A rows and B columns are loaded into the west and north lanes through the head port at 16&nbsp;B/ns (5.0&nbsp;ns each); then the wavefront runs. PE(<var>i</var>,<var>j</var>) starts at beat <var>i</var>+<var>j</var>, each active beat does one MAC for 41&nbsp;fJ (8 local, 16 forwarding A east, 16 forwarding B south, 1 of clock) while the trunk toggles for 36&nbsp;fJ, for 22 beats including six skew beats; the four-beat northward drain (73&nbsp;fJ per PE-beat) delivers the i32 tile to the north lanes, and the store carries the 64-byte C tile back through the head port (2,337&nbsp;fJ, 5.0&nbsp;ns).</p>
+
+<div class="anim" id="anim3"></div>
+<div class="totals" id="anim3-totals"></div>
+
+<p>Counters: dynamic energy 50,729&nbsp;fJ (configuration 23,873; loads 5,873; mesh 18,620, of which trunk 972 and PE clock 432; store 2,337); makespan 58.26&nbsp;ns; area 5,913&nbsp;&micro;m&sup2; by the Scenario-2 rule (a 729&nbsp;&micro;m&sup2; diamond plus the 72&sup2; array block); 1,613 events; 198&nbsp;fJ/MAC with the one-time configuration, 105 without it. The settled single core with the blocked kernel (two issues per MAC, since the head has no fused MAC): 15,454&nbsp;fJ (60.4&nbsp;fJ/MAC) in 679.89&nbsp;ns on 1,089&nbsp;&micro;m&sup2;. The wavefront is <b>11.7&times; faster</b> and 3.28&times; the energy (1.74&times; with the configuration amortised; 0.47&times; like for like with the head's clock charged). At this toy size the array's fixed costs dominate; the 64&times;64 table in &sect;6 is where the PE pitch decides the verdict. Two choices the Scenario-2 text left open are recorded in the schedule: the drain is drawn as a synchronous shift of one PE per beat, which is what its pricing implies, and the skew applies to the MAC phase only.</p>
+
+<h2 id="decisions">12. Open decisions</h2>
+
+<div class="tblwrap"><table>
+<tr><th>#</th><th>Decision</th><th>Recommended default</th><th>Alternative and its cost</th></tr>
+<tr><td>P1</td><td>Tape rate for <var>P</var> &ge; 2, and the time board</td><td>8&nbsp;B/ns per tape (Dally's 64-bit quantum); <var>P</var> = 1 keeps 1&nbsp;B/ns; the time board is split at <var>P</var> = 1 | <var>P</var> &ge; 2 (a <code>replicate 2</code> shell with one idle lane runs the streamed sum 1.45&times; faster on the tape rate alone); every speed-up is also reported against a same-tape <var>P</var> = 1</td><td>give <var>P</var> = 1 the 8&nbsp;B/ns tape: one board, but every <var>P</var> = 1 time record is re-scored (the streamed sum 2,102,751 &rarr; 1,447,809&nbsp;ns); or a priced multi-tape option, one tape per die edge at <var>E</var><sub>in</sub> each</td></tr>
+<tr><td>P2</td><td>Fetch continuity</td><td>4&nbsp;fJ per line + 1&nbsp;fJ per issue per tile everywhere, plus each scenario's delivery term</td><td>a located loop buffer at about 5&nbsp;fJ per instruction byte for all <var>P</var> is the physically honest MIMD price but re-scores every <var>P</var> = 1 record by 2&ndash;24%</td></tr>
+<tr><td>P3</td><td>Static energy</td><td>report <var>E</var><sub>static</sub> = <var>A&middot;T</var> &times; 1&nbsp;fJ per &micro;m&sup2; per &micro;s as a column and run an <var>A&middot;T</var> board; do not score it yet</td><td>scoring it changes <var>P</var> = 1 (6.0&nbsp;&micro;J against 0.73&nbsp;&micro;J on the resident sum) and makes resident tasks far better parallel; the constant has a &plusmn;10&times; band</td></tr>
+<tr><td>P4</td><td>Idle-clock term</td><td>one rule for all scenarios: 0.125&nbsp;fJ per bit-micron of the declared control structure's clock tree per ns, gated or not (168&nbsp;fJ/ns per tile, 720&nbsp;fJ per beat for a <var>K</var> = 16 array); scored for <var>P</var> &ge; 2; &ldquo;<var>E</var><sub>clk</sub> if charged at <var>P</var> = 1&rdquo; reported. To accept: the 16-tile matmul costs 2.0&times; the settled energy (1.11&times; like for like) and the resident sum's dividend caps near 3&times;</td><td>omit it and idle silicon is free (4,096 declared cores cost nothing; the energy board's optimum is <var>P</var><sub>max</sub>); or charge <var>P</var> = 1 too, moving every <var>P</var> = 1 energy record by 7&ndash;80%</td></tr>
+<tr><td>P5</td><td>Area rule</td><td>&Sigma; settled squares + <var>P</var> &times; 16,384 (0 at <var>P</var> = 1); pitch <var>S</var> = max(2<var>k</var>&minus;1, <var>k</var>+129)</td><td>the centred (2<var>K</var>+1)&sup2; tile is 4&times; the settled area at the same <var>K</var> and breaks <var>P</var> = 1 exactness; a 64&times;64 block under-sizes the buffers 4&times;</td></tr>
+<tr><td>P6</td><td>Write pricing</td><td>landing writes of collectives and messages charged; tape landings and local writes free (settled D2)</td><td>charging all writes for <var>P</var> &ge; 2 is cleaner, at a declared <var>P</var> = 1 &rarr; 2 step; a banked head memory for the coprocessor is the same family of decision</td></tr>
+<tr><td>P7</td><td>SIMT board and <code>dp4a</code></td><td>SIMT on its own <var>P</var> &ge; 2 board; <code>dp4a</code>/<code>dp2a</code> rejected at <var>P</var> = 1 and in mesh tiles</td><td>adopting <code>dp4a</code> into v1 drops the 16&times;16 record 4&times; overnight; adopting it into mesh tiles makes the mesh beat SIMT on 64&times;64 matmul time (about 9,300 against 11,021&nbsp;ns, an estimate)</td></tr>
+<tr><td>P8</td><td>Makespan on the general path</td><td>the published integer-tick simulator plus the untimed credit run are normative; tier 3 accepts only collective-structured or judge-verified periodic programs</td><td>free-form point-to-point at tier 3 costs hours per submission (4&times;10<sup>8</sup> events as first drafted)</td></tr>
+</table></div>
+
+<p>Summarized in one sentence: put the settled machine on a lattice and let tiles talk only through
+priced, statically scheduled collectives, and the judge stays a formula while parallel time,
+cross-core locality and the cost of idle silicon all become visible; everything more expressive
+than that is a simulator, and everything more specialised is a coprocessor.</p>
+
+<h2 id="refs">13. References</h2>
+
+<ol class="refs">
+<li>W. J. Dally, &ldquo;On the model of computation: Point. We must extend our model of computation to account for cost and location,&rdquo; <i>Communications of the ACM</i> 65(9), September 2022, pp. 30&ndash;32, <a href="https://cacm.acm.org/opinion/on-the-model-of-computation-point/">cacm.acm.org</a> &mdash; the PECM, the SRAM numbers, the 256-core table-sum example.</li>
+<li>B. H. Roune, &ldquo;Designing AI Chip Software and Hardware,&rdquo; 2026, <a href="https://docs.google.com/document/d/1dZ3vF8GE8_gx6tl52sOaUVEPq0ybmai1xvu3uk89_is/edit">Google Doc</a> &mdash; the AI-CPU thesis, systolic-array size forces, torus and all-reduce arithmetic, SRAM-to-network DMAs.</li>
+<li>&ldquo;Compare matmul costs across chips,&rdquo; Codex thread, September 2026 &mdash; the 1&nbsp;fJ-per-step calibration against Dally's SRAM hierarchy; c/120 vs c/1200; the 8&nbsp;KiB sub-array as a 32-shell half-diamond. Companion pages: <a href="../a100-grid-energy-report/">the A100 grid energy report</a>.</li>
+<li>&ldquo;The Grid VM: competition design and feasibility,&rdquo; this repository, September 4, 2026 &mdash; the settled single-core machine, decisions D1&ndash;D6, the rung-(a)&ndash;(e) language.</li>
+<li>&ldquo;The expressivity&ndash;scorability ladder&rdquo; and &ldquo;Fixed or moving I/O order?&rdquo;, this repository &mdash; closed-form scoring by rung; the tapes, determinacy, and the remark that nothing rewards parallelism.</li>
+<li>&ldquo;Proposal: a streamed instruction processor and a compact schedule language,&rdquo; this repository, September 4, 2026 &mdash; the four-port geometry, the canonical instruction encoding, charged reads and writes.</li>
+<li>H. T. Kung and C. E. Leiserson, &ldquo;Systolic arrays (for VLSI),&rdquo; 1978/79 &mdash; the wavefront schedule of Scenario 2 and Animation 3.</li>
+<li>Y. Xu et al., &ldquo;GSPMD: general and scalable parallelization for ML computation graphs,&rdquo; 2021 &mdash; the programming model Scenario 1 prices (partition ids, all-reduce, all-gather, collective-permute on a mesh).</li>
+<li>N. P. Jouppi et al., &ldquo;Ten lessons from three generations shaped Google's TPUv4i,&rdquo; ISCA 2021; &ldquo;In-datacenter performance analysis of a tensor processing unit,&rdquo; ISCA 2017 &mdash; the matrix unit fed from a banked vector memory that Scenario 2 approximates with a 16&nbsp;B/ns port.</li>
+<li>A. Olofsson, &ldquo;Epiphany-V: a 1024-processor 64-bit RISC system-on-chip,&rdquo; 2016; Intel SCC; Cerebras WSE &mdash; the manycore anchors of Scenario 3.</li>
+<li>G. Kahn, &ldquo;The semantics of a simple language for parallel programming,&rdquo; IFIP 1974 &mdash; determinacy of the message-passing and collective networks.</li>
+<li>C. Sun et al., &ldquo;DSENT: a tool connecting emerging photonics with electronics for opto-electronic networks-on-chip modeling,&rdquo; NOCS 2012 &mdash; the router energy band behind the 40&nbsp;fJ transit constant.</li>
+<li>lowRISC, the Ibex RISC-V core &mdash; the microcontroller-class core behind the 128&times;128 block and the 1,000&nbsp;fJ per instruction control column.</li>
+<li>A. Aggarwal, B. Alpern, A. Chandra, M. Snir, &ldquo;A model for hierarchical memory,&rdquo; STOC 1987; L. Yavits, A. Morad, R. Ginosar, &ldquo;Cache hierarchy optimization,&rdquo; 2014 &mdash; the &radic;-priced memory and the bank-plus-network latency decomposition that the hierarchy numbers follow.</li>
+<li>NVIDIA, PTX ISA (<code>dp4a</code>, <code>shfl</code>, predication, shared-memory banks) &mdash; the vocabulary of Scenario 4.</li>
+</ol>
+
+<footer>Design report, September 7, 2026. Synthesis of a multi-agent adversarially-reviewed
+design run (six designs, eighteen reviews, two critiques, one revision); animation engine and
+schedules verified against an independent calculator. Part of the
+<a href="https://github.com/cybertronai/sutro-problems">sutro-problems</a> benchmark suite.</footer>
+
+</main>
+
+<script src="gridanim.js"></script>
+<script src="grid-vm-multiprocessor-anim-data.js"></script>
+<script>
+(function () {
+  function fmtE(fJ) { return GridAnim.fmt.energy(fJ); }
+  function fmtT(ns) { return GridAnim.fmt.time(ns); }
+  function fmtI(n) { return GridAnim.fmt.int(Math.round(n)); }
+  function mount(id, A) {
+    var el = document.getElementById(id), tot = document.getElementById(id + '-totals');
+    if (!el || !A) { if (tot) tot.textContent = 'This animation is not available.'; return; }
+    var cfg = Object.assign({}, A.config, { events: A.events, autoplay: false });
+    var ctl = GridAnim.create(el, cfg);
+    var sim = ctl.totals();
+    var T = A.totals || {};
+    var parts = ['Scored totals: dynamic energy ' + fmtE(sim.energy_fJ)];
+    if (T.E_clk != null) parts.push('clock ' + fmtE(T.E_clk));
+    if (T.E != null) parts.push('total ' + fmtE(T.E));
+    parts.push('makespan ' + fmtT(sim.makespan_ns));
+    if (T.A != null) parts.push('area ' + fmtI(T.A) + ' µm² (scenario rule: settled squares plus core blocks)');
+    parts.push(fmtI(sim.events) + ' events');
+    tot.textContent = parts.join(' · ');
+  }
+  mount('anim1', window.ANIM1);
+  mount('anim2', window.ANIM2);
+  mount('anim3', window.ANIM3);
+})();
+</script>
+</body>
+</html>
