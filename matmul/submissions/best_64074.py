@@ -1,4 +1,4 @@
-"""Replay and verify the 64,075 16x16 submission (standard library only)."""
+"""Replay and verify the 64,074 16x16 submission (standard library only)."""
 import hashlib
 import json
 from pathlib import Path
@@ -10,11 +10,11 @@ from matmul import score_16x16
 from matmul.matmul import _parse
 from matmul.submissions.best_66178 import _prove
 
-EXPECTED_SHA256 = '926d13673924154e4b98d8372c89edf11d45b640dfd35e83843eb79ffd95d841'
+EXPECTED_SHA256 = 'b5ca6fb67c61825927e6978c13e16a6a432748c32f6c0f1f52a5dbefb3f2e7dd'
 BASE_SHA256 = '9d94114a87fecd30168fbcf63931bbc98a50778984a11fe0c3b16940218bcf11'
 IR_PATH = Path(__file__).with_suffix('.ir')
-EXPECTED_OPERATIONS = {'copy': 1749, 'mul': 4096, 'add': 3840}
-EXPECTED_READ_COSTS = {'copy': 20048, 'mul': 18832, 'add': 20751, 'output': 4444}
+EXPECTED_OPERATIONS = {'copy': 1748, 'mul': 4096, 'add': 3840}
+EXPECTED_READ_COSTS = {'copy': 20047, 'mul': 18832, 'add': 20751, 'output': 4444}
 
 
 def decode(ir):
@@ -34,13 +34,13 @@ def decode(ir):
     return inputs, steps, [memory[a] for a in outputs]
 
 
-def generate_best_64075():
+def generate_best_64074():
     base = IR_PATH.with_name('best_64431.ir').read_bytes()
     assert hashlib.sha256(base).hexdigest() == BASE_SHA256
     inputs, steps, outputs = decode(base.decode())
     # Rows are [boundary in the original 9,440 instructions, input ID, dest].
     captures = json.loads(IR_PATH.with_suffix('.json').read_text())
-    assert len(captures) == 245
+    assert len(captures) == 244
     assert captures == sorted(captures, key=lambda row: row[0])
     inserted = {}
     for boundary, value, dest in captures:
@@ -70,10 +70,10 @@ def verify():
     data = IR_PATH.read_bytes()
     assert hashlib.sha256(data).hexdigest() == EXPECTED_SHA256
     ir = data.decode()
-    assert generate_best_64075() == ir
+    assert generate_best_64074() == ir
     score = score_16x16(ir)
     operations, read_costs = _prove(ir)
-    assert score == 64075 == sum(read_costs.values())
+    assert score == 64074 == sum(read_costs.values())
     assert operations == EXPECTED_OPERATIONS
     assert read_costs == EXPECTED_READ_COSTS
     inputs, ops, outputs = _parse(ir)
