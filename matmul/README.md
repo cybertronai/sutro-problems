@@ -70,6 +70,6 @@ rejected, which admits the usual bilinear matmul algorithms.
 | 2026-09-04 |  65,084 | [ir](submissions/best_65084.ir), [report](submissions/best_65084.md), [py](submissions/best_65084.py) | [@jurajselep](https://github.com/jurajselep) | newest-first snake passes + JIT A staging + local exact tier allocation |
 | 2026-09-04 |  64,431 | [ir](submissions/best_64431.ir), [report](submissions/best_64431.md), [py](submissions/best_64431.py) | [@cosminscn](https://github.com/cosminscn) | asymmetric panel schedule + persistent B captures + dependency-safe order search |
 | 2026-09-07 |  64,074 | [ir](submissions/best_64074.ir), [report](submissions/best_64074.md), [py](submissions/best_64074.py) | [@SecurityQQ](https://github.com/SecurityQQ) | temporary input captures + cheapest surviving replica reads + redundant-copy deletion |
-| 2026-09-07 |  63,847 | [ir](submissions/best_63847.ir), [report](submissions/best_63847.md), [py](submissions/best_63847.py) | [@SecurityQQ](https://github.com/SecurityQQ) | 5+11 asymmetric panels + alternating input captures and address allocation (frozen-artifact verifier) ★ best |
+| 2026-09-07 |  63,819 | [ir](submissions/best_63819.ir), [report](submissions/best_63819.md), [py](submissions/best_63819.py) | [@SecurityQQ](https://github.com/SecurityQQ) | 6+10 asymmetric panels + dependency-safe scheduling + input captures and address allocation (frozen-artifact verifier) ★ best |
 
 [access_distance](doc/access_distance/) — read-distance histograms for the plotted submission set.

@@ -1,26 +1,26 @@
-"""Exact-output, score, and frozen-artifact contracts for the 63,847 record."""
+"""Exact-output, score, and frozen-artifact contracts for the 63,819 record."""
 import subprocess
 import sys
 import tempfile
 import unittest
 from unittest.mock import patch
 
-from matmul.submissions import best_63847 as record
+from matmul.submissions import best_63819 as record
 
 
-class Record63847Tests(unittest.TestCase):
+class Record63819Tests(unittest.TestCase):
     def test_exact_outputs_cost_and_artifact(self):
-        self.assertEqual(record.verify(), 63847)
+        self.assertEqual(record.verify(), 63819)
 
     def test_hash_gate_rejects_changed_artifact(self):
         changed = record.IR_PATH.read_bytes() + b'\n'
-        self.assertEqual(record.score_16x16(changed.decode()), 63847)
+        self.assertEqual(record.score_16x16(changed.decode()), 63819)
         with patch.object(record.Path, 'read_bytes', return_value=changed):
             with self.assertRaisesRegex(AssertionError, 'SHA-256'):
                 record.verify()
 
     def test_official_score_gate(self):
-        with patch.object(record, 'score_16x16', return_value=63848):
+        with patch.object(record, 'score_16x16', return_value=63820):
             with self.assertRaisesRegex(AssertionError, 'score mismatch'):
                 record.verify()
 
@@ -47,7 +47,7 @@ class Record63847Tests(unittest.TestCase):
                 [sys.executable, '-S', str(record.IR_PATH.with_suffix('.py'))],
                 cwd=directory, capture_output=True, text=True, check=True,
             )
-        self.assertIn('score=63,847', result.stdout)
+        self.assertIn('score=63,819', result.stdout)
         self.assertIn(record.EXPECTED_SHA256, result.stdout)
 
 
