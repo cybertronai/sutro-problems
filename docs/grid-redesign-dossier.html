@@ -1,0 +1,2435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grid-Model Redesign: Decision Dossier</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg: #fcfcfb; --plane: #f9f9f7; --ink: #0b0b0b; --ink2: #52514e;
+    --muted: #898781; --grid: #e1e0d9; --line: #c3c2b7;
+    --accent: #2a78d6; --code-bg: #f2f1ed; --good: #006300; --bad: #a33a3a;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1a1a19; --plane: #0d0d0d; --ink: #ffffff; --ink2: #c3c2b7;
+      --muted: #898781; --grid: #2c2c2a; --line: #383835;
+      --accent: #3987e5; --code-bg: #242422; --good: #0ca30c; --bad: #e66767;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 16px/1.65 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 54rem; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+  h1 { font-size: 1.9rem; line-height: 1.25; margin: 0 0 .4rem; }
+  .sub { color: var(--ink2); margin: 0 0 1.6rem; }
+  h2 { font-size: 1.35rem; margin: 2.8rem 0 .7rem; padding-top: .6rem;
+       border-top: 1px solid var(--grid); scroll-margin-top: 1rem; }
+  h3 { font-size: 1.05rem; margin: 1.6rem 0 .4rem; scroll-margin-top: 1rem; }
+  h4 { font-size: .98rem; margin: 1.2rem 0 .3rem; color: var(--ink2); }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code, pre { font-family: ui-monospace, "SF Mono", Menlo, monospace;
+              font-size: .88em; background: var(--code-bg); border-radius: 4px; }
+  code { padding: .1em .35em; }
+  pre { padding: .8rem 1rem; overflow-x: auto; line-height: 1.5; }
+  pre code { background: none; padding: 0; }
+  .tblwrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0;
+          font-size: .875rem; font-variant-numeric: tabular-nums; }
+  th { text-align: left; color: var(--ink2); font-weight: 600;
+       border-bottom: 1px solid var(--line); padding: .4rem .7rem .4rem 0;
+       vertical-align: bottom; }
+  td { border-bottom: 1px solid var(--grid); padding: .4rem .7rem .4rem 0;
+       vertical-align: top; }
+  blockquote { margin: 1rem 0; padding: .1rem 0 .1rem 1rem;
+               border-left: 3px solid var(--line); color: var(--ink2); }
+  blockquote p { margin: .5rem 0; }
+  ul, ol { padding-left: 1.4rem; }
+  li { margin: .3rem 0; }
+  hr { border: 0; border-top: 1px solid var(--grid); margin: 2.5rem 0; }
+  .toc { background: var(--plane); border: 1px solid var(--grid);
+         border-radius: 8px; padding: .9rem 1.2rem; font-size: .92rem;
+         margin-bottom: 2rem; }
+  .toc a { display: inline-block; margin-right: 1.1rem; white-space: nowrap; }
+  footer { margin-top: 3.5rem; padding-top: 1rem; border-top: 1px solid var(--grid);
+           color: var(--muted); font-size: .85rem; }
+</style>
+</head>
+<body>
+<main>
+
+<div style="text-align: right;"><a href="https://github.com/cybertronai/sutro-problems/blob/main/docs/grid-redesign-dossier.html" target="_blank" rel="noopener noreferrer" aria-label="View this page on GitHub">GitHub &#8599;</a></div>
+
+<h1>Grid-model redesign: decision dossier</h1>
+<p class="sub">Every source bearing on the four open decisions &mdash; the instruction set, the
+grid size, the physical dimensions, and what competitors submit &mdash; with what is decided,
+what is proposed, what contradicts what, and a 58-item fork index. Companion to
+<a href="grid-vm-competition-design.html">The Grid VM: competition design</a>,
+<a href="expressivity-scorability-ladder.html">The expressivity&ndash;scorability ladder</a> and
+<a href="grid-vm-multiprocessor.html">Multiprocessors on the Grid VM</a>.
+September 8, 2026.</p>
+
+<nav class="toc">
+<a href="#0-state-of-each-decision">State of each decision</a>
+<a href="#1-where-everything-lives">Where everything lives</a>
+<a href="#2-decision-1-the-instruction-set-architecture">The instruction set architecture</a>
+<a href="#3-decision-2-the-grid-size">The grid size</a>
+<a href="#4-decision-3-the-physical-dimensions">The physical dimensions</a>
+<a href="#5-decision-4-what-competitors-submit">What competitors submit</a>
+<a href="#6-cross-cutting-decisions-you-will-need-anyway">Cross-cutting decisions you will need anyway</a>
+<a href="#6-half-decisions-nobody-has-named-yet">Decisions nobody has named yet</a>
+<a href="#7-contradictions-ledger">Contradictions ledger</a>
+<a href="#8-what-is-not-written-down-anywhere">What is not written down anywhere</a>
+<a href="#9-appendix-the-complete-fork-index">Fork index</a>
+<a href="#10-link-hub">Link hub</a>
+</nav>
+
+<p><strong>Assembled 2026-09-08 (week 37).</strong> Everything bearing on the four decisions you named:
+the instruction set, the grid size, the physical dimensions, and what competitors actually
+submit. This is a reference, not a proposal — it says what is written down, where, and
+what is still open. Nothing here is a recommendation unless a source made one, in which
+case the source is named.</p>
+<blockquote>
+<p><strong>Do not push this file as-is.</strong> It links private ChatGPT/Gemini/Claude sessions and
+internal Google Docs, and the repo root is served publicly by GitHub Pages. It is
+deliberately left uncommitted.</p>
+</blockquote>
+<p><strong>Read-order if you only have ten minutes:</strong> §0 (state of each decision) → §9 (the complete
+fork index — 58 choices with status) → §7 (contradictions) → §8 (gaps).
+If you have thirty: add §6½ (the forks nobody has named yet) — that is where the answer to
+"what am I forgetting?" mostly lives.</p>
+<hr />
+
+<h2 id="0-state-of-each-decision">0. State of each decision</h2>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Decision</th>
+<th>Status</th>
+<th>Where the current answer is written</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>ISA</strong></td>
+<td>v0/v3 live and frozen per-problem; the <em>redesign</em> ISA (13 ops + <code>recv</code>/<code>send</code> + <code>mode</code>) is <strong>proposed, not merged</strong></td>
+<td><a href="https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets"><code>simplified-dally-model/instruction-sets/</code></a>; <code>docs/grid-vm-competition-design.html</code> §4</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Grid size</strong></td>
+<td>Three MNIST tiers <strong>decided</strong> (3×3/600, 9×9/6k, 28×28/60k). Cell <strong>count/address-space caps proposed</strong> (1 MB / 16 MB / 256 MB per tier). Pitch-to-capacity mapping <strong>open</strong></td>
+<td>internal log 03sep26 + 06sep26; <code>docs/grid-vm-competition-design.html</code> §8</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Physical dimensions</strong></td>
+<td><strong>Decided as a mnemonic triple</strong>: 1 µm pitch, 1 fJ/byte·µm, c/160. Their derivation from Dally is <strong>partly unsourced</strong> and the per-mm constants <strong>contradict each other by 3–9×</strong></td>
+<td>Sutro meeting #30 agenda; RFC #48 §8.2; <code>docs/grid-vm-multiprocessor.html</code> §2</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Submission format</strong></td>
+<td><strong>Two-track, proposed and coherent</strong>: trace for episodic/tier-1, schedule language for at-scale/tiers 2–3. Awaiting <em>your</em> decision — Andy has built it and you have not reviewed PR #48</td>
+<td><a href="https://github.com/cybertronai/sutro-problems/pull/48">PR #48</a>; <code>docs/expressivity-scorability-ladder.html</code> §2</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>The single most consequential thing in the dossier</strong>, and it is not on your list of four:</p>
+<blockquote>
+<p>"the one decision that actually shapes the competition is not in the language at all, but
+in <strong>where the episodes come from</strong>."
+— <code>docs/grid-vm-competition-design.html</code>, §11 closing sentence</p>
+</blockquote>
+<p>That is decision <strong>D1</strong> (embedded weights). If the training pool is public, a submitter
+pretrains offline and ships int8 weights as immediates — ~100 B for a tier-1 linear head,
+~80 KB for a tier-3 MLP at ~98%. Embedding costs a ~10⁻⁵ tax and skips roughly 15/16 of
+tier-3 energy, so the "learning" axis becomes dead code and the benchmark measures
+inference circuits. See §6.3.</p>
+<hr />
+<h2 id="1-where-everything-lives">1. Where everything lives</h2>
+<h3 id="1-1-the-106-commit-gap-read-this-first">1.1 The 106-commit gap — read this first</h3>
+<p>Your local working tree at <code>~/Library/CloudStorage/Dropbox/git0/sutro-problems</code> is
+<strong>106 commits behind <code>origin/main</code></strong>. The three design reports that settle most of this
+exist only on the remote and are not in your checkout:</p>
+<pre><code class="language-bash">cd ~/Library/CloudStorage/Dropbox/git0/sutro-problems &amp;&amp; git log --oneline HEAD..origin/main | wc -l
+</code></pre>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>Doc</th>
+<th>Landed</th>
+<th>What it settles</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>docs/expressivity-scorability-ladder.html</code> (<code>00c8cb7</code>)</td>
+<td>Sep 4</td>
+<td>rungs (a)–(f); where the scoring cliff is; the fetch fork</td>
+</tr>
+<tr>
+<td><code>docs/grid-vm-competition-design.html</code> (<code>4f4d3e2</code>)</td>
+<td>Sep 4</td>
+<td>the whole machine: language, scoring function, adjudication, judge cost, targets, decisions D1–D6</td>
+</tr>
+<tr>
+<td><code>docs/grid-vm-multiprocessor.html</code> (<code>5706824</code>)</td>
+<td>Sep 7</td>
+<td>four multiprocessor scenarios + open decisions P1–P8; also silently <strong>corrects</strong> the metric and the c/160 figure</td>
+</tr>
+<tr>
+<td><code>docs/dataflow-io-order.html</code></td>
+<td>Sep 3</td>
+<td>ports, determinacy, closed/open division, the resident-vs-restream break-even</td>
+</tr>
+<tr>
+<td><code>docs/rfc-scheduled-dally-language.md</code></td>
+<td>branch <code>rfc-scheduled-dally</code> only (<a href="https://github.com/cybertronai/sutro-problems/pull/48">PR #48</a>)</td>
+<td>SDL: grammar, closed-form scoring, sandbox</td>
+</tr>
+</tbody>
+</table></div>
+<p>Live at:
+- <a href="https://cybertronai.github.io/sutro-problems/docs/grid-vm-competition-design.html">https://cybertronai.github.io/sutro-problems/docs/grid-vm-competition-design.html</a>
+- <a href="https://cybertronai.github.io/sutro-problems/docs/expressivity-scorability-ladder.html">https://cybertronai.github.io/sutro-problems/docs/expressivity-scorability-ladder.html</a>
+- <a href="https://cybertronai.github.io/sutro-problems/docs/grid-vm-multiprocessor.html">https://cybertronai.github.io/sutro-problems/docs/grid-vm-multiprocessor.html</a>
+- <a href="https://cybertronai.github.io/sutro-problems/docs/dataflow-io-order.html">https://cybertronai.github.io/sutro-problems/docs/dataflow-io-order.html</a>
+- <a href="https://cybertronai.github.io/sutro-problems/docs/spatial-model-analysis.html">https://cybertronai.github.io/sutro-problems/docs/spatial-model-analysis.html</a>
+- <a href="https://cybertronai.github.io/sutro-problems/docs/">https://cybertronai.github.io/sutro-problems/docs/</a></p>
+<p>The only origin-only <em>directory</em> is <code>a100-grid-energy-report/</code>. <code>dally-eval</code> is an
+<strong>external repo</strong> (<a href="https://github.com/cybertronai/dally-eval">https://github.com/cybertronai/dally-eval</a>); this repo carries a
+74-line shim <code>dally_eval.py</code>. There is no <code>scoring-at-scale/</code>, no <code>mnist/</code>, no <code>grid/</code> on
+any of the 22 remote branches, despite references to them.</p>
+<h3 id="1-2-repos">1.2 Repos</h3>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>Repo</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/cybertronai/sutro-problems"><code>cybertronai/sutro-problems</code></a></td>
+<td>the benchmark suite, leaderboards, design reports</td>
+</tr>
+<tr>
+<td><a href="https://github.com/cybertronai/simplified-dally-model"><code>cybertronai/simplified-dally-model</code></a></td>
+<td>the cost model + the versioned ISA specs (v0–v3)</td>
+</tr>
+<tr>
+<td><a href="https://github.com/cybertronai/dally-eval"><code>cybertronai/dally-eval</code></a></td>
+<td>the fast Rust scorer (wired in by PR #44)</td>
+</tr>
+<tr>
+<td><code>~/Library/CloudStorage/Dropbox/git0/spatial-computer/</code></td>
+<td>earlier long-form: <code>dally-spatial-report.html</code>, <code>pram-tutorial.html</code>, slides, <code>paper.pdf</code></td>
+</tr>
+<tr>
+<td><code>~/Library/CloudStorage/Dropbox/git0/SutroYaro/</code></td>
+<td>Yad's repo; <code>telegram.db</code> (Feb 9 – Mar 28 only), mirrored group docs under <code>docs/google-docs/</code>, <code>docs/catchups/</code></td>
+</tr>
+<tr>
+<td><code>~/Library/CloudStorage/Dropbox/git0/sutro/</code></td>
+<td><code>sutro.org</code>, <code>docs/findings/</code>, <code>docs/research/</code></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="1-3-google-docs">1.3 Google Docs</h3>
+<p>Full text of 35 of these is mirrored nightly to <code>~/drive/gdocs-archive/&lt;docId&gt;/&lt;date&gt;.txt</code>
+(with <code>meta.json</code>), which is faster and more reliable than opening them.</p>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>Doc</th>
+<th>id</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://docs.google.com/document/d/1IjNHivXLiF9yFwim3VWsBL1rx7aT0i2qtwRTwCHgVl8/edit">Sutro internal Log</a> (week 36 onward)</td>
+<td><code>1IjNHiv…</code></td>
+</tr>
+<tr>
+<td><a href="https://docs.google.com/document/d/1B9867EN6Bg4ZVQK9vI_ZqykZ5HEtMAHJ7zBGGas4szQ/edit">Sutro Group: top level</a></td>
+<td><code>1B9867EN…</code></td>
+</tr>
+<tr>
+<td><a href="https://docs.google.com/document/d/11Xj14ugYXZZRUCD_R042I_smIKDtTlhaKGrZ3CHkwns/edit">sutro meeting #30</a> — <strong>the authoritative "design choices" list</strong></td>
+<td><code>11Xj14ug…</code></td>
+</tr>
+<tr>
+<td><a href="https://docs.google.com/document/d/1RYSonuCnSQWOVavyl3grHRxtLrMBUMG9eMsxm7q4Vvs/edit">sutro #29</a></td>
+<td><code>1RYSonuC…</code></td>
+</tr>
+<tr>
+<td><a href="https://docs.google.com/document/d/1uDZ1NhTTZX_BdsizSZDhm_jk5-1KNK-5AmhJ1JeohII/edit">MNIST on grid model?</a></td>
+<td><code>1uDZ1Nh…</code></td>
+</tr>
+<tr>
+<td><a href="https://docs.google.com/document/d/1vUbTxn65oEmhhbjJewBg0inaq7z6LdZd_8Mqgg1WYCQ/edit">Numbers to know</a></td>
+<td><code>1vUbTxn…</code></td>
+</tr>
+<tr>
+<td><a href="https://docs.google.com/document/d/1ZMx22vh1S4S9kcGBU_8Hb2ZiYGq-ERF-F1Gaoc1B85A/edit">sutro fJ report</a> — how fJ were chosen</td>
+<td><code>1ZMx22vh…</code></td>
+</tr>
+<tr>
+<td><a href="https://docs.google.com/document/d/1EUVW1tB_AFaTLJzXm2hmGtScrRH6x4YiVMQ_yAbaxSo/edit">Bjarke Roune, <em>Designing AI Chip Software and Hardware</em></a></td>
+<td><code>1EUVW1tB…</code></td>
+</tr>
+<tr>
+<td><a href="https://docs.google.com/document/d/16eeltCaTpiiM1t_m_5BSxRnqxoMoiJ-xn4cy0x-TFgc/edit">sutro group challenge #1: sparse parity</a></td>
+<td><code>16eeltCa…</code></td>
+</tr>
+<tr>
+<td><a href="https://docs.google.com/document/d/1oSTIM0h1-THnb3fZ6Cz5o86DQx6n44si1q4BkP2lfSA/edit">Yaroslav's sutro planning sprint #1</a></td>
+<td><code>1oSTIM0h…</code></td>
+</tr>
+<tr>
+<td><a href="https://docs.google.com/document/d/1RvwoLX-0K15tuDFpfnwDYKhOebimEDi-frlC8qR9cVA/edit">08sep26 — interlude show</a></td>
+<td><code>1RvwoLX…</code></td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="1-4-chat">1.4 Chat</h3>
+<ul>
+<li>Group discussion: <a href="https://t.me/sutro_group">https://t.me/sutro_group</a>. Topics: <code>General</code>, <code>chat-yaroslav</code>,
+  <code>chat-yad</code>, <code>challenge #1: sparse parity</code>, <code>In-person meetings</code>, <code>Introductions</code>.</li>
+<li>Local copy <code>~/…/SutroYaro/telegram.db</code> covers <strong>2026-02-09 → 2026-03-28 only</strong> (1,005
+  messages). <strong>The Aug/Sep discussions are not on this machine</strong> — the live Telethon
+  session lives on the <code>intel</code> Mac (<code>flush-util/machines.toml</code>, <code>telegram_fetch =
+  { writer = "intel" }</code>), read over the SSH forward. HTML exports of the group at
+  <code>~/Downloads/Telegram Lite/ChatExport_2026-04-06/</code> and <code>…_2026-04-20/</code> (the 07-31 export
+  is a different, personal chat).</li>
+<li><strong>Andy's PR #61 quotes a database-wide search of 2,588 messages, 2026-02-09 → 2026-09-05.</strong>
+  That diff is currently the only local window into the recent Telegram record.</li>
+</ul>
+<h3 id="1-5-dictated-working-notes">1.5 Dictated working notes</h3>
+<p><code>~/My Drive/hiq-transcribed/recording-&lt;YYYYMMDD&gt;-&lt;HHMMSS&gt;-&lt;engine&gt;.txt</code>, engines
+<code>soniox</code> / <code>scribe</code> / <code>parakeet</code> / <code>groq</code> (prefer scribe and soniox; groq hallucinates).
+392 clips in the Aug 26 – Sep 8 window. Signal is concentrated in ~20 clips; the densest
+by far is <code>20260903-180729</code>, which you titled the design description.</p>
+<h3 id="1-6-meeting-cadence-and-people">1.6 Meeting cadence and people</h3>
+<p>Mondays 18:00, South Park Commons, 380 Brannan (meeting #29's doc says 18:15). #29 was
+Aug 31, <strong>#30 was Sep 7</strong>. Mission line as of Sep 8: <em>"huge amount of energy waste due to
+legacy learning algorithms. Address this in a maximally open way."</em></p>
+<p>Contributors on the current leaderboards: <a href="https://github.com/zh4ngx">@zh4ngx</a> (Andy Zhang),
+<a href="https://github.com/cosminscn">@cosminscn</a>, <a href="https://github.com/jurajselep">@jurajselep</a>,
+<a href="https://github.com/npow">@npow</a>, <a href="https://github.com/b0nce">@b0nce</a>,
+<a href="https://github.com/sigkillme0">@sigkillme0</a>, <a href="https://github.com/SecurityQQ">@SecurityQQ</a>,
+<a href="https://github.com/sjbaebae">@sjbaebae</a>, <a href="https://github.com/SethTS">@SethTS</a>,
+<a href="https://github.com/adotzh">@adotzh</a>, <a href="https://github.com/ab-10">@ab-10</a>.</p>
+<hr />
+<h2 id="2-decision-1-the-instruction-set-architecture">2. Decision 1 — the instruction set architecture</h2>
+<h3 id="2-1-what-exists-today">2.1 What exists today</h3>
+<p>Four versioned specs, each strictly extending the last
+(<a href="https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets"><code>instruction-sets/</code></a>):</p>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>Version</th>
+<th>Ops added</th>
+<th>Total</th>
+<th>Used by</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>v0</strong></td>
+<td><code>add</code>, <code>sub</code>, <code>mul</code>, <code>copy</code></td>
+<td>4</td>
+<td><strong>matmul</strong> (4×4, 16×16)</td>
+</tr>
+<tr>
+<td><strong>v1</strong></td>
+<td>+ <code>and</code>, <code>or</code>, <code>not</code>, <code>xor</code></td>
+<td>8</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>v2</strong></td>
+<td>+ <code>set</code> (integer immediate; no read, so free)</td>
+<td>9</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>v3</strong></td>
+<td>+ <code>div</code>, <code>cmp</code>, <code>select</code>, <code>abs</code></td>
+<td>13</td>
+<td><strong>sparse-parity</strong>, <strong>symmetry</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>Three-address code, LLVM-flavoured: <code>%d = add %a, %b</code> ⇒ <code>add d,a,b</code>. Two-operand short
+form <code>add d,s</code> ≡ <code>add d,d,s</code>. <code>cmp</code> takes a predicate from <code>{eq,ne,lt,le,gt,ge}</code>.
+v3's stated purpose is Gaussian elimination with partial pivoting as straight-line code.</p>
+<h3 id="2-2-what-the-scorer-actually-implements-and-where-it-differs-from-the-spec">2.2 What the scorer actually implements — and where it differs from the spec</h3>
+<p>This matters because the code, not the README, is the ruler.</p>
+<p><strong><code>matmul/matmul.py</code></strong> — v0 <em>only</em>. <code>unknown op: … (v0 supports add/sub/mul/copy)</code>.
+- <strong>No cell width at all.</strong> Values are unbounded Python ints; correctness is checked
+  <strong>symbolically</strong> over a polynomial ring, and intermediates of <strong>degree &gt; 2 are rejected</strong>
+  (which admits the usual bilinear algorithms). There is no wrapping.
+- <strong>No address-space limit.</strong> Any integer ≥ 1; ≤ 0 raises.
+- Cost: <code>_cost(addr) = math.isqrt(addr - 1) + 1</code> = ⌈√addr⌉, summed over <strong>every source
+  operand of every instruction</strong>, plus one <code>_cost</code> per declared output address at exit.
+  Writes, arithmetic and input placement are free.
+- Its own docstring already says: <em>"the cell at linear index <code>addr</code> sits at </em><em>Manhattan</em><em>
+  distance ⌈√addr⌉ from the core."</em></p>
+<p><strong>sparse-parity / symmetry</strong> — v3, and a genuinely different machine:
+- <strong>8-bit signed cells</strong>, wrapped after every op:
+  <code>_to_signed_8bit(v) = (v &amp; 0xFF) - 0x100 if ≥ 0x80</code>.
+- Address cap <code>bit_length() ≤ 64</code>; IR length cap <strong>2,000,000 lines</strong> (declarations included).
+- <code>set</code> is <strong>free</strong> (zero reads); <code>select</code> charges <strong>3 reads</strong>.</p>
+<p>So "the ISA" is already two incompatible machines. Any redesign has to say which one it
+is continuous with.</p>
+<h3 id="2-3-your-own-prior-constraints-on-changing-it">2.3 Your own prior constraints on changing it</h3>
+<p>These are the only decision-bearing review comments you have ever left in the repo, and
+they all point the same way:</p>
+<blockquote>
+<p>"Changing the instruction set changes the ruler, so algorithms' performance in the old
+instruction set aren't directly comparable against algorithms with the new instruction
+set, I guess maybe I should put the eval in a different repo so agents don't touch it."
+— PR #1, 2026-04-30</p>
+<p>"Each problem has it's own leaderboard. I think evaluation metric should be fixed for
+each problem. Over time we may discover that something is wrong with current IR, and
+have v4 or v5 IR of Dally model and start using it for future problems, but for now v3
+seems sufficient" — PR #18, 2026-05-14</p>
+<p>"Can you modify this to not modify <code>matmul.py</code>? <code>matmul.py</code> is where evaluation code sits."
+— PR #2, 2026-04-30</p>
+<p>"Could you only include the first two files and not <code>matmul/exp_madd.py</code>. The reason is
+that it re-implements the scoring function, but that changes the metric" — PR #1</p>
+</blockquote>
+<p><strong>Implication for the redesign:</strong> the precedent you set is <em>new ISA version → new problems,
+old problems keep their ruler</em>. That is a clean migration story for MNIST and it costs
+nothing; it also means the matmul and sparse-parity leaderboards need not move.</p>
+<p>Note: PR #58 (MNIST tier 1) both uses <code>set</code> — which v0's <code>matmul.py</code> does not accept — and
+<strong>re-implements <code>static_cost()</code></strong>, which is exactly what you rejected in PR #1.</p>
+<h3 id="2-4-the-proposed-redesign-isa">2.4 The proposed redesign ISA</h3>
+<p>From <code>docs/grid-vm-competition-design.html</code> §4 and RFC #48 §3:</p>
+<ul>
+<li><strong>~13 trace opcodes + <code>recv</code> / <code>send</code></strong>, plus the higher rungs: <code>for</code> (affine),
+  <code>def</code>/static recursion, a fixed <strong>bijective index-map library</strong> (<code>bitrev</code>, <code>stride</code>
+  (gcd 1), <code>xorc</code>), and <code>mode sel -&gt; c in 0..K</code>.</li>
+<li><strong>Placement is syntax</strong>: <code>tile X[...] at (x,y)</code>, <code>stage tmp from src at (x,y)</code>, <code>place</code>,
+  <code>release</code>. RFC #48 §2.2: <em>"The compiler (such as it is) never chooses addresses."</em></li>
+<li><strong>Ports</strong> (your 03sep26 formulation, verbatim from the log):<blockquote>
+<p>"A submission is a straight-line program (a circuit) over a distance-priced address
+space, with one input port and one output port. Ports are read and written in a
+declared, data-independent order; work cells are charged ⌈√a⌉ per read; port
+operations are charged a fixed crossing cost."
+  <code>recv d</code> charges a flat <code>E_in</code> (the crossing, <em>not</em> ⌈√d⌉ — physically the price of a
+  fresh sample is the crossing, not the destination). <code>send s</code> charges ⌈√s⌉ + <code>E_out</code>.</p>
+</blockquote>
+</li>
+<li><strong>Four hard grammar constraints</strong>, each with a concrete exploit behind it:
+  1. <strong>Port balance</strong> — every arm of every <code>mode</code> must have identical <code>(recv, send)</code>
+     counts, or the tape position becomes data-dependent and you fall off the
+     decidability cliff (Buck).
+  2. <strong>Mode dispatch must be priced</strong> — as a read at distance ⌈√(total static bytes of all
+     arms)⌉. Unpriced, a nested 512-leaf mode is a free associative memory and a hardcoded
+     pattern→label table wins tier-1 energy <strong>50–100×</strong> over honest centroid. Cap arms
+     (~64) and nesting (≤3).
+  3. <strong>Index maps banned inside mode arms</strong> — max-over-arms does not commute with the
+     permutation-invariance rewrite; a four-iteration counterexample undercharges 8 → 5.
+  4. <strong>Recursion must be offset-affine</strong> — memoizing on the size tuple alone is wrong;
+     Strassen at 8192 has ~14 memo nodes but 7¹³ ≈ 10¹¹ call sites at distinct offsets.</li>
+<li><strong>Semantics that must be pinned before anyone writes a program</strong> (<em>"every worked example
+  produced during the design run had at least one overflow bug until these were fixed"</em>):
+  <code>u8</code>/<code>i16</code>/<code>i32</code> as adjacent cells, little-endian; wrap mod 256 (two's complement);
+  widen-before-op; <code>x/0 = 0</code>; all cells zero at start; one fresh run per episode; an
+  out-of-range mode selector traps and the episode scores zero; <strong>blocking <code>recv</code> only —
+  no emptiness test, no clock</strong>.</li>
+</ul>
+<p>That last prohibition is load-bearing, not stylistic: given an emptiness test, output stops
+being a function of input alone (Brock–Ackerman), two runs of the same submission score
+differently, and the leaderboard is noise.</p>
+<ul>
+<li><strong>Instruction fetch must be priced.</strong> Unpriced program text is free ROM: a lookup table
+  as immediates costs Θ(K) instead of the Θ(K^1.5) the same table pays in priced memory.
+  Two constants, one per track — ~1 unit per executed line (episodic), 4 fJ per static
+  line + 0.1–1 fJ per issued instruction (schedule). Hutter Prize precedent. <em>The current
+  ISA does not price fetch, and adopting it re-scores every existing record.</em></li>
+</ul>
+<h3 id="2-5-what-your-own-dictated-notes-add">2.5 What your own dictated notes add</h3>
+<p>The notes contain <strong>no mention of an instruction set, opcode, IR, or assembly</strong> in the whole
+Aug 26 – Sep 8 window. What they do contain are two design criteria:</p>
+<blockquote>
+<p>"the real issue is that you want to be able to do algorithms with small memory footprint,
+because that's what ultimately it's about" — <code>20260907-164225</code></p>
+<p>"what if we reinvent all of linear algebra, all of algorithms for a new abstraction? …
+So the issue with linear algebra is that it … discourages algorithms with small memory
+footprint. … this was the big surprise of vanilla attention. It's like, well, no
+abstraction, the cost is invisible." — <code>20260904-125521</code></p>
+</blockquote>
+<p>and one governing philosophy for how coarse the model should be:</p>
+<blockquote>
+<p>"the signal cannot go from one [end to the other] in a single clock cycle, so we no
+longer can pretend that— … Or the danger of modeling is too finely. You can have super
+accurate models, but if there's many, it splits the community. So one somehow needs a
+model of computation which is at least conceptually in the right direction, that we can
+reuse the lessons from, and then fields can specialize." — <code>20260830-175235</code></p>
+</blockquote>
+<h3 id="2-6-open-forks-on-the-isa">2.6 Open forks on the ISA</h3>
+<ul>
+<li><strong>Cell width and datatype.</strong> 8-bit everywhere? <code>u8</code>/<code>i16</code>/<code>i32</code> as adjacent cells?
+  matmul currently has <em>no</em> width. PR #58 flags the concrete failure: <em>"8-bit cells alias
+  int16 logits (verified: wrapped argmax differs); argmax happens off-model."</em></li>
+<li><strong>Accumulate semantics</strong> — functional vs in-place rebind. RFC #48 §9.2, open; the 4×4
+  records indicate in-place with explicit <code>release</code> wins.</li>
+<li><strong>A reduce / combination primitive</strong> — one of Andy's four named forks.</li>
+<li><strong>Fetch pricing on or off</strong>, and at what constant.</li>
+<li><strong>Whether <code>mode</code> ships in v1</strong> or only its syntax is reserved.</li>
+<li><strong>Read/write time asymmetry.</strong> Internal log 06sep26: <em>"reads have 2x the time,
+  round-trip with address, return sends the byte / writes have regular cost."</em> This is a
+  time asymmetry only; energy stays one-way. Not implemented anywhere.</li>
+<li><strong>Whether writes stay free.</strong> D2 says free in v1 <em>for record continuity</em> — a
+  compatibility choice, not a physics one. Note the cost of keeping it: <strong>free writes make
+  store always beat recompute, which deletes the single most-cited worked example in
+  Dally's own article</strong> (activations stored off-chip at 640 pJ per 16-b activation vs
+  recomputed at 160 fJ/MAC; recompute wins below n ≈ 4,000, and by 16× at n = 256). If the
+  benchmark is meant to reward the recompute-over-store instinct, free writes work against it.</li>
+<li><strong>Is arithmetic still free?</strong> Inherited unexamined from Dally's PECM (<em>"Arithmetic operations
+  remain unit cost"</em>). But priced at Horowitz's 45 nm figures (8-bit multiply 0.2 pJ, add
+  0.03 pJ), <strong>the 16×16 record's arithmetic alone is 934.4 pJ — 14.1× the entire movement
+  proxy the leaderboard measures.</strong> At the current problem sizes the free-arithmetic
+  assumption is not a small idealisation; it is the dominant term being discarded. It blocks
+  any claim that the model ranks algorithms the way silicon does. (Dally's own "an add is
+  worth 10 µm of movement" is the cheap middle option.)</li>
+<li><strong>Division-by-zero.</strong> A direct conflict between shipped code and the design note:
+  <code>mask_sparse_parity._safe_div</code> raises <code>ZeroDivisionError</code>; the Grid VM report specifies
+  <code>x/0 = 0</code>. A raise is not a semantics a circuit can have.</li>
+<li><strong>Sub-byte widths.</strong> The grid is byte cells, so Dally's entire "do it with smaller data"
+  branch (int8 / log8 / sym8 codebooks / per-64 scale factors) and Jouppi's 21× Int8-vs-Int32
+  multiply gap are <strong>inexpressible</strong>. Either admit that as a declared scope boundary or add
+  sub-byte widths.</li>
+</ul>
+<h3 id="2-7-what-each-fork-actually-costs-in-code">2.7 What each fork actually costs in code</h3>
+<p>The engineering price of every option, in the files that would have to change:</p>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>Wanted change</th>
+<th>What must change</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>2-D <code>(x,y)</code> addressing</strong></td>
+<td><code>matmul.py:_cost</code>, <code>_check_addrs</code>, <code>_parse</code> (operands are <code>int(x)</code>); <code>mask_sparse_parity.py:_cost</code>, <code>parse_addrs</code>, <code>_compile_ir</code> (<code>addr_to_idx</code> sorts scalar ints), <code>_compile_vector</code>; <code>addr_renamer.py</code> (assumes cost is monotone in a scalar address); <code>energy-report/eightk_scaling.py:shell_prefix/shell_sum</code> — its closed form <code>F(x) = q(q+1)(4q−1)/6 + (x−q²)(q+1)</code> is <strong>1-D only</strong></td>
+</tr>
+<tr>
+<td><strong>Manhattan <code>lin(a)</code> kept, 2-D merely exposed</strong></td>
+<td><strong>nothing.</strong> PR #61 shows the embedding is an exact isometry, so scores are bit-identical. <em>This is the free option.</em></td>
+</tr>
+<tr>
+<td><strong>Ports / streaming I/O</strong></td>
+<td><code>_parse</code> (line 1 = input list, last line = output list) disappears; <code>recv</code>/<code>send</code> need entries in the op tables of <strong>both</strong> scorers, plus <code>E_in</code>/<code>E_out</code>; <code>test_matmul.py:_assert_submission_invariants</code> hard-asserts exactly 32 inputs / 16 outputs</td>
+</tr>
+<tr>
+<td><strong>Wider words</strong></td>
+<td><code>_to_signed_8bit</code> / <code>_wrap8</code> in <code>mask_sparse_parity.py</code>; the <code>int16</code> batch dtype; the <code>set</code> literal bound (−128..255). Note the matmul side is already unbounded-int, so it needs a width <strong>added</strong>, not widened</td>
+</tr>
+<tr>
+<td><strong>Priced writes</strong></td>
+<td>both simulators charge reads only — 3 <code>cost +=</code> sites in <code>matmul.py</code>, 1 loop in <code>_compile_ir</code></td>
+</tr>
+<tr>
+<td><strong>Instruction-fetch pricing</strong></td>
+<td>no code exists anywhere</td>
+</tr>
+<tr>
+<td><strong>Time / area metric</strong></td>
+<td>nothing exists. <code>eightk-audit.json</code> states it outright: <em>"No throughput or clock rate is used, so the model produces energy but does not produce time."</em></td>
+</tr>
+<tr>
+<td><strong>An op cap for matmul</strong></td>
+<td><code>mask_sparse_parity</code> has <code>OP_CAP</code>; <code>matmul.py</code> has none</td>
+</tr>
+<tr>
+<td><strong>Non-bilinear matmul algorithms</strong></td>
+<td><code>_poly_mul</code> — the degree-2 restriction blocks them by construction</td>
+</tr>
+</tbody>
+</table></div>
+<p>Two observations worth carrying into the decision:</p>
+<ul>
+<li><strong>Keeping <code>lin(a)</code> and exposing 2-D coordinates costs literally nothing</strong> and preserves
+  every record bit-exactly. That is the cheapest possible resolution of C1.</li>
+<li><strong>Byte-packing is the largest empirical lever the ISA has ever produced.</strong> The 100% sparse
+  parity band went 12,461,610 (unpacked, Aug 30) → 938,331 (septet-packed, Aug 31) →
+  <strong>392,666</strong> (Sep 2) — a <strong>32×</strong> improvement from packing alone. <code>docs/index.html</code>:
+  <em>"byte-packing historically bought 5–15× in this repo."</em> Any cell-width decision is
+  therefore also a decision about how much of the leaderboard is packing skill. Note the
+  packed records use <strong>6-bit</strong> row masks, not 7 or 8, because signed 8-bit plus <code>not</code> makes
+  the top bits hostile — a concrete argument for unsigned cells.</li>
+</ul>
+<hr />
+<h2 id="3-decision-2-the-grid-size">3. Decision 2 — the grid size</h2>
+<h3 id="3-1-what-is-sized-today">3.1 What is sized today</h3>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Instance</th>
+<th>Caps</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>sparse-parity</td>
+<td>n = 32 bits, k = 5 secret positions, m = 18 strings; 32 output cells</td>
+<td>≤ 2,000,000 IR lines; address <code>bit_length() ≤ 64</code>; 1,024-instance dev suite, fresh 2,048-instance adjudication suite</td>
+</tr>
+<tr>
+<td>matmul</td>
+<td>4×4 and 16×16 only</td>
+<td>no address cap at all</td>
+</tr>
+<tr>
+<td>symmetry</td>
+<td>6-bit palindrome (8 of 64 patterns)</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="3-2-the-mnist-tier-ladder-decided">3.2 The MNIST tier ladder — decided</h3>
+<p>Stated twice within a minute on 2026-09-03 and again in the log on 06sep26:</p>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Image</th>
+<th>Train / test</th>
+<th>Grid cap (proposed)</th>
+<th>K episodes</th>
+<th>Fuel cap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>3×3</td>
+<td>600 / 600</td>
+<td>1 MB</td>
+<td>50</td>
+<td>10⁹</td>
+</tr>
+<tr>
+<td>2</td>
+<td>9×9</td>
+<td>6,000 / 6,000</td>
+<td>16 MB</td>
+<td>10</td>
+<td>10¹¹</td>
+</tr>
+<tr>
+<td>3</td>
+<td>28×28</td>
+<td>60,000 / 60,000</td>
+<td>256 MB</td>
+<td>3</td>
+<td>3×10¹² laptop / 10¹³ CI</td>
+</tr>
+</tbody>
+</table></div>
+<p><em>"These scales roughly two orders of magnitude"</em> (<code>20260903-153539</code>). QMNIST supplies the
+extras. Memory stays under ~1.5 GB worst case, plus one shared ~110 MB corpus.</p>
+<p><strong>Area</strong> is defined as the origin-anchored bounding square of touched cells in µm² —
+deliberately not touched-cell count, which is gameable by scatter — unioned over mode arms.</p>
+<h3 id="3-3-capacity-anchors">3.3 Capacity anchors</h3>
+<p>The arithmetic a grid-size decision has to match, reverse-engineered from Dally in the
+internal log, 03sep26 (your own parenthetical <em>"(where is the micron measurement from?)"</em>
+is still unanswered):</p>
+<ul>
+<li>256 MB ≈ 100 mm², built from <strong>32,768</strong> sub-arrays of 8 KB (64 Kb).</li>
+<li>64 Kb sub-array = 1,024 words × 64 bits (= 8 KiB = 65,536 bits ✓); as a Manhattan grid
+  with <strong>32 concentric lines</strong>; dimensions <strong>62 × 31</strong>; <em>"Equivalent Bill Dally is
+  110 µm × 55 µm"</em> ⇒ <strong>1.77 µm per pitch</strong> (110/62 = 55/31 = 1.774 ✓).</li>
+</ul>
+<p>⚠️ <strong>Two off-by-ones in this derivation, and the pitch inherits them.</strong>
+  - The series is wrong: the log says "1+3+…+31 = 1024", but 1+3+…+31 = <strong>256</strong> (16 terms).
+    The identity you want is Σ(2c−1) for c = 1..32 = 32² = 1024, whose last term is <strong>63</strong>:
+    "1+3+…+<strong>63</strong>".
+  - The bounding box is wrong: a 32-shell upper-half-plane diamond spans x ∈ [−31, 31] and
+    y ∈ [1, 32], i.e. <strong>63 × 32</strong>, not 62 × 31. (62 × 31 = 1,922 cells, not 1,024.)
+  - So <strong>1.77 µm is derived from the wrong box.</strong> 110/62 = 55/31 = 1.774 exactly — which
+    strongly suggests 110 × 55 µm was itself back-solved <em>from</em> 62 × 31 at 1.774. On the
+    correct box the two axes stop agreeing: 110/63 = 1.746 and 55/32 = 1.719.</p>
+<p>The <em>conclusion</em> (32 shells hold 1,024 word-sites) is right; the arithmetic under it is
+  not. Worth fixing before it is quoted, because this is the same 2c−1 shell identity that
+  settles the Manhattan-vs-Chebyshev question in §6.1.
+- ⇒ <strong>181 × 181 grid</strong> of 64 Kb sub-arrays, ≈ 10 mm wide, sub-array ≈ 55 µm wide.</p>
+<p>The parallel derivation in the multiprocessor note's calibration thread gets <strong>55.2 µm</strong>
+square-equivalent per sub-array and <strong>1.73 µm</strong> per 64-bit word site = <strong>0.61 µm per byte</strong>,
+with the 8 KiB sub-array as 32 half-diamond shells of mean one-way distance 37.7 µm, and
+Dally's 15 mm needing a routing factor of ~2.24 over the 6.7 mm mean of a flat 100 mm² layout.</p>
+<p><strong>Note the tension:</strong> 0.61 µm/byte (area-derived) vs the adopted <strong>1 µm/byte</strong> mnemonic.</p>
+<p>Workload anchors:
+- 8192³ matmul ≈ <strong>1 T ops</strong>; measured A100 int8 = <strong>0.904 J</strong> board energy above idle
+  = 1.64 pJ/MAC at 5.5×10¹¹ MACs. (fp32 15.757 J, fp16 1.426 J, b1 0.648 J —
+  <code>a100-grid-energy-report/results.csv</code>.)
+- Judge-scored blocked 8192³ schedule = <strong>0.119 J</strong> (216 fJ/MAC), 7.6× below the A100;
+  naive = 23.401 J (<code>matmul/energy-report/eightk-audit.json</code>).
+- Ciresan MNIST 784→2500→2000→1500→1000→500→10, 99% achievable, ~<strong>0.7 T ops</strong> forward;
+  A100 energy ~2.5 J. One INT8 inference epoch over 60,000 images measured at <strong>12.82 J</strong>
+  on an A100-SXM4-40GB.
+- Meeting #30 closes with the scale target: <strong>"1 quadrillion moves."</strong></p>
+<h3 id="3-4-open-forks-on-grid-size">3.4 Open forks on grid size</h3>
+<ul>
+<li><strong>What <em>is</em> the grid — one subarray, one chip, or a nested pair?</strong> This is not stated
+  anywhere, and four incompatible readings are in circulation:
+  (a) 1,024 cells = one 64 Kb subarray (the 03sep26 area math);
+  (b) that subarray as the <em>endpoint</em>, with 181×181 of them = 256 MB on ~10×10 mm (same
+  passage, one level up);
+  (c) a flat unbounded half-plane — <strong>what all three scorers actually implement</strong>, where
+  "writing to an address makes it exist";
+  (d) per-tier caps of 1 / 16 / 256 MB (the Grid VM report).
+  Nothing in code has any capacity notion at all. Until this is settled, <strong>no area metric
+  and no "how big is the machine" statement is possible</strong>, and the multiprocessor tile-pitch
+  derivation has no base.</li>
+<li><strong>Address-space bound.</strong> The two shipped scorers already disagree: matmul allows unbounded
+  positive ints, sparse-parity caps at <code>[1, 2^64)</code>. PR #48's floor-sum evaluator assumes
+  A_max ≈ 10⁸ — and the 8192³ schedule already touches <strong>201,359,490 cells</strong> (radius 14,191
+  steps), so this is not hypothetical.</li>
+<li><strong>Grid geometry is decided</strong> — upper half-plane / half-diamond with the processor at the
+  origin — but note its area consequence: a 256 MiB half-diamond occupies <strong>268 mm²</strong> against
+  Dally's ~100 mm², and its rectangular envelope is ~32.77 × 16.38 = <strong>536.8 mm²</strong>, half of
+  which is empty unless two triangles are packed together.</li>
+<li><strong>The µm-per-bit vs µm-per-byte split.</strong> The MNIST-on-grid doc contains <em>both</em>
+  "10 micron grid size in bits / 1 fJ 1 bit 10 microns / 10,000 bits per mm²" <em>and</em>
+  "Grid of bytes, with 1 micron spacing / 1 fJ per byte moved per (one way) / 1 micron
+  pitch." 1 byte/µm² = 8×10⁶ bits/mm² is <strong>800×</strong> the 10,000 bits/mm² figure.</li>
+<li><strong>Off-chip / memory tiers.</strong> PR #58 is blunt: <em>"Off-chip DRAM/HBM streaming is not
+  priced; tier 3 (47 MB dataset) needs an explicit memory-tier edge cost before its
+  numbers mean anything."</em> Meeting #30 design choice 1: <em>"Keeping dataset in main memory
+  is weird, augment grid model with streaming."</em></li>
+<li><strong>256 MB vs 256 MiB</strong> for the Dally anchor.</li>
+<li><strong>Resident vs re-streamed training set</strong> — see §6.4.</li>
+</ul>
+<hr />
+<h2 id="4-decision-3-the-physical-dimensions">4. Decision 3 — the physical dimensions</h2>
+<h3 id="4-1-the-adopted-set">4.1 The adopted set</h3>
+<p>The authoritative statement is the <strong>meeting #30 agenda</strong>, verbatim:</p>
+<blockquote>
+<p>Design choices:
+1. Keeping dataset in main memory is weird, augment grid model with streaming
+2. Use physically plausible dimensions:
+   <strong>1 micron spacing between bytes</strong>
+   <strong>1 fJ to transfer 1 byte by 1 micron in 0.5 ps</strong>
+   (obtaining by matching latency, energy, area against 256 MiB in Dally CACM)</p>
+</blockquote>
+<p><code>docs/grid-vm-multiprocessor.html</code> §2 states the same machine as settled:</p>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>Quantity</th>
+<th>Value</th>
+<th>Reading</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Cell</td>
+<td>one byte at a lattice site, <strong>1 µm pitch</strong></td>
+<td>multi-byte values are adjacent cells, little-endian</td>
+</tr>
+<tr>
+<td>Movement</td>
+<td><strong>1 fJ per byte per micron of Manhattan path</strong></td>
+<td>the only priced quantity; arithmetic free</td>
+</tr>
+<tr>
+<td>Propagation</td>
+<td><strong>c/160 = 1,874 µm/ns</strong></td>
+<td>0.53 ns/mm (Dally's global-wire figure is 0.4 ns/mm = c/120)</td>
+</tr>
+<tr>
+<td>Issue</td>
+<td>1 ns per instruction, no overlap with flight (time v1)</td>
+<td>D4</td>
+</tr>
+<tr>
+<td>Tapes</td>
+<td>input at (−1,0), output at (1,0), instructions at (0,−1); memory above the origin</td>
+<td>serial, data-independent order, blocking receive only</td>
+</tr>
+<tr>
+<td>Port crossing</td>
+<td><strong>E_in = E_out ≈ 5,000 fJ</strong> per byte</td>
+<td>chiplet/HBM class (0.6 pJ/bit)</td>
+</tr>
+<tr>
+<td>Fetch</td>
+<td>4 fJ per static line + 1 fJ per issued instruction</td>
+<td>a loop buffer amortising fetch</td>
+</tr>
+<tr>
+<td>Writes</td>
+<td>free in v1 (D2)</td>
+<td>the write of one op is the read of the next</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>The calibration check that comes with it</strong> (added to the MNIST-on-grid doc 2026-09-04):
+one byte per grid location, 1 µm pitch, 1 fJ per byte per 1 µm Manhattan edge one-way, c/160.
+Applied to Dally's own 256 MiB benchmark, that machine gives <strong>268 mm², 175 pJ per 64-bit
+access, 12 ns</strong> — against Dally's <strong>100 mm², 58 pJ, 12.3 ns</strong>. So the adopted constants are
+<strong>3× his energy and 2.68× his area</strong>, with latency matching almost exactly. That is the real
+"fitted to Dally" claim, and stating it in the spec is much stronger than "matched to a 256
+memory bank", because a reader can check it.</p>
+<p><strong>And the constant that quietly decides the leaderboard: the endpoint term.</strong> Under the
+current pure-distance rule (1 fJ × S) the best 8192³ schedule beats naive by <strong>5.14×</strong>.
+Under <code>2.5 fJ × (S + 160R)</code> — i.e. adding a ~400 fJ fixed cost per paid read — the same
+comparison collapses to <strong>1.0034×</strong>. A fixed per-access endpoint charge (which is what every
+real SRAM has, and what Dally's own <code>50 + 0.022√S</code> law encodes as its additive 50 fJ/bit)
+<strong>almost entirely erases the advantage the benchmark exists to measure.</strong> Whatever is chosen,
+it should be chosen deliberately and published with the task, not inherited.</p>
+<p><strong>Your stated design method, which is worth writing into the spec</strong> (<code>20260903-180729</code>):</p>
+<blockquote>
+<p>"I took the numbers to match the energy … of Bill Dally's model … match the energy of a
+256 memory bank. And I chose the other to be <strong>within the same order of magnitude for
+time and area, while being easy to remember</strong>."</p>
+</blockquote>
+<p>That is: energy is <em>fitted</em>; time and area are <em>not</em> fitted, they are mnemonic. Say so in
+the spec rather than letting a reader assume all three are derived.</p>
+<h3 id="4-2-dally-s-published-numbers-the-calibration-targets">4.2 Dally's published numbers — the calibration targets</h3>
+<p><strong>CACM 65(9), Sept 2022</strong> (<a href="https://cacm.acm.org/opinion/on-the-model-of-computation-point/"><em>On the model of computation: point</em></a>), verbatim:
+- 32-bit add: <strong>20 fJ and 150 ps</strong>. Fetching its two operands from main memory: <strong>1.3 nJ</strong> — 64,000×.
+- Moving two 32-bit words <strong>1 mm</strong>: <strong>1.9 pJ and 400 ps</strong>.
+- 64 bits <strong>40 mm</strong> corner-to-corner on a 400 mm² chip: <strong>77 pJ and 16 ns</strong>.
+- Off chip: <strong>320 pJ</strong> per 64 b, <strong>6 ns per metre</strong>.
+- 8 KB (64 Kb) sub-array, 64 b access: <strong>0.64 pJ, 300 ps</strong>.
+- 256 MB (≈100 mm²) from those sub-arrays: <strong>58 pJ and 12.3 ns</strong>, of which <strong>57.4 pJ and
+  12 ns are communication</strong> — 15 mm each way, 30 mm total.
+- CPU overhead turns a 20 fJ add into an <strong>80 pJ add instruction</strong>.
+- <strong>PECM</strong>: <em>"Each processing element and each memory is assigned a location l ∈ L and a
+  distance function D: L × L ⇒ R … </em><em>Two-dimensional Manhattan distance</em><em> models on-chip
+  communication … Off-chip communication can be modeled by adding additional distance when
+  either coordinate spans a chip boundary."</em> — note this model is <strong>explicitly parallel</strong>;
+  the settled Grid VM is its P = 1 case.</p>
+<p><strong>CACM 63(7), July 2020</strong> (<em>Domain-Specific Hardware Accelerators</em>), <strong>14 nm</strong>:
+- 8-bit add <strong>10 fJ and 4 µm²</strong>; double-precision FP multiply 5 pJ and 3,600 µm².
+- 8 KB local memory <strong>50 fJ/bit</strong>, SRAM <strong>0.013 µm²/bit</strong>.
+- On-chip communication <strong>100 fJ/bit·mm</strong>. 100 MB memory ≈ 0.7 pJ/bit.
+- LPDDR4 ~4 pJ/bit; SDDR4 ~20 pJ/bit; off-chip SerDes ~10 pJ/bit.
+- <strong>And, crucially, the closed-form √-address law itself:</strong> the cost of accessing a memory
+  of size <em>S</em> bits is <strong>50 + 0.022·√S fJ per bit</strong>. That constant decomposes exactly:
+  0.022 = 2 (round trip) × 100 fJ/bit·mm × √(0.013 µm²/bit). Check at S = 800 Mbit:
+  50 + 0.022·28,284 = 672 fJ/bit ≈ the paper's own "0.7 pJ/bit for a 100 MB memory". ✓</p>
+<p><strong>This is the literature statement of the benchmark's pricing rule, in Dally's own
+  words, and it is not currently cited anywhere in the repo.</strong> ⌈√a⌉ is not an
+  approximation invented here — it is his formula with the additive endpoint term dropped.</p>
+<p><strong>AHA 2023 retreat keynote</strong>, in Dally's own preferred unit:
+- <em>"Cost of an add (1 fJ/bit) = Cost of going 10 µm"</em>; <em>"An add is worth 10 µm of movement."</em>
+  Our grid charges 1 fJ/byte/µm = 0.125 fJ/bit/µm = <strong>1.25 fJ per bit per 10 µm</strong> — i.e.
+  <strong>1.25× Dally's own figure</strong>. That is the tightest agreement anywhere in the constant set,
+  and it is stated in the unit he prefers.
+- Instruction overhead, the axis that separates CPUs from TPUs: fetch + decode + operand
+  fetch = <strong>30 pJ</strong>; HFMA 1.5 pJ (2,000% overhead), HDP4A 6.0 pJ (500%), HMMA 110 pJ (22%),
+  IMMA 160 pJ (16%). An out-of-order ARM A-15 integer add instruction: <strong>250 pJ</strong>, ~4,000×
+  the energy of the add itself.
+- Memory hierarchy per 64-b word: local SRAM (KB) <strong>5 pJ</strong>, on-chip SRAM (MB) <strong>50 pJ</strong>,
+  LPDDR (GB) <strong>640 pJ</strong>.</p>
+<h3 id="4-2b-dally-s-own-number-has-moved-twice">4.2b Dally's own number has moved, twice</h3>
+<p>The single largest unresolved discrepancy in the physical constants is not between us and
+him — it is <strong>within his own published work</strong>:</p>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>Year</th>
+<th>On-chip wire energy</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>2020</td>
+<td><strong>100 fJ/bit·mm</strong></td>
+<td>CACM 63(7)</td>
+</tr>
+<tr>
+<td>2022</td>
+<td><strong>~30 fJ/bit·mm</strong> (1.9 pJ / 64 b / mm = 29.69; cross-checks at 40 mm: 77 pJ/64 b/40 mm = 30.08)</td>
+<td>CACM 65(9)</td>
+</tr>
+<tr>
+<td>2023</td>
+<td><strong>~100 fJ/b·mm</strong></td>
+<td>AHA retreat keynote, twice</td>
+</tr>
+</tbody>
+</table></div>
+<p>A 3.4× swing, same author, and node cannot explain it — Jouppi reports wire energy per unit
+length improved <strong>less than 2×</strong> from 45 nm to 7 nm.</p>
+<p><strong>This matters concretely, because our two derivations use different branches.</strong> The
+internal-log constant table (30 fJ/bit·mm, 400 ps/mm, 10 fJ/bit endpoint, 5 pJ/bit off-chip,
+6 ps/mm) is CACM 2022 renormalised per bit. But 1 fJ/byte/µm = <strong>125 fJ/bit·mm</strong>, which is
+calibrated against the <em>100</em> branch with a ×2 round-trip factor at a 0.61 µm byte pitch —
+<em>not</em> against the 30 branch that the same document quotes as its justification. Anyone
+re-deriving it from CACM 2022 gets a number 3.4× smaller and concludes there is a bug.
+<strong>Pick a branch, write the arithmetic into the spec, and state the round-trip convention.</strong></p>
+<p>Two further quoting hazards inside CACM 2022 itself: it says <strong>1.3 nJ</strong> for a main-memory
+operand fetch in one paragraph and <strong>1.2 nJ</strong> three paragraphs later; and it reports the
+same locality example as both <strong>354×</strong> and <strong>230×</strong>. Its 320 pJ is the <em>crossing</em>; its
+640 pJ is the <em>full DRAM access</em> — do not cite them for each other.</p>
+<h3 id="4-3-the-renormalisation-that-produced-the-working-constants">4.3 The renormalisation that produced the working constants</h3>
+<p>Every line of your 03sep26 constant table is CACM 2022 re-expressed per bit:</p>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>Your line</th>
+<th>Dally source</th>
+<th>Check</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>On-chip movement <strong>30 fJ/bit·mm</strong></td>
+<td>1.9 pJ / 64 b / mm</td>
+<td>= 29.7 ✓</td>
+</tr>
+<tr>
+<td>On-chip latency <strong>400 ps/mm</strong></td>
+<td>same move</td>
+<td>✓ (= c/120 exactly)</td>
+</tr>
+<tr>
+<td>8 KB SRAM endpoint <strong>10 fJ/bit, 300 ps</strong></td>
+<td>0.64 pJ / 64 b</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>Off-chip <strong>5 pJ/bit</strong> per crossing</td>
+<td>320 pJ / 64 b</td>
+<td>✓</td>
+</tr>
+<tr>
+<td>Off-chip propagation <strong>6 ps/mm</strong></td>
+<td>6 ns/m</td>
+<td>✓</td>
+</tr>
+</tbody>
+</table></div>
+<p>Independently, CACTI 7.0.3 at <strong>22 nm</strong> (<code>tmp/cacti-sram8k-22nm.txt</code>, 8 KB scratch RAM,
+itrs-hp, 300 K, delay-optimal) gives: access <strong>0.129 ns</strong>, read <strong>2.048 pJ / 64 b = 32 fJ/bit</strong>,
+sub-array <strong>20.56 µm × 58.96 µm</strong>, data-array area 0.00683 mm² at 67.8% efficiency.
+Wire at 22 nm: <strong>280 fJ/bit·mm</strong> repeated full-swing, <strong>2.84 fJ/bit·mm</strong> low-swing.</p>
+<p>Two consequences worth stating in the spec:
+1. <strong>"fJ per bit per mm" is undefined until the signalling style is fixed</strong> — the two CACTI
+   figures differ by ~100×, and Dally's own two papers differ by 3.4× (30 vs 100 fJ/bit·mm).
+2. <strong>There is no 14 nm CACTI datapoint</strong> in <code>tmp/</code> — the file named <code>8k-14nm.cfg</code> actually
+   sets <code>-technology 0.032</code>. CACTI 7 tops out at 22 nm.</p>
+<h3 id="4-4-technology-node-unpinned">4.4 Technology node — unpinned</h3>
+<p>Internal log 02sep26: <em>"use 7nm because Jouppi gives numbers / Dally also uses 7nm."</em>
+But Dally CACM 2020 states <strong>14 nm</strong>; the AHA 2023 slides use <strong>28 nm</strong> for area/add and
+<strong>45 nm</strong> for the instruction table; the CACTI runs are <strong>22 nm</strong>. Nothing in the dictated
+notes names a node at all — only <em>"conceivably implementable on existing CMOS process."</em></p>
+<h3 id="4-5-the-pitch-question-and-the-best-available-defence-of-1-m">4.5 The pitch question, and the best available defence of 1 µm</h3>
+<p>The grid needs exactly one number: <strong>how many µm² does one byte of addressable memory
+occupy?</strong> Then pitch = √(µm²/byte). Every candidate, side by side:</p>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>Basis</th>
+<th>µm²/byte</th>
+<th>⇒ byte pitch</th>
+<th>Node</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dally's stated SRAM area (0.013 µm²/bit)</td>
+<td>0.104</td>
+<td>0.322 µm</td>
+<td>14 nm</td>
+</tr>
+<tr>
+<td>TSMC N7 HD SRAM bitcell</td>
+<td>0.216</td>
+<td>0.465 µm</td>
+<td>7 nm</td>
+</tr>
+<tr>
+<td><strong>Dally's 256 MB in ~100 mm²</strong> (array level)</td>
+<td>0.373</td>
+<td><strong>0.610 µm</strong></td>
+<td>not stated</td>
+</tr>
+<tr>
+<td>TSMC 16 nm bitcell</td>
+<td>0.56</td>
+<td>0.748 µm</td>
+<td>16 nm</td>
+</tr>
+<tr>
+<td>Intel 22 nm SRAM cell</td>
+<td>0.736</td>
+<td>0.858 µm</td>
+<td>22 nm</td>
+</tr>
+<tr>
+<td><strong>TPUv4i CMEM macro</strong> (128 MB = 28% of a &lt;400 mm² die)</td>
+<td>0.834</td>
+<td><strong>0.913 µm</strong></td>
+<td><strong>7 nm</strong></td>
+</tr>
+<tr>
+<td><strong>the adopted grid</strong></td>
+<td><strong>1.0</strong></td>
+<td><strong>1.000 µm</strong></td>
+<td>—</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>1 µm per byte is almost exactly the macro-level byte density of a shipping 7 nm inference
+chip's main scratchpad</strong> (TPUv4i's CMEM, 0.913 µm/byte). That is the strongest single
+justification for the choice and it is not cited anywhere in the repo — it is worth putting
+in the spec, because it converts "easy to remember" into "matches real silicon."</p>
+<p>Two cautions that go with it:
+- Dally's 0.013 µm²/bit at "14 nm" is <strong>5.4× denser than TSMC's 16 nm bitcell</strong>. It cannot
+  be a bitcell figure; flag it as an idealisation.
+- <strong>Dally's 256 MB in 100 mm² is ~2.2× denser than TPUv4i achieves at 7 nm</strong> (2.56 vs
+  1.14 MB/mm²). Sizing the grid from his number is optimistic by that factor.</p>
+<p>Sub-array cross-check: at 0.013 µm²/bit an 8 KB sub-array is 852 µm² of bitcell = 29.2 µm
+on a side, against the 55.2 µm square-equivalent the 100 mm² / 32,768 decomposition
+allocates it — ~28% array efficiency, which is plausible for SRAM with decoders, sense amps
+and an H-tree (CACTI measures 67.8% for a delay-optimal scratch RAM, so ~28% is on the
+conservative side).</p>
+<h3 id="4-6-the-two-softest-constants">4.6 The two softest constants</h3>
+<p><strong>The 8 KB SRAM endpoint</strong> is the softest number in the model:</p>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>Value</th>
+<th>Source</th>
+<th>Node</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>10 fJ/bit</strong> (adopted)</td>
+<td>Dally CACM 2022, 0.64 pJ / 64 b</td>
+<td>not stated</td>
+</tr>
+<tr>
+<td>50 fJ/bit</td>
+<td>Dally CACM 2020</td>
+<td>14 nm</td>
+</tr>
+<tr>
+<td>117 fJ/bit</td>
+<td>Jouppi ISCA 2021, 7.5 pJ / 64 b</td>
+<td>7 nm</td>
+</tr>
+<tr>
+<td>156 fJ/bit</td>
+<td>Horowitz ISSCC 2014, 10 pJ / 64 b</td>
+<td>45 nm</td>
+</tr>
+<tr>
+<td>32 fJ/bit</td>
+<td>CACTI 7.0.3, 2.048 pJ / 64 b</td>
+<td>22 nm</td>
+</tr>
+</tbody>
+</table></div>
+<p>10 fJ/bit is <strong>the most optimistic figure in the literature, by 5–12×</strong>. The plausible
+reconciliation: 0.64 pJ is bitcell + local bitline/wordline only, while 7.5–10 pJ is a
+<em>macro</em> access including decode, sense amps, periphery and the local H-tree. <strong>Say which one
+the model prices</strong> — a grid whose endpoint cost is 12× below the measured macro number will
+systematically under-reward locality relative to real silicon.</p>
+<p><strong>E_in = 5,000 fJ/byte is an HBM/chiplet crossing, not Dally's off-chip number.</strong> The repo's
+own correction, verbatim: <em>"320 pJ per 64 b is 5 pJ per bit, 40,000 fJ per byte, a
+board-level crossing; the 5,000 fJ per byte the competition uses for E_in is a chiplet- or
+HBM-class crossing (0.6 pJ/bit), and the two must not be cited for each other."</em> Cite
+HBM2 (250–450 pJ/64 b = 3.9–7.0 pJ/bit) for it, not CACM's 320 pJ.</p>
+<h3 id="4-7-numbers-available-for-free-if-time-and-area-become-scored">4.7 Numbers available for free, if time and area become scored</h3>
+<p>Nothing needs deriving — the literature already supplies them:
+- <strong>Time:</strong> 150 ps (32-b add), 400 ps/mm (on-chip), 300 ps (8 KB sub-array), 12.3 ns
+  (256 MB), 16 ns (40 mm), 6 ns/m (off-chip).
+- <strong>Area:</strong> 4 µm² (8-b add), 3,600 µm² (DP FP multiply), 0.013 µm²/bit (SRAM).
+- <strong>Node scaling, 45 → 7 nm</strong> (the only source giving the same quantity at two nodes, so the
+  only basis for a "same program, different node" column): logic <strong>2.1–4.3×</strong>
+  (geomean 2.6×), SRAM only <strong>1.3–2.4×</strong>, DRAM <strong>6.3×</strong>, wire <strong>&lt;2×</strong>.</p>
+<p>One flag: the current time model's <em>"1 ns per instruction, no overlap with flight"</em> is an
+invention, not a literature number, and is ~3–7× slower than the 700–1,050 MHz TPU clock it
+is implicitly modelling.</p>
+<h3 id="4-8-what-the-hmm-adds-beyond-justifying-a">4.8 What the HMM adds, beyond justifying ⌈√a⌉</h3>
+<p><code>docs/spatial-model-analysis.html</code> already establishes that charging f(x) = x^α with
+<strong>α = ½</strong> is exactly [AACS 87]'s Hierarchical Memory Model, whose authors themselves motivate
+it as 2-D physical distance. Its results at α = ½: scanning N inputs is <strong>Θ(N^1.5)</strong>;
+sorting and FFT are also Θ(N^1.5) (the log factors vanish); binary search collapses from
+log N to <strong>Θ(√N)</strong>; matmul is Θ(n³) for α &lt; ½, <strong>Θ(n³ log n) at α = ½</strong>, Θ(n^(2α+2)) above —
+i.e. α = ½ is precisely the critical exponent at which cubic linear algebra turns
+movement-bound. Any time-T space-S RAM computation costs at most <strong>T·√S</strong>.</p>
+<p><strong>The one result with a direct design consequence</strong> is Thm 5.2: Block-LRU dynamic placement
+is <strong>O(1)-competitive</strong> with the offline optimum. That says a compiler that <em>relocates</em> data
+between phases is provably within a constant of optimal, and static single placement is not —
+which is a real argument about whether <code>release</code>/<code>stage</code> should be the only relocation
+mechanism, and it is measurable: the repo's own compiler audit puts the current hand layouts
+at <strong>1.41–2.79× over the provably optimal static assignment</strong>, where the worst assignment
+would be 3.70–8.58×.</p>
+<p>⚠️ That "1.41–2.79×" is the report's own summary line, but <strong>its own table lists
+2.79, 2.78, 3.96, 1.68, 1.41, 2.46 — so the true range is 1.41–3.96×.</strong> The worst/optimal
+range (3.70–8.58×) does match the table. Fix the summary before quoting it.</p>
+<h3 id="4-9-open-forks-on-physical-dimensions">4.9 Open forks on physical dimensions</h3>
+<ul>
+<li><strong>Which per-mm constant is normative</strong> (30 vs 100 vs 280 vs 2.84 fJ/bit·mm).</li>
+<li><strong>c/120 vs c/160 vs c/1200</strong> (global wire vs adopted vs full sub-array access).</li>
+<li><strong>Pitch</strong>: internal log 02sep26 says outright <em>"pitch size is still open"</em> — 1 µm
+  (adopted) vs 1.77 µm (your subarray derivation) vs 0.61 µm/byte (area-derived) vs
+  10 µm/bit (the other MNIST-doc section).</li>
+<li><strong>The provenance of Dally's micron figures</strong>, which you flagged yourself.</li>
+<li><strong>Whether time and area are scored or only reported</strong> — see §6.5.</li>
+</ul>
+<hr />
+<h2 id="5-decision-4-what-competitors-submit">5. Decision 4 — what competitors submit</h2>
+<h3 id="5-1-what-is-submitted-today">5.1 What is submitted today</h3>
+<p>sparse-parity README, verbatim:</p>
+<blockquote>
+<p>"A submission is one straight-line program (an <strong>IR</strong>) in the v3 instruction set: 8-bit
+cells, no loops, no branches, no data-dependent addressing, at most <strong>2,000,000 lines</strong>
+(every line counts, declarations included). / An IR is plain text. Line 1 declares the
+input cell addresses … the last line declares the 32 output addresses, and each line
+between is one op…"</p>
+</blockquote>
+<p>Delivery: <em>"Submit a PR adding your <code>.ir</code> and generator under <code>submissions/</code>."</em>
+matmul adds: <em>"the scorer (<code>matmul.py</code>) must not be modified."</em></p>
+<p>So the <strong>de-facto practice is already the hybrid</strong>: <code>.ir</code> + a <code>.md</code> report + the Python
+generator, with the generator outside the trust boundary. Andy's own sparse-parity records
+are exactly this shape (<code>optimize_layout(generate_sis_mask(1, 2))</code>).</p>
+<p><strong>Current records</strong> (origin/main, 2026-09-08):</p>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>Problem</th>
+<th>Best</th>
+<th>Date</th>
+<th>By</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>matmul 4×4</td>
+<td><strong>675</strong></td>
+<td>2026-09-04</td>
+<td>@jurajselep</td>
+</tr>
+<tr>
+<td>matmul 16×16</td>
+<td><strong>63,819</strong></td>
+<td>2026-09-07</td>
+<td>@SecurityQQ</td>
+</tr>
+<tr>
+<td>sparse-parity 20% band</td>
+<td>86,753</td>
+<td>2026-09-02</td>
+<td>@b0nce</td>
+</tr>
+<tr>
+<td>40% / 60% / 80%</td>
+<td>141,218 / 149,665 / 182,744</td>
+<td>2026-09-01</td>
+<td>@npow</td>
+</tr>
+<tr>
+<td>100%</td>
+<td>392,666</td>
+<td>2026-09-02</td>
+<td>@jurajselep + @b0nce</td>
+</tr>
+<tr>
+<td>symmetry 6-bit / 8-bit</td>
+<td>20 / 29</td>
+<td>2026-05-11</td>
+<td>baselines, no competitor entries</td>
+</tr>
+</tbody>
+</table></div>
+<p>(<code>matmul/agent_prompt.md</code> and <code>directions.json</code> are badly stale — they still quote
+73,602 / 69,697.)</p>
+<h3 id="5-2-the-wall-that-forces-the-decision">5.2 The wall that forces the decision</h3>
+<blockquote>
+<p>"Submissions … are straight-line programs … That choice makes energy a <strong>syntactic
+property</strong> — the judge scores by reading the program, never by running it … But it has a
+hard consequence: <strong>program length is proportional to work</strong>. A 10¹² -operation
+computation is a 10¹² -line program."
+— <code>docs/expressivity-scorability-ladder.html</code> §1</p>
+</blockquote>
+<p>1.7×10¹² ops as raw trace text is <strong>~27 TB</strong>. Tier-2 MNIST is ~1.2×10⁷ trace lines;
+tier-3 is ~10⁹ lines, a <strong>10–19 GB file</strong>.</p>
+<p>Your own answer, internal log 04sep26:</p>
+<blockquote>
+<p>"the submitted artifact has to be <strong>the generator</strong> of the straight-line program, not
+the expanded trace"</p>
+</blockquote>
+<h3 id="5-3-the-two-track-resolution-the-actual-proposal-on-the-table">5.3 The two-track resolution — the actual proposal on the table</h3>
+<p><code>docs/expressivity-scorability-ladder.html</code> §2 and RFC #48 §1:</p>
+<blockquote>
+<p><strong>Generators are unrestricted wherever the expansion is scored, and restricted exactly
+where the schedule is scored.</strong></p>
+</blockquote>
+<ul>
+<li><strong>Episodic track</strong> (tier 1, sparse-parity, matmul): submit the <strong>expanded trace</strong>.
+  Generate it with anything — Python, an LLM, anything Turing-complete — <em>because the
+  organizer never runs it</em>. This is already how the leaderboards work.</li>
+<li><strong>Schedule track</strong> (tiers 2–3, 8192³ GEMM): the <strong>schedule itself is the submission</strong>,
+  and its language must be restricted — <em>for scorability, not sandboxing</em>.</li>
+</ul>
+<p>Made normative in the design report §10: <em>"tiers 2 and 3 are schedule-track only, declared
+in the rules from day one; tier 1 runs dual-track and serves as the trace-vs-schedule
+cross-validation corpus."</em></p>
+<h3 id="5-4-the-ladder-the-vocabulary-for-arguing-about-this">5.4 The ladder — the vocabulary for arguing about this</h3>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>Rung</th>
+<th>Generator may contain</th>
+<th>Scoring</th>
+<th>Unlocks</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>a</strong></td>
+<td>nothing (straight-line trace)</td>
+<td>O(L) summation</td>
+<td>episodic tasks</td>
+</tr>
+<tr>
+<td><strong>b</strong></td>
+<td>affine loop nests, static bounds</td>
+<td>closed form</td>
+<td>GEMM, conv, transformer fwd/bwd</td>
+</tr>
+<tr>
+<td><strong>c</strong></td>
+<td>+ static recursion (compile-time depth)</td>
+<td>recurrence relations</td>
+<td><strong>Strassen</strong>, recursive FFT, fractal tiling</td>
+</tr>
+<tr>
+<td><strong>d</strong></td>
+<td>+ bijective index maps from a fixed library</td>
+<td><strong>free</strong> (permutation invariance)</td>
+<td>FFT butterflies, bitonic networks</td>
+</tr>
+<tr>
+<td><strong>e</strong></td>
+<td>+ <code>mode</code>: data-dependent selector among k static schedules</td>
+<td>worst-case over arms stays static</td>
+<td>MoE with capacity factor, early exit</td>
+</tr>
+<tr>
+<td><strong>f</strong></td>
+<td>+ <code>while</code> / data-dependent trip counts</td>
+<td><strong>undecidable</strong> — simulation only</td>
+<td>convergence-based iteration</td>
+</tr>
+</tbody>
+</table></div>
+<blockquote>
+<p>"The cliff is between (e) and (f), and it is <strong>a theorem, not a taste</strong>: once trip counts
+depend on data, boundedness — and with it cost — is undecidable (Buck)."</p>
+</blockquote>
+<p>Rung (c) is not optional: <em>"an energy leaderboard for matrix multiplication that cannot
+express the sub-cubic algorithms would prejudge the very question it poses."</em>
+Rung (d) is free because Σ⌈√σ(i)⌉ = Σ⌈√i⌉ for a bijection σ — permuting which iteration
+touches which address cannot change the address multiset.</p>
+<h3 id="5-5-the-recommended-stack-and-what-was-rejected">5.5 The recommended stack, and what was rejected</h3>
+<p>Three routes were compared:</p>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>Route</th>
+<th>Verdict</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>A — GridASM</strong>, flat opcode text, superset of today's IR</td>
+<td><em>keep as the SIR level</em> — the address is the cost, visible to writer and reviewer, no compiler in the trust boundary</td>
+</tr>
+<tr>
+<td><strong>B — structured DSL</strong> (<code>place W : i8[10][9] at (4,0)</code>, affine <code>for</code>, recursive <code>def</code> with a kind system, <code>mode</code>, <code>recv</code>/<code>send</code>)</td>
+<td><em>adopt surface ideas</em>; lowers to a one-page Schedule IR which is the scored artifact</td>
+</tr>
+<tr>
+<td><strong>C — reuse survey</strong></td>
+<td><strong>decisive negative result</strong>: no existing system computes this scoring function. MLIR affine is the right vocabulary but a multi-GB LLVM build to parse 40-line files; Halide and TVM cannot express static recursion (so no Strassen); Wasm/RISC-V solve a sandboxing problem this design does not have. <em>Winner inside C: an embedded </em><em>Python builder library</em><em> emitting canonical schedule text.</em></td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>The recommendation is B ⊕ C:</strong> a Python builder as the <em>authoring</em> layer (outside the
+trust boundary, eager validation — a non-affine index is a <code>TypeError</code> on the submitter's
+machine), emitting <strong>canonical schedule text styled after MLIR-affine notation</strong> as the
+reviewed and scored artifact, consumed by a Rust judge of ~2–3k new lines atop <code>dally-eval</code>.
+Hand-written schedule text stays a legal submission, so the trace-tuning culture is not
+orphaned. <em>"In every route surveyed, the grammar itself is the rung enforcement: <code>while</code> is
+unrepresentable — verification by absence, the cheapest verifier there is."</em></p>
+<p>Explicitly rejected:
+- <strong>Python-script submissions with instrumentation</strong> — <em>"allowed too many ways to cheat;
+  unrestricted hosts are not sandboxable"</em> (RFC #48 §1; you reached the same conclusion in
+  Telegram five months earlier).
+- <strong>Traces alone at scale</strong> — the 27 TB wall.
+- <strong>Compiler-chosen placement</strong> — <em>"under the Dally model </em><em>placement is the algorithm</em><em>"</em>.</p>
+<h3 id="5-6-what-andy-has-actually-built-and-what-he-is-asking-you">5.6 What Andy has actually built, and what he is asking you</h3>
+<p>Andy Zhang (<a href="https://github.com/zh4ngx">@zh4ngx</a>) has <strong>eight open PRs</strong>, all awaiting you.
+You have left <strong>zero comments on any of them</strong>.</p>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>PR</th>
+<th>What</th>
+<th>Needs you?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a href="https://github.com/cybertronai/sutro-problems/pull/48">#48</a></td>
+<td><strong>RFC: the Scheduled Dally Language</strong> — the whole submission-format answer</td>
+<td><strong>yes</strong></td>
+</tr>
+<tr>
+<td><a href="https://github.com/cybertronai/sutro-problems/pull/58">#58</a></td>
+<td>MNIST tier-1 (3×3) demo: 280 ops, cost 4,625, ~0.005 nJ/inference, float 53.0% = int8 53.0%</td>
+<td><strong>yes</strong></td>
+</tr>
+<tr>
+<td><a href="https://github.com/cybertronai/sutro-problems/pull/61">#61</a></td>
+<td>Chebyshev-vs-Manhattan provenance audit</td>
+<td><strong>yes — see §6.1</strong></td>
+</tr>
+<tr>
+<td><a href="https://github.com/cybertronai/sutro-problems/pull/49">#49</a></td>
+<td>three-engine benchmark: Rust CPU <strong>69–77×</strong> Python; GPU LDS <strong>0.38–0.90×</strong> Rust CPU on static traces, but <strong>2×</strong> on search workloads</td>
+<td>reference</td>
+</tr>
+<tr>
+<td>#51 / #52 / #55 / #56</td>
+<td>matmul search runs (858 floor), access heatmaps</td>
+<td>reference</td>
+</tr>
+<tr>
+<td>#60</td>
+<td><code>BUILD_NOTES.md</code> + reviewer triage</td>
+<td>reference</td>
+</tr>
+</tbody>
+</table></div>
+<p>His four named forks, verbatim from PR #48's body: <em>"MNIST data representation, accumulate
+semantics, reduce primitive, home repo."</em></p>
+<p>His framing of your Sep 2 ask, verbatim from RFC §1: <em>"The request (Yaroslav, 2026-09-02):
+a language that covers both matmul and MNIST, is immune to cheating (interpreted in a
+sandbox), and makes memory placement an explicit part of program design."</em></p>
+<h3 id="5-7-what-your-dictated-notes-say-about-this-axis">5.7 What your dictated notes say about this axis</h3>
+<p>Nothing directly — the words "submission", "instruction stream", "IR", "language", "SDL",
+and "PR" do not appear in the 14-day window. Two indirect signals, both pointing at
+<em>generator, not trace</em>:</p>
+<blockquote>
+<p>"I can just generate this competition, and then people will create these data flow
+algorithms that do learning and prediction, and <strong>I'll want to understand how they're
+doing it</strong>, but probably not backprop." — <code>20260903-183033</code> (opens in Russian: <em>"Right
+now I think that I have seen how to get rid of backprop"</em>)</p>
+</blockquote>
+<p>A flat trace is precisely the artifact you cannot understand.</p>
+<blockquote>
+<p>"what if we reinvent all of linear algebra, all of algorithms for a new abstraction?
+<strong>And then we have compilers</strong>" — <code>20260904-125521</code></p>
+</blockquote>
+<p>And on who builds it:</p>
+<blockquote>
+<p>"maybe with <strong>Andy</strong> I … figure out how to create a data flow computer that does this."
+— <code>20260903-073220</code></p>
+</blockquote>
+<hr />
+<h2 id="6-cross-cutting-decisions-you-will-need-anyway">6. Cross-cutting decisions you will need anyway</h2>
+<h3 id="6-1-the-metric-manhattan-or-chebyshev-currently-self-contradictory-on-main">6.1 The metric: Manhattan or Chebyshev — currently self-contradictory on <code>main</code></h3>
+<p>This is the sharpest live inconsistency and it sits in published documents.</p>
+<ul>
+<li><strong><code>docs/grid-vm-competition-design.html</code> §5, still on main, uncorrected:</strong> <em>"distance is
+  </em><em>Chebyshev</em><em>, d(x,y) = max(x,y)"</em>, and decision <strong>D3</strong>: <em>"native 2-D Chebyshev with
+  canonical <code>lin</code> legacy embedding."</em> Rationale given: max-of-affine is piecewise-affine,
+  so rung-(b) sums become lattice sums instead of √-staircases.</li>
+<li><strong>RFC #48 §8.3:</strong> keeps <strong>1-D <code>lin(a)</code></strong> for v1 for bit-exact record continuity;
+  Chebyshev deferred to a v2 spatial division.</li>
+<li><strong><code>docs/grid-vm-multiprocessor.html</code> (Sep 7, merged) silently adopts the correction</strong>:
+  <em>"1 fJ per byte per micron of </em><em>Manhattan</em><em> path"</em>, and <strong>"c/160 = 1,874 µm/ns"</strong>.</li>
+<li><strong>PR #61's evidence:</strong> across 2,588 Telegram messages (2026-02-09 → 2026-09-05),
+  <strong>zero</strong> contain "Chebyshev". Your own messages consistently say Manhattan (msg 1277,
+  2026-03-30: <em>"Bill Dally advocates a model based on Manhattan distance…"</em>). First repo
+  occurrence is commit <code>4f4d3e2</code> — the 14-agent design run — from which it propagated into
+  PR #48's text.</li>
+</ul>
+<p><strong>The identity that settles it, and it is exact:</strong></p>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>Shell at radius c</th>
+<th>Cell count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>legacy <code>{a : ⌈√a⌉ = c}</code></td>
+<td>c² − (c−1)² = <strong>2c − 1</strong></td>
+</tr>
+<tr>
+<td>upper-half-plane Manhattan <code>{|x| + y = c, y &gt; 0}</code></td>
+<td><strong>2c − 1</strong> ✓</td>
+</tr>
+<tr>
+<td>first-quadrant Chebyshev <code>{max(x,y) = c}</code></td>
+<td><strong>2c + 1</strong> ✗</td>
+</tr>
+</tbody>
+</table></div>
+<p>So Manhattan is the <em>exact</em> discrete realisation of the existing ⌈√a⌉ law — no substitution
+is needed. The explicit embedding: <code>k = ⌈√a⌉</code>, <code>t = a − (k−1)² − 1</code>, <code>x = −(k−1) + t</code>,
+<code>y = k − |x|</code>. Physically, Chebyshev underprices a rectilinear diagonal route by up to 2×
+((d,d) costs d under Chebyshev, 2d under Manhattan), which breaks the 1 fJ/byte-micron
+calibration.</p>
+<p><strong>Also uncorrected on main:</strong> the competition design report's time formula prints
+<code>1.875 µm·ns⁻¹</code> where c/160 = <strong>1,874 µm/ns</strong> — a factor of 1,000.</p>
+<p><strong>And a second, subtler metric error that PR #61 also flags.</strong> RFC #48 §8.1 charges <em>"each
+edge … <code>ceil(sqrt(distance))</code> once."</em> But ⌈√a⌉ is the function that converts a linear address
+<strong>rank</strong> into the radius of its packed 2-D shell — applying another square root to an already
+<em>geometric</em> distance conflates rank with route length. Under native placement the correct form
+is simply</p>
+<pre><code>E_move = Σ_reads bytes(r) · d₁(src, dst) · 1 fJ/byte-µm
+</code></pre>
+<p>This one is easy to miss because it only bites once addresses become coordinates — i.e.
+exactly when you adopt native 2-D. The correction was drafted in PR #61 and never posted.</p>
+<h3 id="6-2-the-scoring-function">6.2 The scoring function</h3>
+<ul>
+<li><strong>Energy:</strong> `E = Σ_reads d(p) + 4 fJ · static lines + 0.1–1 fJ · issued instructions</li>
+<li>n_recv·E_in + Σ_sends (d(s) + E_out)`.</li>
+<li><strong>Closed forms, honestly stated:</strong> single-variable progressions use the ⌈√⌉
+  antiderivative (RFC #48). Multi-coefficient affine addresses give <strong>Ehrhart
+  quasi-polynomials with floor-sum corrections</strong>, not pure polynomials — still exact and
+  fast via banded lattice counting, ~10⁴ integer evaluations at A_max = 10⁸ — <em>"but the
+  spec must name the floor-sum evaluator as normative rather than claim 'O(1) polynomial.'"</em></li>
+<li><strong>Cross-validation is the anti-divergence rule:</strong> for every program small enough to
+  expand (~1 M ops), the closed-form score must equal <code>dally-eval</code>'s static score of the
+  expanded trace, <strong>bit-exact</strong>.</li>
+<li><strong>Judge cost:</strong> 0.1–4 ms per submission at every tier. Adjudication: ≈0.5–4 s (tier 1),
+  10–20 s (tier 2), 2–18 min (tier 3, JIT; LeNet worst ≈1 h). A 20-finalist tier-3
+  re-score is a ~3 h overnight job on an 8-core machine. <strong>A cluster is never needed.</strong></li>
+<li><strong>Fuel is free:</strong> executed-op count is itself closed-form, so over-budget submissions are
+  rejected <em>without being run</em> — evaluation DoS is structurally impossible.</li>
+<li><strong>One flag set consciously:</strong> the tier-3 laptop fuel cap has ~3× headroom over a plain
+  MLP but <strong>below 1× at a realistic 4–6 byte-ops/MAC — as drafted it can exclude honest
+  LeNet training</strong>, unlike the 10× margins at tiers 1–2.</li>
+</ul>
+<h3 id="6-3-anti-cheat-the-decision-that-shapes-the-competition">6.3 Anti-cheat — the decision that shapes the competition</h3>
+<p><strong>Your stated policy</strong>, <code>20260903-090056</code>, which is worth writing into the rules verbatim:</p>
+<blockquote>
+<p>"the reward hack just means they do something and somebody looks at this and they're
+like, there is no way I can use this technique in real life. … It's like, hey, that's a
+cool technique, [re]use it. And they hard code — it's like, well, you can't reuse it.
+And we want to <strong>isolate as many reward hacks and fix it on the competition</strong>. And I
+think <strong>for the integrity of the competition, allow any other reward hacks</strong> because
+ultimately it's subjective. So it's <strong>unfair to the participants to change the rules in
+the middle of the game</strong>."</p>
+</blockquote>
+<p>Decoded: the test is subjective ("could I reuse this?"); enumerate and close hacks up
+front; then allow the rest and never change rules mid-game.</p>
+<p>Reinforced at the Sep 7 meeting: <em>"the goal is algorithms … </em><em>they love to cheat</em><em>."</em></p>
+<p><strong>Mitigation triage from the red team</strong> (design report §7):</p>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>Mitigation</th>
+<th>Fate</th>
+<th>Why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Held-out QMNIST pool</td>
+<td><strong>fails</strong></td>
+<td>public since 2019; attacker pretrains on the union</td>
+</tr>
+<tr>
+<td>Fetch-priced immediates</td>
+<td><strong>fails</strong></td>
+<td>kills Θ(K) table bombs, not 80 KB of compressed hypothesis</td>
+</tr>
+<tr>
+<td>Program-length caps</td>
+<td><strong>fails</strong></td>
+<td>any cap excluding 8 KB of <code>set</code>s excludes honest inference</td>
+</tr>
+<tr>
+<td>Per-episode label permutation</td>
+<td>keep, insufficient alone</td>
+<td>recoverable by vote-table matching (25–30% tax at tier 1, &lt;1% at tier 3) — <strong>but it forces Ω(100) train reads, killing zero-read programs</strong></td>
+</tr>
+<tr>
+<td>Per-episode pixel permutation</td>
+<td>bypassable</td>
+<td>~8% tax to attacker, ~2× tax to honest convs</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>The three options that actually work, to be chosen explicitly:</strong>
+(a) accept it — rename the closed division <em>episodic inference energy</em>, run in-episode
+learning separately; (b) <strong>procedural episode generation</strong> (MNIST-1D-style parameters
+redrawn per episode, so no finite pool exists); (c) per-episode invertible GF(2)-affine
+mixing — makes recovery equivalent to learning but destroys spatial priors and every
+calibration number. <strong>Recommendation: (b) for tiers 1–2; decide tier 3 after deciding
+whether convolutional architectures are a protected species.</strong></p>
+<p><em>Note:</em> RFC #48 §9.1 claims D1 is <em>"Resolved via procedural episode generation (S7) for
+Tiers 1-2"</em>; the design report leaves tier 3 open. <strong>The two documents disagree about
+whether D1 is closed.</strong></p>
+<p><strong>Seeds must be keyed, not merely derived:</strong>
+<code>seed_j = SHA-256(server secret ‖ submission bytes ‖ tier ‖ j)</code>. Without the secret term a
+submitter simulates every episode offline and ships the answer sequence as immediates —
+100% accuracy at near-zero energy. <em>This was found as a fatal hole in the first draft.</em>
+K = 50 / 10 / 3 shrinks the mined maximum to ~+0.8 pp at tier 1.</p>
+<p>Two attacks recorded as <strong>dead</strong>: the tier-1 "Bayes table" (59,725 of 60,000 3×3 images are
+distinct at 8-bit depth, so a top-1000-pattern table scores ~12%), and pool-lookup by
+linear scan (~6×10¹² trace lines at tier 3, fetch-priced into oblivion).</p>
+<p><strong>Your own train/test idea</strong> (<code>20260904-092239</code>): <em>"I just have a pool of examples, and I
+resample both training and test sets."</em> Note the tension with the sparse-parity mask tier,
+which deliberately has <strong>no test set</strong>.</p>
+<p><strong>Nine pitfalls are already published</strong> (<code>docs/index.html</code> §Pitfalls) and were learned the
+hard way on sparse-parity. A redesign must not lose them:</p>
+<ol>
+<li><strong>"The public suite is minable — never adjudicate on it."</strong> Demonstrated at n=12: an
+   exploit passed the η ≥ 0.25 scorer <em>at lower cost than the honest entry</em> while its true
+   advantage was 0.223.</li>
+<li><strong>"Sampled secrets must be fresh or hidden."</strong> A ~33,000-instruction circuit (13% of the
+   cap) enumerating only the dev suite's 128 sampled secrets <em>"scores a perfect η = 1.0 on
+   the dev suite — Pareto-dominating the honest frontier — while measuring exactly 0.0 on a
+   fresh key."</em></li>
+<li><strong>"Output truncation must be priced, not banned"</strong> — via the decode/predict energy
+   balance; set m_test ≈ D/P of the reference decoder and re-derive it per tier.</li>
+<li><strong>"Candidate enumeration is not the only brute force."</strong> <em>Both</em> exponentials must be
+   checked against the cap. m_train = 18 at n = 32 was chosen specifically so the full 2¹⁴
+   scan exceeds it.</li>
+<li><strong>"The instruction cap is part of the contract. Energy alone cannot kill brute force…
+   Raising the cap is a benchmark-version change, not a tuning knob."</strong></li>
+<li>Accepted noise is ±4 pp across suite keys — <em>"Energy is static and exact; only the
+   accuracy coordinate is noisy."</em></li>
+<li>Publish pooled curves with spread, not single deterministic points.</li>
+<li>Complement pairing needs <strong>odd k</strong> (both live tiers use k = 3, k = 5).</li>
+<li><strong>"No data-dependent addressing cuts both ways"</strong> — submissions cannot hash, but the
+   generator is ordinary Python.</li>
+</ol>
+<p>Points 1, 2 and 5 are the ones that transfer directly to MNIST, and 5 is the one most
+likely to be forgotten: <strong>the line cap is a rule, not a tuning knob.</strong></p>
+<h3 id="6-4-accuracy-targets-measurement-overturned-the-drafts">6.4 Accuracy targets — measurement overturned the drafts</h3>
+<p>An adversarial reviewer ran real 600/600 episodes rather than extrapolating, and two
+recommendations flipped:</p>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Measured</th>
+<th>Draft target</th>
+<th>Corrected target</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 (3×3)</td>
+<td>centroid <strong>48.2 ± 2.1%</strong>, linear@600 50.5%, 1-NN@600 54.0%</td>
+<td>50% (would kill centroid)</td>
+<td><strong>~45%</strong></td>
+</tr>
+<tr>
+<td>2 (9×9)</td>
+<td>linear <strong>84.8%</strong> on full data</td>
+<td>88% (would exclude linear)</td>
+<td><strong>~80–82%</strong></td>
+</tr>
+<tr>
+<td>3 (28×28)</td>
+<td>1-NN 96.9%</td>
+<td>—</td>
+<td><strong>97.3%</strong>, and <em>"never place a target at 97.0"</em> (works only because the task pins a 60k test set, σ = 0.07 pp)</td>
+</tr>
+</tbody>
+</table></div>
+<p>Per-episode binomial noise: ±2.0 / ±0.5 / ±0.09 pp.</p>
+<p><strong>The resident-vs-restream lever, genuinely contested.</strong> Holding the 60k×784 training set
+resident costs (2/3)·(4.70×10⁷)^1.5 ≈ 2.2×10¹¹ units per sweep; re-streaming costs
+4.70×10⁷·E_in. <strong>Resident wins iff E_in ≳ 4.6×10³</strong> — which is why E_in ≈ 5,000 fJ puts the
+two régimes within ~10% of each other and makes this a real strategic choice rather than a
+foregone one. <em>"1,000 fJ is wrong."</em></p>
+<p><strong>Stream floors never decide a ranking:</strong> 11.4 kB / 0.98 MB / 94 MB in-streams cost
+5.7×10⁷ / 4.9×10⁹ / 4.7×10¹¹ fJ — at tier 3 that is ~10⁻³ of MLP training energy.</p>
+<h3 id="6-5-time-and-area">6.5 Time and area</h3>
+<p>Internal log 06sep26: <em>"report three things — energy, time, area, accuracy"</em> (four listed).</p>
+<ul>
+<li><strong>Time v1 = sequential issue:</strong> <code>T = N_issued·1 ns + Σ d(p)/1.875 µm·ns⁻¹ + port terms</code>
+  (constant is wrong by 1000×, see §6.1). <em>"The honest consequence: TIME correlates with
+  ENERGY and tier-3 sequential time is measured in days."</em> Tier-3 MLP 784-256-10 at 30
+  epochs ≈ <strong>9.5 days</strong>; 1-NN anti-strategy ≈ <strong>240 days</strong>.</li>
+<li><strong>Time v2 = dataflow critical path</strong> (Karp–Miller–Winograd affine schedules) is well-posed
+  and closed-form, <strong>but bijection invariance fails there</strong> (a bit-reversal stretches wires —
+  physically real), so library maps would need per-map dilation lemmas. Run as a separately
+  scored division; <strong>do not blend it into v1</strong>.</li>
+<li><strong>Area:</strong> origin-anchored bounding square of touched cells in µm², unioned over mode arms.</li>
+<li><strong>Nothing is currently scored except energy.</strong> The c/160 constant is unused by any scorer.
+  <code>docs/dataflow-io-order.html</code> names the gap: <em>"Nothing rewards parallelism. Order-fixed,
+  time-free, energy-only scoring never penalises an arbitrarily serial submission — an odd
+  property for a benchmark about a spatial machine."</em></li>
+<li><strong>Unanswered and important: with four axes (energy, time, area, accuracy), how is a
+  winner defined?</strong> The design report says accuracy gates entry and energy/time/area get
+  separate leaderboards. Nothing says how they combine, or what happens on a tie.</li>
+</ul>
+<h3 id="6-6-parallelism-decided-in-outline-p1-p8-open">6.6 Parallelism — decided in outline, P1–P8 open</h3>
+<p><code>docs/grid-vm-multiprocessor.html</code> compares four ways to put more than one control unit on
+the grid, and recommends an <strong>adoption order</strong>:</p>
+<ol>
+<li><strong>SPMD tile mesh with a collective library</strong> — <em>adopt first</em>. Smallest delta; keeps the
+   judge a formula; makes parallel makespan, cross-core locality and idle-silicon cost
+   visible. Every message-passing program using only collectives scores identically.</li>
+<li><strong>Systolic coprocessor inside a tile</strong> ("AI-CPU tile") — the only scenario that prices
+   Roune's thesis; closed-form; first showcase is 8192³ GEMM.</li>
+<li><strong>Message-passing multicore</strong> — needs the reference simulator first.</li>
+<li><strong>SIMT lane array</strong> — its own P ≥ 2 division.</li>
+</ol>
+<p>Eight open decisions P1–P8, each with a stated cost: tape rate for P ≥ 2 (8 B/ns vs 1),
+fetch continuity, whether static energy A·T is scored, the idle-clock term (0.125 fJ per
+bit-micron of clock tree per ns = 168 fJ/ns per tile), the area rule, write pricing,
+whether SIMT/<code>dp4a</code> enters v1 (<em>"adopting dp4a into v1 drops the 16×16 record 4×
+overnight"</em>), and makespan on the general path.</p>
+<p>Two migration items it flags as <em>settled-but-unwritten</em>: the port term (a <code>recv.T</code> occupies
+<code>sizeof(T)</code> ns at 1 B/ns with no issue slot) and the area function ((2k−1)² over the
+<code>lin(a)</code> half-diamond). And one correction: <strong>"5 pJ per byte" should be per bit.</strong></p>
+<h3 id="6-7-what-each-proposed-change-costs-the-existing-leaderboard">6.7 What each proposed change costs the existing leaderboard</h3>
+<p>Every option has a stated re-scoring price. Collected in one place, because this is the
+constraint that has silently driven several design choices (D2 "writes free", D3 "keep
+<code>lin(a)</code>", RFC §8.3) toward compatibility rather than physics:</p>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>Change</th>
+<th>Records it moves</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Manhattan <code>lin(a)</code> embedding, 2-D exposed</td>
+<td><strong>none — bit-exact</strong></td>
+</tr>
+<tr>
+<td>Native (x,y) placement</td>
+<td>requires a versioned leaderboard even under Manhattan</td>
+</tr>
+<tr>
+<td>Pricing ports</td>
+<td><em>"once ports are priced, legacy free-input records are not score-comparable anyway"</em></td>
+</tr>
+<tr>
+<td>Instruction-fetch pricing</td>
+<td>every record; none has been re-scored under it</td>
+</tr>
+<tr>
+<td>A located loop buffer (P2)</td>
+<td>every P = 1 record by <strong>2–24%</strong></td>
+</tr>
+<tr>
+<td>Charging the idle clock at P = 1 (P4)</td>
+<td>every P = 1 energy record by <strong>7–80%</strong></td>
+</tr>
+<tr>
+<td>8 B/ns tape at P = 1 (P1)</td>
+<td>every P = 1 <em>time</em> record (streamed sum 2,102,751 → 1,447,809 ns)</td>
+</tr>
+<tr>
+<td>Adopting <code>dp4a</code> into v1 (P7)</td>
+<td>drops the 16×16 record <strong>4× overnight</strong></td>
+</tr>
+<tr>
+<td>Priced writes</td>
+<td>both scorers charge reads only today</td>
+</tr>
+</tbody>
+</table></div>
+<p>The corpus PR #48 §8.3 promises to keep bit-exact is <em>"sparse-parity, 4×4 matmul at 675,
+16×16 matmul at 64,431, and the Tier-1 PR #58 demo"</em> — note <strong>16×16 has since moved to
+63,819</strong>, so that clause is already stale.</p>
+<h3 id="6-8-hosting-and-the-shape-of-the-competition">6.8 Hosting, and the shape of the competition</h3>
+<ul>
+<li>Today: a GitHub repo with PR-based submissions. Nothing decided beyond that.</li>
+<li>Your own suggestion, Telegram msg 1238 (2026-03-27): <em>"near.market is a good fit for this
+  kind of competition."</em> You had already posted the red-blue pebble game as a near.market
+  job (msg 314).</li>
+<li>Also floated: Prime Intellect RL hub / Anthropic RL envs (msg 1092: <em>"Ben Mann seemed
+  interested"</em>), HuggingFace Spaces leaderboard (Yad).</li>
+<li>Andy's fourth fork is literally <strong>"home repo"</strong> — where SDL lives.</li>
+</ul>
+<h3 id="6-9-two-things-you-have-said-before-that-a-redesign-must-not-lose">6.9 Two things you have said before that a redesign must not lose</h3>
+<p><strong>The metric has been silently wrong twice.</strong> Both times a leaderboard leader was not
+counting its own work:
+- Yad, msg 1102 (2026-03-22): <em>"GF2's measured DMC of 8,607 was artificially low. The
+  harness only tracked write(A) → read(A) → write(solution), skipping the O(n²) row
+  operations. </em><em>Honest tracking puts GF2 at 189,056.</em><em>"</em>
+- You, msg 1231 (2026-03-27): <em>"It may affect the existing leaderboard because the Gaussian
+  elimination didn't count the cost of the elimination step."</em></p>
+<p>A new ISA should be judged partly on whether it makes this class of error impossible —
+which is exactly the argument for execution-free scoring over instrumented Python.</p>
+<p><strong>Iteration speed is a hard design input, repeatedly stated.</strong> msg 689 (2026-03-04):
+<em>"baseline SGD 22 seconds is too slow. It should be &lt;2 seconds. Making it 22 seconds makes
+your iteration time 10x slower."</em> msg 925: <em>"Only consider experiments runnable on 1980s
+hardware in 1 hour (less than 1 second today)."</em></p>
+<p><strong>And the benchmark-overfitting warning, from you</strong> (msg 767, 2026-03-09):
+<em>"keep in mind the AI Radiology debacle where a team of (human) agents optimize the heck
+out of a benchmark, but the result didn't really work … Unless your evaluation is the
+actual thing you care about (extremely rare), [you] need to be exercising human judgement
+to tell if the direction your agents are moving is likely to make impact."</em></p>
+<hr />
+<h2 id="6-half-decisions-nobody-has-named-yet">6½. Decisions nobody has named yet</h2>
+<p>These are not open questions — they are choices that have already been made <em>by accident</em>,
+or that a competition needs and this one does not have. Grouped by how badly they bite.</p>
+<h3 id="a-made-implicitly-by-code-never-chosen-by-anyone">A. Made implicitly by code, never chosen by anyone</h3>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>The accidental decision</th>
+<th>Why it matters</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Free input placement</strong></td>
+<td>The submitter chooses input addresses and placement is free (both scorers).</td>
+<td>At tier 3 that is free placement of <strong>4.7×10⁷ cells</strong> — an enormous unpriced degree of freedom. The Grid VM report concedes the consequence in passing: <em>"once ports are priced, legacy free-input records are not score-comparable anyway."</em></td>
+</tr>
+<tr>
+<td><strong>No registers</strong></td>
+<td><code>addr = 0</code> is the off-grid ALU; address 1 costs 1.</td>
+<td>Whether the machine has a register file, and whether register traffic is free, was settled by an address convention rather than a design choice.</td>
+</tr>
+<tr>
+<td><strong>Free fan-out / broadcast</strong></td>
+<td>Writes are free, so one read feeding many consumers is free.</td>
+<td>Broadcast is unpriced, which silently sets its complexity. The <code>dally-spatial-report</code> notes that pricing writes <em>"restores broadcast to Θ(n^1.5)"</em>.</td>
+</tr>
+<tr>
+<td><strong>Store always beats recompute</strong></td>
+<td>Free writes.</td>
+<td>Deletes Dally's headline example (§2.6).</td>
+</tr>
+<tr>
+<td><strong>Two engines, one silent fallback</strong></td>
+<td><code>dally_eval.py</code> returns <code>None</code> when the Rust binary is missing and the harness silently falls back to Python; <code>DALLY_EVAL_BIN</code> is environment-overridable, with no pinned version and no engine identity recorded per score. The vectorised engine computes in <strong>int16</strong> while the scalar engine wraps to signed 8-bit — they are <em>asserted</em> to agree, not proven across all ops.</td>
+<td>A scoring harness that can quietly change engines is exactly the failure mode that produced the GF(2) 8,607 → 189,056 correction.</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="b-what-is-actually-being-measured-the-biggest-unnamed-fork">B. What is actually being measured — the biggest unnamed fork</h3>
+<ul>
+<li><strong>Is this a learning benchmark or an inference benchmark?</strong> The Grid VM report says that if
+  embedded weights go unmitigated, <em>"the 'learning' axis is dead code and the benchmark
+  measures inference circuits"</em>, and its fallback is to rename the closed division <em>episodic
+  inference energy</em>. Your voice notes say the target is <em>"an actual MNIST </em><em>training</em><em> loop."</em>
+  PR #58 trains in numpy, off-model. <strong>"Training-in-the-IR vs training-off-model" is never
+  posed as a decision anywhere.</strong></li>
+<li><strong>Is accuracy computed inside the model and priced?</strong> Today it is not: the harness computes
+  it, and PR #58's argmax runs off-model in the pre-wrap integer domain because 8-bit cells
+  alias int16 logits.</li>
+<li><strong>What else may legally happen off-model?</strong> PR #58 set the precedent by accident. Without a
+  rule, "off-model" is an unbounded escape hatch — and it is the same shape as the reward
+  hacks the pitfalls list already catalogues.</li>
+<li><strong>Does the practical track survive?</strong> PTX-on-real-GPUs, NVML vs RAPL, "total system energy
+  under time and accuracy bounds" was decided in Apr/May and has been dormant since. The
+  redesign never says whether it still exists.</li>
+<li><strong>Does MNIST-on-grid serve the stated week-52 final exam?</strong> The exam is <em>"demonstrate
+  energy-efficient training of Karpathy's nanoGPT … without sacrificing wall-clock time and
+  accuracy."</em> No document connects the MNIST ladder to it.</li>
+</ul>
+<h3 id="c-governance-the-competition-as-an-institution">C. Governance — the competition as an institution</h3>
+<p>Almost entirely absent, and cheap to fix:</p>
+<ul>
+<li><strong>There is no <code>LICENSE</code> and no <code>CONTRIBUTING</code> on <code>origin/main</code>.</strong> Entrants submit code by PR
+  into a repo with no licence, no CLA, no copyright grant, and no statement of what rights
+  anyone has. (SutroYaro was deliberately made Unlicense; sutro-problems never was.)</li>
+<li>No prize, deadline, eligibility rule, anti-sybil measure, submission rate limit, or appeals
+  process.</li>
+<li><strong>The conflict of interest is unaddressed:</strong> you merge every PR <em>and</em> hold leaderboard
+  records.</li>
+<li><strong>Human-vs-AI provenance disclosure existed once</strong> (Sutro #12 agenda, "human-vs-AI provenance
+  rule") and vanished. PR #60 volunteers a build footprint; nothing requires it.</li>
+<li><strong>No deprecation/migration policy</strong>, and precedent runs both ways — sparse-parity already
+  carries a "Legacy page" of <em>retired</em> tiers, while PR #48 argues for bit-exact <em>preservation</em>.</li>
+<li><strong>Discoverability regression:</strong> commits <code>9e3175e</code>/<code>5e72dbb</code> <strong>removed the "Design notes"
+  section from the root README</strong>, so all four live design notes are published on Pages and
+  linked from nothing. The README also lists only two of the repo's four problem directories.</li>
+<li><strong>Your reward-hack policy is not written anywhere a participant can read it.</strong> It exists
+  only as dictated audio (§6.3). It is the most complete policy statement in the corpus.</li>
+</ul>
+<h3 id="d-ranking-four-axes-and-no-rule">D. Ranking — four axes and no rule</h3>
+<ul>
+<li><strong>How is a winner defined?</strong> Options nobody has written down: lexicographic; energy at fixed
+  accuracy (today's sparse-parity band scheme); Pareto frontier with ties unbroken; <strong>AT²</strong>
+  (the theoretical backdrop — Thompson, and the Ryan Williams thread in your April log —
+  never adopted); energy·time; energy under time and area caps.</li>
+<li><strong>How do you rank on a noisy axis?</strong> Energy is exact; accuracy carries ±2.0 / ±0.5 / ±0.09 pp.
+  The only escalation ladder anywhere is in <code>chatgpt-report.txt</code>, written for sparse-parity.</li>
+<li><strong>Area has no unit and no rule in any scorer.</strong> Bounding-square is proposed only in the Grid
+  VM report; touched-cell count is explicitly gameable by scatter.</li>
+<li><strong>Nothing versions the metric.</strong> <code>v0…v3</code> versions the <em>ISA</em>. Your PR #18 comment is the
+  closest thing to a metric-versioning rule and it is buried in a May PR thread.</li>
+<li><strong>The compatibility claim and the proposed pricing changes are mutually exclusive</strong>, and both
+  live in the same document set (§6.7).</li>
+</ul>
+<h3 id="e-machine-model-forks-still-unnamed">E. Machine-model forks still unnamed</h3>
+<ul>
+<li><strong>DRAM as a tier.</strong> Off-chip is priced in exactly one place (5 pJ/bit crossing, 6 ps/mm) and
+  <strong>nothing in the current model crosses a chip boundary at all.</strong> Capacity, bandwidth ceilings
+  (400 GB/s off-chip, 1 TB/s interposer), refresh, and page/row structure are all absent.</li>
+<li><strong>Leakage and idle silicon.</strong> Static energy is <em>reported not scored</em> (P3, and <em>"the constant
+  has a ±10× band"</em>); clock energy is scored only for P ≥ 2 (P4). Both make an idle grid free —
+  so at P ≥ 2 the energy board's optimum is P_max unless the clock term lands.</li>
+<li><strong>Operating point.</strong> Voltage, frequency and temperature are the entire basis of the constants
+  (E = ½CV² at V ≈ 0.5 V) and are never declared.</li>
+</ul>
+<h3 id="f-mnist-specific-gaps">F. MNIST-specific gaps</h3>
+<ul>
+<li><strong>No lower bound and no reference implementation for any tier</strong> — so there is no way to
+  detect saturation, which was the stated motivation for the redesign in the first place.</li>
+<li><strong>No rule on dataset representation.</strong> PR #58 chose signed 6-bit features from block
+  averaging; that was the submitter's choice, not a spec.</li>
+<li><strong>Whether convolutions are "a protected species"</strong> — the Grid VM report defers tier-3 D1 on it.</li>
+<li><strong>Is tier 3 even runnable?</strong> Modelled sequential time is 2.3–240 days, and the laptop fuel cap
+  is <em>"below 1× at a realistic 4–6 byte-ops/MAC — as drafted it can exclude honest LeNet
+  training."</em></li>
+</ul>
+<hr />
+<h2 id="7-contradictions-ledger">7. Contradictions ledger</h2>
+<p>Things that disagree <strong>in writing, right now</strong>. Each needs a ruling.</p>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>The disagreement</th>
+<th>Sources</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>C1</td>
+<td><strong>Chebyshev vs Manhattan.</strong> D3 says native 2-D Chebyshev; the Sep 7 note and RFC §8.3 say Manhattan / keep 1-D <code>lin(a)</code>; PR #61 proves Manhattan is the exact realisation (2c−1 vs 2c+1). Uncorrected on main.</td>
+<td>design report §5/§11 vs multiprocessor §2 vs RFC #48 §8.3 vs PR #61</td>
+</tr>
+<tr>
+<td>C2</td>
+<td><strong><code>1.875 µm·ns⁻¹</code> vs <code>1,874 µm/ns</code></strong> for c/160 — 1000×</td>
+<td>design report §5 vs multiprocessor §2</td>
+</tr>
+<tr>
+<td>C3</td>
+<td><strong>1 picojoule vs 1 femtojoule</strong> — <em>resolved: a misspeak, not a fork.</em> The dictated design description does say "the idealized computer is 1 picojoule, 1 micron" (verified across engines), but the same 134-word clip also says a memory access "takes milliseconds" (true value 0.5 ps), and <strong>every written source of that same week</strong> — the MNIST-on-grid doc (Sep 4), meeting #30 (Sep 8), RFC #48 §8.2, the multiprocessor note — says <strong>1 fJ per byte per micron</strong>. Treat the clip as dictation error.</td>
+<td><code>20260903-180729</code> vs meeting #30 / RFC §8.2</td>
+</tr>
+<tr>
+<td>C5</td>
+<td><strong>30 vs 100 vs 280 vs 2.84 fJ/bit·mm.</strong> <strong>Dally's own figure went 100 (2020) → 30 (2022) → 100 (2023)</strong> — a 3.4× swing that node cannot explain (wire energy improved &lt;2× from 45→7 nm). CACTI 22 nm repeated wire = 280; low-swing = 2.84. Our two derivations use <em>different branches</em>: the constant table is the 30 branch, but 1 fJ/byte·µm = 125 fJ/bit·mm is calibrated to the 100 branch with a ×2 round trip at 0.61 µm. <strong>Biggest single unresolved number.</strong></td>
+<td>Dally CACM 2020 / 2022 / AHA 2023; internal log 03sep26; <code>tmp/cacti-sram8k-22nm.txt</code></td>
+</tr>
+<tr>
+<td>C5b</td>
+<td><strong>8 KB SRAM endpoint: 10 vs 32 vs 50 vs 117 vs 156 fJ/bit.</strong> The adopted 10 fJ/bit is the most optimistic in the literature by 5–12×; probably a bitcell+local-wire figure being used where a macro figure belongs.</td>
+<td>§4.6</td>
+</tr>
+<tr>
+<td>C6</td>
+<td><strong>c/120 vs c/160 vs c/1200.</strong> 400 ps/mm = c/120 exactly (global wire); c/160 = 533 ps/mm (adopted, "conservative"); c/1200 for a complete sub-array access; meeting #30 says 0.5 ps/µm = c/150.</td>
+<td>internal log 03sep26 vs meeting #30 vs RFC §8.2</td>
+</tr>
+<tr>
+<td>C7</td>
+<td><strong>1 µm/byte vs 1.25 µm/step vs 1.77 µm/pitch vs 0.61 µm/byte vs 10 µm/bit.</strong> Five pitches in circulation. <code>binary-matmul-regimes/derived.json</code> and <code>a100-grid-energy-report/grid-audit.json</code> both derive <strong>1.25 µm per step</strong> at 1 fJ per int8 value from 100 fJ/bit·mm (and <strong>10 µm</strong> if the fJ is per <em>bit</em>); the multiprocessor note splits the difference at <strong>0.98 fJ</strong> for a byte-wide round trip at the 0.61 µm area-derived pitch. And 1 byte/µm² is <strong>800×</strong> the 10,000 bits/mm² figure in the same MNIST doc.</td>
+<td>meeting #30 vs internal log 03sep26 vs multiprocessor §3 vs MNIST-on-grid doc vs <code>derived.json</code></td>
+</tr>
+<tr>
+<td>C8</td>
+<td><strong>"5 pJ per byte" vs "5 pJ per bit"</strong> off-chip. 320 pJ/64 b = 5 pJ/<strong>bit</strong> = 40,000 fJ/byte (board-level); the 5,000 fJ/byte used for E_in is a chiplet/HBM-class crossing (0.6 pJ/bit). <em>"The two must not be cited for each other."</em></td>
+<td>multiprocessor §3 (explicit correction)</td>
+</tr>
+<tr>
+<td>C9</td>
+<td><strong>Technology node: 7 nm vs 14 nm vs 22 nm vs 28/45 nm.</strong> You wrote "use 7nm because Jouppi gives numbers / Dally also uses 7nm", but Dally 2020 says 14 nm, AHA 2023 uses 28/45 nm, and the CACTI runs are 22 nm. There is no 14 nm CACTI datapoint (<code>8k-14nm.cfg</code> actually sets 0.032).</td>
+<td>internal log 02sep26 vs the papers vs <code>tmp/cacti-*</code></td>
+</tr>
+<tr>
+<td>C10</td>
+<td><strong>Is D1 (embedded weights) closed?</strong> RFC §9.1 says resolved via procedural episodes for tiers 1–2; the design report leaves it as the open decision that defines the competition.</td>
+<td>RFC #48 §9.1 vs design report §11</td>
+</tr>
+<tr>
+<td>C11</td>
+<td><strong>256 MB vs 256 MiB</strong> for the Dally anchor.</td>
+<td>CACM 2022 vs meeting #30</td>
+</tr>
+<tr>
+<td>C12</td>
+<td><strong>"report three things — energy, time, area, accuracy"</strong> — four listed.</td>
+<td>internal log 06sep26</td>
+</tr>
+<tr>
+<td>C13</td>
+<td><strong>PR #58 claims it emits "the exact op set the matmul competition scores"</strong> but uses <code>set</code>, which v0's <code>matmul.py</code> rejects, and re-implements <code>static_cost()</code>.</td>
+<td>PR #58 vs <code>matmul/matmul.py</code></td>
+</tr>
+<tr>
+<td>C14</td>
+<td><strong>Meeting time 18:00 vs 18:15.</strong></td>
+<td>top-level doc vs meeting #29 doc</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="8-what-is-not-written-down-anywhere">8. What is not written down anywhere</h2>
+<p>Genuine gaps, not disagreements.</p>
+<ol>
+<li><strong>The grid's actual size.</strong> Per-tier memory caps exist (1/16/256 MB); a cell count,
+   address-space bound, or "the machine is N×N" statement does not. Your dictated notes
+   never mention it once.</li>
+<li><strong>A migration story from the existing leaderboards to the new machine.</strong> The Sep 3
+   dataflow/MNIST rethink appears in your notes as a fresh start. The matmul and
+   sparse-parity records, the <code>.ir</code> format, and the energy numbers are not discussed at all
+   in the 14-day window — even while you were actively producing sparse-parity results.
+   Your own PR-#18 precedent (new IR → new problems only) would resolve this cheaply if
+   stated. The one useful outside analogy is Jouppi's Lesson ⑩: Google deliberately chose
+   <strong>source-level ("backwards ML") compatibility over binary compatibility</strong>, precisely so
+   the hardware could change underneath the programs. Applied here, that says: when the
+   competition switches from traces to SDL, <strong>re-score the programs, don't preserve the
+   traces</strong> — which is the opposite of what "bit-exact record continuity" (RFC §8.3, D2,
+   D3) is currently optimising for. Worth deciding on purpose rather than by default.</li>
+<li><strong>Cited artifacts that do not exist.</strong> Verified absent from <code>main</code> and every remote branch:
+   - <em>"Proposal: a streamed instruction processor and a compact schedule language, this
+     repository, September 4, 2026 — the four-port geometry, the canonical instruction
+     encoding, charged reads and writes."</em> The only cited source for the four-port geometry
+     and for <em>charged writes</em>.
+   - <strong><code>scoring-at-scale/</code></strong> — cited in the Grid VM report as the source of the
+     <em>"0.3–3 ms to score a 1.1×10¹²-instruction schedule"</em> measurement. <strong>The headline
+     judge-cost claim has no artifact.</strong>
+   - <strong><code>matmul/a100_8192_dtype_energy_results.json</code></strong> — cited as the measured A100 anchor;
+     <code>git log --all</code> shows it has never existed. The content survives as
+     <code>a100-grid-energy-report/measurement-audit.json</code> (which names it as <code>source_artifact</code>
+     with its sha256), and the 0.904 J INT8 figure <em>is</em> verifiable there.
+   - <strong>"S7"</strong> — cited by RFC #48 §9.1 as the resolution of the embedded-weights fork.
+     Defined nowhere in any repo document.
+   - <code>docs/pr48-response-draft.md</code> — cited by PR #61, not in the repo.
+   - <strong>No SDL parser or interpreter exists in any PR.</strong> RFC #48's security claim
+     ("no I/O, no host calls, no unbounded allocation") is a specification, not code.</li>
+<li><strong>What "256 memory bank" refers to</strong> in your design description, and which Dally table
+   the fJ anchor was fitted to. (<code>sutro fJ report</code> is the candidate; it is only 545 bytes.)</li>
+<li><strong>The provenance of Dally's micron figures</strong> — your own inline note
+   <em>"(where is the micron measurement from?)"</em> is still open.</li>
+<li><strong>Number format.</strong> Bytes everywhere; no statement on precision, signedness, or
+   accumulate width, beyond the design report's <code>u8</code>/<code>i16</code>/<code>i32</code> proposal.</li>
+<li><strong>Whether time and area are scored or only reported</strong>, and how a winner is defined
+   across four axes.</li>
+<li><strong>Off-chip / DRAM pricing.</strong> Only the pair "5 pJ/bit per boundary crossing" and
+   "6 ps/mm" exist. Tier 3 has no meaning without it (PR #58 says so explicitly).</li>
+<li><strong>Determinism of the eval suite.</strong> <code>chatgpt-report.txt</code> flags that the current scorer
+   uses <code>secrets.SystemRandom()</code> — <em>"good for unpredictability, but not for deterministic
+   leaderboard comparisons"</em> — and recommends a public deterministic suite (committed seed)
+   plus a private one (fixed server-side key), with <em>"Do not regenerate the final suite on
+   every scoring run."</em></li>
+<li><strong>Tie-breaking.</strong> <code>chatgpt-report.txt</code> proposes an escalation ladder (smoke 1k → dev 10k
+    → leaderboard 50k → strong 100k → final 250k → tie-break 1M → audit ~2M) with
+    <em>"if two submissions are within ~0.3 pp, rerun those only at 1M–2M tasks."</em> Not adopted.</li>
+<li><strong>The recent Telegram record is not on this machine.</strong> Everything Aug–Sep lives on the
+    <code>intel</code> Mac. PR #61's diff is the only local window.</li>
+<li><strong>The Sep 8 memory-wall thread has not reached the design.</strong> <code>20260908-122822</code>:
+    <em>"I got really nerd sniped by the numbers"</em>; <code>20260908-141736</code>: <em>"there's some useful
+    takeaways in terms of why we have the memory wall."</em> Worth folding in before fixing
+    axis (3).</li>
+<li><strong>The Sep 7 meeting produced "a hierarchy of three"</strong> (<code>20260907-163821</code>) — probably the
+    three MNIST tiers, but the clip does not say so, and meeting #30's own notes are thin.</li>
+<li><strong>Load-bearing decisions that live only in private, uncitable threads.</strong> These cannot go
+    into a public spec, and several are the <em>only</em> record of how a choice was made:<ul>
+<li><code>gemini.google.com/app/f39fddafa2095317</code> (11apr26) — <strong>the only cheat-proofing thread
+  in the entire corpus</strong>; its content is nowhere summarised.</li>
+<li><code>chatgpt.com/s/cx_6a99e9a8379c81918ee21b94acdd9235</code> — the "Compare matmul costs across
+  chips" megathread that is the stated source of the whole 30 fJ/bit·mm / 400 ps/mm /
+  10 fJ/bit / 5 pJ/bit constant block.</li>
+<li><code>claude.ai/code/session_01USznRPfqyKT1tbu8UeDJ1P</code> — "divergence architecture in
+  andy/yaroslav", the only record of how Andy's design and yours diverged.</li>
+<li>The ISA threads (<code>chatgpt.com/g/…/c/69d19662-…</code>, and two others).</li>
+<li>Dally 2020 and Jouppi are linked as <strong>private Drive files</strong> (<code>drive.google.com/open?id=…</code>)
+  — unusable in a public spec.</li>
+<li><code>http://100.70.243.24:31095/…</code> — a tailnet IP, unreachable to anyone else.</li>
+</ul>
+</li>
+<li><strong>The primary source is not archived.</strong> Dally CACM 2022 returns 403 to automated fetch;
+    the working copy is a university mirror plus a local <code>tmp/pdfs/</code> that <strong>is not on
+    <code>origin/main</code></strong>. Every constant in the benchmark traces to a document the repo does not
+    contain.</li>
+</ol>
+<hr />
+<h2 id="9-appendix-the-complete-fork-index">9. Appendix — the complete fork index</h2>
+<p>Every choice that has to be made, with its status. <strong>DECIDED</strong> = settled in code or in a
+document you wrote; <strong>PROPOSED</strong> = someone has recommended an answer and it awaits you;
+<strong>OPEN</strong> = no answer exists.</p>
+<h3 id="isa">ISA</h3>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>Fork</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>I1</td>
+<td>Which instruction set is normative across all problems?</td>
+<td>OPEN</td>
+</tr>
+<tr>
+<td>I2</td>
+<td>Cell width and data representation</td>
+<td>OPEN</td>
+</tr>
+<tr>
+<td>I3</td>
+<td>Are writes priced?</td>
+<td>OPEN — and a documentation bug today</td>
+</tr>
+<tr>
+<td>I4</td>
+<td>Is arithmetic priced?</td>
+<td>DECIDED (free) in code; <strong>the 14.1× is an unaddressed known error</strong></td>
+</tr>
+<tr>
+<td>I5</td>
+<td>Is instruction fetch priced?</td>
+<td>PROPOSED</td>
+</tr>
+<tr>
+<td>I6</td>
+<td>Do ports (<code>recv</code>/<code>send</code>) exist as instructions?</td>
+<td>PROPOSED</td>
+</tr>
+<tr>
+<td>I7</td>
+<td>What is <code>E_in</code> / <code>E_out</code>?</td>
+<td>PROPOSED (number chosen, not ratified)</td>
+</tr>
+<tr>
+<td>I8</td>
+<td>Read/write time asymmetry ("reads have 2× the time")</td>
+<td>PROPOSED, unimplemented anywhere</td>
+</tr>
+<tr>
+<td>I9</td>
+<td>Accumulate semantics at the macro level</td>
+<td>OPEN — <strong>the only one of Andy's four original forks still posed as a question</strong></td>
+</tr>
+<tr>
+<td>I10</td>
+<td>Is there a <code>reduce</code> primitive?</td>
+<td>PROPOSED (self-resolved by the proposer, never ratified)</td>
+</tr>
+<tr>
+<td>I11</td>
+<td>Is <code>mode</code> admitted?</td>
+<td>PROPOSED</td>
+</tr>
+<tr>
+<td>I12</td>
+<td>Where is the expressivity ceiling (which rung)?</td>
+<td>PROPOSED</td>
+</tr>
+<tr>
+<td>I13</td>
+<td>Division-by-zero and trap semantics</td>
+<td>OPEN (shipped code contradicts the design note)</td>
+</tr>
+<tr>
+<td>I14</td>
+<td>Keep matmul's degree-≤2 symbolic check?</td>
+<td>DECIDED in code (PR #31); not revisited</td>
+</tr>
+<tr>
+<td>I15</td>
+<td>Are tensor/SIMD instructions (<code>dp4a</code>) admitted into v1?</td>
+<td>PROPOSED — adopting drops the 16×16 record 4× overnight</td>
+</tr>
+<tr>
+<td>I16</td>
+<td>Instruction/line cap for matmul</td>
+<td>OPEN (matmul has none; sparse-parity has 2 M)</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="grid-size">Grid size</h3>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>Fork</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>G1</td>
+<td>What <em>is</em> the grid — subarray, chip, or nested pair?</td>
+<td>OPEN</td>
+</tr>
+<tr>
+<td>G2</td>
+<td>Address-space bound</td>
+<td>OPEN (<strong>two shipped scorers already disagree</strong>)</td>
+</tr>
+<tr>
+<td>G3</td>
+<td>What is the next problem?</td>
+<td>DECIDED in substance (MNIST)</td>
+</tr>
+<tr>
+<td>G4</td>
+<td>The MNIST tier ladder</td>
+<td>DECIDED by repetition; the 60k-<em>test</em> departure from standard MNIST is unflagged</td>
+</tr>
+<tr>
+<td>G5</td>
+<td>Accuracy targets per tier</td>
+<td>PROPOSED (D5)</td>
+</tr>
+<tr>
+<td>G6</td>
+<td>Episodes per tier (K)</td>
+<td>PROPOSED (D5)</td>
+</tr>
+<tr>
+<td>G7</td>
+<td>Off-chip / memory tier</td>
+<td>PROPOSED (intent stated, nothing implemented)</td>
+</tr>
+<tr>
+<td>G8</td>
+<td>Fuel / instruction caps per tier</td>
+<td>PROPOSED</td>
+</tr>
+<tr>
+<td>G9</td>
+<td>Resident dataset vs re-streaming</td>
+<td>PROPOSED (D6)</td>
+</tr>
+<tr>
+<td>G10</td>
+<td>256 MB or 256 MiB for the Dally anchor</td>
+<td>OPEN (trivial, but load-bearing for the derivation)</td>
+</tr>
+<tr>
+<td>G11</td>
+<td>Matmul tiers (does 8192³ join the board?)</td>
+<td>PROPOSED</td>
+</tr>
+<tr>
+<td>G12</td>
+<td>Sparse parity — retire, resize, or keep?</td>
+<td>OPEN</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="physical-dimensions">Physical dimensions</h3>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>Fork</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>P1</td>
+<td>Cell pitch and quantum</td>
+<td>de-facto adopted, but <em>"pitch size is still open"</em> was never retracted, and the 10 µm/bit block is still un-struck in the same doc as the 1 µm/byte one</td>
+</tr>
+<tr>
+<td>P2</td>
+<td>Movement energy per distance, and one-way vs round-trip</td>
+<td>OPEN (<strong>three literature values from one author</strong>)</td>
+</tr>
+<tr>
+<td>P3</td>
+<td>Propagation velocity</td>
+<td>PROPOSED, with a published 1000× unit error to correct</td>
+</tr>
+<tr>
+<td>P4</td>
+<td>Technology node</td>
+<td>DECIDED (7 nm) in the log, <strong>contradicted by every source it cites</strong></td>
+</tr>
+<tr>
+<td>P5</td>
+<td>Is the memory endpoint priced at all?</td>
+<td>OPEN — softest constant in the model, and it moves the 8192³ verdict from 5.14× to 1.0034×</td>
+</tr>
+<tr>
+<td>P6</td>
+<td>Wire signalling style (repeated vs low-swing)</td>
+<td>OPEN — raised nowhere in any design doc, yet it spans ~100×</td>
+</tr>
+<tr>
+<td>P7</td>
+<td>Off-chip crossing energy</td>
+<td>PROPOSED</td>
+</tr>
+<tr>
+<td>P8</td>
+<td>Manhattan / Chebyshev / Euclidean</td>
+<td>OPEN — <strong>the highest-leverage one-line decision available</strong>; Chebyshev is live on Pages in a document you committed, and the PR retracting it has had no reply</td>
+</tr>
+<tr>
+<td>P9</td>
+<td>Scalar <code>lin(a)</code> vs native (x,y)</td>
+<td>PROPOSED (agreed by both parties)</td>
+</tr>
+<tr>
+<td>P10</td>
+<td><code>ceil(sqrt(distance))</code> applied to a geometric edge</td>
+<td>OPEN (correction drafted, never posted)</td>
+</tr>
+<tr>
+<td>P11</td>
+<td>Grid geometry (half-diamond at the origin)</td>
+<td>DECIDED</td>
+</tr>
+<tr>
+<td>P12</td>
+<td>Is TIME scored, and with what semantics?</td>
+<td>PROPOSED</td>
+</tr>
+<tr>
+<td>P13</td>
+<td>What is AREA?</td>
+<td>PROPOSED</td>
+</tr>
+<tr>
+<td>P14</td>
+<td>Static/leakage energy and the idle clock</td>
+<td>PROPOSED</td>
+</tr>
+<tr>
+<td>P15</td>
+<td>1 pJ vs 1 fJ in your spoken vs written record</td>
+<td>resolved as a misspeak (§7 C3)</td>
+</tr>
+<tr>
+<td>P16</td>
+<td>The "milliseconds" artifact</td>
+<td>resolved as a misspeak</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="submission-format">Submission format</h3>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>Fork</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>S1</td>
+<td>Trace, generator, or both?</td>
+<td>the log sentence ("the generator, not the trace") and the two-track note are <strong>not reconciled</strong></td>
+</tr>
+<tr>
+<td>S2</td>
+<td>If a language, which shape?</td>
+<td>PROPOSED — <strong>two competing proposals: Andy's SDL and the Grid VM stack</strong></td>
+</tr>
+<tr>
+<td>S3</td>
+<td>Where does the language live?</td>
+<td>OPEN, and untracked — it exists only in a PR body</td>
+</tr>
+<tr>
+<td>S4</td>
+<td>Which scorer is normative?</td>
+<td>PROPOSED (<code>dally-eval</code>)</td>
+</tr>
+<tr>
+<td>S5</td>
+<td>I/O order — fixed or moving?</td>
+<td>OPEN — you wrote the question on 04sep26; the page answering it now exists on main</td>
+</tr>
+<tr>
+<td>S6</td>
+<td>Online or transductive?</td>
+<td>DECIDED (batched inference), with an unexamined hole</td>
+</tr>
+<tr>
+<td>S7</td>
+<td>Does the organizer ever execute submitted code?</td>
+<td>PROPOSED</td>
+</tr>
+<tr>
+<td>S8</td>
+<td>What is reported, and what is ranked?</td>
+<td>OPEN — <strong>the largest unwritten piece of the redesign</strong></td>
+</tr>
+<tr>
+<td>S9</td>
+<td>Leaderboard continuity</td>
+<td>OPEN</td>
+</tr>
+<tr>
+<td>S10</td>
+<td>The submission bundle (IR + report + generator?)</td>
+<td>OPEN in rule, settled in practice</td>
+</tr>
+<tr>
+<td>S11</td>
+<td>Instruction caps as part of the contract</td>
+<td>DECIDED as a principle; per-tier numbers PROPOSED</td>
+</tr>
+<tr>
+<td>S12</td>
+<td>Adjudication protocol</td>
+<td>PROPOSED</td>
+</tr>
+</tbody>
+</table></div>
+<h3 id="cross-cutting">Cross-cutting</h3>
+<div class="tblwrap"><table>
+<thead>
+<tr>
+<th></th>
+<th>Fork</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>X1</td>
+<td>Coarse-and-memorable vs accurate</td>
+<td>DECIDED as philosophy, <strong>unstated in any spec</strong></td>
+</tr>
+<tr>
+<td>X2</td>
+<td>Cheat-proofing policy</td>
+<td>DECIDED in voice, <strong>never written down anywhere</strong></td>
+</tr>
+<tr>
+<td>X3</td>
+<td>Episode supply / embedded weights</td>
+<td>OPEN — <strong>the highest-stakes fork in the set</strong></td>
+</tr>
+<tr>
+<td>X4</td>
+<td>Train/test resampling</td>
+<td>PROPOSED</td>
+</tr>
+<tr>
+<td>X5</td>
+<td>Single control unit or many?</td>
+<td>PROPOSED (P1–P8, your own commit <code>5706824</code>)</td>
+</tr>
+<tr>
+<td>X6</td>
+<td>What is the model even called?</td>
+<td>OPEN — "simplified Dally model", "Grid VM", "PECM", "spatial computer", "stream processor with a scratchpad" are all in use</td>
+</tr>
+<tr>
+<td>X7</td>
+<td>Who adjudicates, and what happens to the nine open PRs?</td>
+<td>OPEN — <strong>a collaboration risk, not just a technical one</strong></td>
+</tr>
+<tr>
+<td>X8</td>
+<td>The two parallel design tracks (yours and Andy's)</td>
+<td>OPEN</td>
+</tr>
+<tr>
+<td>X9</td>
+<td>Documentation consistency before any launch</td>
+<td>OPEN (pure cleanup, but it is what a visitor sees)</td>
+</tr>
+<tr>
+<td>X10</td>
+<td>Hosting, community, distribution</td>
+<td>OPEN</td>
+</tr>
+<tr>
+<td>X11</td>
+<td>Judge cost and hardware budget</td>
+<td>PROPOSED / mostly measured</td>
+</tr>
+<tr>
+<td>X12</td>
+<td>Launch timing, and whether the practical track survives</td>
+<td>OPEN</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="10-link-hub">10. Link hub</h2>
+<p><strong>Public pages</strong>
+- Benchmark report — <a href="https://cybertronai.github.io/sutro-problems/docs/">https://cybertronai.github.io/sutro-problems/docs/</a>
+- Spatial-model analysis — <a href="https://cybertronai.github.io/sutro-problems/docs/spatial-model-analysis.html">https://cybertronai.github.io/sutro-problems/docs/spatial-model-analysis.html</a>
+- Grid VM competition design — <a href="https://cybertronai.github.io/sutro-problems/docs/grid-vm-competition-design.html">https://cybertronai.github.io/sutro-problems/docs/grid-vm-competition-design.html</a>
+- Expressivity–scorability ladder — <a href="https://cybertronai.github.io/sutro-problems/docs/expressivity-scorability-ladder.html">https://cybertronai.github.io/sutro-problems/docs/expressivity-scorability-ladder.html</a>
+- Multiprocessors on the Grid VM — <a href="https://cybertronai.github.io/sutro-problems/docs/grid-vm-multiprocessor.html">https://cybertronai.github.io/sutro-problems/docs/grid-vm-multiprocessor.html</a>
+- Fixed or moving I/O order? — <a href="https://cybertronai.github.io/sutro-problems/docs/dataflow-io-order.html">https://cybertronai.github.io/sutro-problems/docs/dataflow-io-order.html</a>
+- matmul energy report — <a href="https://cybertronai.github.io/sutro-problems/matmul/energy-report/">https://cybertronai.github.io/sutro-problems/matmul/energy-report/</a>
+- matmul animations — <a href="https://cybertronai.github.io/sutro-problems/matmul/animation/">https://cybertronai.github.io/sutro-problems/matmul/animation/</a>
+- sparse-parity — <a href="https://cybertronai.github.io/sutro-problems/sparse-parity/">https://cybertronai.github.io/sutro-problems/sparse-parity/</a></p>
+<p><strong>Repos</strong>
+- <a href="https://github.com/cybertronai/sutro-problems">https://github.com/cybertronai/sutro-problems</a>
+- <a href="https://github.com/cybertronai/simplified-dally-model">https://github.com/cybertronai/simplified-dally-model</a> · <a href="https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets">instruction-sets</a>
+- <a href="https://github.com/cybertronai/dally-eval">https://github.com/cybertronai/dally-eval</a></p>
+<p><strong>Open PRs needing you:</strong> <a href="https://github.com/cybertronai/sutro-problems/pull/48">#48</a> ·
+<a href="https://github.com/cybertronai/sutro-problems/pull/58">#58</a> ·
+<a href="https://github.com/cybertronai/sutro-problems/pull/61">#61</a> ·
+<a href="https://github.com/cybertronai/sutro-problems/pull/49">#49</a> ·
+<a href="https://github.com/cybertronai/sutro-problems/pull/51">#51</a> ·
+<a href="https://github.com/cybertronai/sutro-problems/pull/52">#52</a> ·
+<a href="https://github.com/cybertronai/sutro-problems/pull/55">#55</a> ·
+<a href="https://github.com/cybertronai/sutro-problems/pull/56">#56</a> ·
+<a href="https://github.com/cybertronai/sutro-problems/pull/60">#60</a></p>
+<p><strong>Literature</strong>
+- Dally, <em>On the model of computation: point</em>, CACM 65(9) 2022 — <a href="https://cacm.acm.org/opinion/on-the-model-of-computation-point/">https://cacm.acm.org/opinion/on-the-model-of-computation-point/</a>
+- Dally, Turakhia, Han, <em>Domain-Specific Hardware Accelerators</em>, CACM 63(7) 2020
+- Dally, AHA 2023 retreat keynote — <a href="https://aha.stanford.edu/sites/g/files/sbiybj20066/files/media/file/aha-retreat-2023_dally_keynote_en_eff_ai_hw_0.pdf">https://aha.stanford.edu/sites/g/files/sbiybj20066/files/media/file/aha-retreat-2023_dally_keynote_en_eff_ai_hw_0.pdf</a>
+- Horowitz, <em>Life Post Moore's Law</em> slides (55 pp, Jul 2023; proposal from slide ~37) — <a href="https://aha.stanford.edu/sites/g/files/sbiybj20066/files/media/file/aha_071923_horowitz_newcad_0.pdf">https://aha.stanford.edu/sites/g/files/sbiybj20066/files/media/file/aha_071923_horowitz_newcad_0.pdf</a> · MICRO 2023 keynote — <a href="https://www.youtube.com/watch?v=q8WK63joI_Y">https://www.youtube.com/watch?v=q8WK63joI_Y</a>
+- Jouppi et al., <em>Ten Lessons From Three Generations… TPUv4i</em>, ISCA 2021
+- Aggarwal, Alpern, Chandra, Snir, <em>A model for hierarchical memory</em>, STOC 1987 — the HMM with f(a)=a^α; our model is α = ½
+- Hong &amp; Kung, <em>I/O complexity: the red-blue pebble game</em>, STOC 1981
+- Buck, <em>Scheduling dynamic dataflow graphs with bounded memory</em> (PhD, Berkeley 1993) — the undecidability that fixes the (e)/(f) cliff
+- Karp, Miller, Winograd, JACM 14(3) 1967 — affine schedules for the v2 time division
+- Greydanus &amp; Kobak, <em>MNIST-1D</em>, ICML 2024 — procedural generation as the memorization defense
+- Yadav &amp; Bottou, <em>Cold case: the lost MNIST digits</em> (QMNIST), NeurIPS 2019
+- Onur Mutlu dataflow lectures — <a href="https://www.youtube.com/@OnurMutluLectures/search?query=dataflow">https://www.youtube.com/@OnurMutluLectures/search?query=dataflow</a> · <a href="https://www.youtube.com/watch?v=waqM1JM9GU0">https://www.youtube.com/watch?v=waqM1JM9GU0</a></p>
+<p><strong>Local paths worth remembering</strong>
+- <code>~/drive/gdocs-archive/&lt;docId&gt;/&lt;date&gt;.txt</code> — nightly full text of 35 Google Docs
+- <code>~/My Drive/hiq-transcribed/</code> — dictated notes, four engines per clip
+- <code>~/…/sutro-problems/tmp/cacti*</code> — the CACTI 22 nm / 32 nm SRAM runs
+- <code>~/…/SutroYaro/telegram.db</code> — group chat, Feb 9 – Mar 28 2026 only
+- <code>~/…/flush-util/machines.toml</code> — says the live Telegram session is on the <code>intel</code> Mac</p>
+
+<footer>
+Assembled September 8, 2026 from the internal log, the Sutro group documents and meeting
+notes, the repository and its open pull requests, the Telegram record, dictated working
+notes, and the primary literature. Part of the
+<a href="https://github.com/cybertronai/sutro-problems">sutro-problems</a> benchmark suite.
+</footer>
+
+</main>
+</body>
+</html>
