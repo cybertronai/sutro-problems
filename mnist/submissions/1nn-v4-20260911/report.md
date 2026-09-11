@@ -4,7 +4,7 @@
 
 This fixed 1-nearest-neighbor algorithm learns by memorizing the 600 supplied training examples, then labels each of the 600 test images with the label of its nearest training image. It uses the nine supplied pixel values directly. No neural-network training, extra data, pretrained weights or hyperparameter search is involved. This is a baseline attempt, with no claim of optimal accuracy, time or energy.
 
-The attempt is ready for submission review. [Submission source branch](https://github.com/cybertronai/sutro-problems/tree/codex/mnist-small-1nn-submission/mnist/submissions/1nn-v4-20260911). Its model scores depend on the explicit numeric, tape and area conventions below. They are calculated by a submission-owned interpreter, because the linked specification does not provide an authoritative executable scorer. The A100 measurements are actual NVML and CUDA-event observations.
+The submission was merged in [PR #64](https://github.com/cybertronai/sutro-problems/pull/64). [Submission source](https://github.com/cybertronai/sutro-problems/tree/main/mnist/submissions/1nn-v4-20260911). Its model scores depend on the explicit numeric, tape and area conventions below. They are calculated by a submission-owned interpreter, because the linked specification does not provide an authoritative executable scorer. The A100 measurements are actual NVML and CUDA-event observations.
 
 Contributors: Codex (implementation, experiments and report), with independent scorer, GPU and rules-review agents; requested by `yaroslavvb`. Run date: September 10, 2026 Pacific / September 11 UTC. No W&B runs were created for this attempt. Before publication, main was rechecked at `1ede666`: the README now explicitly calls the model scores theoretical and allows an A100 ISA of choice. Dataset, target and v4 requirements are unchanged. The A100 source is a hand-written equivalent Triton implementation; it is not mechanically generated from the v4 text.
 
@@ -12,17 +12,24 @@ Contributors: Codex (implementation, experiments and report), with independent s
 
 ## Results and metric boundaries
 
-| Metric | Result | Meaning |
+All task runtimes use **picoseconds (ps)** and all energies use **femtojoules (fJ)**, so the theoretical and measured results share the same units. Each task includes 600 training examples and 600 test predictions. Per-task runtime and energy values in the comparison and trial tables are rounded to four significant figures; exact model totals are given below, and the measured energy's baseline sensitivity is reported separately.
+
+| Performance per complete task | Theoretical model | Measured A100, mean |
+| --- | ---: | ---: |
+| **Time (ps)** | **1.682 × 10⁹** | **6.947 × 10⁶** |
+| **Energy (fJ)** | **1.876 × 10⁹** | **5.198 × 10¹¹** |
+
+The model sums charged scratch accesses and excludes tape I/O. The A100 time is CUDA-event steady-state graph throughput including the memorization copy; its energy is idle-adjusted GPU board energy from NVML. The shared units make the numerical scales directly comparable; the measurement boundaries remain as documented here.
+
+| Supporting metric | Result | Meaning |
 | --- | ---: | --- |
 | Accuracy | **308/600 = 51.3333%** | Canonical fixed small test split |
-| Model Time | **1.6821972 ms** | Sum of all charged scratch-access times; tape I/O excluded by model |
-| Model Energy | **1.8759744 µJ** | Sum of all charged scratch-access energies; tape I/O excluded by model |
 | Area, occupied-cell convention | **6,014 µm² = 0.006014 mm²** | Peak 6,014 allocated 32-bit scratch words, 24,056 bytes |
-| Time to score | **34.899 s** | One full generator/interpreter/accounting run on Intel Core i9-9880H, 2.30 GHz |
-| Time on A100 | **6.947 µs per complete task** | Mean CUDA-event steady-state graph throughput, including memorization copy |
-| Energy on A100 | **0.00051982 J per complete task (0.520 mJ)** | Mean idle-adjusted GPU board energy from NVML cumulative counters |
+| Time to score | **34.899 s** | Host runtime of one full generator/interpreter/accounting run on Intel Core i9-9880H, 2.30 GHz |
 
-Both modeled and GPU task scopes include learning/memorization and all 600 predictions. Dataset preparation, the one training-only validation check, and host evaluation are outside those task scopes. The GPU additionally writes nearest-row indices and distances for verification; those writes are included in its measured runtime and energy. The CPU reference's 11.238 ms host runtime is supplementary and is **not** the model's Time or Time to score.
+Host scoring runtime and measurement-window duration are reported in seconds. Unit conversions: **1 µs = 10⁶ ps** and **1 J = 10¹⁵ fJ**.
+
+Both modeled and GPU task scopes include learning/memorization and all 600 predictions. Dataset preparation, the one training-only validation check, and host evaluation are outside those task scopes. The GPU additionally writes nearest-row indices and distances for verification; those writes are included in its measured runtime and energy. The CPU reference's 1.124 × 10¹⁰ ps host runtime is supplementary and is **not** the model's Time or Time to score.
 
 **The threshold margin is eight examples.** This establishes a pass on this particular fixed split. There is no measurement of generalization across alternative dataset samples, and no post-test algorithm or hyperparameter changes were made. Detailed rule gaps and experimental limitations are in the [separate ambiguities and problems report](ambiguities.html).
 
@@ -92,25 +99,26 @@ Hardware: **NVIDIA A100-SXM4-40GB**, 39.5 GiB visible memory, compute capability
 
 One Triton kernel copies all training pixels and labels into preallocated model memory. A second uses one program per query, compares all 600 candidates, accumulates the nine FP32 squared differences in feature order, and reduces by distance then lowest training index. The graph contains 128 complete task invocations, each with its own memorization copy. All buffers are reused; input and working data remain on the GPU.
 
-After compilation, correctness checks, warmup and graph capture, three active trials repeatedly execute this graph. CUDA events measure device elapsed time; synchronized host wall throughput is also retained. NVML's `nvmlDeviceGetTotalEnergyConsumption` supplies cumulative millijoule counters around the active window and a two-second idle interval on each side. Energy per task is:
+After compilation, correctness checks, warmup and graph capture, three active trials repeatedly execute this graph. CUDA events measure device elapsed time; synchronized host wall throughput is also retained. NVML's `nvmlDeviceGetTotalEnergyConsumption` supplies cumulative millijoule counters around the active window and a two-second idle interval on each side. Convert the cumulative-counter result to femtojoules per task:
 
 ```text
-P_idle = (P_idle_before + P_idle_after) / 2
-E_task = ((counter_after - counter_before)/1000 - P_idle * active_seconds)
-         / number_of_complete_task_invocations
+P_idle_W = (P_idle_before_W + P_idle_after_W) / 2
+E_task_fJ = (((counter_after_mJ - counter_before_mJ)/1000
+              - P_idle_W * active_seconds) * 1e15)
+            / number_of_complete_task_invocations
 ```
 
 Counter-read timestamps use the midpoint of the host call, and query latencies are retained. Negative adjusted values are not silently clipped. Reported aggregate values are the means over the three trials.
 
-| Trial | Full tasks | Active NVML window (s) | Raw board energy (J) | Idle before / after (W) | CUDA time/task (µs) | Adjusted energy/task (mJ) |
+| Trial | Full tasks | Active NVML window (s) | Raw board energy (fJ) | Idle before / after (W) | CUDA time/task (ps) | Adjusted energy/task (fJ) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1 | 340,480 | 2.377255 | 357.029 | 81.215 / 82.923 | 6.9738 | 0.475594 |
-| 2 | 340,480 | 2.376813 | 358.194 | 64.112 / 79.863 | 6.9717 | 0.549498 |
-| 3 | 340,480 | 2.350739 | 354.074 | 64.181 / 82.272 | 6.8942 | 0.534354 |
+| 1 | 340,480 | 2.377255 | 3.57029 × 10¹⁷ | 81.215 / 82.923 | 6.974 × 10⁶ | 4.756 × 10¹¹ |
+| 2 | 340,480 | 2.376813 | 3.58194 × 10¹⁷ | 64.112 / 79.863 | 6.972 × 10⁶ | 5.495 × 10¹¹ |
+| 3 | 340,480 | 2.350739 | 3.54074 × 10¹⁷ | 64.181 / 82.272 | 6.894 × 10⁶ | 5.344 × 10¹¹ |
 
-Mean host wall throughput is **6.947 µs/task**. Across trials, CUDA-event time ranges **6.894–6.974 µs**, and idle-adjusted energy ranges **0.476–0.549 mJ/task**. Using either the before-only or after-only idle baseline across these trials yields **0.470–0.604 mJ/task**. This is baseline sensitivity, not a confidence interval. Idle power drifts materially; energy deserves fewer significant figures than the raw counters provide.
+Mean host wall throughput is **6.947 × 10⁶ ps/task**. Across trials, CUDA-event time ranges **6.894 × 10⁶–6.974 × 10⁶ ps**, and idle-adjusted energy ranges **4.756 × 10¹¹–5.495 × 10¹¹ fJ/task**. Using either the before-only or after-only idle baseline across these trials yields **4.696 × 10¹¹–6.045 × 10¹¹ fJ/task**. This is baseline sensitivity, not a confidence interval. Idle power drifts materially; energy deserves fewer significant figures than the raw counters provide.
 
-The active trial target was three seconds; the actual windows in the table are authoritative. Observed throughput differed from calibration, producing shorter active windows; the cause was not measured. No GPU clock or power limit was changed by the benchmark. These are warm, repeated, cache-resident throughput measurements. Host/device transfers, allocation, compilation, graph capture, validation, startup, host energy and facility overhead are excluded. NVML measures GPU board energy, not individual instructions. Comparing its joules directly with the model's tape-excluded scratch score does not establish physical prediction accuracy of the model.
+The active trial target was three seconds; the actual windows in the table are authoritative. Observed throughput differed from calibration, producing shorter active windows; the cause was not measured. No GPU clock or power limit was changed by the benchmark. These are warm, repeated, cache-resident throughput measurements. Host/device transfers, allocation, compilation, graph capture, validation, startup, host energy and facility overhead are excluded. NVML measures GPU board energy, not individual instructions. Comparing its energy directly with the model's tape-excluded scratch score does not establish physical prediction accuracy of the model.
 
 GPU outputs agree with all **600** canonical CPU predictions, all **600** nearest indices and all **600** winning FP32 distance bit patterns. Additional checks use fresh random queries and changed training labels to verify runtime input dependence. Changing training labels changes all 600 corresponding predicted labels. The saved PTX has no FP32 FMA.
 
