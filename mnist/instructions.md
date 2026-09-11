@@ -5,25 +5,32 @@
 ## Submit a solution
 
 Open a pull request adding your solution under `mnist/submissions/<name>/`.
-Include the source or generator, commands to reproduce training and prediction,
-and a short report naming the dataset tier, contributors, test accuracy
-(`correct` / `total`), dataset checksum, and any W&B runs.
+Include the source or generator, instructions to reproduce training, prediction,
+and scoring calculations, and a link to a standalone report naming the dataset
+tier, contributors, test accuracy (`correct` / `total`), dataset checksum, and any
+W&B runs.
 
 Add a row to the matching tier's results table on the [MNIST page](README.md),
-with a link to that submission. Report **Time**, **Energy**, **Area**, **Time to score**, and
-**Time on A100**, giving units, metric definitions, measurement commands, and
-hardware/software versions in the report. Use an em dash for unmeasured values;
+with a link to that submission. Report **Time**, **Energy**, **Area**, **Time to score**,
+**Time on A100**, and **Energy on A100**, giving units, metric definitions,
+measurement commands, and hardware/software versions in the report. Use an em dash for unmeasured values;
 do not substitute estimates for measurements without labeling them.
 
 The overview sketch shows the
 [Bill Dally single-core model with tape](https://github.com/cybertronai/simplified-dally-model/tree/main/models/single-core-with-tape),
-using the [v4 instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets/v4). The exact
-MNIST model-scoring protocol and accuracy thresholds are not yet fixed. The
-included evaluator checks classification accuracy only; it does not calculate
-the five scoring metrics. Keep model scores and measured A100 runtime distinct.
+using the [v4 instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets/v4).
+Use its tape operations for dataset reads and writes. Compute **Time**, **Energy**,
+and **Area** under this model; Area comes from peak memory use. **Time to score**
+is the runtime of those calculations on your machine. Then implement the algorithm
+on an A100 using [pyptx](https://github.com/patrick-toulme/pyptx) or Triton and report
+its runtime and idle-adjusted energy in joules measured via NVML. Include the
+background needed to reproduce these calculations in the standalone report.
+The included evaluator checks classification accuracy only; it does not calculate
+these scoring metrics.
 
 **Task:** given training images, training labels, and test images, produce one
-predicted digit label (0–9) for each test image. The task includes learning from
+predicted digit label (0–9) for each test image with at least **50% accuracy**
+(this target may change in September). The task includes learning from
 the supplied training data and predicting the test labels; no model architecture
 is prescribed.
 
@@ -42,8 +49,8 @@ integers from 0 through 9.
 
 Accuracy is the fraction of test labels predicted correctly. For energy-efficient
 learning comparisons, the computation of interest includes training and
-inference. Accuracy thresholds and an energy measurement/scoring contract have
-not yet been fixed for this problem; the included evaluator measures accuracy.
+inference. The included evaluator measures accuracy; report model scores and
+A100 measurements separately as described above.
 
 ## Reference results
 
