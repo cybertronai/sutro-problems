@@ -1,9 +1,12 @@
-# MNIST-medium: a fully scored 4% error submission
+# MNIST-medium: fully scored, qualifying at 3% error
 
 **The frozen three-ConvNet learner achieved 2.2% ± 0.1 pp mean error
 (97.8% ± 0.1 pp accuracy)** across eleven independent draws, each with
 10,000 training and 10,000 held-out query examples at 9×9 resolution. It clears
-the requested **4% error** threshold. This package includes the complete v4
+the **3% error** level under the revised targets **2%, 3%, 5%, 8%, 12%**.
+The experiment was originally frozen for 4% error; this is a later rules-based
+reclassification of the same measured result, with no new tuning or training.
+This package includes the complete v4
 program generator, an exact aggregate scorer, actual A100 training and prediction
 measurements, reproducible evidence, and a visible session export.
 
@@ -35,12 +38,26 @@ entire physical GPU board.
 ## Accuracy and the five targets
 
 There were **107,534 correct predictions out of 110,000**.
-The inclusive 4% threshold requires **105,600 correct**, giving
-a margin of **1,934**. The unrounded aggregate is used for the
-decision. The five requested error levels are 10%, 8%, 6%, 4%, and 2%, corresponding
-to 90%, 92%, 94%, 96%, and 98% accuracy. This is the 4% attempt; it also exceeds
-the three looser levels, but misses the 2% level by 266 correct predictions.
-No further target-specific tuning was performed after these results were opened.
+The inclusive 3% threshold requires **106,700 correct**, giving
+a margin of **834**. The unrounded aggregate is used for the
+decision. The revised levels are approximately geometrically spaced by a factor
+of 1.5 in error tolerance; lower error is harder. This does not predict a fixed
+factor in computational cost. The result passes the 3%, 5%, 8%, and 12% levels,
+but misses 2% by 266 correct predictions.
+
+| Maximum mean error | Minimum mean accuracy | Minimum correct / 110,000 | Current result |
+| ---: | ---: | ---: | --- |
+| 2% | 98% | 107,800 | Not met |
+| 3% | 97% | 106,700 | Pass |
+| 5% | 95% | 104,500 | Pass |
+| 8% | 92% | 101,200 | Pass |
+| 12% | 88% | 96,800 | Pass |
+
+The target correction arrived after evaluation. Original protocol, configuration,
+accuracy and audit files retain their predeclared 4% target and former levels.
+The separate target assessment links those immutable records by hash and applies
+the new thresholds. No algorithm, prediction, model score or A100 measurement
+changed; this is not a newly predeclared 3% experiment.
 
 | Draw | Dataset seed | Correct / total | Accuracy | Error |
 | ---: | ---: | ---: | ---: | ---: |
@@ -271,6 +288,7 @@ Full testing takes longer than the reported scoring interval.
 ## Evidence and references
 
 - [Accuracy and all eleven counts](accuracy.json), [frozen protocol](protocol.json), [global prediction manifest](prediction_manifest.json).
+- [Current target assessment](target-assessment.json), [revised target levels](current-targets.json), [reclassification script](assess_targets.py).
 - [Exact model score](model-score.json), [compact program](program.il.json), [scorer](ir_core.py), [compiler](ir_model.py), [seed-only constants](constants/constants.json).
 - [Raw A100 trials and counters](benchmark/results.json), [executed learner provenance](benchmark/results/draw-00.json), [configuration](config.json), [selection record](selection.json).
 - [Independent evidence audit](audit.json), [complete numerical compiler checks](ir-model-validation.json), [current-source A100 checks](ordered_backend/submission-validation/results.json), [supplementary argmax checks](supplemental-argmax/results.json).

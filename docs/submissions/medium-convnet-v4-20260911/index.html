@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Reproducible MNIST-medium convolutional-network submission: eleven draws, exact model scoring and complete-task A100 measurements.">
-<title>MNIST-medium: a fully scored 4% error submission · Sutro problems</title><style>
+<title>MNIST-medium: fully scored, qualifying at 3% error · Sutro problems</title><style>
 :root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
 *{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
 header{background:#103c47;color:white;padding:36px max(24px,calc((100vw - 1060px)/2)) 26px}
@@ -17,11 +17,14 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 @media(max-width:600px){main{padding:24px 18px 44px}h1{font-size:29px}header{padding:24px 18px}table{font-size:13px}th,td{padding:8px}}
 </style></head>
 <body><header><p>Sutro problems · Submission attempt · September 2026</p><div class="brand">MNIST-medium / Ordered ConvNet</div><nav><a class="active" href="index.html">Results & reproduction</a><a class="" href="session.html">Session export</a><a class="" href="ambiguities.html">Ambiguities & problems</a></nav></header>
-<main><h1 id="mnist-medium-a-fully-scored-4-error-submission">MNIST-medium: a fully scored 4% error submission</h1>
+<main><h1 id="mnist-medium-fully-scored-qualifying-at-3-error">MNIST-medium: fully scored, qualifying at 3% error</h1>
 <p><strong>The frozen three-ConvNet learner achieved 2.2% ± 0.1 pp mean error
 (97.8% ± 0.1 pp accuracy)</strong> across eleven independent draws, each with
 10,000 training and 10,000 held-out query examples at 9×9 resolution. It clears
-the requested <strong>4% error</strong> threshold. This package includes the complete v4
+the <strong>3% error</strong> level under the revised targets <strong>2%, 3%, 5%, 8%, 12%</strong>.
+The experiment was originally frozen for 4% error; this is a later rules-based
+reclassification of the same measured result, with no new tuning or training.
+This package includes the complete v4
 program generator, an exact aggregate scorer, actual A100 training and prediction
 measurements, reproducible evidence, and a visible session export.</p>
 <p>Contributors: Yaroslav Bulatov (task and evaluation requirements), Codex (implementation,
@@ -69,12 +72,59 @@ of numbers in the same units; it does not equate a modeled single core with an
 entire physical GPU board.</p>
 <h2 id="accuracy-and-the-five-targets">Accuracy and the five targets</h2>
 <p>There were <strong>107,534 correct predictions out of 110,000</strong>.
-The inclusive 4% threshold requires <strong>105,600 correct</strong>, giving
-a margin of <strong>1,934</strong>. The unrounded aggregate is used for the
-decision. The five requested error levels are 10%, 8%, 6%, 4%, and 2%, corresponding
-to 90%, 92%, 94%, 96%, and 98% accuracy. This is the 4% attempt; it also exceeds
-the three looser levels, but misses the 2% level by 266 correct predictions.
-No further target-specific tuning was performed after these results were opened.</p>
+The inclusive 3% threshold requires <strong>106,700 correct</strong>, giving
+a margin of <strong>834</strong>. The unrounded aggregate is used for the
+decision. The revised levels are approximately geometrically spaced by a factor
+of 1.5 in error tolerance; lower error is harder. This does not predict a fixed
+factor in computational cost. The result passes the 3%, 5%, 8%, and 12% levels,
+but misses 2% by 266 correct predictions.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Maximum mean error</th>
+<th style="text-align: right;">Minimum mean accuracy</th>
+<th style="text-align: right;">Minimum correct / 110,000</th>
+<th>Current result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">2%</td>
+<td style="text-align: right;">98%</td>
+<td style="text-align: right;">107,800</td>
+<td>Not met</td>
+</tr>
+<tr>
+<td style="text-align: right;">3%</td>
+<td style="text-align: right;">97%</td>
+<td style="text-align: right;">106,700</td>
+<td>Pass</td>
+</tr>
+<tr>
+<td style="text-align: right;">5%</td>
+<td style="text-align: right;">95%</td>
+<td style="text-align: right;">104,500</td>
+<td>Pass</td>
+</tr>
+<tr>
+<td style="text-align: right;">8%</td>
+<td style="text-align: right;">92%</td>
+<td style="text-align: right;">101,200</td>
+<td>Pass</td>
+</tr>
+<tr>
+<td style="text-align: right;">12%</td>
+<td style="text-align: right;">88%</td>
+<td style="text-align: right;">96,800</td>
+<td>Pass</td>
+</tr>
+</tbody>
+</table>
+<p>The target correction arrived after evaluation. Original protocol, configuration,
+accuracy and audit files retain their predeclared 4% target and former levels.
+The separate target assessment links those immutable records by hash and applies
+the new thresholds. No algorithm, prediction, model score or A100 measurement
+changed; this is not a newly predeclared 3% experiment.</p>
 <table>
 <thead>
 <tr>
@@ -382,6 +432,7 @@ Full testing takes longer than the reported scoring interval.</p>
 <h2 id="evidence-and-references">Evidence and references</h2>
 <ul>
 <li><a href="accuracy.json">Accuracy and all eleven counts</a>, <a href="protocol.json">frozen protocol</a>, <a href="prediction_manifest.json">global prediction manifest</a>.</li>
+<li><a href="target-assessment.json">Current target assessment</a>, <a href="current-targets.json">revised target levels</a>, <a href="assess_targets.py">reclassification script</a>.</li>
 <li><a href="model-score.json">Exact model score</a>, <a href="program.il.json">compact program</a>, <a href="ir_core.py">scorer</a>, <a href="ir_model.py">compiler</a>, <a href="constants/constants.json">seed-only constants</a>.</li>
 <li><a href="benchmark/results.json">Raw A100 trials and counters</a>, <a href="benchmark/results/draw-00.json">executed learner provenance</a>, <a href="config.json">configuration</a>, <a href="selection.json">selection record</a>.</li>
 <li><a href="audit.json">Independent evidence audit</a>, <a href="ir-model-validation.json">complete numerical compiler checks</a>, <a href="ordered_backend/submission-validation/results.json">current-source A100 checks</a>, <a href="supplemental-argmax/results.json">supplementary argmax checks</a>.</li>

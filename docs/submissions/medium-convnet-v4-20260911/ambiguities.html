@@ -22,13 +22,20 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 table. The accompanying submission report records the selected algorithm,
 accuracy, complete model scores, A100 measurements, and reproduction commands.</p>
 <h2 id="what-counts-as-a-successful-attempt">What counts as a successful attempt</h2>
-<p>The latest request defines five medium error targets: <strong>10%, 8%, 6%, 4%, 2%</strong>.
-This submission attempts <strong>4% error</strong>, using eleven draws of <strong>10,000 training
-and 10,000 query examples</strong> at 9×9 resolution. The former 6,000/6,000 protocol
-and intermediate 90%, 97%, and 98% requests are superseded for this attempt.
-Historical reports retain their original scope and are not directly comparable.
-The inclusive 4% threshold requires 105,600 / 110,000 correct; the result is
-107,534 correct. It does not meet the strictest 2% level (107,800 required).
+<p>The latest request defines five medium error targets: <strong>2%, 3%, 5%, 8%, 12%</strong>,
+spaced by roughly a factor of 1.5 in error tolerance. Lower error is harder; this
+does not establish a fixed factor in training time, energy or scoring difficulty.
+The completed result uses eleven draws of <strong>10,000 training and 10,000 query
+examples</strong> at 9×9 resolution, and now qualifies at the <strong>3% error</strong> level.
+The inclusive 3% threshold requires 106,700 / 110,000 correct; the result is
+107,534 correct. It does not meet the strictest 2% level (107,800 required).</p>
+<p>The user corrected the levels after the experiment was complete. This is a
+post-evaluation reclassification, not a newly predeclared 3% experiment. Frozen
+protocol, configuration, evaluator, accuracy and audit records retain the
+original 4% target and previous five levels. <code>target-assessment.json</code> links those
+records by hash and applies the revised thresholds. All predictions, learned
+state, model costs and GPU measurements are unchanged. Historical reports retain
+their original scope and are not directly comparable across dataset protocols.
 The decision uses exact counts. Sample SD uses the eleven dataset accuracies
 and denominator ten; it is in percentage points, not a standard error.</p>
 <p>Training and query rows are disjoint within each draw. Independently drawn

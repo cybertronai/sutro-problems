@@ -8,6 +8,8 @@ def cost(value): return f'{float(f"{value:.2g}"):,.0f}' if abs(value)>=10 else f
 
 def main():
     a, s, b = read('accuracy.json'), read('model-score.json'), read('benchmark/results.json')
+    assessment = read('target-assessment.json')
+    qualified = next(row for row in assessment['current_levels'] if row['error_target_percent'] == '3')
     r = read('results/draw-00.json')
     t = b['summary']['cuda_ms_per_task']['median']
     e = b['summary']['idle_adjusted_energy_mj_per_task']['median']
@@ -16,12 +18,16 @@ def main():
     trials = '\n'.join(f"| {d['trial']} | {d['invocations']} | {cost(d['cuda_ms_per_task'])} | {cost(d['wall_ms_per_task'])} | {cost(d['gross_energy_mj_per_task'])} | {cost(d['idle_adjusted_energy_mj_per_task'])} |" for d in b['trials'])
     before = [d['before_only_adjusted_mj_per_task'] for d in b['trials']]
     after = [d['after_only_adjusted_mj_per_task'] for d in b['trials']]
-    text = f'''# MNIST-medium: a fully scored 4% error submission
+    level_rows = '\n'.join(f"| {row['error_target_percent']}% | {row['accuracy_target_percent']}% | {row['required_correct']:,} | {'Pass' if row['meets_target'] else 'Not met'} |" for row in assessment['current_levels'])
+    text = f'''# MNIST-medium: fully scored, qualifying at 3% error
 
 **The frozen three-ConvNet learner achieved {error:.1f}% ± {sd:.1f} pp mean error
 ({mean:.1f}% ± {sd:.1f} pp accuracy)** across eleven independent draws, each with
 10,000 training and 10,000 held-out query examples at 9×9 resolution. It clears
-the requested **4% error** threshold. This package includes the complete v4
+the **3% error** level under the revised targets **2%, 3%, 5%, 8%, 12%**.
+The experiment was originally frozen for 4% error; this is a later rules-based
+reclassification of the same measured result, with no new tuning or training.
+This package includes the complete v4
 program generator, an exact aggregate scorer, actual A100 training and prediction
 measurements, reproducible evidence, and a visible session export.
 
@@ -53,12 +59,22 @@ entire physical GPU board.
 ## Accuracy and the five targets
 
 There were **{a['total_correct']:,} correct predictions out of {a['total_predictions']:,}**.
-The inclusive 4% threshold requires **{a['required_correct']:,} correct**, giving
-a margin of **{a['margin_correct']:,}**. The unrounded aggregate is used for the
-decision. The five requested error levels are 10%, 8%, 6%, 4%, and 2%, corresponding
-to 90%, 92%, 94%, 96%, and 98% accuracy. This is the 4% attempt; it also exceeds
-the three looser levels, but misses the 2% level by 266 correct predictions.
-No further target-specific tuning was performed after these results were opened.
+The inclusive 3% threshold requires **{qualified['required_correct']:,} correct**, giving
+a margin of **{qualified['margin_correct']:,}**. The unrounded aggregate is used for the
+decision. The revised levels are approximately geometrically spaced by a factor
+of 1.5 in error tolerance; lower error is harder. This does not predict a fixed
+factor in computational cost. The result passes the 3%, 5%, 8%, and 12% levels,
+but misses 2% by 266 correct predictions.
+
+| Maximum mean error | Minimum mean accuracy | Minimum correct / 110,000 | Current result |
+| ---: | ---: | ---: | --- |
+{level_rows}
+
+The target correction arrived after evaluation. Original protocol, configuration,
+accuracy and audit files retain their predeclared 4% target and former levels.
+The separate target assessment links those immutable records by hash and applies
+the new thresholds. No algorithm, prediction, model score or A100 measurement
+changed; this is not a newly predeclared 3% experiment.
 
 | Draw | Dataset seed | Correct / total | Accuracy | Error |
 | ---: | ---: | ---: | ---: | ---: |
@@ -277,6 +293,7 @@ Full testing takes longer than the reported scoring interval.
 ## Evidence and references
 
 - [Accuracy and all eleven counts](accuracy.json), [frozen protocol](protocol.json), [global prediction manifest](prediction_manifest.json).
+- [Current target assessment](target-assessment.json), [revised target levels](current-targets.json), [reclassification script](assess_targets.py).
 - [Exact model score](model-score.json), [compact program](program.il.json), [scorer](ir_core.py), [compiler](ir_model.py), [seed-only constants](constants/constants.json).
 - [Raw A100 trials and counters](benchmark/results.json), [executed learner provenance](benchmark/results/draw-00.json), [configuration](config.json), [selection record](selection.json).
 - [Independent evidence audit](audit.json), [complete numerical compiler checks](ir-model-validation.json), [current-source A100 checks](ordered_backend/submission-validation/results.json), [supplementary argmax checks](supplemental-argmax/results.json).
@@ -285,7 +302,7 @@ Full testing takes longer than the reported scoring interval.
 - [Pinned single-core model](https://github.com/cybertronai/simplified-dally-model/tree/26abcca402de647381d31286d42dfbb7a001763d/models/single-core-with-tape), [pinned v4 instructions](https://github.com/cybertronai/simplified-dally-model/tree/26abcca402de647381d31286d42dfbb7a001763d/instruction-sets/v4).
 '''
     (HERE/'report.md').write_text(text)
-    row = f"| {mean:.1f}% ± {sd:.1f} pp | {cost(s['time_ms'])} | {cost(s['energy_mj'])} | {cost(s['area_mm2'])} | {cost(s['time_to_score_seconds'])} | {cost(t)} | {cost(e)} | [Three ConvNets · 4% error target](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-convnet-v4-20260911/) |"
+    row = f"| {mean:.1f}% ± {sd:.1f} pp | {cost(s['time_ms'])} | {cost(s['energy_mj'])} | {cost(s['area_mm2'])} | {cost(s['time_to_score_seconds'])} | {cost(t)} | {cost(e)} | [Ordered ConvNets](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-convnet-v4-20260911/) |"
     (HERE/'readme-row.txt').write_text(row+'\n')
     print(row)
 

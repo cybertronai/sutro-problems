@@ -33,6 +33,7 @@ ROOT_FILES = {
     'ir-core-validation.json', 'ir-model-validation.json', 'model-score.json',
     'prediction_manifest.json', 'program.il.json', 'protocol.json', 'selection.json',
     'audit.json', 'submission-audit.json', 'reproduction-audit.json', 'reproduction-check.json',
+    'assess_targets.py', 'current-targets.json', 'target-assessment.json',
 }
 BACKEND_SOURCES = {
     'README.md', 'ops.py', 'network.py', 'schedule.py', 'cpu_ref.py',
