@@ -29,6 +29,10 @@ Use tape operations to read and write the dataset.
 
 | Time | Energy | Area | Time to score | Time on A100 | Energy on A100 (J) | Submission |
 | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| 1.6821972 ms | 1.8759744 µJ | 6,014 µm²* | 34.899 s | 6.947 µs† | 0.000519815 J† | [1NN attempt — 308/600 (51.33%)](submissions/1nn-v4-20260911/) |
+
+*Occupied scratch-cell area under the submission's declared FP32/tape conventions.
+†A100 GPU-resident, steady-state complete-task throughput and idle-adjusted NVML energy; training memorization included. See the report for boundaries and baseline sensitivity.
 
 ## MNIST-medium
 

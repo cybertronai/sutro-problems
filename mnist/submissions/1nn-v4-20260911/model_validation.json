@@ -1,0 +1,40 @@
+{
+  "status": "passed",
+  "source_sha256": "0187db7f3bb9757ff7b5fc4ac375beab5bf7ec8fbb76584b03c6b7436a9ea19c",
+  "generator_and_text_replay_match_fields": [
+    "time_ps",
+    "energy_fj",
+    "peak_allocated_scratch_words",
+    "instructions",
+    "charged_reads",
+    "charged_writes",
+    "input_tape_sha256",
+    "output_tape_sha256",
+    "prediction_npy_sha256"
+  ],
+  "predictions_match_root_baseline": true,
+  "predictions_array_int64_le_sha256": "4c6b5f9b1c8a77f04388904ca86e67a6f4ec99b7e00847d6df728bd4fcb48579",
+  "generator_time_to_score_seconds": 34.89918006211519,
+  "full_text_replay_time_to_score_seconds": 111.16395404702052,
+  "expanded_trace": {
+    "instruction_count": 11171400,
+    "expanded_bytes": 220146130,
+    "expanded_sha256": "f6f657cc159160050e73d1df8ae169b313b795f3d1b1a45a72ad4f757383ef2b",
+    "gzip_file_bytes": 11106793,
+    "gzip_file_sha256": "65df35e0396d40a773471344b91e3cfac19a5c9a9576c1574f21ed2742e7216c",
+    "note": "The gzip is retained locally; regenerate from score_v4.py --emit-ir. Canonical checksum is expanded ASCII text, because gzip header timestamps can differ."
+  },
+  "self_tests_passed": [
+    "published integer example: 450 fJ and 300 ps",
+    "zero-cost far-distance recv/send",
+    "uninitialized scratch sources incl unselected select value rejected",
+    "toy FP32 strict tie chooses earliest training row"
+  ],
+  "independent_numerical_oracle_matches": true,
+  "independent_closed_form_scores_match": true,
+  "reported_cpu_brand": "Intel(R) Core(TM) i9-9880H CPU @ 2.30GHz",
+  "notes": [
+    "Full instruction generation + execution is the reported leaderboard time to score; decompression/text parsing is separately timed by replay.",
+    "The initial generator measurement was superseded by the retained final-source measurement after adding replay support."
+  ]
+}
