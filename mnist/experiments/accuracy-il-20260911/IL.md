@@ -36,7 +36,7 @@ For every primitive leaf, the scorer knows its enclosing loop domains. Their Car
 
 For an affine operand, each referenced loop contributes an arithmetic-progression histogram of addresses. Discrete convolution combines these histograms, including overlapping addresses and negative strides. A sliding-window implementation performs the convolution without enumerating the Cartesian product. Loops absent from the address merely multiply its access counts. The resulting vectors specify exact read/write multiplicities at each concrete scratch address; no fitted coefficient or learner-specific cost formula is accepted as input.
 
-The scorer retains exact native units internally; reports convert time to ms and energy to mJ, with scoring runtime in s. With `h = |x| + y` for each cell, the internal aggregate score is:
+The scorer retains exact native units internally; reports convert time to ms, energy to mJ, and area to mm², with scoring runtime in s. Area displays divide the saved integer µm² total by 10⁶ and round to two significant figures: the 1NN baseline is 0.0060 mm² and the H32 MLP is 0.020 mm². The exact grid and per-word convention are unchanged. With `h = |x| + y` for each cell, the internal aggregate score is:
 
 - Energy: `(reads + writes) * max(50, 2*h)` fJ.
 - Read time: `reads * max(250, 4*h)` ticks, where one tick is 0.2 ps.

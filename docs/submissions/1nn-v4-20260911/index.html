@@ -82,7 +82,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 </tr>
 <tr>
 <td>Area, occupied-cell convention</td>
-<td style="text-align: right;"><strong>6.0 × 10³ µm²</strong></td>
+<td style="text-align: right;"><strong>0.0060 mm²</strong></td>
 <td>Peak 6,014 allocated 32-bit scratch words, 24,056 bytes</td>
 </tr>
 <tr>
@@ -92,7 +92,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 </tr>
 </tbody>
 </table>
-<p>Measurement-window durations also use milliseconds. Unit conversions: <strong>1 ms = 1000 µs = 10⁹ ps</strong> and <strong>1 mJ = 10¹² fJ</strong>. Energy and time measure different quantities, related by <strong>E(mJ) = P(W) × t(ms)</strong>. The cost model retains its exact native ps/fJ accounting internally.</p>
+<p>Measurement-window durations also use milliseconds. Unit conversions: <strong>1 ms = 1000 µs = 10⁹ ps</strong> and <strong>1 mJ = 10¹² fJ</strong>. Energy and time measure different quantities, related by <strong>E(mJ) = P(W) × t(ms)</strong>. Areas are displayed in <strong>mm²</strong>, using <strong>1 mm² = 10⁶ µm²</strong>. The cost model retains its exact native ps/fJ accounting and one-µm² scratch-cell convention internally; raw area totals are unchanged.</p>
 <p>Both modeled and GPU task scopes include learning/memorization and all 600 predictions. Dataset preparation, the one training-only validation check, and host evaluation are outside those task scopes. The GPU additionally writes nearest-row indices and distances for verification; those writes are included in its measured runtime and energy. The CPU reference's 11 ms host runtime is supplementary and is <strong>not</strong> the model's Time or Time to score.</p>
 <p><strong>The original 50% threshold margin was eight examples.</strong> The unchanged 308/600 result does not pass the current 60% requirement. There is no measurement of generalization across alternative dataset samples, and no post-test algorithm or hyperparameter changes were made. Detailed rule gaps and experimental limitations are in the <a href="ambiguities.html">separate ambiguities and problems report</a>.</p>
 <h2 id="dataset-and-selection-record">Dataset and selection record</h2>
@@ -143,7 +143,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 </ol>
 <p>The output tape is 600 unsigned 32-bit predicted labels in test-row order. These serialization choices need organizer agreement for comparisons across submissions. The input tape is consumed exactly once using <code>recv</code>; each output is produced using <code>send</code>. All training data enter scratch through <code>recv</code>. Test pixels are streamed nine at a time; test labels and source indices are absent from the input tape.</p>
 <p>Scratch addresses 1–9 hold the current query, 10–14 hold five temporaries, 15–5414 hold training pixels, and 5415–6014 hold training labels. Addresses fill Manhattan half-diamond shells: increasing h, then increasing x in <code>-(h-1)..h-1</code>, with y = h − |x|. The hottest fourteen words are closest to the processor. The maximum distance is <strong>78 hops</strong>. Every allocated location is initialized before a source read.</p>
-<p>The occupied-cell convention gives <strong>6,014 µm²</strong>. The enclosing grid-cell rectangle is <strong>12,012 µm²</strong>, illustrating why occupied cells and full physical footprint must be distinguished. Processor, instruction storage, tapes and routing area have no supplied area model and are excluded. The source generator emits a fully straight-line v4 program; its Python loops generate instructions and introduce no unpriced machine loops or branches.</p>
+<p>The occupied-cell convention gives <strong>0.0060 mm²</strong>. The enclosing grid-cell rectangle is <strong>0.012 mm²</strong>, illustrating why occupied cells and full physical footprint must be distinguished. Processor, instruction storage, tapes and routing area have no supplied area model and are excluded. The source generator emits a fully straight-line v4 program; its Python loops generate instructions and introduce no unpriced machine loops or branches.</p>
 <h2 id="model-score-derivation-and-verification">Model score derivation and verification</h2>
 <p>The following formulas use the specification’s <strong>exact native units, ps and fJ</strong>, rather than the report’s ms/mJ display units. The <a href="https://github.com/cybertronai/simplified-dally-model/blob/26abcca402de647381d31286d42dfbb7a001763d/models/single-core-with-tape/README.md">single-core-with-tape cost model</a> charges each non-tape scratch read at distance h <code>max(50, 2h)</code> fJ and <code>max(50, 0.8h)</code> ps. Each scratch write costs <code>max(50, 2h)</code> fJ and <code>max(50, 0.4h)</code> ps. Both reads of <code>mul t,t,t</code> count, and <code>select</code> reads its condition and both alternatives. Accesses are blocking and are summed. <code>recv</code> and <code>send</code>, including their scratch accesses, cost zero by definition.</p>
 <table>

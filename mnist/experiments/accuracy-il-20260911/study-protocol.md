@@ -127,8 +127,10 @@ construction, parameter initialization, every training update, and inference.
 The compact IL work in this directory represents the complete fixed-loop
 program and statically aggregates its explicit v4 operations. It does not
 change the learning algorithm or skip the energy/time cost of training.
-These MLPs have no new measured A100 runtime or energy and are not yet complete
-new benchmark submissions.
+No MLP A100 runtime or energy was measured as part of this study. The original
+tables retain that scope. A later [H32 / 300 epochs / seed 101 submission](https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/)
+carries this frozen candidate forward and reports its own GPU verification and
+measurement status; other configurations and seeds remain unmeasured on A100.
 
 ## Reproduction
 

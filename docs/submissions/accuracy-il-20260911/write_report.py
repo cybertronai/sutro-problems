@@ -16,6 +16,11 @@ def display(value):
     return format(Decimal(f'{value:.2g}'), 'f')
 
 
+def area_display(square_micrometers):
+    """Display square millimeters with exactly two significant figures."""
+    return format(Decimal(f'{square_micrometers / 1e6:.1e}'), 'f')
+
+
 def label(row):
     return f"H{row['width']} · {row['epochs']:,} epochs"
 
@@ -34,11 +39,12 @@ def main():
     baseline = scoring['baseline']
     lines = ['# Higher accuracy, practical scoring', '',
     '**MNIST-small · exploratory results · 11 September 2026**', '',
-    '**The official MNIST-small accuracy target is now 60%, and this study meets that accuracy requirement.** A 32-hidden-unit network trained for 300 epochs cleared it with all three predeclared seeds. These results remain an exploratory study, not a complete new A100 submission. A 65% target was reached by only one run; 70% and 75% were not reached. This finite search does not establish an upper limit on accuracy.', '',
-    '**Scoring the training algorithm is practical with a compact intermediate language.** The tested neural networks represent up to 24 billion primitive instructions, yet exact cost aggregation takes about '+display(max(r['median_static_score_seconds'] for r in scores.values()))+' s. Numerical training and accuracy verification are separate. These MLPs have no measured A100 runtime or energy yet.', '',
+    '**The official MNIST-small accuracy target is now 60%, and this study meets that accuracy requirement.** A 32-hidden-unit network trained for 300 epochs cleared it with all three predeclared seeds. These tables preserve the original exploratory study and its CPU/model measurements. A 65% target was reached by only one run; 70% and 75% were not reached. This finite search does not establish an upper limit on accuracy.', '',
+    '**Scoring the training algorithm is practical with a compact intermediate language.** The tested neural networks represent up to 24 billion primitive instructions, yet exact cost aggregation takes about '+display(max(r['median_static_score_seconds'] for r in scores.values()))+' s. Numerical training and accuracy verification are separate. No MLP A100 runtime or energy was measured in this study.', '',
+    'A separate [H32 / 300 epochs / seed 101 A100 submission](https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/) carries this frozen candidate forward and reports its GPU verification and measurement status. The tables below retain the original study scope. Other configurations and seeds remain unmeasured on A100.', '',
     '[TOC]', '',
     '## One display convention', '',
-    'Execution times use **milliseconds (ms)**, energies use **millijoules (mJ)**, and **time to score uses seconds (s)**, with **two significant figures**. Prediction counts, model dimensions, and exact target thresholds retain their integer values. Raw JSON preserves full measurements and exact integer cost totals.', '',
+    'Execution times use **milliseconds (ms)**, energies use **millijoules (mJ)**, areas use **square millimeters (mm²)**, and **time to score uses seconds (s)**, with **two significant figures**. Prediction counts, model dimensions, and exact target thresholds retain their integer values. Raw JSON preserves full measurements and exact integer cost totals.', '',
     'Energy and time use matching milli prefixes: **E(mJ) = P(W) × t(ms)**. At 1 W, their numerical values are equal. Model and measured execution share ms and mJ; host scoring work is shown separately in s. The raw scorer retains exact internal ps ticks and fJ counts, converted only for display.', '',
     '## Higher accuracy results', '',
     'Each count below is correct predictions out of the same 600 test examples, in seed order 101 / 102 / 103. The shortlist and all 15 prediction arrays were frozen before test evaluation. Means and sample standard deviations describe seed variation on this fixed test set, not population uncertainty.', '',
@@ -56,14 +62,14 @@ def main():
         lines.append(f'| {target}% | {target*6} | {count}/15 | {interpretation} |')
     lines += ['', '**Target checks use exact counts, not rounded display percentages.** The single run above 65% was H32 / 1,000 epochs / seed 102, with 405/600 correct (about 68%). Its other two seeds scored 383/600 and 376/600. Choosing that seed after viewing the test result would need separate validation. The best training-validation configuration was H32 / 10,000 epochs; its three test results were 381/600, 389/600, and 387/600.', '',
     '## Complete-task model costs', '',
-    'Every MLP score includes explicit scratch initialization, dataset tape operations, pixel transformation, one-hot target construction, initial weight writes, all training updates, inference, and output selection. Costs use the same pinned Dally v4 conventions as the 1NN baseline. Area is occupied scratch-cell area with the declared fixed placement.', '',
+    'Every MLP score includes explicit scratch initialization, dataset tape operations, pixel transformation, one-hot target construction, initial weight writes, all training updates, inference, and output selection. Costs use the same pinned Dally v4 conventions as the 1NN baseline. Area is occupied scratch-cell area with the declared fixed placement, displayed in mm². The exact internal convention remains one µm² per word; divide the saved µm² total by 10⁶ for display.', '',
     'Accuracy columns show the rounded mean, exact correct counts out of 600 in seed order 101 / 102 / 103, and the number of seeds meeting the current 60% requirement. Pass/fail uses the exact 360/600 threshold.', '',
-    '| Configuration | Accuracy (mean; correct / 600 by seed; ≥60%) | Model time (ms) | Model energy (mJ) | Area (µm²) |',
+    '| Configuration | Accuracy (mean; correct / 600 by seed; ≥60%) | Model time (ms) | Model energy (mJ) | Area (mm²) |',
     '| --- | --- | ---: | ---: | ---: |',
-    f"| Original 1NN | 51%; 308/600; below 60% | {display(baseline['time_ps']/1e9)} | {display(baseline['energy_fj']/1e12)} | {sci(baseline['area_um2_occupied_cells'])} |"]
+    f"| Original 1NN | 51%; 308/600; below 60% | {display(baseline['time_ps']/1e9)} | {display(baseline['energy_fj']/1e12)} | {area_display(baseline['area_um2_occupied_cells'])} |"]
     for row in rows:
         r=scores[row['config_id']]
-        lines.append(f"| {label(row)} | {accuracy_label(row)} | {display(r['time_ps']/1e9)} | {display(r['energy_fj']/1e12)} | {sci(r['area_um2_occupied_cells'])} |")
+        lines.append(f"| {label(row)} | {accuracy_label(row)} | {display(r['time_ps']/1e9)} | {display(r['energy_fj']/1e12)} | {area_display(r['area_um2_occupied_cells'])} |")
     lines += ['', 'All three seeds of each configuration have identical model costs: only the seed-dependent literal bits differ. The learner uses separately rounded FP32 multiplication and addition with ascending reduction order. The cost model charges memory reads and writes; it is not a hardware power simulator.', '',
     '## Cost-evaluation work', '',
     'These timings include schema, address-bound and initialization checks, placement, exact access histograms, integer cost sums, and canonical program hashing. They exclude JSON loading, file output, numerical training, and accuracy verification. Each timing is the median of five complete scoring calls on the same host and Python environment.', '',
@@ -77,13 +83,13 @@ def main():
     'The original 1NN interpreter took about **35 s** while also executing each FP32 instruction. That is a different workload from static cost evaluation. The new number is not an end-to-end verification speedup. A separate scaling stress test, without an accuracy claim, also scored a 41-billion-instruction program; raw measurements use a separately recorded Python/NumPy environment.', '',
     '## Measured execution and comparison boundaries', '',
     'For context, the CPU reference actually performed training and inference. The table gives the range across the three final seeds. Timing begins after input transformation, one-hot conversion, and parameter initialization; it excludes the independent ordered-reduction checks. Those operations are included in the theoretical IL costs above. CPU energy was not measured.', '',
-    '| Configuration | Accuracy (mean; correct / 600 by seed; ≥60%) | CPU reference training + inference time (ms) | A100 time / energy |',
+    '| Configuration | Accuracy (mean; correct / 600 by seed; ≥60%) | CPU reference training + inference time (ms) | A100 time / energy in this study |',
     '| --- | --- | ---: | --- |']
     for row in rows:
         elapsed=[r['cpu_reference_train_and_infer_seconds']*1e3 for r in accuracy['runs'] if r['config_id']==row['config_id']]
         low, high = display(min(elapsed)), display(max(elapsed))
         interval = low if low == high else f'{low}–{high}'
-        lines.append(f"| {label(row)} | {accuracy_label(row)} | {interval} | Not measured |")
+        lines.append(f"| {label(row)} | {accuracy_label(row)} | {interval} | Not measured in this study |")
     lines += ['', 'The already measured **1NN** comparison remains a historical reference: its **308/600 (51%)** accuracy is below the current **60%** target.', '',
     '| Quantity | Dally model | A100 measured |', '| --- | ---: | ---: |',
     '| Time (ms) | 1.7 | 0.0069 |', '| Energy (mJ) | 0.0019 | 0.52 |', '',
@@ -98,7 +104,7 @@ def main():
     '- **MLP lowering:** two complete small training/inference programs were expanded and executed in the original interpreter with explicit comparison predicates. Every learned parameter bit, output prediction, instruction count, and model score matched the ordered reference.',
     '- **Full training arithmetic:** the validation-best H32 / 10,000-epoch / seed-101 run was independently repeated with explicit ordered FP32 reductions. All final parameter bits and all 600 output score vectors matched. The comparison took about **140,000 ms**.',
     '- **Every final run:** all 600 final score vectors matched explicit ordered reductions. Canonical dataset hashes, source hashes, prediction arrays, selection plans, and chronology are saved.', '',
-    'The full 24-billion-instruction MLP trace was not expanded and interpreted. The evidence combines independent scorer checks, small end-to-end lowering checks, source review, and a full ordered numerical training check. Official acceptance of the IL and a complete MLP A100 submission remain future work.', '',
+    'The full 24-billion-instruction MLP trace was not expanded and interpreted. The evidence combines independent scorer checks, small end-to-end lowering checks, source review, and a full ordered numerical training check. Official acceptance of the IL remains a separate question. The later H32 / 300 epochs / seed 101 submission documents its own verification and A100 work; other configurations and seeds remain without A100 measurements.', '',
     '## Reproduce and inspect', '',
     'Run from the repository root with Python 3.11. The accuracy study records NumPy 2.4.6; the separate legacy scaling file records its own environment. Use a fresh directory for accuracy reruns so the frozen published evidence is preserved.', '',
     '```bash', 'S=mnist/experiments/accuracy-il-20260911',
@@ -115,7 +121,7 @@ def main():
     '**Documents:** [Language specification](il.html) · [Study protocol](protocol.html) · [Ambiguities and remaining work](ambiguities.html) · [Visible session export](session.html).', '',
     '**Exact evidence:** [Accuracy results](accuracy_results.json) · [Cost results](scoring_results.json) · [Frozen predictions](frozen_predictions.json) · [Full training check](ordered_training_verification.json) · [MLP lowering check](mlp_validation.json) · [IL checks](il-validation.json) · [Trace identity](il-expansion-validation.json) · [Scaling stress test](il-scaling.json).', '',
     '**Source:** [Learner](accuracy_study.py) · [IL scorer](il.py) · [MLP lowering](mlp_il.py) · [Scoring driver](score_study.py) · [Repository directory](https://github.com/cybertronai/sutro-problems/tree/main/mnist/experiments/accuracy-il-20260911).', '',
-    '**Related:** [Original submission and A100 measurements](../1nn-v4-20260911/) · [MNIST task](https://github.com/cybertronai/sutro-problems/blob/main/mnist/README.md#mnist-small).', '']
+    '**Related:** [H32 / 300 epochs / seed 101 follow-up A100 submission](https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/) · [Original submission and A100 measurements](../1nn-v4-20260911/) · [MNIST task](https://github.com/cybertronai/sutro-problems/blob/main/mnist/README.md#mnist-small).', '']
     (HERE/'report.md').write_text('\n'.join(lines))
 
 

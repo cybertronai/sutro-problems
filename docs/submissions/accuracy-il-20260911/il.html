@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="MNIST-small higher-accuracy experiments and compact affine-loop scoring, with execution time in ms, energy in mJ, and scoring time in s.">
+<meta name="description" content="MNIST-small higher-accuracy experiments and compact affine-loop scoring, with execution time in ms, energy in mJ, area in mm², and scoring time in s.">
 <title>Compact affine v4 prototype · Sutro problems</title><style>
 :root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
 *{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
@@ -43,7 +43,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <h2 id="exact-counting-without-instruction-by-instruction-scoring">Exact counting without instruction-by-instruction scoring</h2>
 <p>For every primitive leaf, the scorer knows its enclosing loop domains. Their Cartesian-product size gives the exact dynamic instruction multiplicity. Each source and destination is processed independently, preserving repeated reads when source addresses alias one another or the destination. All three sources of a <code>select</code> are read and charged, including the unchosen value.</p>
 <p>For an affine operand, each referenced loop contributes an arithmetic-progression histogram of addresses. Discrete convolution combines these histograms, including overlapping addresses and negative strides. A sliding-window implementation performs the convolution without enumerating the Cartesian product. Loops absent from the address merely multiply its access counts. The resulting vectors specify exact read/write multiplicities at each concrete scratch address; no fitted coefficient or learner-specific cost formula is accepted as input.</p>
-<p>The scorer retains exact native units internally; reports convert time to ms and energy to mJ, with scoring runtime in s. With <code>h = |x| + y</code> for each cell, the internal aggregate score is:</p>
+<p>The scorer retains exact native units internally; reports convert time to ms, energy to mJ, and area to mm², with scoring runtime in s. Area displays divide the saved integer µm² total by 10⁶ and round to two significant figures: the 1NN baseline is 0.0060 mm² and the H32 MLP is 0.020 mm². The exact grid and per-word convention are unchanged. With <code>h = |x| + y</code> for each cell, the internal aggregate score is:</p>
 <ul>
 <li>Energy: <code>(reads + writes) * max(50, 2*h)</code> fJ.</li>
 <li>Read time: <code>reads * max(250, 4*h)</code> ticks, where one tick is 0.2 ps.</li>
@@ -66,6 +66,6 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 python il.py 1nn.il.json --output 1nn.il.score.json
 python test_il.py
 </code></pre>
-<p>For small programs, <code>python il.py example.il.json --expand expanded.jsonl</code> materializes every leaf for an independent evaluator. Expansion remains proportional to dynamic instructions and is deliberately absent from the fast static scoring path.</p></main><footer>Exploratory results; MLP A100 measurements remain outstanding.
+<p>For small programs, <code>python il.py example.il.json --expand expanded.jsonl</code> materializes every leaf for an independent evaluator. Expansion remains proportional to dynamic instructions and is deliberately absent from the fast static scoring path.</p></main><footer>Historical study scope: MLP A100 trials were not measured here. <a href="https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/">H32 / 300 epochs / seed 101 follow-up A100 submission</a>. Other configurations and seeds remain unmeasured on A100.
 <a href="https://github.com/cybertronai/sutro-problems/tree/main/mnist/experiments/accuracy-il-20260911">Source and evidence</a>
  · <a href="../1nn-v4-20260911/">Original submission</a></footer></body></html>

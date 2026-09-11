@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="MNIST-small higher-accuracy experiments and compact affine-loop scoring, with execution time in ms, energy in mJ, and scoring time in s.">
+<meta name="description" content="MNIST-small higher-accuracy experiments and compact affine-loop scoring, with execution time in ms, energy in mJ, area in mm², and scoring time in s.">
 <title>Higher-accuracy MNIST-small feasibility study · Sutro problems</title><style>
 :root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
 *{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
@@ -195,8 +195,10 @@ construction, parameter initialization, every training update, and inference.
 The compact IL work in this directory represents the complete fixed-loop
 program and statically aggregates its explicit v4 operations. It does not
 change the learning algorithm or skip the energy/time cost of training.
-These MLPs have no new measured A100 runtime or energy and are not yet complete
-new benchmark submissions.</p>
+No MLP A100 runtime or energy was measured as part of this study. The original
+tables retain that scope. A later <a href="https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/">H32 / 300 epochs / seed 101 submission</a>
+carries this frozen candidate forward and reports its own GPU verification and
+measurement status; other configurations and seeds remain unmeasured on A100.</p>
 <h2 id="reproduction">Reproduction</h2>
 <p>From the repository root, using Python 3.11 and the recorded NumPy version, use
 a fresh output directory:</p>
@@ -213,6 +215,6 @@ checksums from <code>mnist/doc/dataset_manifest.json</code>. The recorded result
 source checksums, exact predictions, initial and final parameter checksums,
 the frozen shortlist checksum, software versions, and measured CPU reference
 times. The <code>.npy</code> prediction files are optional convenience outputs; identical
-integer predictions are preserved in the JSON manifest.</p></main><footer>Exploratory results; MLP A100 measurements remain outstanding.
+integer predictions are preserved in the JSON manifest.</p></main><footer>Historical study scope: MLP A100 trials were not measured here. <a href="https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/">H32 / 300 epochs / seed 101 follow-up A100 submission</a>. Other configurations and seeds remain unmeasured on A100.
 <a href="https://github.com/cybertronai/sutro-problems/tree/main/mnist/experiments/accuracy-il-20260911">Source and evidence</a>
  · <a href="../1nn-v4-20260911/">Original submission</a></footer></body></html>

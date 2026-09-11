@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="MNIST-small higher-accuracy experiments and compact affine-loop scoring, with execution time in ms, energy in mJ, and scoring time in s.">
+<meta name="description" content="MNIST-small higher-accuracy experiments and compact affine-loop scoring, with execution time in ms, energy in mJ, area in mm², and scoring time in s.">
 <title>Ambiguities and remaining work · Sutro problems</title><style>
 :root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
 *{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
@@ -39,7 +39,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 </tr>
 <tr>
 <td>Current accuracy requirement</td>
-<td>The official MNIST-small target is now 60%, requiring 360/600 correct. Every seed at 300 epochs and above meets it in this experiment. The original 1NN result, 308/600 (51%), is below the current target and remains a historical measurement reference. Meeting the accuracy requirement does not make these MLP experiments complete new A100 submissions. A 65% target was met by one of 15 runs; 70% and 75% were not reached, which does not establish a universal ceiling.</td>
+<td>The official MNIST-small target is now 60%, requiring 360/600 correct. Every seed at 300 epochs and above meets it in this experiment. The original 1NN result, 308/600 (51%), is below the current target and remains a historical measurement reference. Meeting the accuracy requirement does not establish the other submission requirements for every tested model; this study retains its original CPU/model measurement scope. A 65% target was met by one of 15 runs; 70% and 75% were not reached, which does not establish a universal ceiling.</td>
 </tr>
 <tr>
 <td>Public test-set reuse</td>
@@ -75,11 +75,11 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 </tr>
 <tr>
 <td>Area convention</td>
-<td>The reported area is one µm² per occupied word at the fixed half-diamond placement. It includes all explicitly initialized buffers, labels, targets, and test images. A containing footprint or technology-specific chip area would be a different measure.</td>
+<td>Area is displayed in mm², dividing the exact saved µm² total by 10⁶ and rounding to two significant figures. The internal convention remains one µm² per occupied word at the fixed half-diamond placement. It includes all explicitly initialized buffers, labels, targets, and test images. A containing footprint or technology-specific chip area would be a different measure.</td>
 </tr>
 <tr>
 <td>Actual hardware measurements</td>
-<td>Only the original 1NN has A100 runtime and idle-adjusted NVML energy. New MLP CPU training times are contextual measurements and have slightly different setup boundaries from model scores. No MLP A100 time or energy is inferred from them. A GPU implementation, numerical checks, and repeated NVML trials are required for complete new submissions.</td>
+<td>At the time of the original study, only the prior 1NN submission had measured A100 runtime and idle-adjusted NVML energy; MLP entries remain “Not measured in this study.” A separate <a href="https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/">H32 / 300 epochs / seed 101 submission</a> documents that candidate’s GPU verification and measurement status. Other configurations and seeds remain unmeasured on A100. CPU times are contextual measurements with different setup boundaries from model scores; no GPU figures are inferred from them.</td>
 </tr>
 <tr>
 <td>Energy and time relationship</td>
@@ -87,7 +87,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 </tr>
 </tbody>
 </table>
-<p>The practical next candidate is H32 / 300 epochs, which exceeded 60% with all three fixed seeds and is much cheaper in the model than the longer training runs. A complete submission would fix its seed without selecting on these test results, validate the chosen compact-format policy, and measure an equivalent A100 implementation. A stronger accuracy target needs additional evidence.</p>
-<p><a href="index.html">Feasibility results</a> · <a href="il.html">IL specification</a> · <a href="protocol.html">Selection protocol</a> · <a href="../1nn-v4-20260911/ambiguities.html">Original submission ambiguities</a></p></main><footer>Exploratory results; MLP A100 measurements remain outstanding.
+<p>H32 / 300 epochs exceeded 60% with all three fixed seeds and is much cheaper in the model than the longer training runs. It is now carried forward with seed 101 in the <a href="https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/">follow-up A100 submission</a>. That configuration was the frozen training-validation choice at the 300-epoch budget, and 101 was the first predeclared seed. Promoting it to a submission occurred after the public test results were known; this is not a new blind selection or test. The follow-up documents its own GPU work and remaining limitations. Stronger accuracy targets and other configurations need additional evidence.</p>
+<p><a href="index.html">Feasibility results</a> · <a href="il.html">IL specification</a> · <a href="protocol.html">Selection protocol</a> · <a href="../1nn-v4-20260911/ambiguities.html">Original submission ambiguities</a></p></main><footer>Historical study scope: MLP A100 trials were not measured here. <a href="https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/">H32 / 300 epochs / seed 101 follow-up A100 submission</a>. Other configurations and seeds remain unmeasured on A100.
 <a href="https://github.com/cybertronai/sutro-problems/tree/main/mnist/experiments/accuracy-il-20260911">Source and evidence</a>
  · <a href="../1nn-v4-20260911/">Original submission</a></footer></body></html>

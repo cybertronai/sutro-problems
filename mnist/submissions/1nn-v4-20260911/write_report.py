@@ -77,10 +77,10 @@ The model sums charged scratch accesses and excludes tape I/O. The A100 time is 
 | Supporting metric | Result | Meaning |
 | --- | ---: | --- |
 | Accuracy | **{acc['correct']}/{acc['total']} = {acc['accuracy']*100:.2g}%** | Canonical fixed small test split |
-| Area, occupied-cell convention | **{scientific(model['area_um2_occupied_cells'])} µm²** | Peak {model['peak_allocated_scratch_words']:,} allocated 32-bit scratch words, {model['peak_allocated_scratch_bytes']:,} bytes |
+| Area, occupied-cell convention | **{significant(model['area_um2_occupied_cells']/1e6)} mm²** | Peak {model['peak_allocated_scratch_words']:,} allocated 32-bit scratch words, {model['peak_allocated_scratch_bytes']:,} bytes |
 | Time to score | **{significant(model['time_to_score_seconds'])} s** | Host runtime of one full generator/interpreter/accounting run on Intel Core i9-9880H, 2.30 GHz |
 
-Measurement-window durations also use milliseconds. Unit conversions: **1 ms = 1000 µs = 10⁹ ps** and **1 mJ = 10¹² fJ**. Energy and time measure different quantities, related by **E(mJ) = P(W) × t(ms)**. The cost model retains its exact native ps/fJ accounting internally.
+Measurement-window durations also use milliseconds. Unit conversions: **1 ms = 1000 µs = 10⁹ ps** and **1 mJ = 10¹² fJ**. Energy and time measure different quantities, related by **E(mJ) = P(W) × t(ms)**. Areas are displayed in **mm²**, using **1 mm² = 10⁶ µm²**. The cost model retains its exact native ps/fJ accounting and one-µm² scratch-cell convention internally; raw area totals are unchanged.
 
 Both modeled and GPU task scopes include learning/memorization and all 600 predictions. Dataset preparation, the one training-only validation check, and host evaluation are outside those task scopes. The GPU additionally writes nearest-row indices and distances for verification; those writes are included in its measured runtime and energy. The CPU reference's {significant(cpu['cpu_reference_wall_seconds']*1000)} ms host runtime is supplementary and is **not** the model's Time or Time to score.
 
@@ -124,7 +124,7 @@ The output tape is 600 unsigned 32-bit predicted labels in test-row order. These
 
 Scratch addresses 1–9 hold the current query, 10–14 hold five temporaries, 15–5414 hold training pixels, and 5415–6014 hold training labels. Addresses fill Manhattan half-diamond shells: increasing h, then increasing x in `-(h-1)..h-1`, with y = h − |x|. The hottest fourteen words are closest to the processor. The maximum distance is **{model['max_manhattan_hops']} hops**. Every allocated location is initialized before a source read.
 
-The occupied-cell convention gives **6,014 µm²**. The enclosing grid-cell rectangle is **{model['bounding_rectangle_um2']:,} µm²**, illustrating why occupied cells and full physical footprint must be distinguished. Processor, instruction storage, tapes and routing area have no supplied area model and are excluded. The source generator emits a fully straight-line v4 program; its Python loops generate instructions and introduce no unpriced machine loops or branches.
+The occupied-cell convention gives **{significant(model['area_um2_occupied_cells']/1e6)} mm²**. The enclosing grid-cell rectangle is **{significant(model['bounding_rectangle_um2']/1e6)} mm²**, illustrating why occupied cells and full physical footprint must be distinguished. Processor, instruction storage, tapes and routing area have no supplied area model and are excluded. The source generator emits a fully straight-line v4 program; its Python loops generate instructions and introduce no unpriced machine loops or branches.
 
 ## Model score derivation and verification
 

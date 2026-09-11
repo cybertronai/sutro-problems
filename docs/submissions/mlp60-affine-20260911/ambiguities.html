@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Fixed 32-unit MLP: 374/600 correct, exact compact model scoring, and measured complete-task A100 performance.">
+<title>Ambiguities and problems: the 60% submission · Sutro problems</title><style>
+:root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
+*{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
+header{background:#103c47;color:white;padding:36px max(24px,calc((100vw - 1060px)/2)) 26px}
+header p{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#bfd9da}
+header .brand{font-size:27px;font-weight:680;margin:6px 0 18px}nav{display:flex;gap:9px;flex-wrap:wrap}
+nav a{color:#edf8f8;border:1px solid #5c8088;padding:6px 13px;border-radius:5px;text-decoration:none;font-size:14px}
+nav a.active{background:#fff;color:#103c47}main{max-width:1120px;margin:0 auto;padding:32px 30px 70px;background:white;min-height:60vh}
+h1{font:700 36px/1.2 Georgia,serif;letter-spacing:-.015em;margin:10px 0 24px}h2{font-size:24px;line-height:1.35;margin:38px 0 16px;border-top:1px solid var(--line);padding-top:24px}
+h3{font-size:19px;margin:28px 0 8px}p{margin:12px 0}a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
+code{font-size:.84em;background:#edf2f3;padding:2px 5px;border-radius:3px;overflow-wrap:anywhere}pre{padding:18px;overflow:auto;background:#edf2f3;border:1px solid var(--line);border-radius:6px;font-size:14px;line-height:1.5}
+pre code{padding:0;background:none;overflow-wrap:normal}table{border-collapse:collapse;display:block;max-width:100%;overflow:auto;margin:22px 0;font-size:15px}th,td{padding:10px 14px;border:1px solid var(--line);vertical-align:top}th{background:#eaf2f3;text-align:left}tr:nth-child(even) td{background:#f8fafb}
+blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;background:#fffaed}blockquote p{margin:6px 0}li{margin:9px 0}footer{max-width:1120px;margin:auto;padding:22px 30px 40px;font-size:13px;color:var(--muted)}.toc{padding:18px 24px;background:#f4f8f8;border:1px solid var(--line);border-radius:6px}.toc ul{margin:0;padding-left:20px}.toc li{margin:3px 0}.toc a{text-decoration:none}
+@media(max-width:600px){main{padding:24px 18px 44px}h1{font-size:29px}header{padding:24px 18px}table{font-size:13px}th,td{padding:8px}}
+</style></head>
+<body><header><p>Sutro problems · Submission attempt · September 2026</p><div class="brand">MNIST-small / 60% target</div><nav><a class="" href="index.html">Results & reproduction</a><a class="" href="session.html">Session export</a><a class="active" href="ambiguities.html">Ambiguities & problems</a></nav></header>
+<main><h1 id="ambiguities-and-problems-the-60-submission">Ambiguities and problems: the 60% submission</h1>
+<p>The fixed network scores <strong>374/600 correct (62%)</strong>, above the current <strong>60%</strong>
+requirement. This establishes classification qualification on the supplied
+dataset, subject to the benchmark decisions below.</p>
+<h2 id="selection-after-the-public-study">Selection after the public study</h2>
+<p>The 300-epoch configuration was one of five configurations frozen before the
+feasibility study's test evaluation. Seed 101 was the first of its three
+predeclared seeds. However, choosing this configuration as the submission for
+the newly requested 60% target happened after all study test results were
+public. It is not a fresh blind selection. The other fixed 300-epoch seeds
+scored 371/600 and 377/600; neither is substituted for the chosen first seed.
+No new hyperparameter or seed search was performed for this submission.</p>
+<p>The gap above the threshold is 14 correct predictions. It is a pass on this
+fixed split, not a claim that unseen datasets or arbitrary seeds will pass.</p>
+<h2 id="compact-il-is-a-proposal">Compact IL is a proposal</h2>
+<p><code>sutro-affine-v4/0.1</code> compresses fixed loops and affine addresses while charging
+every expanded primitive operation. It is submission-owned code, not an
+officially accepted benchmark format. The benchmark needs to decide whether
+this representation and its restricted verifier are acceptable.</p>
+<p>The full program contains 618,842,313 primitive instructions and was not
+numerically interpreted instruction by instruction. Its static counts match
+the frozen study exactly. Small expanded MLP programs test the lowering's
+semantics; a separate full 300-epoch ordered FP32 replay verifies this learner's
+parameters, scores, and predictions. Those checks provide different evidence
+and do not amount to a full expanded-program proof.</p>
+<h2 id="arithmetic-tape-placement-and-area">Arithmetic, tape, placement, and area</h2>
+<p>The submission inherits the original attempt's declared binary32 arithmetic,
+rounding after each multiply and add, unfused operations, free tape operations,
+and fixed half-diamond placement at the pinned v4 model revision. The ISA's
+relationship to this concrete FP32 interpretation remains a benchmark policy
+question. The compact language adds no free matrix operation.</p>
+<p>Reported area is <strong>0.020 mm²</strong>: occupied scratch-cell area under one square
+micrometre per word. It is not a fabricated chip area, A100 die area, enclosing
+rectangle, or GPU allocator footprint. The unit conversion changes no allocation
+or physical assumptions. Tape, instruction storage, and host/device buffers
+outside the modeled scratch memory are excluded.</p>
+<p>Seed-only initial parameter constants are generated before execution and reset
+within each task. This treats the fixed random initialization as program
+constants; it excludes running a random-number generator from both model and
+GPU costs. The benchmark should explicitly decide this convention.</p>
+<h2 id="gpu-scope-and-energy-uncertainty">GPU scope and energy uncertainty</h2>
+<p>CUDA graphs measure repeated, GPU-resident complete training-and-prediction
+tasks. Each replay recomputes the learned parameters. Transfers, allocations,
+compilation, graph capture, verification, cold start, and host CPU energy are
+excluded. This is steady-state task throughput, not application launch latency.</p>
+<p>The idle-adjusted energy subtracts the mean of idle board power measured before
+and after each active interval. GPU clocks, temperature, and telemetry sampling
+affect this baseline. Raw energy, both one-sided baseline alternatives, and all
+three trials are reported alongside the primary result; no negative value is
+clipped. These measurements are not a laboratory power-meter calibration.</p>
+<p>The first A100 run passed numerical checks but contained a CUDA-time conversion
+error. It is retained as invalid evidence and contributes no headline metric.
+The corrected run adds a CUDA/wall-time consistency check, extends active
+intervals, and allows idle power to settle. See <code>gpu_run_history.txt</code> for both
+attempts. The algorithm, seed, and training budget did not change.</p>
+<p>The A100 implementation was written manually from the same update equations.
+It is not emitted by an automatic IL-to-PTX compiler. Its kernels preserve
+ordered FP32 arithmetic, and complete learned-parameter and score bits are
+checked against the CPU implementation before and after timing.</p>
+<h2 id="scoring-runtime-excludes-semantic-verification">Scoring runtime excludes semantic verification</h2>
+<p>The fast score includes IL validation, placement, address histograms, exact
+integer cost sums, and canonical program hashing. It excludes JSON loading,
+numerical training, accuracy evaluation, and file output. CPU learning and
+the independent verification suite have separate timings in the report.
+Calling the static score a complete submission-verification runtime would be
+incorrect.</p>
+<h2 id="evidence-and-provenance">Evidence and provenance</h2>
+<p>Raw JSON retains exact measurements and native model units. Human tables use
+two significant figures, execution time in ms, energy in mJ, area in mm², and
+scoring time in s. Threshold decisions use exact counts, not rounded percentages.
+The human-readable session is a snapshot ending at its stated export cutoff;
+it does not include later publishing steps or hidden reasoning.</p>
+<p>The medium and large targets are unrelated to this small-tier submission.
+This run establishes no new measurement for either tier.</p>
+<ul>
+<li><a href="index.html">Results and reproduction</a></li>
+<li><a href="verification.json">CPU verification evidence</a></li>
+<li><a href="gpu_run_history.txt">GPU measurement history</a></li>
+<li><a href="../accuracy-il-20260911/protocol.html">Original study protocol</a></li>
+<li><a href="../accuracy-il-20260911/ambiguities.html">Original study ambiguities</a></li>
+</ul></main><footer>Standalone record. Model scores use declared conventions; acceptance remains subject to review. <a href="https://github.com/cybertronai/sutro-problems">Repository</a> · <a href="../">All submission reports</a></footer></body></html>

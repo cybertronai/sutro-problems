@@ -2,15 +2,17 @@
 
 **MNIST-small · exploratory results · 11 September 2026**
 
-**The official MNIST-small accuracy target is now 60%, and this study meets that accuracy requirement.** A 32-hidden-unit network trained for 300 epochs cleared it with all three predeclared seeds. These results remain an exploratory study, not a complete new A100 submission. A 65% target was reached by only one run; 70% and 75% were not reached. This finite search does not establish an upper limit on accuracy.
+**The official MNIST-small accuracy target is now 60%, and this study meets that accuracy requirement.** A 32-hidden-unit network trained for 300 epochs cleared it with all three predeclared seeds. These tables preserve the original exploratory study and its CPU/model measurements. A 65% target was reached by only one run; 70% and 75% were not reached. This finite search does not establish an upper limit on accuracy.
 
-**Scoring the training algorithm is practical with a compact intermediate language.** The tested neural networks represent up to 24 billion primitive instructions, yet exact cost aggregation takes about 0.13 s. Numerical training and accuracy verification are separate. These MLPs have no measured A100 runtime or energy yet.
+**Scoring the training algorithm is practical with a compact intermediate language.** The tested neural networks represent up to 24 billion primitive instructions, yet exact cost aggregation takes about 0.13 s. Numerical training and accuracy verification are separate. No MLP A100 runtime or energy was measured in this study.
+
+A separate [H32 / 300 epochs / seed 101 A100 submission](https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/) carries this frozen candidate forward and reports its GPU verification and measurement status. The tables below retain the original study scope. Other configurations and seeds remain unmeasured on A100.
 
 [TOC]
 
 ## One display convention
 
-Execution times use **milliseconds (ms)**, energies use **millijoules (mJ)**, and **time to score uses seconds (s)**, with **two significant figures**. Prediction counts, model dimensions, and exact target thresholds retain their integer values. Raw JSON preserves full measurements and exact integer cost totals.
+Execution times use **milliseconds (ms)**, energies use **millijoules (mJ)**, areas use **square millimeters (mm²)**, and **time to score uses seconds (s)**, with **two significant figures**. Prediction counts, model dimensions, and exact target thresholds retain their integer values. Raw JSON preserves full measurements and exact integer cost totals.
 
 Energy and time use matching milli prefixes: **E(mJ) = P(W) × t(ms)**. At 1 W, their numerical values are equal. Model and measured execution share ms and mJ; host scoring work is shown separately in s. The raw scorer retains exact internal ps ticks and fJ counts, converted only for display.
 
@@ -40,18 +42,18 @@ The original 1NN baseline scored **308/600 (51%)**, below the current **60%** re
 
 ## Complete-task model costs
 
-Every MLP score includes explicit scratch initialization, dataset tape operations, pixel transformation, one-hot target construction, initial weight writes, all training updates, inference, and output selection. Costs use the same pinned Dally v4 conventions as the 1NN baseline. Area is occupied scratch-cell area with the declared fixed placement.
+Every MLP score includes explicit scratch initialization, dataset tape operations, pixel transformation, one-hot target construction, initial weight writes, all training updates, inference, and output selection. Costs use the same pinned Dally v4 conventions as the 1NN baseline. Area is occupied scratch-cell area with the declared fixed placement, displayed in mm². The exact internal convention remains one µm² per word; divide the saved µm² total by 10⁶ for display.
 
 Accuracy columns show the rounded mean, exact correct counts out of 600 in seed order 101 / 102 / 103, and the number of seeds meeting the current 60% requirement. Pass/fail uses the exact 360/600 threshold.
 
-| Configuration | Accuracy (mean; correct / 600 by seed; ≥60%) | Model time (ms) | Model energy (mJ) | Area (µm²) |
+| Configuration | Accuracy (mean; correct / 600 by seed; ≥60%) | Model time (ms) | Model energy (mJ) | Area (mm²) |
 | --- | --- | ---: | ---: | ---: |
-| Original 1NN | 51%; 308/600; below 60% | 1.7 | 0.0019 | 6.0 × 10³ |
-| H32 · 100 epochs | 60% mean; 356 / 365 / 362; 2/3 pass | 31 | 0.038 | 2.0 × 10⁴ |
-| H32 · 300 epochs | 62% mean; 374 / 371 / 377; 3/3 pass | 93 | 0.11 | 2.0 × 10⁴ |
-| H32 · 1,000 epochs | 65% mean; 383 / 405 / 376; 3/3 pass | 310 | 0.38 | 2.0 × 10⁴ |
-| H32 · 10,000 epochs | 64% mean; 381 / 389 / 387; 3/3 pass | 3100 | 3.8 | 2.0 × 10⁴ |
-| H128 · 3,000 epochs | 64% mean; 384 / 388 / 385; 3/3 pass | 4000 | 6.1 | 2.8 × 10⁴ |
+| Original 1NN | 51%; 308/600; below 60% | 1.7 | 0.0019 | 0.0060 |
+| H32 · 100 epochs | 60% mean; 356 / 365 / 362; 2/3 pass | 31 | 0.038 | 0.020 |
+| H32 · 300 epochs | 62% mean; 374 / 371 / 377; 3/3 pass | 93 | 0.11 | 0.020 |
+| H32 · 1,000 epochs | 65% mean; 383 / 405 / 376; 3/3 pass | 310 | 0.38 | 0.020 |
+| H32 · 10,000 epochs | 64% mean; 381 / 389 / 387; 3/3 pass | 3100 | 3.8 | 0.020 |
+| H128 · 3,000 epochs | 64% mean; 384 / 388 / 385; 3/3 pass | 4000 | 6.1 | 0.028 |
 
 All three seeds of each configuration have identical model costs: only the seed-dependent literal bits differ. The learner uses separately rounded FP32 multiplication and addition with ascending reduction order. The cost model charges memory reads and writes; it is not a hardware power simulator.
 
@@ -76,13 +78,13 @@ The original 1NN interpreter took about **35 s** while also executing each FP32 
 
 For context, the CPU reference actually performed training and inference. The table gives the range across the three final seeds. Timing begins after input transformation, one-hot conversion, and parameter initialization; it excludes the independent ordered-reduction checks. Those operations are included in the theoretical IL costs above. CPU energy was not measured.
 
-| Configuration | Accuracy (mean; correct / 600 by seed; ≥60%) | CPU reference training + inference time (ms) | A100 time / energy |
+| Configuration | Accuracy (mean; correct / 600 by seed; ≥60%) | CPU reference training + inference time (ms) | A100 time / energy in this study |
 | --- | --- | ---: | --- |
-| H32 · 100 epochs | 60% mean; 356 / 365 / 362; 2/3 pass | 210 | Not measured |
-| H32 · 300 epochs | 62% mean; 374 / 371 / 377; 3/3 pass | 620–630 | Not measured |
-| H32 · 1,000 epochs | 65% mean; 383 / 405 / 376; 3/3 pass | 2100 | Not measured |
-| H32 · 10,000 epochs | 64% mean; 381 / 389 / 387; 3/3 pass | 21000 | Not measured |
-| H128 · 3,000 epochs | 64% mean; 384 / 388 / 385; 3/3 pass | 11000 | Not measured |
+| H32 · 100 epochs | 60% mean; 356 / 365 / 362; 2/3 pass | 210 | Not measured in this study |
+| H32 · 300 epochs | 62% mean; 374 / 371 / 377; 3/3 pass | 620–630 | Not measured in this study |
+| H32 · 1,000 epochs | 65% mean; 383 / 405 / 376; 3/3 pass | 2100 | Not measured in this study |
+| H32 · 10,000 epochs | 64% mean; 381 / 389 / 387; 3/3 pass | 21000 | Not measured in this study |
+| H128 · 3,000 epochs | 64% mean; 384 / 388 / 385; 3/3 pass | 11000 | Not measured in this study |
 
 The already measured **1NN** comparison remains a historical reference: its **308/600 (51%)** accuracy is below the current **60%** target.
 
@@ -109,7 +111,7 @@ The prototype deliberately restricts programs to fixed control flow and affine a
 - **Full training arithmetic:** the validation-best H32 / 10,000-epoch / seed-101 run was independently repeated with explicit ordered FP32 reductions. All final parameter bits and all 600 output score vectors matched. The comparison took about **140,000 ms**.
 - **Every final run:** all 600 final score vectors matched explicit ordered reductions. Canonical dataset hashes, source hashes, prediction arrays, selection plans, and chronology are saved.
 
-The full 24-billion-instruction MLP trace was not expanded and interpreted. The evidence combines independent scorer checks, small end-to-end lowering checks, source review, and a full ordered numerical training check. Official acceptance of the IL and a complete MLP A100 submission remain future work.
+The full 24-billion-instruction MLP trace was not expanded and interpreted. The evidence combines independent scorer checks, small end-to-end lowering checks, source review, and a full ordered numerical training check. Official acceptance of the IL remains a separate question. The later H32 / 300 epochs / seed 101 submission documents its own verification and A100 work; other configurations and seeds remain without A100 measurements.
 
 ## Reproduce and inspect
 
@@ -136,4 +138,4 @@ The first scoring command uses the published frozen shortlist and emits regenera
 
 **Source:** [Learner](accuracy_study.py) · [IL scorer](il.py) · [MLP lowering](mlp_il.py) · [Scoring driver](score_study.py) · [Repository directory](https://github.com/cybertronai/sutro-problems/tree/main/mnist/experiments/accuracy-il-20260911).
 
-**Related:** [Original submission and A100 measurements](../1nn-v4-20260911/) · [MNIST task](https://github.com/cybertronai/sutro-problems/blob/main/mnist/README.md#mnist-small).
+**Related:** [H32 / 300 epochs / seed 101 follow-up A100 submission](https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/) · [Original submission and A100 measurements](../1nn-v4-20260911/) · [MNIST task](https://github.com/cybertronai/sutro-problems/blob/main/mnist/README.md#mnist-small).

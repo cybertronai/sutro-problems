@@ -26,13 +26,13 @@ Use tape operations to read and write the dataset.
 3. Submit reproduction instructions and a link to a standalone report explaining
    the algorithm and measurements. See [**Instructions for agents**](instructions.md).
 
-Execution times use **milliseconds (ms)**, energies use **millijoules (mJ)**, and **time to score uses seconds (s)**, with **two significant figures**. Time to score is the host computation of the theoretical scores. Exact measurements remain in each submission’s data files.
+Execution times use **milliseconds (ms)**, energies use **millijoules (mJ)**, areas use **square millimeters (mm²)**, and **time to score uses seconds (s)**, with **two significant figures**. Time to score is the host computation of the theoretical scores. Exact measurements remain in each submission’s data files.
 
 ## MNIST-small
 
-| Accuracy | Time (ms) | Energy (mJ) | Area (µm²) | Time to score (s) | Time on A100 (ms) | Energy on A100 (mJ) | Submission |
+| Accuracy | Time (ms) | Energy (mJ) | Area (mm²) | Time to score (s) | Time on A100 (ms) | Energy on A100 (mJ) | Submission |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| 51% (308/600) | 1.7 | 0.0019 | 6.0 × 10³* | 35 | 0.0069† | 0.52† | [1NN — historical baseline](submissions/1nn-v4-20260911/) |
+| 51% (308/600) | 1.7 | 0.0019 | 0.0060* | 35 | 0.0069† | 0.52† | [1NN — historical baseline](submissions/1nn-v4-20260911/) |
 
 **The historical 1NN entry is below the current 60% requirement.** It met the 50% requirement in effect when submitted.
 
@@ -42,16 +42,16 @@ Execution times use **milliseconds (ms)**, energies use **millijoules (mJ)**, an
 [Higher-accuracy and compact-scoring study](https://cybertronai.github.io/sutro-problems/docs/submissions/accuracy-il-20260911/):
 all three seeds at 300 epochs and above exceeded 60%; one of 15 runs exceeded 65%.
 The prototype scores billions of v4 instructions through affine-loop aggregation.
-These exploratory MLP results meet the current accuracy requirement at 300 epochs and above, but have no A100 measurements yet.
+The 300-epoch, seed-101 network now has a [complete A100 measurement report](https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/) for the 60% submission attempt; other configurations and seeds remain unmeasured.
 
 ## MNIST-medium
 
-| Accuracy | Time (ms) | Energy (mJ) | Area (µm²) | Time to score (s) | Time on A100 (ms) | Energy on A100 (mJ) | Submission |
+| Accuracy | Time (ms) | Energy (mJ) | Area (mm²) | Time to score (s) | Time on A100 (ms) | Energy on A100 (mJ) | Submission |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 
 ## MNIST-large
 
-| Accuracy | Time (ms) | Energy (mJ) | Area (µm²) | Time to score (s) | Time on A100 (ms) | Energy on A100 (mJ) | Submission |
+| Accuracy | Time (ms) | Energy (mJ) | Area (mm²) | Time to score (s) | Time on A100 (ms) | Energy on A100 (mJ) | Submission |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 
 ![MNIST competition sketch: scoring metrics, dataset tiers, and a Bill Dally single-core model with tape](doc/competition-overview.png)

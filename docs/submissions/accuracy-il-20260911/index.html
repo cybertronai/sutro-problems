@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="MNIST-small higher-accuracy experiments and compact affine-loop scoring, with execution time in ms, energy in mJ, and scoring time in s.">
+<meta name="description" content="MNIST-small higher-accuracy experiments and compact affine-loop scoring, with execution time in ms, energy in mJ, area in mm², and scoring time in s.">
 <title>Higher accuracy, practical scoring · Sutro problems</title><style>
 :root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
 *{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
@@ -21,8 +21,9 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <div class="brand">MNIST-small / Higher accuracy &amp; compact scoring</div><nav><a class="active" href="index.html">Results</a><a class="" href="il.html">Intermediate language</a><a class="" href="protocol.html">Study protocol</a><a class="" href="ambiguities.html">Ambiguities</a><a class="" href="session.html">Session export</a></nav></header>
 <main><h1 id="higher-accuracy-practical-scoring">Higher accuracy, practical scoring</h1>
 <p><strong>MNIST-small · exploratory results · 11 September 2026</strong></p>
-<p><strong>The official MNIST-small accuracy target is now 60%, and this study meets that accuracy requirement.</strong> A 32-hidden-unit network trained for 300 epochs cleared it with all three predeclared seeds. These results remain an exploratory study, not a complete new A100 submission. A 65% target was reached by only one run; 70% and 75% were not reached. This finite search does not establish an upper limit on accuracy.</p>
-<p><strong>Scoring the training algorithm is practical with a compact intermediate language.</strong> The tested neural networks represent up to 24 billion primitive instructions, yet exact cost aggregation takes about 0.13 s. Numerical training and accuracy verification are separate. These MLPs have no measured A100 runtime or energy yet.</p>
+<p><strong>The official MNIST-small accuracy target is now 60%, and this study meets that accuracy requirement.</strong> A 32-hidden-unit network trained for 300 epochs cleared it with all three predeclared seeds. These tables preserve the original exploratory study and its CPU/model measurements. A 65% target was reached by only one run; 70% and 75% were not reached. This finite search does not establish an upper limit on accuracy.</p>
+<p><strong>Scoring the training algorithm is practical with a compact intermediate language.</strong> The tested neural networks represent up to 24 billion primitive instructions, yet exact cost aggregation takes about 0.13 s. Numerical training and accuracy verification are separate. No MLP A100 runtime or energy was measured in this study.</p>
+<p>A separate <a href="https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/">H32 / 300 epochs / seed 101 A100 submission</a> carries this frozen candidate forward and reports its GPU verification and measurement status. The tables below retain the original study scope. Other configurations and seeds remain unmeasured on A100.</p>
 <div class="toc">
 <ul>
 <li><a href="#higher-accuracy-practical-scoring">Higher accuracy, practical scoring</a><ul>
@@ -39,7 +40,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 </ul>
 </div>
 <h2 id="one-display-convention">One display convention</h2>
-<p>Execution times use <strong>milliseconds (ms)</strong>, energies use <strong>millijoules (mJ)</strong>, and <strong>time to score uses seconds (s)</strong>, with <strong>two significant figures</strong>. Prediction counts, model dimensions, and exact target thresholds retain their integer values. Raw JSON preserves full measurements and exact integer cost totals.</p>
+<p>Execution times use <strong>milliseconds (ms)</strong>, energies use <strong>millijoules (mJ)</strong>, areas use <strong>square millimeters (mm²)</strong>, and <strong>time to score uses seconds (s)</strong>, with <strong>two significant figures</strong>. Prediction counts, model dimensions, and exact target thresholds retain their integer values. Raw JSON preserves full measurements and exact integer cost totals.</p>
 <p>Energy and time use matching milli prefixes: <strong>E(mJ) = P(W) × t(ms)</strong>. At 1 W, their numerical values are equal. Model and measured execution share ms and mJ; host scoring work is shown separately in s. The raw scorer retains exact internal ps ticks and fJ counts, converted only for display.</p>
 <h2 id="higher-accuracy-results">Higher accuracy results</h2>
 <p>Each count below is correct predictions out of the same 600 test examples, in seed order 101 / 102 / 103. The shortlist and all 15 prediction arrays were frozen before test evaluation. Means and sample standard deviations describe seed variation on this fixed test set, not population uncertainty.</p>
@@ -130,7 +131,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 </table>
 <p><strong>Target checks use exact counts, not rounded display percentages.</strong> The single run above 65% was H32 / 1,000 epochs / seed 102, with 405/600 correct (about 68%). Its other two seeds scored 383/600 and 376/600. Choosing that seed after viewing the test result would need separate validation. The best training-validation configuration was H32 / 10,000 epochs; its three test results were 381/600, 389/600, and 387/600.</p>
 <h2 id="complete-task-model-costs">Complete-task model costs</h2>
-<p>Every MLP score includes explicit scratch initialization, dataset tape operations, pixel transformation, one-hot target construction, initial weight writes, all training updates, inference, and output selection. Costs use the same pinned Dally v4 conventions as the 1NN baseline. Area is occupied scratch-cell area with the declared fixed placement.</p>
+<p>Every MLP score includes explicit scratch initialization, dataset tape operations, pixel transformation, one-hot target construction, initial weight writes, all training updates, inference, and output selection. Costs use the same pinned Dally v4 conventions as the 1NN baseline. Area is occupied scratch-cell area with the declared fixed placement, displayed in mm². The exact internal convention remains one µm² per word; divide the saved µm² total by 10⁶ for display.</p>
 <p>Accuracy columns show the rounded mean, exact correct counts out of 600 in seed order 101 / 102 / 103, and the number of seeds meeting the current 60% requirement. Pass/fail uses the exact 360/600 threshold.</p>
 <table>
 <thead>
@@ -139,7 +140,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <th>Accuracy (mean; correct / 600 by seed; ≥60%)</th>
 <th style="text-align: right;">Model time (ms)</th>
 <th style="text-align: right;">Model energy (mJ)</th>
-<th style="text-align: right;">Area (µm²)</th>
+<th style="text-align: right;">Area (mm²)</th>
 </tr>
 </thead>
 <tbody>
@@ -148,42 +149,42 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <td>51%; 308/600; below 60%</td>
 <td style="text-align: right;">1.7</td>
 <td style="text-align: right;">0.0019</td>
-<td style="text-align: right;">6.0 × 10³</td>
+<td style="text-align: right;">0.0060</td>
 </tr>
 <tr>
 <td>H32 · 100 epochs</td>
 <td>60% mean; 356 / 365 / 362; 2/3 pass</td>
 <td style="text-align: right;">31</td>
 <td style="text-align: right;">0.038</td>
-<td style="text-align: right;">2.0 × 10⁴</td>
+<td style="text-align: right;">0.020</td>
 </tr>
 <tr>
 <td>H32 · 300 epochs</td>
 <td>62% mean; 374 / 371 / 377; 3/3 pass</td>
 <td style="text-align: right;">93</td>
 <td style="text-align: right;">0.11</td>
-<td style="text-align: right;">2.0 × 10⁴</td>
+<td style="text-align: right;">0.020</td>
 </tr>
 <tr>
 <td>H32 · 1,000 epochs</td>
 <td>65% mean; 383 / 405 / 376; 3/3 pass</td>
 <td style="text-align: right;">310</td>
 <td style="text-align: right;">0.38</td>
-<td style="text-align: right;">2.0 × 10⁴</td>
+<td style="text-align: right;">0.020</td>
 </tr>
 <tr>
 <td>H32 · 10,000 epochs</td>
 <td>64% mean; 381 / 389 / 387; 3/3 pass</td>
 <td style="text-align: right;">3100</td>
 <td style="text-align: right;">3.8</td>
-<td style="text-align: right;">2.0 × 10⁴</td>
+<td style="text-align: right;">0.020</td>
 </tr>
 <tr>
 <td>H128 · 3,000 epochs</td>
 <td>64% mean; 384 / 388 / 385; 3/3 pass</td>
 <td style="text-align: right;">4000</td>
 <td style="text-align: right;">6.1</td>
-<td style="text-align: right;">2.8 × 10⁴</td>
+<td style="text-align: right;">0.028</td>
 </tr>
 </tbody>
 </table>
@@ -255,7 +256,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <th>Configuration</th>
 <th>Accuracy (mean; correct / 600 by seed; ≥60%)</th>
 <th style="text-align: right;">CPU reference training + inference time (ms)</th>
-<th>A100 time / energy</th>
+<th>A100 time / energy in this study</th>
 </tr>
 </thead>
 <tbody>
@@ -263,31 +264,31 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <td>H32 · 100 epochs</td>
 <td>60% mean; 356 / 365 / 362; 2/3 pass</td>
 <td style="text-align: right;">210</td>
-<td>Not measured</td>
+<td>Not measured in this study</td>
 </tr>
 <tr>
 <td>H32 · 300 epochs</td>
 <td>62% mean; 374 / 371 / 377; 3/3 pass</td>
 <td style="text-align: right;">620–630</td>
-<td>Not measured</td>
+<td>Not measured in this study</td>
 </tr>
 <tr>
 <td>H32 · 1,000 epochs</td>
 <td>65% mean; 383 / 405 / 376; 3/3 pass</td>
 <td style="text-align: right;">2100</td>
-<td>Not measured</td>
+<td>Not measured in this study</td>
 </tr>
 <tr>
 <td>H32 · 10,000 epochs</td>
 <td>64% mean; 381 / 389 / 387; 3/3 pass</td>
 <td style="text-align: right;">21000</td>
-<td>Not measured</td>
+<td>Not measured in this study</td>
 </tr>
 <tr>
 <td>H128 · 3,000 epochs</td>
 <td>64% mean; 384 / 388 / 385; 3/3 pass</td>
 <td style="text-align: right;">11000</td>
-<td>Not measured</td>
+<td>Not measured in this study</td>
 </tr>
 </tbody>
 </table>
@@ -326,7 +327,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <li><strong>Full training arithmetic:</strong> the validation-best H32 / 10,000-epoch / seed-101 run was independently repeated with explicit ordered FP32 reductions. All final parameter bits and all 600 output score vectors matched. The comparison took about <strong>140,000 ms</strong>.</li>
 <li><strong>Every final run:</strong> all 600 final score vectors matched explicit ordered reductions. Canonical dataset hashes, source hashes, prediction arrays, selection plans, and chronology are saved.</li>
 </ul>
-<p>The full 24-billion-instruction MLP trace was not expanded and interpreted. The evidence combines independent scorer checks, small end-to-end lowering checks, source review, and a full ordered numerical training check. Official acceptance of the IL and a complete MLP A100 submission remain future work.</p>
+<p>The full 24-billion-instruction MLP trace was not expanded and interpreted. The evidence combines independent scorer checks, small end-to-end lowering checks, source review, and a full ordered numerical training check. Official acceptance of the IL remains a separate question. The later H32 / 300 epochs / seed 101 submission documents its own verification and A100 work; other configurations and seeds remain without A100 measurements.</p>
 <h2 id="reproduce-and-inspect">Reproduce and inspect</h2>
 <p>Run from the repository root with Python 3.11. The accuracy study records NumPy 2.4.6; the separate legacy scaling file records its own environment. Use a fresh directory for accuracy reruns so the frozen published evidence is preserved.</p>
 <pre><code class="language-bash">S=mnist/experiments/accuracy-il-20260911
@@ -344,6 +345,6 @@ python &quot;$S/accuracy_study.py&quot; --phase evaluate --output /tmp/mnist-acc
 <p><strong>Documents:</strong> <a href="il.html">Language specification</a> · <a href="protocol.html">Study protocol</a> · <a href="ambiguities.html">Ambiguities and remaining work</a> · <a href="session.html">Visible session export</a>.</p>
 <p><strong>Exact evidence:</strong> <a href="accuracy_results.json">Accuracy results</a> · <a href="scoring_results.json">Cost results</a> · <a href="frozen_predictions.json">Frozen predictions</a> · <a href="ordered_training_verification.json">Full training check</a> · <a href="mlp_validation.json">MLP lowering check</a> · <a href="il-validation.json">IL checks</a> · <a href="il-expansion-validation.json">Trace identity</a> · <a href="il-scaling.json">Scaling stress test</a>.</p>
 <p><strong>Source:</strong> <a href="accuracy_study.py">Learner</a> · <a href="il.py">IL scorer</a> · <a href="mlp_il.py">MLP lowering</a> · <a href="score_study.py">Scoring driver</a> · <a href="https://github.com/cybertronai/sutro-problems/tree/main/mnist/experiments/accuracy-il-20260911">Repository directory</a>.</p>
-<p><strong>Related:</strong> <a href="../1nn-v4-20260911/">Original submission and A100 measurements</a> · <a href="https://github.com/cybertronai/sutro-problems/blob/main/mnist/README.md#mnist-small">MNIST task</a>.</p></main><footer>Exploratory results; MLP A100 measurements remain outstanding.
+<p><strong>Related:</strong> <a href="https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/">H32 / 300 epochs / seed 101 follow-up A100 submission</a> · <a href="../1nn-v4-20260911/">Original submission and A100 measurements</a> · <a href="https://github.com/cybertronai/sutro-problems/blob/main/mnist/README.md#mnist-small">MNIST task</a>.</p></main><footer>Historical study scope: MLP A100 trials were not measured here. <a href="https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/">H32 / 300 epochs / seed 101 follow-up A100 submission</a>. Other configurations and seeds remain unmeasured on A100.
 <a href="https://github.com/cybertronai/sutro-problems/tree/main/mnist/experiments/accuracy-il-20260911">Source and evidence</a>
  · <a href="../1nn-v4-20260911/">Original submission</a></footer></body></html>

@@ -1,0 +1,43 @@
+{
+  "all_passed": true,
+  "checks": [
+    "Executed GPU source checksum matches published benchmark source.",
+    "All 650 learned parameter words agree with independently generated submission CPU parameters.",
+    "All 6000 output score words agree with the independent submission CPU score-array hash.",
+    "All 600 GPU predictions equal the independent fixed submission predictions.",
+    "Every final parameter and score bit still matches after all timed full-task graph replays.",
+    "All eight exported PTX hashes match; no FP32 fused multiply-add or flush-to-zero instruction appears.",
+    "Every trial recomputes from cumulative NVML counters, paired idle powers, invocation counts, and correctly converted CUDA/wall intervals."
+  ],
+  "summary": {
+    "median_a100_time_ms": 70.90747470543033,
+    "median_idle_adjusted_energy_mj": 2020.4074519894366,
+    "minimum_idle_adjusted_energy_mj": 1945.7833307627402,
+    "maximum_idle_adjusted_energy_mj": 2137.826503662172,
+    "before_or_after_idle_sensitivity_mj": [
+      1940.1637621560064,
+      2220.259688900642
+    ],
+    "trials": 3,
+    "tasks_per_trial": [
+      122,
+      122,
+      122
+    ],
+    "active_interval_seconds": [
+      8.666351680000005,
+      8.643269373499997,
+      8.654413503
+    ]
+  },
+  "gpu_results_sha256": "9d22ca7bd399da729d812296dac7d929fa0b62d121a449d19c90f98c56f72d77",
+  "cpu_parameters_npz_sha256": "a08aef2f028cf3a84324321c3092dceea1efca59a0b079a568f525c8e31ca718",
+  "cpu_output_scores_npy_sha256": "89185852d7cf67ab2f16fe02a24136e74abd8c3c1f2a6e873b34e359823d62bf",
+  "cpu_predictions_npy_sha256": "b8bafd9208a93a2eef8af8701bc2d2291c9f7d06cce642a6ec13e36345756a92",
+  "limitations": [
+    "GPU-resident CUDA-graph throughput; transfers/allocation/JIT/capture excluded.",
+    "NVML whole-board energy with paired idle subtraction; seed and algorithm unchanged.",
+    "Trial 3 has 2.3 W difference between before/after idle means; raw sensitivity is retained.",
+    "Attempt 1 timing was invalid and is excluded from primary results."
+  ]
+}

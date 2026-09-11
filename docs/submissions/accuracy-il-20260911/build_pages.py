@@ -26,11 +26,11 @@ def render(source, current):
     style = base.STYLE + '\n@media(max-width:600px){header .brand{font-size:22px}th,td{padding:7px}table{font-size:12px}}'
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="MNIST-small higher-accuracy experiments and compact affine-loop scoring, with execution time in ms, energy in mJ, and scoring time in s.">
+<meta name="description" content="MNIST-small higher-accuracy experiments and compact affine-loop scoring, with execution time in ms, energy in mJ, area in mm², and scoring time in s.">
 <title>{html.escape(title)} · Sutro problems</title><style>{style}</style></head>
 <body><header><p>Sutro problems · Feasibility study · September 2026</p>
 <div class="brand">MNIST-small / Higher accuracy &amp; compact scoring</div><nav>{nav}</nav></header>
-<main>{content}</main><footer>Exploratory results; MLP A100 measurements remain outstanding.
+<main>{content}</main><footer>Historical study scope: MLP A100 trials were not measured here. <a href="https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/">H32 / 300 epochs / seed 101 follow-up A100 submission</a>. Other configurations and seeds remain unmeasured on A100.
 <a href="https://github.com/cybertronai/sutro-problems/tree/main/mnist/experiments/accuracy-il-20260911">Source and evidence</a>
  · <a href="../1nn-v4-20260911/">Original submission</a></footer></body></html>'''
 

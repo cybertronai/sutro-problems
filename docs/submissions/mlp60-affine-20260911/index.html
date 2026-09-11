@@ -1,0 +1,353 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Fixed 32-unit MLP: 374/600 correct, exact compact model scoring, and measured complete-task A100 performance.">
+<title>MNIST-small: a submission for the 60% target · Sutro problems</title><style>
+:root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
+*{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
+header{background:#103c47;color:white;padding:36px max(24px,calc((100vw - 1060px)/2)) 26px}
+header p{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#bfd9da}
+header .brand{font-size:27px;font-weight:680;margin:6px 0 18px}nav{display:flex;gap:9px;flex-wrap:wrap}
+nav a{color:#edf8f8;border:1px solid #5c8088;padding:6px 13px;border-radius:5px;text-decoration:none;font-size:14px}
+nav a.active{background:#fff;color:#103c47}main{max-width:1120px;margin:0 auto;padding:32px 30px 70px;background:white;min-height:60vh}
+h1{font:700 36px/1.2 Georgia,serif;letter-spacing:-.015em;margin:10px 0 24px}h2{font-size:24px;line-height:1.35;margin:38px 0 16px;border-top:1px solid var(--line);padding-top:24px}
+h3{font-size:19px;margin:28px 0 8px}p{margin:12px 0}a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
+code{font-size:.84em;background:#edf2f3;padding:2px 5px;border-radius:3px;overflow-wrap:anywhere}pre{padding:18px;overflow:auto;background:#edf2f3;border:1px solid var(--line);border-radius:6px;font-size:14px;line-height:1.5}
+pre code{padding:0;background:none;overflow-wrap:normal}table{border-collapse:collapse;display:block;max-width:100%;overflow:auto;margin:22px 0;font-size:15px}th,td{padding:10px 14px;border:1px solid var(--line);vertical-align:top}th{background:#eaf2f3;text-align:left}tr:nth-child(even) td{background:#f8fafb}
+blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;background:#fffaed}blockquote p{margin:6px 0}li{margin:9px 0}footer{max-width:1120px;margin:auto;padding:22px 30px 40px;font-size:13px;color:var(--muted)}.toc{padding:18px 24px;background:#f4f8f8;border:1px solid var(--line);border-radius:6px}.toc ul{margin:0;padding-left:20px}.toc li{margin:3px 0}.toc a{text-decoration:none}
+@media(max-width:600px){main{padding:24px 18px 44px}h1{font-size:29px}header{padding:24px 18px}table{font-size:13px}th,td{padding:8px}}
+</style></head>
+<body><header><p>Sutro problems · Submission attempt · September 2026</p><div class="brand">MNIST-small / 60% target</div><nav><a class="active" href="index.html">Results & reproduction</a><a class="" href="session.html">Session export</a><a class="" href="ambiguities.html">Ambiguities & problems</a></nav></header>
+<main><h1 id="mnist-small-a-submission-for-the-60-target">MNIST-small: a submission for the 60% target</h1>
+<p><strong>374/600 correct (62%)</strong> on the canonical 600-training / 600-test, 3 × 3
+MNIST-small dataset. The fixed 32-unit network exceeds the current requirement
+of <strong>360/600 (60%)</strong> by 14 correct predictions. Both the model scores and the
+A100 measurements cover fresh training and all 600 predictions.</p>
+<p>Contributors: Yaroslav Bulatov (task and benchmark requirements) and Codex
+(implementation, experiments, verification, and reporting). No W&amp;B run was
+created for this submission; raw evidence is supplied below.</p>
+<p>This is a submission attempt. The compact intermediate language and the
+declared model conventions still require benchmark review. This particular
+configuration was chosen for submission after the feasibility study's test
+results were known; the configuration and seed themselves were fixed before
+that study's test evaluation. See the separate ambiguity report for the
+selection boundary.</p>
+<div class="toc">
+<ul>
+<li><a href="#mnist-small-a-submission-for-the-60-target">MNIST-small: a submission for the 60% target</a><ul>
+<li><a href="#comparable-measurements">Comparable measurements</a></li>
+<li><a href="#fixed-learning-algorithm">Fixed learning algorithm</a></li>
+<li><a href="#complete-task-model-and-compact-scoring">Complete-task model and compact scoring</a></li>
+<li><a href="#independent-numerical-verification">Independent numerical verification</a></li>
+<li><a href="#a100-implementation-and-measurement">A100 implementation and measurement</a></li>
+<li><a href="#data-and-evidence-fingerprints">Data and evidence fingerprints</a></li>
+<li><a href="#reproduction">Reproduction</a></li>
+<li><a href="#download-the-evidence">Download the evidence</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<h2 id="comparable-measurements">Comparable measurements</h2>
+<p>Human displays use two significant figures. <strong>Execution time is in ms, energy
+in mJ, area in mm², and time to score in s.</strong> Exact measurements and primitive
+counts remain in the linked JSON. The same fixed model and predictions appear
+in both rows; area applies to the theoretical scratch-cell model.</p>
+<table>
+<thead>
+<tr>
+<th>Execution</th>
+<th style="text-align: right;">Accuracy</th>
+<th style="text-align: right;">Time (ms)</th>
+<th style="text-align: right;">Energy (mJ)</th>
+<th style="text-align: right;">Area (mm²)</th>
+<th style="text-align: right;">Time to score (s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dally v4, complete compact program</td>
+<td style="text-align: right;">62% (374/600)</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">0.11</td>
+<td style="text-align: right;">0.020</td>
+<td style="text-align: right;">0.081</td>
+</tr>
+<tr>
+<td>A100, complete task; mean of three trials</td>
+<td style="text-align: right;">62% (374/600)</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: right;">2000</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">—</td>
+</tr>
+</tbody>
+</table>
+<p>The A100 time is 0.76 times the modeled serial time. Its
+idle-adjusted board energy is 18000 times the model energy.
+These ratios compare the same learning task under different hardware and
+accounting assumptions; they do not calibrate the theoretical model to silicon.
+GPU energy includes the entire board's incremental energy, whereas the model
+charges scratch accesses under its declared tape and arithmetic conventions.</p>
+<h2 id="fixed-learning-algorithm">Fixed learning algorithm</h2>
+<p>The network is <code>9 → 32 ReLU → 10</code>, with 650 scalar FP32 parameters. Inputs use
+<code>FP32(FP32(x * 4) - 0.5)</code>. Training uses squared error against one-hot labels,
+300 epochs, contiguous minibatches of 30, no shuffle, and learning rate 0.2.
+There are exactly 20 minibatches per epoch and 6,000 updates per task.</p>
+<p>Seed 101 initializes PCG64. Input weights use a uniform distribution on
+<code>[-1/3, 1/3]</code>; output weights use <code>[-1/sqrt(32), 1/sqrt(32)]</code>; biases start at
+zero. The 650 initialization words are data-independent program constants.
+Generating those constants is outside the task; writing/resetting every
+parameter is included in both model and GPU execution.</p>
+<p>For a batch, compute the hidden activations and linear outputs, then
+<code>delta2 = output - target</code> and
+<code>delta1 = (delta2 @ old_W2.T) * (hidden &gt; 0)</code>. Sum gradients in increasing batch
+index and subtract <code>FP32(0.2 / 30) * gradient</code> from each parameter. Backpropagation
+uses the old output weights. Every multiplication and addition rounds separately
+to FP32, with ascending-index reductions and no fused multiply-add. The final
+prediction is the first maximum among the ten output scores.</p>
+<p>The <a href="../accuracy-il-20260911/">feasibility study</a> froze this configuration as
+the best training-validation choice at a 300-epoch budget. Its three predeclared
+seeds scored 374/600, 371/600, and 377/600. This submission uses the first seed,
+101, without further tuning or selection among seeds. Choosing this budget for
+the new target happened after those study results were public.</p>
+<h2 id="complete-task-model-and-compact-scoring">Complete-task model and compact scoring</h2>
+<p>The program uses the single-core-with-tape model and v4 specification at commit
+<code>26abcca402de647381d31286d42dfbb7a001763d</code>. It receives 11,400 tape words (all training
+pixels and labels, then all test pixels), performs input and target preparation,
+sets initial parameters and work buffers, executes every training update, and
+sends 600 predicted labels. Tape reads and writes have the pinned model's zero
+access charge; ordinary scratch operands retain all their charges.</p>
+<p>The compact program has 835 syntax nodes, including
+773 primitive leaves. It represents
+<strong>618,842,313 primitive instructions</strong> and
+<strong>1,833,513,513 charged operand accesses</strong>. Each fixed loop
+contributes its exact multiplicity. Affine address histograms retain every
+source read and destination write, including repeated or aliased operands.
+There is no fitted training cost or free matrix operation.</p>
+<p>Scratch storage occupies 20,290 words in
+13 non-overlapping regions. At one square micrometre per word, the reported
+area is <strong>0.020 mm²</strong>. This is occupied cell area, not the placement's
+enclosing rectangle, die area, or GPU allocation. Dividing µm² by 10⁶ changes
+only the presentation units.</p>
+<p>The five complete static scoring calls have median
+<strong>0.081 s</strong>. This includes schema, bounds and
+definite-initialization checks, placement, exact address histograms, integer
+cost sums, and canonical hashing. It excludes JSON loading, numerical execution,
+accuracy checking, and output files. CPU: Python 3.11.13,
+NumPy 2.4.6, <code>macOS-26.6.2-x86_64-i386-64bit</code>.</p>
+<p>The exact model uses integer 0.2-ps ticks and integer fJ internally. Conversion
+to the display is <code>ticks / 5e9</code> ms, <code>fJ / 1e12</code> mJ, and <code>µm² / 1e6</code> mm².
+The <a href="../accuracy-il-20260911/il.html">language specification</a> explains the cost
+equations, fixed half-diamond placement, initialization proof, and restrictions.</p>
+<h2 id="independent-numerical-verification">Independent numerical verification</h2>
+<p>All 300 epochs were replayed using explicit, ordered FP32 reductions. All four
+parameter arrays, every one of the 6,000 output scores, and all 600 predictions
+match bit for bit. Parameter hashes and predictions also match the frozen study;
+that study did not save its full output-score matrix.</p>
+<p>Running the actual learner CLI with only <code>train_images</code>, <code>train_labels</code>, and
+<code>test_images</code> in the input archive produces identical outputs. Changing every
+training label to <code>(label + 1) % 10</code> changes learned parameters and 589 predictions.
+The separate evaluator confirms the exact current target, independent of rounded
+display percentages. Test labels are never learner inputs.</p>
+<table>
+<thead>
+<tr>
+<th>Separate host work</th>
+<th style="text-align: right;">Accuracy checked</th>
+<th style="text-align: right;">Time (ms)</th>
+<th>Scope</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>CPU learner</td>
+<td style="text-align: right;">62% (374/600)</td>
+<td style="text-align: right;">660</td>
+<td>Fresh normalization, initialization, training, prediction</td>
+</tr>
+<tr>
+<td>Ordered 300-epoch replay</td>
+<td style="text-align: right;">62% (374/600)</td>
+<td style="text-align: right;">3400</td>
+<td>Independent reduction implementation</td>
+</tr>
+<tr>
+<td>Complete CPU verification suite</td>
+<td style="text-align: right;">62% (374/600)</td>
+<td style="text-align: right;">5700</td>
+<td>Replay, hashes, allowed-input CLI, mutation, static rescore, accuracy</td>
+</tr>
+</tbody>
+</table>
+<p>The full 618-million-instruction program was not numerically interpreted after
+expansion. The earlier IL tests execute small expanded MLPs and check lowering
+semantics and address counts; the full ordered replay checks this learner's
+numerical result. The distinction is recorded in <a href="verification.json">verification.json</a>.</p>
+<h2 id="a100-implementation-and-measurement">A100 implementation and measurement</h2>
+<p>The measured device was <strong>NVIDIA A100-SXM4-40GB</strong>, with
+108 streaming multiprocessors, compute capability
+8.0, and board power limit 400 W.
+It ran through Modal using a pinned container. Software: Python
+3.11.15, PyTorch 2.5.1+cu124, Triton 3.1.0,
+NumPy 2.2.6, CUDA runtime 12.4, NVIDIA driver
+580.95.05, NVML 13.580.95.05, and
+<code>nvidia-ml-py</code> 12.560.30.</p>
+<p>Container: <code>ghcr.io/ab-10/wikitext-bench@sha256:95de89319ba89c53a91d5440a5db4ff46f68b05031062c0a760ec3caa48dc42f</code>.</p>
+<p>Eight Triton kernels implement input normalization, parameter/target
+initialization, hidden forward, output/error, hidden error, parameter updates,
+and the two inference stages. Each minibatch runs four kernels; every graph
+replay includes all 24,000 minibatch kernel launches plus preparation and
+inference. The graph is replayed for a complete fresh learning task each time.
+GPU memory is reused, but learned parameters are reset and recomputed.</p>
+<p>The manual GPU implementation is checked against the ordered CPU calculation
+for all 650 parameter words, all 6,000 output-score words, and all 600 predictions
+before and after timing. Changed queries and changed training labels also pass
+independent reference checks. The exported PTX contains no FP32 fused multiply-add
+or flush-to-zero instruction. This establishes agreement for the tested data;
+it is not a proof for every possible input.</p>
+<p>Each trial targets ten seconds of active graph execution. Idle power is measured
+for three seconds before and after the active window, with a three-second
+settling gap before each idle sample. CUDA events and host wall time both cover
+the repeated graph replays. A consistency assertion catches unit mismatches. Calibration selected 122
+complete tasks per trial; actual active intervals were about 8,700 ms, shorter
+than the calibration target after execution warmed up.</p>
+<p>NVML cumulative board energy is sampled at active-window boundaries. If the
+paired idle powers are <code>P_before</code> and <code>P_after</code>, the per-task adjusted energy is
+<code>1000 * (E_active_J - (P_before + P_after)/2 * active_seconds) / tasks</code>, in mJ.
+The subtraction uses the NVML counter's active interval, not the CUDA duration.
+No negative energy is clipped. Means below are unweighted across three trials.</p>
+<table>
+<thead>
+<tr>
+<th>Trial</th>
+<th style="text-align: right;">Accuracy</th>
+<th style="text-align: right;">Complete tasks</th>
+<th style="text-align: right;">Time (ms/task)</th>
+<th style="text-align: right;">Idle before / after (W)</th>
+<th style="text-align: right;">Raw energy (mJ/task)</th>
+<th style="text-align: right;">Paired-idle energy (mJ/task)</th>
+<th style="text-align: right;">Before-only / after-only energy (mJ/task)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td style="text-align: right;">62% (374/600)</td>
+<td style="text-align: right;">122</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: right;">70 / 70</td>
+<td style="text-align: right;">6900</td>
+<td style="text-align: right;">1900</td>
+<td style="text-align: right;">1900 / 2000</td>
+</tr>
+<tr>
+<td>2</td>
+<td style="text-align: right;">62% (374/600)</td>
+<td style="text-align: right;">122</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: right;">69 / 69</td>
+<td style="text-align: right;">6900</td>
+<td style="text-align: right;">2000</td>
+<td style="text-align: right;">2000 / 2000</td>
+</tr>
+<tr>
+<td>3</td>
+<td style="text-align: right;">62% (374/600)</td>
+<td style="text-align: right;">122</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: right;">67 / 69</td>
+<td style="text-align: right;">7000</td>
+<td style="text-align: right;">2100</td>
+<td style="text-align: right;">2200 / 2100</td>
+</tr>
+</tbody>
+</table>
+<p>Mean CUDA time is <strong>71 ms</strong>, with sample standard deviation
+<strong>0.094 ms</strong>.
+Mean host wall time is <strong>71 ms</strong>.
+Mean idle-adjusted energy is <strong>2000 mJ</strong>, with sample standard deviation
+<strong>97 mJ</strong>.
+Mean raw board energy is <strong>6900 mJ</strong>.
+The separate baseline alternatives show sensitivity to the idle-power choice.
+The third trial has a 2.3 W difference between its paired idle means; the
+one-sided baseline energy envelope across trials is about 1,900–2,200 mJ/task.</p>
+<p>Host/device transfers, allocations, JIT compilation, graph capture, validation,
+cold start, and host CPU energy are excluded. These are GPU-resident steady-state
+complete-task measurements. Repeated execution may benefit from cache residency.
+The first run had a timing conversion bug and is excluded from every metric
+above; the corrected second run supplies all results. The measurement history
+retains that failure and its correction.</p>
+<h2 id="data-and-evidence-fingerprints">Data and evidence fingerprints</h2>
+<p>The dataset is <code>competition-v2</code>, canonical seed 20260910. The 600 training and
+600 test examples are disjoint subsets of the original MNIST training pool,
+downsampled to 3 × 3. The manifest file SHA-256 is
+<code>296359c9046a8045aefdb5bc7c471c5abc2c4c5c546d6c56ca53b1299d278054</code>.
+Allowed array SHA-256 values (C-order, little-endian content):</p>
+<ul>
+<li><code>train_images</code>: <code>1d123f4ff4c0fa6975ee07f5e647971713284515c4e10b88b943a257fdcb7ca5</code>.</li>
+<li><code>train_labels</code>: <code>948baa48cdcf75b8b0187a9a5f2a1dcec108998dbfd0081cccc396bfb14321aa</code>.</li>
+<li><code>test_images</code>: <code>9c0793497fb028e7f6ecea5819377502d4e25990aea59578db9ba6f52ba69a09</code>.</li>
+</ul>
+<p>Prediction content SHA-256: <code>007b9462848073e7342050a67263c7efef0bdcf6c815eff1e352ba475c16b828</code>.
+Output-score content SHA-256: <code>8520c9d95bed5047fff72217e518ead34e06fe3a16c6425c615885f68e0ea09a</code>.
+Canonical IL hash: <code>9ba3446348eb559666e89a9466fa3475636cf1ad465fbb03a471d0b4fad20b2f</code>.
+GPU source SHA-256: <code>9e85ccd67c25ddac738a7d65e67c04212e7564e4718a5d3a26d7875eccc20eb4</code>.</p>
+<p>Scoring source fingerprints:</p>
+<ul>
+<li><code>score.py</code>: <code>2a35978282dbfc30ce36b0202f1407971c83108ec37cc4cd049f4d265488429b</code>.</li>
+<li><code>mlp_il.py</code>: <code>df55755126f06df297cdee092cbf3aa94fe4bd0d18b864ffd2e99515aedf54a1</code>.</li>
+<li><code>il.py</code>: <code>24bd0b890c433029199a6b63d08e1a6730f7789856006351b8097885c17fd7bc</code>.</li>
+</ul>
+<p>Additional source, parameter, and PTX fingerprints are recorded in the raw
+evidence. The program-file byte hash differs from the canonical IL hash because
+the canonical hash normalizes JSON formatting.</p>
+<h2 id="reproduction">Reproduction</h2>
+<p>The submission branch is <code>codex/mnist-small-60-submission</code>. After it is merged,
+the same commands work on <code>main</code>. Run from the repository root:</p>
+<pre><code class="language-sh">git clone --branch codex/mnist-small-60-submission https://github.com/cybertronai/sutro-problems.git
+cd sutro-problems
+python3.11 -m venv .venv-mlp60
+.venv-mlp60/bin/python -m pip install -r mnist/submissions/mlp60-affine-20260911/requirements.txt
+.venv-mlp60/bin/python -m mnist.code.data --output mnist/data --seed 20260910
+.venv-mlp60/bin/python mnist/submissions/mlp60-affine-20260911/learner.py --output /tmp/mlp60-reproduction
+.venv-mlp60/bin/python -m mnist.code.evaluate --tier small --predictions /tmp/mlp60-reproduction/predictions.npy --data-dir mnist/data --output /tmp/mlp60-reproduction/accuracy.json
+.venv-mlp60/bin/python mnist/submissions/mlp60-affine-20260911/score.py --output /tmp/mlp60-reproduction
+.venv-mlp60/bin/python mnist/submissions/mlp60-affine-20260911/verify.py --artifacts /tmp/mlp60-reproduction --output /tmp/mlp60-reproduction/verification.json
+</code></pre>
+<p>The learner and generator import the checked-in feasibility study implementation
+under <code>mnist/experiments/accuracy-il-20260911/</code>. They do not import saved weights
+or predictions. Input array content hashes are checked against the canonical
+manifest. The evaluator alone opens test labels after predictions are fixed.
+Verification also runs the learner with an archive containing only the three
+allowed input members.</p>
+<p>With configured Modal credentials and <code>uv</code> installed, reproduce the complete
+task on an A100-40GB:</p>
+<pre><code class="language-sh">uvx --with numpy==2.2.6 modal==1.5.5 run mnist/submissions/mlp60-affine-20260911/gpu_benchmark.py --data mnist/data/small.npz --output /tmp/mlp60-gpu
+.venv-mlp60/bin/python -m mnist.code.evaluate --tier small --predictions /tmp/mlp60-gpu/gpu_predictions.npy --data-dir mnist/data --output /tmp/mlp60-gpu/accuracy.json
+</code></pre>
+<p>The GPU command runs three trials after numerical verification. Each graph
+replay resets parameters, prepares inputs and targets, trains all 300 epochs,
+and predicts all 600 test labels. Host/device transfers, JIT, graph capture,
+allocation, and validation are excluded from steady-state GPU measurements.
+The remote container pins NumPy 2.2.6; the local CPU and scoring environment
+used NumPy 2.4.6. Parameter, score, and prediction bits match across them.</p>
+<p>To regenerate the report from the saved evidence:</p>
+<pre><code class="language-sh">.venv-mlp60/bin/python -m pip install -r mnist/submissions/mlp60-affine-20260911/requirements-report.txt
+.venv-mlp60/bin/python mnist/submissions/mlp60-affine-20260911/write_report.py
+.venv-mlp60/bin/python mnist/submissions/mlp60-affine-20260911/build_pages.py
+</code></pre>
+<p>The report build uses checked-in measurements, never reruns GPU trials. The
+readable session is a timestamped snapshot of visible user and assistant
+messages; hidden reasoning, system instructions, and tool payloads are omitted.</p>
+<ul>
+<li><a href="https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/">Standalone report</a></li>
+<li><a href="https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/ambiguities.html">Separate ambiguities and problems</a></li>
+<li><a href="https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/session.html">Human-readable session</a></li>
+</ul>
+<h2 id="download-the-evidence">Download the evidence</h2>
+<ul>
+<li><a href="learner.py">CPU learner</a>, <a href="cpu_results.json">CPU results</a>, <a href="predictions.npy">predictions</a>, <a href="output-scores.npy">scores</a>, <a href="parameters.npz">parameters</a>, <a href="accuracy.json">accuracy</a>.</li>
+<li><a href="program.il.json">Compact program</a>, <a href="score.py">score driver</a>, <a href="model-score.json">exact model score</a>.</li>
+<li><a href="verify.py">Independent verifier</a>, <a href="verification.json">verification evidence</a>.</li>
+<li><a href="gpu_benchmark.py">GPU benchmark</a>, <a href="gpu_results.json">GPU results and trial telemetry</a>, <a href="gpu_validation.json">GPU verification</a>, <a href="gpu_predictions.npy">GPU predictions</a>, <a href="gpu_run_history.txt">measurement history</a>.</li>
+<li><a href="ambiguities.html">Separate ambiguities and problems</a>, <a href="session.html">human-readable session export</a>.</li>
+</ul></main><footer>Standalone record. Model scores use declared conventions; acceptance remains subject to review. <a href="https://github.com/cybertronai/sutro-problems">Repository</a> · <a href="../">All submission reports</a></footer></body></html>

@@ -90,11 +90,13 @@ word has exactly 600 charged reads; the initial `recv` is uncharged. The
 interpreter verifies read-before-write validity, fixed-address bounds, unique
 coordinates, complete input consumption, and the exact output length.
 
-The reported area is **6,014 µm² = 0.006014 mm²**, interpreting the 1 µm grid
-spacing as one square micrometer per occupied scratch word. Peak allocated
+The reported area is **0.0060 mm²**, rounded to two significant figures.
+The exact internal convention assigns one square micrometer to each occupied
+scratch word on the 1 µm grid; divide the native µm² total by 10⁶ for the mm²
+display. Raw integer area totals are unchanged. Peak allocated
 scratch is **6,014 words = 24,056 bytes**; all 6,014 locations become initialized.
 The smallest axis-aligned rectangle around this particular placement, including
-unit-cell width, is **12,012 µm²**. The occupied-cell convention is explicit
+unit-cell width, is **0.012 mm²** (rounded). The occupied-cell convention is explicit
 because neither the benchmark nor model defines whether leaderboard area
 should include empty sites, the enclosing rectangle, processor, tapes, program
 store, or routing. This is not a physical die-area estimate.

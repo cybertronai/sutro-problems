@@ -20,11 +20,12 @@ The overview sketch shows the
 [Bill Dally single-core model with tape](https://github.com/cybertronai/simplified-dally-model/tree/main/models/single-core-with-tape),
 using the [v4 instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets/v4).
 Use its tape operations for dataset reads and writes. Compute **Time**, **Energy**,
-and **Area** under this model; Area comes from peak memory use. **Time to score**
+and **Area** under this model; Area comes from peak memory use and is reported in **mm²**. **Time to score**
 is the runtime of those calculations on your machine. Then implement the algorithm
 on an A100 using [pyptx](https://github.com/patrick-toulme/pyptx) or Triton and report
 its runtime in **ms** and idle-adjusted energy in **mJ** measured via NVML.
-Use **ms** and **mJ** for the theoretical scores too, and **s** for Time to score.
+Use **ms** and **mJ** for the theoretical scores too, **mm²** for Area, and **s** for Time to score.
+Convert occupied-cell area from µm² by dividing by 10⁶; the cell/grid convention is unchanged.
 Display measured values with two significant figures; exact counts and target thresholds are not rounded. Include the
 background needed to reproduce these calculations in the standalone report.
 The included evaluator checks classification accuracy only; it does not calculate
