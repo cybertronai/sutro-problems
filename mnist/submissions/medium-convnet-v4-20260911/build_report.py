@@ -285,7 +285,7 @@ Full testing takes longer than the reported scoring interval.
 - [Pinned single-core model](https://github.com/cybertronai/simplified-dally-model/tree/26abcca402de647381d31286d42dfbb7a001763d/models/single-core-with-tape), [pinned v4 instructions](https://github.com/cybertronai/simplified-dally-model/tree/26abcca402de647381d31286d42dfbb7a001763d/instruction-sets/v4).
 '''
     (HERE/'report.md').write_text(text)
-    row = f"| {mean:.1f}% ± {sd:.1f} pp | {cost(s['time_ms'])} | {cost(s['energy_mj'])} | {cost(s['area_mm2'])} | {cost(s['time_to_score_seconds'])} | {cost(t)} | {cost(e)} | [Three ConvNets · 4% error target](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-convnet-v4-20260911/) |"
+    row = f"| {mean:.1f}% ± {sd:.1f} pp | {cost(s['time_ms'])} | {cost(s['energy_mj'])} | {cost(s['area_mm2'])} | {cost(s['time_to_score_seconds'])} | {cost(t)} | {cost(e)} | [Ordered ConvNets](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-convnet-v4-20260911/) |"
     (HERE/'readme-row.txt').write_text(row+'\n')
     print(row)
 

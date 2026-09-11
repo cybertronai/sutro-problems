@@ -42,7 +42,7 @@ Execution times use **milliseconds (ms)**, energies use **millijoules (mJ)**, ar
 
 | Accuracy | Time (ms) | Energy (mJ) | Area (mm²) | Time to score (s) | Time on A100 (ms) | Energy on A100 (mJ) | Submission |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| 97.8% ± 0.1 pp | 4,900,000 | 12,000 | 8.9 | 11 | 13,000 | 780,000 | [Three ConvNets · 4% error target](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-convnet-v4-20260911/) |
+| 97.8% ± 0.1 pp | 4,900,000 | 12,000 | 8.9 | 11 | 13,000 | 780,000 | [Ordered ConvNets](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-convnet-v4-20260911/) |
 | 98.1% ± 0.1 pp | — | — | — | — | 5.9 × 10⁴ | 1.7 × 10⁶ | [Three ConvNets](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-convnet-11draw-20260911/) |
 | 96% | 93,000 | 200 | 0.63 | 2.7 | 4,700 | 150,000 | [512-unit MLP](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-affine-20260911/) |
 
