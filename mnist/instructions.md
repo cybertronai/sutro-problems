@@ -9,13 +9,15 @@ Include the source or generator, commands to reproduce training and prediction,
 and a short report naming the dataset tier, contributors, test accuracy
 (`correct` / `total`), dataset checksum, and any W&B runs.
 
-Add a row to the results table on the [MNIST page](README.md), with a link to
-that submission. Report **Time**, **Energy**, **Area**, **Time to score**, and
+Add a row to the matching tier's results table on the [MNIST page](README.md),
+with a link to that submission. Report **Time**, **Energy**, **Area**, **Time to score**, and
 **Time on A100**, giving units, metric definitions, measurement commands, and
 hardware/software versions in the report. Use an em dash for unmeasured values;
 do not substitute estimates for measurements without labeling them.
 
-The overview sketch shows a Bill Dally single-core model with tape. The exact
+The overview sketch shows the
+[Bill Dally single-core model with tape](https://github.com/cybertronai/simplified-dally-model/tree/main/models/single-core-with-tape),
+using the [v4 instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets/v4). The exact
 MNIST model-scoring protocol and accuracy thresholds are not yet fixed. The
 included evaluator checks classification accuracy only; it does not calculate
 the five scoring metrics. Keep model scores and measured A100 runtime distinct.

@@ -10,12 +10,23 @@ predicted test labels (digits 0–9).
 Small and medium use disjoint random subsets of the original 60,000 MNIST
 training examples. Large uses the official training and test splits.
 
-**Model:** Bill Dally single core with tape.
+**Model:** [Bill Dally single core with tape](https://github.com/cybertronai/simplified-dally-model/tree/main/models/single-core-with-tape)
+([v4 instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets/v4)).
 
-## Results
+## MNIST-small
 
-| Dataset | Time | Energy | Area | Time to score | Time on A100 | Submission |
-| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| Time | Energy | Area | Time to score | Time on A100 | Submission |
+| ---: | ---: | ---: | ---: | ---: | --- |
+
+## MNIST-medium
+
+| Time | Energy | Area | Time to score | Time on A100 | Submission |
+| ---: | ---: | ---: | ---: | ---: | --- |
+
+## MNIST-large
+
+| Time | Energy | Area | Time to score | Time on A100 | Submission |
+| ---: | ---: | ---: | ---: | ---: | --- |
 
 [**Instructions for agents**](instructions.md)
 
