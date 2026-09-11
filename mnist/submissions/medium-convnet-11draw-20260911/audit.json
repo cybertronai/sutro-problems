@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-09-11T05:35:57.294381+00:00",
+  "passed": true,
+  "protocol_sha256": "35614d2c7f0e914efb73c7d7aeeae157ff96144f22402a6249c689e83888749c",
+  "source_sha256": {
+    "learner.py": "b3e3cda033543d70090b78ca3681da6907152464b75541eb5954047cdfd2e7bc",
+    "prepare_draws.py": "0ebc81241bdab4d25ed84adfe1404f4b8e51417aeef248d5e69d10f2e6213302",
+    "modal_accuracy.py": "5a63f0e7f3c47846afc5c883ef6f541d89cc35ba4e5d95818955b36e1c5d77f1",
+    "evaluate_frozen.py": "8cb1d85d0900118b1e964e344d2cc60f5d22c563afd996d7d23c52722bcfffba"
+  },
+  "generator_sha256": "72e203322357befa1aeeae89b7d20f760ae7bf841008625fdb8ce3f2231563b3",
+  "preflight": {
+    "passed": true,
+    "phase": "before GPU launch and before test-label derivation",
+    "independent_index_draws": 11,
+    "exact_resized_image_arrays": 22,
+    "array_shapes": [
+      6000,
+      1,
+      9,
+      9
+    ],
+    "method": "Separate NumPy PCG64 permutation and integer-overlap resize reconstruction from raw official training images; no learner code imported",
+    "raw_train_images_sha256": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+    "allowlist_archives_checked": 11,
+    "allowed_arrays": [
+      "train_images",
+      "train_labels",
+      "test_images"
+    ],
+    "within_draw_train_test_overlap": 0,
+    "query_overlap_first_two_draws": 622,
+    "raw_labels_decompressed": false,
+    "test_labels_derived": false
+  },
+  "source_review": {
+    "model_ast_matches_prior_runner": true,
+    "augmentation_ast_matches_prior_refit": true,
+    "training_metrics_ast_matches_prior_refit": true,
+    "fresh_parameters_optimizer_scheduler_rng_per_draw_member": true,
+    "query_images_do_not_influence_training": true
+  },
+  "evaluator_boundary_checks": {
+    "passed": true,
+    "used_real_predictions_or_labels": false,
+    "cases": [
+      "Exactly 64,680/66,000 passes; 64,679 fails",
+      "Constant eleven-draw accuracy gives zero measured SD",
+      "Offsets -5 through +5 correct predictions give sqrt(11)/60 sample SD in percentage points",
+      "Reject 10 or 12 draws, floats, booleans, negative counts, and counts above 6,000"
+    ]
+  },
+  "post_freeze_independent_audit": {
+    "passed": true,
+    "method": "Python standard-library NPY decoding, raw IDX indexing, integer counts, statistics.mean/stdev and separate rational variance formula; evaluator module not imported",
+    "counts_by_draw": [
+      5888,
+      5883,
+      5883,
+      5890,
+      5904,
+      5881,
+      5894,
+      5888,
+      5897,
+      5882,
+      5886
+    ],
+    "total_correct": 64776,
+    "total_predictions": 66000,
+    "mean_accuracy_percent": 98.14545454545454,
+    "sample_standard_deviation_pp": 0.11904502161668769,
+    "ddof": 1,
+    "exact_sample_variance_pp_squared": {
+      "numerator": 1403,
+      "denominator": 99000
+    },
+    "required_total_correct": 64680,
+    "meets_accuracy_target": true,
+    "prediction_manifest_sha256": "a7605d649f1c7960ad9639f844b4fa17a9948f7c157579cab7edeed9c97dcb8f",
+    "evaluation_freeze_sha256": "b7cf3af7d6a957de39e65a5ab131e7d440c1c37618688ae3e1cdc0f25d4e1405",
+    "accuracy_sha256": "d7fcf300ce79074992fce77d353ea735d6904992deb99a6b2c8db72d8a016757",
+    "prediction_frozen_at_utc": "2026-09-11T05:34:31.205288+00:00",
+    "evaluation_frozen_at_utc": "2026-09-11T05:34:56.309134+00:00",
+    "first_test_label_access_at_utc": "2026-09-11T05:35:00.206907+00:00"
+  },
+  "limits": "Audits dataset construction, source consistency, saved numerical artifacts and aggregate accuracy; it does not independently replay all training updates or certify model cost/hardware measurements."
+}

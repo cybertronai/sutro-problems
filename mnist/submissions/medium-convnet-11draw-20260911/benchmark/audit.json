@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "status": "passed",
+  "audited_at_utc": "2026-09-11T05:43:25.862539+00:00",
+  "method": "Independent standard-library recomputation from raw retained JSON; benchmark/learner modules were not imported and no training or test-label reads were performed.",
+  "evidence_sha256": {
+    "benchmark/measurement_protocol.json": "c3ed1b101bf9bdeaa2561f3e51b6b9a4c0a65f71fb6e1cd9940a3244e39ece96",
+    "benchmark/measurements.json": "7dd1571c5932a25de252362d97e23803dbf4db1bdcf4a3c6a98965ac1fd4bb1a",
+    "benchmark/task_outputs.json": "656ad5e6b90adc06db592b9c4c44a32e48fda958064f39fb526c3c24fd7813c8",
+    "gpu_benchmark.py": "2fef77435daf0df1bfcd723cdf1bb81395a3972f95f019a33fb655edf6a01c1d",
+    "learner.py": "b3e3cda033543d70090b78ca3681da6907152464b75541eb5954047cdfd2e7bc",
+    "accuracy.json": "d7fcf300ce79074992fce77d353ea735d6904992deb99a6b2c8db72d8a016757",
+    "protocol.json": "35614d2c7f0e914efb73c7d7aeeae157ff96144f22402a6249c689e83888749c",
+    "prediction_manifest.json": "a7605d649f1c7960ad9639f844b4fa17a9948f7c157579cab7edeed9c97dcb8f",
+    "results/draw-00.json": "b19d79bf6b6e93d649f568e0f5c70929cfb58baaac56e12d5b2c5c7bb0bea3de"
+  },
+  "source_and_protocol_checks": {
+    "source_hashes_unchanged": true,
+    "accuracy_gate_matches_frozen_result": true,
+    "reference_artifact_hashes_match_global_prediction_freeze": true,
+    "draw00_allowed_archive_hash_verified": true,
+    "same_frozen_model_seeds_epochs_and_schedule": true,
+    "software_versions_match_original_accuracy_run": true,
+    "single_cuda_and_nvml_device_asserted_by_reviewed_source": true
+  },
+  "timing_energy_checks": {
+    "all_counter_deltas_midpoints_api_durations_recomputed": true,
+    "wall_timestamps_and_counter_api_exclusion_verified": true,
+    "idle_samples_before_and_after_active_interval": true,
+    "gross_and_three_idle_subtraction_formulas_recomputed_mj": true,
+    "median_mean_sample_sd_min_max_recomputed": true,
+    "number_of_measured_tasks": 3
+  },
+  "output_checks": {
+    "warmup_and_all_before_after_validation_flags_passed": true,
+    "all_nine_measured_member_state_and_logit_and_prediction_hashes_match_accuracy_reference": true,
+    "all_nine_measured_training_histories_match_reference_excluding_elapsed_metadata": true,
+    "all_three_ensemble_logit_and_prediction_hashes_match_accuracy_reference": true
+  },
+  "hardware": {
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "device_uuid": "GPU-9b9cde15-b1b6-4728-0711-d9b6ea062dd2",
+    "driver": "580.95.05",
+    "nvml": "13.580.95.05",
+    "cuda_capability": [
+      8,
+      0
+    ],
+    "memory_total_bytes": 42405855232,
+    "multiprocessors": 108,
+    "power_limit_mw": 400000,
+    "default_power_limit_mw": 400000,
+    "max_sm_clock_mhz": 1410,
+    "max_memory_clock_mhz": 1215,
+    "exclusive_container": "One Modal A100 allocation; max_containers=1; no concurrent benchmark jobs",
+    "clocks_policy": "Unmodified platform defaults; no frequency or power-limit locking"
+  },
+  "recomputed_trials": [
+    {
+      "trial": 0,
+      "wall_ms": 58713.548834999994,
+      "cuda_event_ms": 58713.18359375,
+      "active_counter_interval_s": 58.71677792,
+      "gross_energy_mj": 5496248,
+      "idle_before_w": 63.98907160796774,
+      "idle_after_w": 66.33064864680416,
+      "paired_idle_power_w": 65.15986012738595,
+      "idle_adjusted_energy_mj": 1670270.9636020157,
+      "energy_interval_minus_wall_ms": 3.2290850000063074,
+      "before_only_adjusted_mj": 1739015.8930879808,
+      "after_only_adjusted_mj": 1601526.0341160512
+    },
+    {
+      "trial": 1,
+      "wall_ms": 53634.742288000016,
+      "cuda_event_ms": 53634.41796875,
+      "active_counter_interval_s": 53.637481033,
+      "gross_energy_mj": 5620867,
+      "idle_before_w": 66.17439487059822,
+      "idle_after_w": 66.47182400723577,
+      "paired_idle_power_w": 66.32310943891699,
+      "idle_adjusted_energy_mj": 2063462.4754205067,
+      "energy_interval_minus_wall_ms": 2.73874499998783,
+      "before_only_adjusted_mj": 2071439.1502580354,
+      "after_only_adjusted_mj": 2055485.800582977
+    },
+    {
+      "trial": 2,
+      "wall_ms": 59275.91377500002,
+      "cuda_event_ms": 59275.45703125,
+      "active_counter_interval_s": 59.283620983499986,
+      "gross_energy_mj": 5527723,
+      "idle_before_w": 65.89537878833578,
+      "idle_after_w": 66.2401210738939,
+      "paired_idle_power_w": 66.06774993111483,
+      "idle_adjusted_energy_mj": 1610987.553851131,
+      "energy_interval_minus_wall_ms": 7.707208499967237,
+      "before_only_adjusted_mj": 1621206.339348137,
+      "after_only_adjusted_mj": 1600768.7683541235
+    }
+  ],
+  "recomputed_summary": {
+    "wall_ms_per_task_median": 58713.548834999994,
+    "wall_ms_per_task_mean": 57208.06829933335,
+    "wall_ms_per_task_sample_sd": 3107.339323100846,
+    "wall_ms_per_task_min": 53634.742288000016,
+    "wall_ms_per_task_max": 59275.91377500002,
+    "cuda_event_ms_per_task_median": 58713.18359375,
+    "cuda_event_ms_per_task_mean": 57207.686197916664,
+    "cuda_event_ms_per_task_sample_sd": 3107.2853478250804,
+    "cuda_event_ms_per_task_min": 53634.41796875,
+    "cuda_event_ms_per_task_max": 59275.45703125,
+    "idle_adjusted_energy_mj_per_task_median": 1670270.9636020162,
+    "idle_adjusted_energy_mj_per_task_mean": 1781573.664291218,
+    "idle_adjusted_energy_mj_per_task_sample_sd": 245915.85359190594,
+    "idle_adjusted_energy_mj_per_task_min": 1610987.553851131,
+    "idle_adjusted_energy_mj_per_task_max": 2063462.4754205067,
+    "gross_energy_mj_per_task_median": 5527723,
+    "gross_energy_mj_per_task_mean": 5548279.333333333,
+    "gross_energy_mj_per_task_sample_sd": 64802.74624067512,
+    "gross_energy_mj_per_task_min": 5496248,
+    "gross_energy_mj_per_task_max": 5620867
+  },
+  "limitations": [
+    "One predeclared dataset draw on one A100, not an average of hardware costs across 11 draws.",
+    "Board energy excludes host CPU energy; paired idle subtraction is an estimate with before/after alternatives retained.",
+    "Raw NVML counters and CUDA event readings are accepted as instrument outputs; their arithmetic, timing placement, and source were audited.",
+    "The stored measured task outputs retain hashes rather than a second copy of every tensor; bitwise tensor comparisons were executed by the reviewed benchmark.",
+    "This audit supplies no v4 instruction translation, model time/energy/area, or time-to-score certification."
+  ]
+}

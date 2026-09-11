@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "frozen_at_utc": "2026-09-11T05:28:50.472576+00:00",
+  "tier": "medium",
+  "dataset_profile": "competition-v2",
+  "target_percent": "98",
+  "dataset_seeds": [
+    20261001,
+    20261002,
+    20261003,
+    20261004,
+    20261005,
+    20261006,
+    20261007,
+    20261008,
+    20261009,
+    20261010,
+    20261011
+  ],
+  "training_examples": 6000,
+  "test_examples": 6000,
+  "source_pool_size": 60000,
+  "source_sha256": {
+    "learner.py": "b3e3cda033543d70090b78ca3681da6907152464b75541eb5954047cdfd2e7bc",
+    "prepare_draws.py": "0ebc81241bdab4d25ed84adfe1404f4b8e51417aeef248d5e69d10f2e6213302",
+    "modal_accuracy.py": "5a63f0e7f3c47846afc5c883ef6f541d89cc35ba4e5d95818955b36e1c5d77f1"
+  },
+  "generator_sha256": "72e203322357befa1aeeae89b7d20f760ae7bf841008625fdb8ce3f2231563b3",
+  "raw_sources": {
+    "train_images": {
+      "filename": "train-images-idx3-ubyte.gz",
+      "md5": "f68b3c2dcbeaaa9fbdd348bbdeb94873",
+      "sha256": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609"
+    },
+    "train_labels": {
+      "filename": "train-labels-idx1-ubyte.gz",
+      "md5": "d53e105ee54ea40749a09fcbcd1e9432",
+      "sha256": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c"
+    }
+  },
+  "container_image": "ghcr.io/ab-10/wikitext-bench@sha256:95de89319ba89c53a91d5440a5db4ff46f68b05031062c0a760ec3caa48dc42f",
+  "config": {
+    "id": "cnn-09",
+    "architecture": "cnn",
+    "width": 64,
+    "depth": 3,
+    "activation": "gelu",
+    "pooling": "none",
+    "dropout": 0.2,
+    "learning_rate": 0.001,
+    "weight_decay": 0.001,
+    "augmentation": "mild_affine",
+    "batch_size": 128,
+    "epochs": 100,
+    "head_width": 256,
+    "image_size": 9
+  },
+  "preparation_software": {
+    "python": "3.11.13",
+    "numpy": "2.4.6"
+  },
+  "epochs": 71,
+  "schedule_epochs": 100,
+  "member_seeds": [
+    101,
+    102,
+    103
+  ],
+  "selected_inference": "ensemble",
+  "ensemble": "float64 arithmetic mean of three float32 raw-logit arrays; argmax breaks ties toward smallest digit",
+  "draw_sampling": "Independent SeedSequence(dataset_seed).spawn(2)[0], PCG64 permutation of all60000 original training rows; positions0:6000 fit and6000:12000 query, disjoint within draw; overlap across draws allowed",
+  "resize": "Canonical data.py: uint8 converted to float32 /255; exact separable box-area overlap averaging28\u21929; clip[0,1]; N,1,9,9",
+  "learner_input_allowlist": [
+    "train_images",
+    "train_labels",
+    "test_images"
+  ],
+  "normalization": "Mean and population standard deviation from each draw6000 training images only; max(std,1e-6)",
+  "optimizer": "AdamW betas(.9,.999),eps1e-8,lr.001,wd.001; cosine horizon100 to2% initial lr, step each epoch",
+  "minibatches": "New seeded CUDA permutation every epoch; B128 with final partial112 retained",
+  "augmentation": {
+    "probability": 0.5,
+    "rotation_degrees": [
+      -8,
+      8
+    ],
+    "inverse_sampling_scale": [
+      0.94,
+      1.06
+    ],
+    "translation_pixels_per_axis": [
+      -0.35,
+      0.35
+    ],
+    "interpolation": "bilinear",
+    "padding": "zeros",
+    "align_corners": false,
+    "applied_to": "raw training images before normalization, no input gradients"
+  },
+  "initialization": "Fresh model, optimizer, scheduler and RNG reset for every draw/member; no pretrained or search checkpoints; no state or data reused across draws",
+  "selection": "No search, early stopping or checkpoint selection on these11draws; final fixed71st epoch only",
+  "development_disclosure": "Architecture and71epochs came from prior training-only search. Ensemble101/102/103 chosen for this new attempt after disclosed old single-dataset feasibility results. New dataset seeds and all choices fixed before any new-draw evaluation.",
+  "prediction_freeze": "All11ensemble predictions and diagnostic member predictions/logits must be hashed in a manifest before ANY per-draw query labels are derived/opened or scored",
+  "accuracy_rule": "Unrounded arithmetic mean across 11 draws; sample SD (ddof=1) across dataset draws; sum(correct) >= 64680 out of 66000, inclusive 98%",
+  "determinism": {
+    "torch_deterministic_algorithms": true,
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": true,
+    "tf32_matmul": false,
+    "tf32_cudnn": false,
+    "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+    "precision": "float32, no autocast"
+  },
+  "retention": "All predictions/logits/training histories/state tensor hashes retained; checkpoint binaries retained only for draw00",
+  "phase_gate": "Accuracy first: do not benchmark energy/runtime or translate until all11draws are frozen and aggregate accuracy passes",
+  "per_draw_test_labels_created": false
+}
