@@ -11,18 +11,22 @@ tier, contributors, test accuracy (`correct` / `total`), dataset checksum, and a
 W&B runs.
 
 Add a row to the matching tier's results table on the [MNIST page](README.md),
-with a link to that submission. Report **Accuracy** (`correct` / `total` and percent), **Time**, **Energy**, **Area**, **Time to score**,
+with a link to its standalone report. Keep the MNIST page to tier headings and
+submission tables: show **Accuracy** as a percentage only, with **Time**, **Energy**, **Area**, **Time to score**,
 **Time on A100**, and **Energy on A100**, giving units, metric definitions,
-measurement commands, and hardware/software versions in the report. Use an em dash for unmeasured values;
+measurement commands, and hardware/software versions in the report. Put exact
+`correct` / `total` counts, qualification notes, footnotes, and all other commentary
+in the individual report, not the MNIST page. Use an em dash for unmeasured values;
 do not substitute estimates for measurements without labeling them.
 
-The overview sketch shows the
+The [competition sketch](doc/competition-overview.png) illustrates the
 [Bill Dally single-core model with tape](https://github.com/cybertronai/simplified-dally-model/tree/main/models/single-core-with-tape),
 using the [v4 instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets/v4).
 Use its tape operations for dataset reads and writes. Compute **Time**, **Energy**,
 and **Area** under this model; Area comes from peak memory use and is reported in **mm²**. **Time to score**
 is the runtime of those calculations on your machine. Then implement the algorithm
-on an A100 using [pyptx](https://github.com/patrick-toulme/pyptx) or Triton and report
+on an A100 with an ISA or toolchain of your choice (for example,
+[pyptx](https://github.com/patrick-toulme/pyptx) or Triton) and report
 its runtime in **ms** and idle-adjusted energy in **mJ** measured via NVML.
 Use **ms** and **mJ** for the theoretical scores too, **mm²** for Area, and **s** for Time to score.
 Convert occupied-cell area from µm² by dividing by 10⁶; the cell/grid convention is unchanged.
