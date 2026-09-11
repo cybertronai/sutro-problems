@@ -35,7 +35,7 @@ An independent integrity-only audit also checked all six arrays in the clean che
 
 The helper `predict` is intended for this benchmark and is protected by the canonical CLI input guard. Its API does not independently enforce integer label dtype/range, and malformed empty arrays can fail during reshape before reaching its custom shape error. These are not defects affecting canonical runs; extending generic validation is unnecessary for this submission.
 
-The measured test result is **308/600 (51.3333%)**, eight correct predictions above the current acceptance threshold. It establishes a pass on one fixed dataset, not uncertainty across alternative dataset samples. This review did not search alternate algorithms, hyperparameters, seeds or numerical conventions after the score was known.
+The measured test result is **308/600 (51%)**, eight correct predictions above the original 50% threshold. That historical pass is below the current 60% requirement (360/600). It does not measure uncertainty across alternative dataset samples. This review did not search alternate algorithms, hyperparameters, seeds or numerical conventions after the score was known.
 
 Reproduce the independent review with:
 

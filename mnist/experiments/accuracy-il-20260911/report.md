@@ -2,7 +2,7 @@
 
 **MNIST-small · exploratory results · 11 September 2026**
 
-**A 60% accuracy target looks feasible on this fixed dataset.** A 32-hidden-unit network trained for 300 epochs cleared it with all three predeclared seeds. A 65% target was reached by only one run; 70% and 75% were not reached. This finite search does not establish an upper limit on accuracy.
+**The official MNIST-small accuracy target is now 60%, and this study meets that accuracy requirement.** A 32-hidden-unit network trained for 300 epochs cleared it with all three predeclared seeds. These results remain an exploratory study, not a complete new A100 submission. A 65% target was reached by only one run; 70% and 75% were not reached. This finite search does not establish an upper limit on accuracy.
 
 **Scoring the training algorithm is practical with a compact intermediate language.** The tested neural networks represent up to 24 billion primitive instructions, yet exact cost aggregation takes about 0.13 s. Numerical training and accuracy verification are separate. These MLPs have no measured A100 runtime or energy yet.
 
@@ -26,7 +26,7 @@ Each count below is correct predictions out of the same 600 test examples, in se
 | H32 · 10,000 epochs | 381 / 389 / 387 | 64% | 0.69 |
 | H128 · 3,000 epochs | 384 / 388 / 385 | 64% | 0.35 |
 
-The original 1NN baseline scored **308/600 (51%)**. All neural-network configurations use learning rate 0.2 and minibatches of 30. H denotes hidden-layer width.
+The original 1NN baseline scored **308/600 (51%)**, below the current **60%** requirement of **360/600** correct. It remains a historical measurement reference. All neural-network configurations use learning rate 0.2 and minibatches of 30. H denotes hidden-layer width.
 
 | Target | Required correct / 600 | Runs meeting it | Interpretation |
 | ---: | ---: | ---: | --- |
@@ -42,14 +42,16 @@ The original 1NN baseline scored **308/600 (51%)**. All neural-network configura
 
 Every MLP score includes explicit scratch initialization, dataset tape operations, pixel transformation, one-hot target construction, initial weight writes, all training updates, inference, and output selection. Costs use the same pinned Dally v4 conventions as the 1NN baseline. Area is occupied scratch-cell area with the declared fixed placement.
 
-| Configuration | Model time (ms) | Model energy (mJ) | Area (µm²) |
-| --- | ---: | ---: | ---: |
-| Original 1NN | 1.7 | 0.0019 | 6.0 × 10³ |
-| H32 · 100 epochs | 31 | 0.038 | 2.0 × 10⁴ |
-| H32 · 300 epochs | 93 | 0.11 | 2.0 × 10⁴ |
-| H32 · 1,000 epochs | 310 | 0.38 | 2.0 × 10⁴ |
-| H32 · 10,000 epochs | 3100 | 3.8 | 2.0 × 10⁴ |
-| H128 · 3,000 epochs | 4000 | 6.1 | 2.8 × 10⁴ |
+Accuracy columns show the rounded mean, exact correct counts out of 600 in seed order 101 / 102 / 103, and the number of seeds meeting the current 60% requirement. Pass/fail uses the exact 360/600 threshold.
+
+| Configuration | Accuracy (mean; correct / 600 by seed; ≥60%) | Model time (ms) | Model energy (mJ) | Area (µm²) |
+| --- | --- | ---: | ---: | ---: |
+| Original 1NN | 51%; 308/600; below 60% | 1.7 | 0.0019 | 6.0 × 10³ |
+| H32 · 100 epochs | 60% mean; 356 / 365 / 362; 2/3 pass | 31 | 0.038 | 2.0 × 10⁴ |
+| H32 · 300 epochs | 62% mean; 374 / 371 / 377; 3/3 pass | 93 | 0.11 | 2.0 × 10⁴ |
+| H32 · 1,000 epochs | 65% mean; 383 / 405 / 376; 3/3 pass | 310 | 0.38 | 2.0 × 10⁴ |
+| H32 · 10,000 epochs | 64% mean; 381 / 389 / 387; 3/3 pass | 3100 | 3.8 | 2.0 × 10⁴ |
+| H128 · 3,000 epochs | 64% mean; 384 / 388 / 385; 3/3 pass | 4000 | 6.1 | 2.8 × 10⁴ |
 
 All three seeds of each configuration have identical model costs: only the seed-dependent literal bits differ. The learner uses separately rounded FP32 multiplication and addition with ascending reduction order. The cost model charges memory reads and writes; it is not a hardware power simulator.
 
@@ -57,14 +59,14 @@ All three seeds of each configuration have identical model costs: only the seed-
 
 These timings include schema, address-bound and initialization checks, placement, exact access histograms, integer cost sums, and canonical program hashing. They exclude JSON loading, file output, numerical training, and accuracy verification. Each timing is the median of five complete scoring calls on the same host and Python environment.
 
-| Configuration | Expanded instructions | Compact JSON bytes | Time to score (s) |
-| --- | ---: | ---: | ---: |
-| Original 1NN | 1.1 × 10⁷ | 8.8 × 10³ | 0.019 |
-| H32 · 100 epochs | 2.1 × 10⁸ | 1.8 × 10⁵ | 0.079 |
-| H32 · 300 epochs | 6.2 × 10⁸ | 1.8 × 10⁵ | 0.078 |
-| H32 · 1,000 epochs | 2.1 × 10⁹ | 1.8 × 10⁵ | 0.079 |
-| H32 · 10,000 epochs | 2.1 × 10¹⁰ | 1.8 × 10⁵ | 0.078 |
-| H128 · 3,000 epochs | 2.4 × 10¹⁰ | 4.6 × 10⁵ | 0.13 |
+| Configuration | Accuracy (mean; correct / 600 by seed; ≥60%) | Expanded instructions | Compact JSON bytes | Time to score (s) |
+| --- | --- | ---: | ---: | ---: |
+| Original 1NN | 51%; 308/600; below 60% | 1.1 × 10⁷ | 8.8 × 10³ | 0.019 |
+| H32 · 100 epochs | 60% mean; 356 / 365 / 362; 2/3 pass | 2.1 × 10⁸ | 1.8 × 10⁵ | 0.079 |
+| H32 · 300 epochs | 62% mean; 374 / 371 / 377; 3/3 pass | 6.2 × 10⁸ | 1.8 × 10⁵ | 0.078 |
+| H32 · 1,000 epochs | 65% mean; 383 / 405 / 376; 3/3 pass | 2.1 × 10⁹ | 1.8 × 10⁵ | 0.079 |
+| H32 · 10,000 epochs | 64% mean; 381 / 389 / 387; 3/3 pass | 2.1 × 10¹⁰ | 1.8 × 10⁵ | 0.078 |
+| H128 · 3,000 epochs | 64% mean; 384 / 388 / 385; 3/3 pass | 2.4 × 10¹⁰ | 4.6 × 10⁵ | 0.13 |
 
 At fixed width H32, increasing training from 100 to 10,000 epochs multiplies the training cost by 100 while the static scoring time stays nearly constant. The epoch loop changes repetition count, not accessed addresses. The compact representation does not forgive the repeated work: each occurrence contributes its full v4 cost.
 
@@ -74,15 +76,15 @@ The original 1NN interpreter took about **35 s** while also executing each FP32 
 
 For context, the CPU reference actually performed training and inference. The table gives the range across the three final seeds. Timing begins after input transformation, one-hot conversion, and parameter initialization; it excludes the independent ordered-reduction checks. Those operations are included in the theoretical IL costs above. CPU energy was not measured.
 
-| Configuration | CPU reference training + inference time (ms) | A100 time / energy |
-| --- | ---: | --- |
-| H32 · 100 epochs | 210 | Not measured |
-| H32 · 300 epochs | 620–630 | Not measured |
-| H32 · 1,000 epochs | 2100 | Not measured |
-| H32 · 10,000 epochs | 21000 | Not measured |
-| H128 · 3,000 epochs | 11000 | Not measured |
+| Configuration | Accuracy (mean; correct / 600 by seed; ≥60%) | CPU reference training + inference time (ms) | A100 time / energy |
+| --- | --- | ---: | --- |
+| H32 · 100 epochs | 60% mean; 356 / 365 / 362; 2/3 pass | 210 | Not measured |
+| H32 · 300 epochs | 62% mean; 374 / 371 / 377; 3/3 pass | 620–630 | Not measured |
+| H32 · 1,000 epochs | 65% mean; 383 / 405 / 376; 3/3 pass | 2100 | Not measured |
+| H32 · 10,000 epochs | 64% mean; 381 / 389 / 387; 3/3 pass | 21000 | Not measured |
+| H128 · 3,000 epochs | 64% mean; 384 / 388 / 385; 3/3 pass | 11000 | Not measured |
 
-The already measured **1NN** comparison remains:
+The already measured **1NN** comparison remains a historical reference: its **308/600 (51%)** accuracy is below the current **60%** target.
 
 | Quantity | Dally model | A100 measured |
 | --- | ---: | ---: |

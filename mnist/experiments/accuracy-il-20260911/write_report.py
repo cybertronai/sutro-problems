@@ -20,6 +20,12 @@ def label(row):
     return f"H{row['width']} · {row['epochs']:,} epochs"
 
 
+def accuracy_label(row):
+    counts = ' / '.join(str(value) for value in row['correct_by_seed'])
+    passed = sum(value >= 360 for value in row['correct_by_seed'])
+    return f"{row['mean_accuracy_percent']:.2g}% mean; {counts}; {passed}/3 pass"
+
+
 def main():
     accuracy = json.loads((HERE/'accuracy_results.json').read_text())
     scoring = json.loads((HERE/'scoring_results.json').read_text())
@@ -28,7 +34,7 @@ def main():
     baseline = scoring['baseline']
     lines = ['# Higher accuracy, practical scoring', '',
     '**MNIST-small · exploratory results · 11 September 2026**', '',
-    '**A 60% accuracy target looks feasible on this fixed dataset.** A 32-hidden-unit network trained for 300 epochs cleared it with all three predeclared seeds. A 65% target was reached by only one run; 70% and 75% were not reached. This finite search does not establish an upper limit on accuracy.', '',
+    '**The official MNIST-small accuracy target is now 60%, and this study meets that accuracy requirement.** A 32-hidden-unit network trained for 300 epochs cleared it with all three predeclared seeds. These results remain an exploratory study, not a complete new A100 submission. A 65% target was reached by only one run; 70% and 75% were not reached. This finite search does not establish an upper limit on accuracy.', '',
     '**Scoring the training algorithm is practical with a compact intermediate language.** The tested neural networks represent up to 24 billion primitive instructions, yet exact cost aggregation takes about '+display(max(r['median_static_score_seconds'] for r in scores.values()))+' s. Numerical training and accuracy verification are separate. These MLPs have no measured A100 runtime or energy yet.', '',
     '[TOC]', '',
     '## One display convention', '',
@@ -41,7 +47,7 @@ def main():
     for row in rows:
         counts = ' / '.join(str(v) for v in row['correct_by_seed'])
         lines.append(f"| {label(row)} | {counts} | {row['mean_accuracy_percent']:.2g}% | {row['sample_sd_percentage_points']:.2g} |")
-    lines += ['', 'The original 1NN baseline scored **308/600 (51%)**. All neural-network configurations use learning rate 0.2 and minibatches of 30. H denotes hidden-layer width.', '',
+    lines += ['', 'The original 1NN baseline scored **308/600 (51%)**, below the current **60%** requirement of **360/600** correct. It remains a historical measurement reference. All neural-network configurations use learning rate 0.2 and minibatches of 30. H denotes hidden-layer width.', '',
     '| Target | Required correct / 600 | Runs meeting it | Interpretation |',
     '| ---: | ---: | ---: | --- |']
     for target, interpretation in [(55,'Reached by every tested run.'),(60,'Reached by every seed at 300 epochs and above.'),
@@ -51,33 +57,34 @@ def main():
     lines += ['', '**Target checks use exact counts, not rounded display percentages.** The single run above 65% was H32 / 1,000 epochs / seed 102, with 405/600 correct (about 68%). Its other two seeds scored 383/600 and 376/600. Choosing that seed after viewing the test result would need separate validation. The best training-validation configuration was H32 / 10,000 epochs; its three test results were 381/600, 389/600, and 387/600.', '',
     '## Complete-task model costs', '',
     'Every MLP score includes explicit scratch initialization, dataset tape operations, pixel transformation, one-hot target construction, initial weight writes, all training updates, inference, and output selection. Costs use the same pinned Dally v4 conventions as the 1NN baseline. Area is occupied scratch-cell area with the declared fixed placement.', '',
-    '| Configuration | Model time (ms) | Model energy (mJ) | Area (µm²) |',
-    '| --- | ---: | ---: | ---: |',
-    f"| Original 1NN | {display(baseline['time_ps']/1e9)} | {display(baseline['energy_fj']/1e12)} | {sci(baseline['area_um2_occupied_cells'])} |"]
+    'Accuracy columns show the rounded mean, exact correct counts out of 600 in seed order 101 / 102 / 103, and the number of seeds meeting the current 60% requirement. Pass/fail uses the exact 360/600 threshold.', '',
+    '| Configuration | Accuracy (mean; correct / 600 by seed; ≥60%) | Model time (ms) | Model energy (mJ) | Area (µm²) |',
+    '| --- | --- | ---: | ---: | ---: |',
+    f"| Original 1NN | 51%; 308/600; below 60% | {display(baseline['time_ps']/1e9)} | {display(baseline['energy_fj']/1e12)} | {sci(baseline['area_um2_occupied_cells'])} |"]
     for row in rows:
         r=scores[row['config_id']]
-        lines.append(f"| {label(row)} | {display(r['time_ps']/1e9)} | {display(r['energy_fj']/1e12)} | {sci(r['area_um2_occupied_cells'])} |")
+        lines.append(f"| {label(row)} | {accuracy_label(row)} | {display(r['time_ps']/1e9)} | {display(r['energy_fj']/1e12)} | {sci(r['area_um2_occupied_cells'])} |")
     lines += ['', 'All three seeds of each configuration have identical model costs: only the seed-dependent literal bits differ. The learner uses separately rounded FP32 multiplication and addition with ascending reduction order. The cost model charges memory reads and writes; it is not a hardware power simulator.', '',
     '## Cost-evaluation work', '',
     'These timings include schema, address-bound and initialization checks, placement, exact access histograms, integer cost sums, and canonical program hashing. They exclude JSON loading, file output, numerical training, and accuracy verification. Each timing is the median of five complete scoring calls on the same host and Python environment.', '',
-    '| Configuration | Expanded instructions | Compact JSON bytes | Time to score (s) |',
-    '| --- | ---: | ---: | ---: |',
-    f"| Original 1NN | {sci(baseline['total_instructions'])} | {sci(baseline['program_json_bytes'])} | {display(baseline['median_static_score_seconds'])} |"]
+    '| Configuration | Accuracy (mean; correct / 600 by seed; ≥60%) | Expanded instructions | Compact JSON bytes | Time to score (s) |',
+    '| --- | --- | ---: | ---: | ---: |',
+    f"| Original 1NN | 51%; 308/600; below 60% | {sci(baseline['total_instructions'])} | {sci(baseline['program_json_bytes'])} | {display(baseline['median_static_score_seconds'])} |"]
     for row in rows:
         r=scores[row['config_id']]
-        lines.append(f"| {label(row)} | {sci(r['total_instructions'])} | {sci(r['program_json_bytes'])} | {display(r['median_static_score_seconds'])} |")
+        lines.append(f"| {label(row)} | {accuracy_label(row)} | {sci(r['total_instructions'])} | {sci(r['program_json_bytes'])} | {display(r['median_static_score_seconds'])} |")
     lines += ['', 'At fixed width H32, increasing training from 100 to 10,000 epochs multiplies the training cost by 100 while the static scoring time stays nearly constant. The epoch loop changes repetition count, not accessed addresses. The compact representation does not forgive the repeated work: each occurrence contributes its full v4 cost.', '',
     'The original 1NN interpreter took about **35 s** while also executing each FP32 instruction. That is a different workload from static cost evaluation. The new number is not an end-to-end verification speedup. A separate scaling stress test, without an accuracy claim, also scored a 41-billion-instruction program; raw measurements use a separately recorded Python/NumPy environment.', '',
     '## Measured execution and comparison boundaries', '',
     'For context, the CPU reference actually performed training and inference. The table gives the range across the three final seeds. Timing begins after input transformation, one-hot conversion, and parameter initialization; it excludes the independent ordered-reduction checks. Those operations are included in the theoretical IL costs above. CPU energy was not measured.', '',
-    '| Configuration | CPU reference training + inference time (ms) | A100 time / energy |',
-    '| --- | ---: | --- |']
+    '| Configuration | Accuracy (mean; correct / 600 by seed; ≥60%) | CPU reference training + inference time (ms) | A100 time / energy |',
+    '| --- | --- | ---: | --- |']
     for row in rows:
         elapsed=[r['cpu_reference_train_and_infer_seconds']*1e3 for r in accuracy['runs'] if r['config_id']==row['config_id']]
         low, high = display(min(elapsed)), display(max(elapsed))
         interval = low if low == high else f'{low}–{high}'
-        lines.append(f"| {label(row)} | {interval} | Not measured |")
-    lines += ['', 'The already measured **1NN** comparison remains:', '',
+        lines.append(f"| {label(row)} | {accuracy_label(row)} | {interval} | Not measured |")
+    lines += ['', 'The already measured **1NN** comparison remains a historical reference: its **308/600 (51%)** accuracy is below the current **60%** target.', '',
     '| Quantity | Dally model | A100 measured |', '| --- | ---: | ---: |',
     '| Time (ms) | 1.7 | 0.0069 |', '| Energy (mJ) | 0.0019 | 0.52 |', '',
     'A100 values are GPU-resident steady-state complete-task throughput and idle-adjusted NVML energy, including training memorization. Host transfer, compilation, warm-up, and idle baseline selection have different boundaries. See the original submission for raw trials and baseline sensitivity. No A100 values have been extrapolated to the MLPs.', '',

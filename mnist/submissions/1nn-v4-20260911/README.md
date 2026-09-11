@@ -1,6 +1,6 @@
 # MNIST-small: fixed 1-nearest-neighbor, v4 tape attempt
 
-**308/600 correct (51.33%)** on canonical `competition-v2`, seed 20260910. The current 50% accuracy requirement is met. This is a submission attempt for review, with explicit FP32 arithmetic, tape serialization, and occupied-cell area conventions.
+**308/600 correct (51%)** on canonical `competition-v2`, seed 20260910. This met the former 50% requirement, but is below the current 60% requirement (360/600). This is a submission attempt for review, with explicit FP32 arithmetic, tape serialization, and occupied-cell area conventions.
 
 The implementation memorizes the 600 supplied training examples and predicts all 600 test labels. It uses ordered FP32 squared Euclidean distance and first-training-row tie breaking. No extra labeled data, pretrained weights, test-label selection or hyperparameter search is used.
 

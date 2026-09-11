@@ -11,7 +11,7 @@ tier, contributors, test accuracy (`correct` / `total`), dataset checksum, and a
 W&B runs.
 
 Add a row to the matching tier's results table on the [MNIST page](README.md),
-with a link to that submission. Report **Time**, **Energy**, **Area**, **Time to score**,
+with a link to that submission. Report **Accuracy** (`correct` / `total` and percent), **Time**, **Energy**, **Area**, **Time to score**,
 **Time on A100**, and **Energy on A100**, giving units, metric definitions,
 measurement commands, and hardware/software versions in the report. Use an em dash for unmeasured values;
 do not substitute estimates for measurements without labeling them.
@@ -23,24 +23,52 @@ Use its tape operations for dataset reads and writes. Compute **Time**, **Energy
 and **Area** under this model; Area comes from peak memory use. **Time to score**
 is the runtime of those calculations on your machine. Then implement the algorithm
 on an A100 using [pyptx](https://github.com/patrick-toulme/pyptx) or Triton and report
-its runtime and idle-adjusted energy in joules measured via NVML. Include the
+its runtime in **ms** and idle-adjusted energy in **mJ** measured via NVML.
+Use **ms** and **mJ** for the theoretical scores too, and **s** for Time to score.
+Display measured values with two significant figures; exact counts and target thresholds are not rounded. Include the
 background needed to reproduce these calculations in the standalone report.
 The included evaluator checks classification accuracy only; it does not calculate
 these scoring metrics.
 
 **Task:** given training images, training labels, and test images, produce one
-predicted digit label (0–9) for each test image with at least **50% accuracy**
-(this target may change in September). The task includes learning from
+predicted digit label (0–9) for each test image meeting the tier-specific
+[accuracy target](#accuracy-targets). The task includes learning from
 the supplied training data and predicting the test labels; no model architecture
 is prescribed.
 
+## Accuracy targets
+
+| Tier | Required accuracy | Minimum correct predictions | Evaluation basis |
+| --- | ---: | ---: | --- |
+| MNIST-small | 60% | 360 / 600 | Current 600/600 study: all three fixed seeds at 300 epochs and above exceeded 60% |
+| MNIST-medium | 98.14% | 5,889 / 6,000 | Mean test accuracy from the neighboring “Build MNIST competition tiers” evaluation; historical 10,000/10,000 split |
+| MNIST-large | 98% | 9,800 / 10,000 | User-selected requirement; the neighboring evaluation prepared this dataset but did not train a large baseline |
+
+The medium target adopts the reported historical mean as a policy requirement
+for the current 6,000/6,000 tier; it is not a measurement on that current split.
+The reference run's three accuracies were 98.18%, 98.19%, and 98.05%.
+[Reference results and W&B runs](#reference-results) preserve the original
+protocol and evidence. The small target is supported by the
+[current-split feasibility study](https://cybertronai.github.io/sutro-problems/docs/submissions/accuracy-il-20260911/).
+
+Targets are inclusive and eligibility uses exact counts:
+`required_correct = ceil(total * target_percent / 100)`.
+In particular, 98.14% of 6,000 is 5,888.4, so medium requires 5,889 correct
+predictions. A rounded display percentage does not establish a pass.
+The evaluator reads the decimal target strings from
+[accuracy_targets.json](doc/accuracy_targets.json).
+
+The historical 1NN attempt scored 308/600: it met the former 50% small target,
+but does not meet the current 60% target. Saved historical measurements and
+session exports retain their original results and chronology.
+
 ## Datasets
 
-| Problem | Image resolution | Training examples | Test examples | Source |
-| --- | --- | ---: | ---: | --- |
-| MNIST-small | 3 × 3 | 600 | 600 | Disjoint random subsets of the original 60,000 MNIST training examples |
-| MNIST-medium | 9 × 9 | 6,000 | 6,000 | Disjoint random subsets of the original 60,000 MNIST training examples |
-| MNIST-large | 28 × 28 | 60,000 | 10,000 | Classic MNIST training and test splits, in full |
+| Problem | Image resolution | Training examples | Test examples | Accuracy requirement | Source |
+| --- | --- | ---: | ---: | ---: | --- |
+| MNIST-small | 3 × 3 | 600 | 600 | 60% | Disjoint random subsets of the original 60,000 MNIST training examples |
+| MNIST-medium | 9 × 9 | 6,000 | 6,000 | 98.14% | Disjoint random subsets of the original 60,000 MNIST training examples |
+| MNIST-large | 28 × 28 | 60,000 | 10,000 | 98% | Classic MNIST training and test splits, in full |
 
 Small and medium are sampled **without replacement**, with no train/test overlap.
 Both use the original training pool, including for their test examples. Large
@@ -59,7 +87,7 @@ provides the following reference numbers. **It used different small and medium
 datasets:** 1,000/1,000 and 10,000/10,000 examples, with training examples from the
 official training split and test examples from the official test split. These
 are historical reference results, not measurements of the 600/600 and
-6,000/6,000 problems above. No results for those new splits have been measured yet.
+6,000/6,000 problems above. The current small split has since been evaluated in the linked feasibility study; these historical numbers do not establish medium performance on the new split.
 
 | Historical dataset | Selected model | Parameters | Final epochs | Test accuracy, mean ± seed SD |
 | --- | --- | ---: | ---: | ---: |
@@ -186,7 +214,12 @@ mnist/.venv/bin/python -m mnist.code.evaluate \
 
 The evaluator reports accuracy as a fraction, integer `correct` and `total`, a
 confusion matrix (rows = true classes; columns = predictions), and per-class
-accuracy. Energy is not measured by this command.
+accuracy. It also reports `accuracy_target_percent`, `required_correct`, and
+`meets_accuracy_target`, using exact integer/rational comparison. Valid input
+still produces a successful CLI exit when it is below target; inspect
+`meets_accuracy_target` for the classification requirement. This flag does not
+certify the dataset, training protocol, model costs, or hardware measurements.
+Energy is not measured by this command.
 
 ## Baseline code
 

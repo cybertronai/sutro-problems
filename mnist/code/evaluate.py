@@ -3,10 +3,55 @@
 from __future__ import annotations
 
 import argparse
+from fractions import Fraction
 import json
 from pathlib import Path
 
 import numpy as np
+
+
+ACCURACY_TARGETS_PATH = Path(__file__).resolve().parents[1] / "doc" / "accuracy_targets.json"
+
+
+def accuracy_target_status(correct: int, total: int, target_percent: str | Fraction) -> dict:
+    """Check the classification threshold using exact rational arithmetic.
+
+    Decimal strings from the target configuration are converted directly to
+    fractions, never through a binary floating-point percentage. The minimum
+    integer correct count is the ceiling of total * target_percent / 100.
+    This status concerns classification accuracy only, not complete compliance
+    with the benchmark's model, tape, scoring, or hardware requirements.
+    """
+    if type(correct) is not int or type(total) is not int or not 0 <= correct <= total or total <= 0:
+        raise ValueError("Accuracy target counts must satisfy 0 <= correct <= total and total > 0")
+    if not isinstance(target_percent, (str, Fraction)):
+        raise ValueError("Accuracy target must be an exact decimal string or fraction")
+    try:
+        percent = Fraction(target_percent)
+    except (ValueError, ZeroDivisionError) as error:
+        raise ValueError("Accuracy target must be a finite percentage between 0 and 100") from error
+    if not 0 <= percent <= 100:
+        raise ValueError("Accuracy target must be a finite percentage between 0 and 100")
+    denominator = percent.denominator * 100
+    required = (total * percent.numerator + denominator - 1) // denominator
+    return {
+        "accuracy_target_percent": float(percent),
+        "required_correct": required,
+        "meets_accuracy_target": correct >= required,
+    }
+
+
+def load_accuracy_target(tier: str) -> str:
+    """Read the selected tier's current percentage from the shared rules file."""
+    configured = json.loads(ACCURACY_TARGETS_PATH.read_text())
+    if not isinstance(configured, dict):
+        raise ValueError("Accuracy target configuration must map tiers to percentage strings")
+    value = configured.get(tier)
+    if value is None:
+        raise ValueError(f"No confirmed accuracy target is configured for MNIST-{tier}")
+    if not isinstance(value, str):
+        raise ValueError(f"Accuracy target for MNIST-{tier} must be a percentage string")
+    return value
 
 
 def _digit_vector(value: np.ndarray, name: str) -> np.ndarray:
@@ -71,7 +116,12 @@ def load_predictions(path: Path) -> np.ndarray:
 
 
 def main(argv: list[str] | None = None) -> None:
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__,
+        epilog="Valid predictions below the accuracy target still produce a successful "
+               "JSON score with meets_accuracy_target=false. This flag checks only "
+               "classification accuracy, not complete benchmark compliance.",
+    )
     parser.add_argument("--predictions", type=Path, required=True)
     parser.add_argument("--tier", choices=("small", "medium", "large"), required=True)
     parser.add_argument("--data-dir", type=Path, default=Path("mnist/data"))
@@ -82,6 +132,9 @@ def main(argv: list[str] | None = None) -> None:
         with np.load(arguments.data_dir / f"{arguments.tier}.npz", allow_pickle=False) as archive:
             labels = archive["test_labels"]
         result = {"tier": arguments.tier, **score_predictions(predictions, labels)}
+        result.update(accuracy_target_status(
+            result["correct"], result["total"], load_accuracy_target(arguments.tier)
+        ))
         serialized = json.dumps(result, indent=2, allow_nan=False) + "\n"
         if arguments.output is not None:
             arguments.output.parent.mkdir(parents=True, exist_ok=True)

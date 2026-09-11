@@ -18,10 +18,11 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 </style></head>
 <body><header><p>Sutro problems · Submission attempt · September 2026</p><div class="brand">MNIST-small / 1-nearest-neighbor</div><nav><a class="active" href="index.html">Results & reproduction</a><a class="" href="session.html">Session export</a><a class="" href="ambiguities.html">Ambiguities & problems</a></nav></header>
 <main><h1 id="mnist-small-a-reproducible-1nn-submission-attempt">MNIST-small: a reproducible 1NN submission attempt</h1>
-<p><strong>308 / 600 correct · 51% accuracy · current 50% target met.</strong></p>
+<p><strong>308 / 600 correct · 51% accuracy · below the current 60% target.</strong></p>
+<p>This historical attempt met the 50% requirement in effect when it was submitted. The current requirement is 360/600 correct; the saved result is 52 predictions short.</p>
 <p>This fixed 1-nearest-neighbor algorithm learns by memorizing the 600 supplied training examples, then labels each of the 600 test images with the label of its nearest training image. It uses the nine supplied pixel values directly. No neural-network training, extra data, pretrained weights or hyperparameter search is involved. This is a baseline attempt, with no claim of optimal accuracy, time or energy.</p>
 <p>The submission was merged in <a href="https://github.com/cybertronai/sutro-problems/pull/64">PR #64</a>. <a href="https://github.com/cybertronai/sutro-problems/tree/main/mnist/submissions/1nn-v4-20260911">Submission source</a>. Its model scores depend on the explicit numeric, tape and area conventions below. They are calculated by a submission-owned interpreter, because the linked specification does not provide an authoritative executable scorer. The A100 measurements are actual NVML and CUDA-event observations.</p>
-<p>Contributors: Codex (implementation, experiments and report), with independent scorer, GPU and rules-review agents; requested by <code>yaroslavvb</code>. Run date: September 10, 2026 Pacific / September 11 UTC. No W&amp;B runs were created for this attempt. Before publication, main was rechecked at <code>1ede666</code>: the README now explicitly calls the model scores theoretical and allows an A100 ISA of choice. Dataset, target and v4 requirements are unchanged. The A100 source is a hand-written equivalent Triton implementation; it is not mechanically generated from the v4 text.</p>
+<p>Contributors: Codex (implementation, experiments and report), with independent scorer, GPU and rules-review agents; requested by <code>yaroslavvb</code>. Run date: September 10, 2026 Pacific / September 11 UTC. No W&amp;B runs were created for this attempt. Before publication, main was rechecked at <code>1ede666</code>: the README now explicitly calls the model scores theoretical and allows an A100 ISA of choice. Dataset, target and v4 requirements were unchanged at that publication check. The small target was subsequently raised to 60%. The A100 source is a hand-written equivalent Triton implementation; it is not mechanically generated from the v4 text.</p>
 <div class="toc">
 <ul>
 <li><a href="#mnist-small-a-reproducible-1nn-submission-attempt">MNIST-small: a reproducible 1NN submission attempt</a><ul>
@@ -44,6 +45,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <thead>
 <tr>
 <th>Performance per complete task</th>
+<th style="text-align: right;">Accuracy</th>
 <th style="text-align: right;">Theoretical model</th>
 <th style="text-align: right;">Measured A100, mean</th>
 </tr>
@@ -51,11 +53,13 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <tbody>
 <tr>
 <td><strong>Time (ms)</strong></td>
+<td style="text-align: right;">51% (308/600)</td>
 <td style="text-align: right;"><strong>1.7</strong></td>
 <td style="text-align: right;"><strong>0.0069</strong></td>
 </tr>
 <tr>
 <td><strong>Energy (mJ)</strong></td>
+<td style="text-align: right;">51% (308/600)</td>
 <td style="text-align: right;"><strong>0.0019</strong></td>
 <td style="text-align: right;"><strong>0.52</strong></td>
 </tr>
@@ -90,7 +94,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 </table>
 <p>Measurement-window durations also use milliseconds. Unit conversions: <strong>1 ms = 1000 µs = 10⁹ ps</strong> and <strong>1 mJ = 10¹² fJ</strong>. Energy and time measure different quantities, related by <strong>E(mJ) = P(W) × t(ms)</strong>. The cost model retains its exact native ps/fJ accounting internally.</p>
 <p>Both modeled and GPU task scopes include learning/memorization and all 600 predictions. Dataset preparation, the one training-only validation check, and host evaluation are outside those task scopes. The GPU additionally writes nearest-row indices and distances for verification; those writes are included in its measured runtime and energy. The CPU reference's 11 ms host runtime is supplementary and is <strong>not</strong> the model's Time or Time to score.</p>
-<p><strong>The threshold margin is eight examples.</strong> This establishes a pass on this particular fixed split. There is no measurement of generalization across alternative dataset samples, and no post-test algorithm or hyperparameter changes were made. Detailed rule gaps and experimental limitations are in the <a href="ambiguities.html">separate ambiguities and problems report</a>.</p>
+<p><strong>The original 50% threshold margin was eight examples.</strong> The unchanged 308/600 result does not pass the current 60% requirement. There is no measurement of generalization across alternative dataset samples, and no post-test algorithm or hyperparameter changes were made. Detailed rule gaps and experimental limitations are in the <a href="ambiguities.html">separate ambiguities and problems report</a>.</p>
 <h2 id="dataset-and-selection-record">Dataset and selection record</h2>
 <p>The task is <code>competition-v2</code>, seed <strong>20260910</strong>: 600 training and 600 test images at <strong>3 × 3</strong>, from disjoint subsets of the original 60,000-example MNIST training pool. The small training rows are positions <code>[0:600]</code> and test rows <code>[6000:6600]</code> in the documented PCG64 permutation. Pixels are normalized float32 box-area averages. This is the current 600/600 task, distinct from the historical 1,000/1,000 experiment. See the <a href="https://github.com/cybertronai/sutro-problems/blob/e70f9c9e1db65b62d9256f7b1f9b668cf4c48909/mnist/instructions.md">pinned task instructions</a>.</p>
 <p>The original MNIST gzip checksums were verified during fresh dataset regeneration. All six regenerated array-content hashes, shapes and dtypes match the canonical manifest; the train/test source-index overlap is zero. The learner decodes only <code>train_images</code>, <code>train_labels</code>, and <code>test_images</code>. Test labels are consulted separately by the official accuracy evaluator. An independent CLI check removed the test-label and source-index members entirely and reproduced every prediction. The NPZ file checksum is bookkeeping after prediction and does not affect learned labels.</p>

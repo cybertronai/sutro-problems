@@ -51,13 +51,15 @@ def main():
     versions = gpu['versions']
     report = f'''# MNIST-small: a reproducible 1NN submission attempt
 
-**308 / 600 correct · 51% accuracy · current 50% target met.**
+**308 / 600 correct · 51% accuracy · below the current 60% target.**
+
+This historical attempt met the 50% requirement in effect when it was submitted. The current requirement is 360/600 correct; the saved result is 52 predictions short.
 
 This fixed 1-nearest-neighbor algorithm learns by memorizing the 600 supplied training examples, then labels each of the 600 test images with the label of its nearest training image. It uses the nine supplied pixel values directly. No neural-network training, extra data, pretrained weights or hyperparameter search is involved. This is a baseline attempt, with no claim of optimal accuracy, time or energy.
 
 The submission was merged in [PR #64](https://github.com/cybertronai/sutro-problems/pull/64). [Submission source](https://github.com/cybertronai/sutro-problems/tree/main/mnist/submissions/1nn-v4-20260911). Its model scores depend on the explicit numeric, tape and area conventions below. They are calculated by a submission-owned interpreter, because the linked specification does not provide an authoritative executable scorer. The A100 measurements are actual NVML and CUDA-event observations.
 
-Contributors: Codex (implementation, experiments and report), with independent scorer, GPU and rules-review agents; requested by `yaroslavvb`. Run date: September 10, 2026 Pacific / September 11 UTC. No W&B runs were created for this attempt. Before publication, main was rechecked at `1ede666`: the README now explicitly calls the model scores theoretical and allows an A100 ISA of choice. Dataset, target and v4 requirements are unchanged. The A100 source is a hand-written equivalent Triton implementation; it is not mechanically generated from the v4 text.
+Contributors: Codex (implementation, experiments and report), with independent scorer, GPU and rules-review agents; requested by `yaroslavvb`. Run date: September 10, 2026 Pacific / September 11 UTC. No W&B runs were created for this attempt. Before publication, main was rechecked at `1ede666`: the README now explicitly calls the model scores theoretical and allows an A100 ISA of choice. Dataset, target and v4 requirements were unchanged at that publication check. The small target was subsequently raised to 60%. The A100 source is a hand-written equivalent Triton implementation; it is not mechanically generated from the v4 text.
 
 [TOC]
 
@@ -65,10 +67,10 @@ Contributors: Codex (implementation, experiments and report), with independent s
 
 All task runtimes use **milliseconds (ms)** and all energies use **millijoules (mJ)**, so the theoretical and measured results share the same units. **Time to score uses seconds (s)** because it measures the host scoring process. Each task includes 600 training examples and 600 test predictions. Per-task runtime and energy values in the comparison and trial tables are rounded to two significant figures; exact totals are retained in the linked measurement files, and the measured energy's baseline sensitivity is reported separately.
 
-| Performance per complete task | Theoretical model | Measured A100, mean |
-| --- | ---: | ---: |
-| **Time (ms)** | **{significant(model['time_ps']/1e9)}** | **{significant(a100_time_ms)}** |
-| **Energy (mJ)** | **{significant(model['energy_fj']/1e12)}** | **{significant(a100_energy_mj)}** |
+| Performance per complete task | Accuracy | Theoretical model | Measured A100, mean |
+| --- | ---: | ---: | ---: |
+| **Time (ms)** | 51% (308/600) | **{significant(model['time_ps']/1e9)}** | **{significant(a100_time_ms)}** |
+| **Energy (mJ)** | 51% (308/600) | **{significant(model['energy_fj']/1e12)}** | **{significant(a100_energy_mj)}** |
 
 The model sums charged scratch accesses and excludes tape I/O. The A100 time is CUDA-event steady-state graph throughput including the memorization copy; its energy is idle-adjusted GPU board energy from NVML. The shared units make the numerical scales directly comparable; the measurement boundaries remain as documented here.
 
@@ -82,7 +84,7 @@ Measurement-window durations also use milliseconds. Unit conversions: **1 ms = 1
 
 Both modeled and GPU task scopes include learning/memorization and all 600 predictions. Dataset preparation, the one training-only validation check, and host evaluation are outside those task scopes. The GPU additionally writes nearest-row indices and distances for verification; those writes are included in its measured runtime and energy. The CPU reference's {significant(cpu['cpu_reference_wall_seconds']*1000)} ms host runtime is supplementary and is **not** the model's Time or Time to score.
 
-**The threshold margin is eight examples.** This establishes a pass on this particular fixed split. There is no measurement of generalization across alternative dataset samples, and no post-test algorithm or hyperparameter changes were made. Detailed rule gaps and experimental limitations are in the [separate ambiguities and problems report](ambiguities.html).
+**The original 50% threshold margin was eight examples.** The unchanged 308/600 result does not pass the current 60% requirement. There is no measurement of generalization across alternative dataset samples, and no post-test algorithm or hyperparameter changes were made. Detailed rule gaps and experimental limitations are in the [separate ambiguities and problems report](ambiguities.html).
 
 ## Dataset and selection record
 
