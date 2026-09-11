@@ -53,12 +53,22 @@ is prescribed.
 | Tier | Required accuracy | Minimum correct predictions over the evaluation | Evaluation basis |
 | --- | ---: | ---: | --- |
 | MNIST-small | 60% mean | 3,960 / 6,600 across 11 draws | Historical fixed-split feasibility informed the target; evaluate the current algorithm across 11 new dataset draws |
-| MNIST-medium | 98% mean | 64,680 / 66,000 across 11 draws | Evaluate the frozen algorithm across 11 current 6,000/6,000 draws |
+| MNIST-medium | 90%, 92%, 94%, 96%, or 98% mean | See the five error targets below | Evaluate the frozen algorithm across 11 current 10,000/10,000 draws |
 | MNIST-large | 98% | 9,800 / 10,000 on the official test split | Existing full-size task; no random-subset evaluation is introduced for large |
 
-The medium target is 98%. The neighboring historical evaluation informed its
-development but used a different dataset protocol. That reference run's three
-accuracies were 98.18%, 98.19%, and 98.05%.
+Medium has five inclusive error targets. Declare the attempted target before
+evaluation. The current submission attempt targets **4% error / 96% accuracy**.
+
+| Maximum mean error | Minimum mean accuracy | Minimum correct across 11 draws |
+| ---: | ---: | ---: |
+| 10% | 90% | 99,000 / 110,000 |
+| 8% | 92% | 101,200 / 110,000 |
+| 6% | 94% | 103,400 / 110,000 |
+| 4% | 96% | 105,600 / 110,000 |
+| 2% | 98% | 107,800 / 110,000 |
+
+The neighboring historical evaluation used a different dataset protocol. Its
+three accuracies were 98.18%, 98.19%, and 98.05%.
 [Reference results and W&B runs](#reference-results) preserve the original
 protocol and evidence. The small target was informed by the
 [current-split feasibility study](https://cybertronai.github.io/sutro-problems/docs/submissions/accuracy-il-20260911/).
@@ -68,12 +78,16 @@ mean across all 11 dataset draws**, not to every draw and not to mean minus SD.
 All draws within a tier have the same test size, so compare
 `sum(correct) / (11 * test_examples_per_draw)` to the exact target fraction.
 Equivalently, `required_total_correct = ceil(11 * test_examples_per_draw * target_percent / 100)`.
-For medium, the 98% target requires **64,680 / 66,000** correct. Apply the exact
+For medium, the 4% error target requires **105,600 / 110,000** correct. Apply the exact
 fraction to the aggregate count; a rounded display percentage does not establish
 a pass.
 
-The existing evaluator reads the decimal target strings from
-[accuracy_targets.json](doc/accuracy_targets.json) and evaluates **one dataset**.
+The evaluator evaluates **one dataset**. For medium, pass `--error-target 4`
+(or `10`, `8`, `6`, `2`) to select a target. The five levels and current dataset
+profile are recorded in [medium_error_targets.json](doc/medium_error_targets.json).
+Without this option it retains the decimal targets in
+[accuracy_targets.json](doc/accuracy_targets.json), including medium's strictest
+98% level, for backward compatibility.
 Its per-draw `meets_accuracy_target` flag is a diagnostic, not certification of
 the new 11-draw mean requirement. Retain all per-draw outputs and aggregate
 accuracy using the rule below. Large keeps its existing single-split check.
@@ -113,6 +127,7 @@ For draw `i`, let `a_i = 100 * correct_i / total_i`. Report:
   (`ddof=1`). This is the standard deviation across dataset-level accuracies,
   not across individual image outcomes, and not a standard error or confidence
   interval.
+- **Mean error (%)**: `100 - mean`; its sample SD is the same as accuracy's.
 - In the standalone report: all 11 dataset seeds, manifests/checksums, learner
   seeds, prediction artifacts, and individual `correct` / `total` results.
 
@@ -141,7 +156,7 @@ training-seed variability, not variability across subsets of the 60,000 pool.
 | Problem | Image resolution | Training examples | Test examples | Accuracy requirement | Source |
 | --- | --- | ---: | ---: | ---: | --- |
 | MNIST-small | 3 × 3 | 600 | 600 | 60% mean over 11 draws | Disjoint random subsets of the original 60,000 MNIST training examples |
-| MNIST-medium | 9 × 9 | 6,000 | 6,000 | 98% mean over 11 draws | Disjoint random subsets of the original 60,000 MNIST training examples |
+| MNIST-medium | 9 × 9 | 10,000 | 10,000 | 10%, 8%, 6%, 4%, or 2% mean error over 11 draws | Disjoint random subsets of the original 60,000 MNIST training examples |
 | MNIST-large | 28 × 28 | 60,000 | 10,000 | 98% | Classic MNIST training and test splits, in full |
 
 Small and medium are sampled **without replacement**, with no train/test overlap.
@@ -160,8 +175,8 @@ The neighboring experiment, **“Build MNIST competition tiers”** (`mnist-2026
 provides the following reference numbers. **It used different small and medium
 datasets:** 1,000/1,000 and 10,000/10,000 examples, with training examples from the
 official training split and test examples from the official test split. These
-are historical reference results, not measurements of the 600/600 and
-6,000/6,000 problems above. The current small split has since been evaluated in the linked feasibility study; these historical numbers do not establish medium performance on the new split.
+are historical reference results, not measurements of the current random-draw
+problems above. The current small split has since been evaluated in the linked feasibility study; these historical numbers do not establish medium performance on the new split.
 
 | Historical dataset | Selected model | Parameters | Final epochs | Test accuracy, mean ± seed SD |
 | --- | --- | ---: | ---: | ---: |
@@ -202,12 +217,13 @@ From the repository root, with Python 3.11 or newer:
 ```bash
 python3 -m venv mnist/.venv
 mnist/.venv/bin/python -m pip install 'numpy>=1.26,<3'
-mnist/.venv/bin/python -m mnist.code.data --output mnist/data --seed 20260910
+mnist/.venv/bin/python -m mnist.code.data --profile medium-error-targets-v1 --output mnist/data --seed 20260910
 mnist/.venv/bin/python -m unittest mnist.code.tests.test_data mnist.code.tests.test_evaluate -v
 ```
 
-The default profile is `competition-v2`, implementing the table at the top of
-this page. Preparation downloads the original gzip IDX files from the
+The current profile is **`medium-error-targets-v1`**; select it explicitly as
+above. The CLI default remains `competition-v2` for reproduction of earlier
+600/600 small and 6,000/6,000 medium submissions. Preparation downloads the original gzip IDX files from the
 [MNIST mirror](https://ossci-datasets.s3.amazonaws.com/mnist/) used by
 [torchvision](https://github.com/pytorch/vision/blob/main/torchvision/datasets/mnist.py)
 and verifies their published MD5 checksums before parsing.
@@ -222,10 +238,10 @@ be evaluated this way.
 
 For any dataset seed, two PCG64 generators derived from
 `numpy.random.SeedSequence(seed).spawn(2)` permute the official training and test
-splits. From the training permutation, medium takes positions `[0:6000]` for
-training and `[6000:12000]` for testing; small takes `[0:600]` and `[6000:6600]`.
-Thus small is nested within medium on each side, with no training/test overlap
-across these two tiers. Sampling is not stratified. Large uses the entire
+splits. In `medium-error-targets-v1`, medium takes positions `[0:10000]` for
+training and `[10000:20000]` for testing; small retains `[0:600]` and `[6000:6600]`.
+Disjointness is required within each draw and tier; the tiers no longer share
+an aligned train/test boundary. Sampling is not stratified. Large uses the entire
 training permutation and the entire official test permutation.
 
 Pixels are converted to float32 and divided by 255. Downsampling uses separable

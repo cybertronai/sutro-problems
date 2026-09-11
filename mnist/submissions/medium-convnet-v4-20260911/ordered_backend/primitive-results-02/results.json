@@ -1,0 +1,283 @@
+{
+  "status": "passed",
+  "source_sha256": {
+    "ops.py": "0cf2444fc7784461af07fb85192cd720fdb6a0788c94856a85d358a77cd0e849",
+    "cpu_ref.py": "cf664eaadea14cd3f65d48a3f1190f3b74c8af97ee8d0d8147a383b94b16821d",
+    "check_primitives.py": "58c62def34f3e36ddcd5fc57ef87bc4d216719f524198fe97f7507573e21d299"
+  },
+  "cases": [
+    {
+      "case": "tiny_rectangular",
+      "shape_n_ci_co_h_w": [
+        2,
+        2,
+        3,
+        4,
+        5
+      ],
+      "checks": [
+        {
+          "name": "tiny_rectangular/padding",
+          "words": 168,
+          "bitwise_match": true,
+          "sha256_float32_le": "decb00330b64d1a04f958d9c08459e33a98a4c2b408baa82c35ea280ba0694f8"
+        },
+        {
+          "name": "tiny_rectangular/forward",
+          "words": 120,
+          "bitwise_match": true,
+          "sha256_float32_le": "c3691b28e0a1e2197d5b626194f7a1283506f53bc54e661ab8f7ddcc013eae8c"
+        },
+        {
+          "name": "tiny_rectangular/input_gradient",
+          "words": 80,
+          "bitwise_match": true,
+          "sha256_float32_le": "2e43aa837244f80d99c5a012ce3bcfe92c9e992c70a8bff3fc25daba9c70fe1f"
+        },
+        {
+          "name": "tiny_rectangular/weight_gradient",
+          "words": 54,
+          "bitwise_match": true,
+          "sha256_float32_le": "b45826557bfb462dbb36fdd7a9534eec6a36fc1e811081c0338784d25cc89718"
+        }
+      ],
+      "independent_native_geometry_check": "passed: independent FP64 torch conv2d/autograd, rtol2e-5 atol1e-6",
+      "cpu_reference_seconds": 0.0019073000000009444,
+      "feasibility_ms_per_primitive": {
+        "pad": 0.03911679983139038,
+        "forward": 0.04157440066337585,
+        "input_gradient": 0.032153600454330446,
+        "weight_gradient": 0.03338240087032318
+      }
+    },
+    {
+      "case": "tiny_swapped",
+      "shape_n_ci_co_h_w": [
+        3,
+        3,
+        2,
+        3,
+        4
+      ],
+      "checks": [
+        {
+          "name": "tiny_swapped/padding",
+          "words": 270,
+          "bitwise_match": true,
+          "sha256_float32_le": "32504c1385786523d6e6d7d6f79c3b4a1e99c09e1c5460ad64f2a18f041845ff"
+        },
+        {
+          "name": "tiny_swapped/forward",
+          "words": 72,
+          "bitwise_match": true,
+          "sha256_float32_le": "2d063733b82b59a20f8c57b5d99ebef744c3b5b4d52b4b3874a1bda6ba088af9"
+        },
+        {
+          "name": "tiny_swapped/input_gradient",
+          "words": 108,
+          "bitwise_match": true,
+          "sha256_float32_le": "636dc5ad45282618aad59037f4e2b7ce053ad12f1461448405ca2ad3cf474bb3"
+        },
+        {
+          "name": "tiny_swapped/weight_gradient",
+          "words": 54,
+          "bitwise_match": true,
+          "sha256_float32_le": "fb5a3a3585bf2170bd768d1172b001d82fba3187682faf91a959d6c8ebe5a146"
+        }
+      ],
+      "independent_native_geometry_check": "passed: independent FP64 torch conv2d/autograd, rtol2e-5 atol1e-6",
+      "cpu_reference_seconds": 0.0014651019999991632,
+      "feasibility_ms_per_primitive": {
+        "pad": 0.02969599962234497,
+        "forward": 0.02744320034980774,
+        "input_gradient": 0.026419198513031004,
+        "weight_gradient": 0.026009601354599
+      }
+    },
+    {
+      "case": "representative_c32",
+      "shape_n_ci_co_h_w": [
+        128,
+        32,
+        32,
+        9,
+        9
+      ],
+      "checks": [
+        {
+          "name": "representative_c32/padding",
+          "words": 495616,
+          "bitwise_match": true,
+          "sha256_float32_le": "8a38746330acf407f84c30a3825fc611a3bdc291fe0b39d12bac2f00a4395f2c"
+        },
+        {
+          "name": "representative_c32/forward",
+          "words": 331776,
+          "bitwise_match": true,
+          "sha256_float32_le": "79b888fd41207d3ea739d579fa8a2aa7b39f7c931549e39594f2940f44595ce0"
+        },
+        {
+          "name": "representative_c32/input_gradient",
+          "words": 331776,
+          "bitwise_match": true,
+          "sha256_float32_le": "68d7818cd921b9cf4467fcf8937b2b9e5f6aef655dd089b60ab8fd55d697347f"
+        },
+        {
+          "name": "representative_c32/weight_gradient",
+          "words": 9216,
+          "bitwise_match": true,
+          "sha256_float32_le": "88dcfa8ce7392a315ff2945822572b72968866d35b5989207d8ede5aa3d5d07b"
+        }
+      ],
+      "independent_native_geometry_check": null,
+      "cpu_reference_seconds": 0.9949818619999995,
+      "feasibility_ms_per_primitive": {
+        "pad": 0.03522560000419617,
+        "forward": 0.1026047945022583,
+        "input_gradient": 0.0942080020904541,
+        "weight_gradient": 2.468659210205078
+      }
+    },
+    {
+      "case": "dense_activation_optimizer",
+      "checks": [
+        {
+          "name": "mm",
+          "words": 77,
+          "bitwise_match": true,
+          "sha256_float32_le": "a624ba7fd710f30d8a92bdfa773cac2fe6e62f7bab17fb0404257d741d846a68"
+        },
+        {
+          "name": "mm/transposed_left",
+          "words": 77,
+          "bitwise_match": true,
+          "sha256_float32_le": "a624ba7fd710f30d8a92bdfa773cac2fe6e62f7bab17fb0404257d741d846a68"
+        },
+        {
+          "name": "mm/transposed_right",
+          "words": 77,
+          "bitwise_match": true,
+          "sha256_float32_le": "a624ba7fd710f30d8a92bdfa773cac2fe6e62f7bab17fb0404257d741d846a68"
+        },
+        {
+          "name": "row_sum",
+          "words": 13,
+          "bitwise_match": true,
+          "sha256_float32_le": "275622984a4389b978effe8def6fb4c04df57d91cf1de635a8dbf5910d28ead0"
+        },
+        {
+          "name": "relu/zero_edges",
+          "words": 6,
+          "bitwise_match": true,
+          "sha256_float32_le": "b84d6db9cb9b4b92b99af206c71bc27fd4d4b19f30860fc59ff1c324dee7e5d9"
+        },
+        {
+          "name": "relu_gradient/zero_edges",
+          "words": 6,
+          "bitwise_match": true,
+          "sha256_float32_le": "d63cf5de2ac0b520b1f4d0b5c5ca20bbde42b229db7551eac9ba968e711b1640"
+        },
+        {
+          "name": "momentum/weights/step0",
+          "words": 23,
+          "bitwise_match": true,
+          "sha256_float32_le": "9a5d5b717c21300966e28ea91cdb1da179e3a6aa83d13391d30e1c86d75e45e6"
+        },
+        {
+          "name": "momentum/velocity/step0",
+          "words": 23,
+          "bitwise_match": true,
+          "sha256_float32_le": "e83751d08641aeb0698d1ba6968e0042e6ea79983c0cc17bd02fa35a1e03e2a5"
+        },
+        {
+          "name": "momentum/weights/step1",
+          "words": 23,
+          "bitwise_match": true,
+          "sha256_float32_le": "26a2d217a7540e30615838e77abd812b119fa190abe1aa5409356377eaf4f69b"
+        },
+        {
+          "name": "momentum/velocity/step1",
+          "words": 23,
+          "bitwise_match": true,
+          "sha256_float32_le": "6d819ff735f5d61ce687a39d0c2d572ce1287d96e1fecddacd7d37db265a6f80"
+        },
+        {
+          "name": "momentum/weights/step2",
+          "words": 23,
+          "bitwise_match": true,
+          "sha256_float32_le": "44576e7e8381f23b0f25ea4c31eb3509f3d0571e0d5072526cb25eb9044c0f5d"
+        },
+        {
+          "name": "momentum/velocity/step2",
+          "words": 23,
+          "bitwise_match": true,
+          "sha256_float32_le": "8ca4bb5ff55d5034e6bd6c105f2edf0c12f948b5b992f5537d7b8a3e425c6310"
+        },
+        {
+          "name": "normalization",
+          "words": 91,
+          "bitwise_match": true,
+          "sha256_float32_le": "ed2f604e1815117f0a719c433db52187e21e9b616655f8a23b0af45f13032c56"
+        },
+        {
+          "name": "dense_bias",
+          "words": 91,
+          "bitwise_match": true,
+          "sha256_float32_le": "a744192ad8350e05bcb36569573c48305b9ad34fd0a85a3e154af18457e3941c"
+        },
+        {
+          "name": "scaled_output_delta",
+          "words": 70,
+          "bitwise_match": true,
+          "sha256_float32_le": "67b595f0ae9df5b94cfccbf16ef2756079d1f82f1b2ef2b9c227e3505977d439"
+        }
+      ]
+    }
+  ],
+  "hardware": {
+    "gpu": "NVIDIA A100-SXM4-40GB",
+    "capability": [
+      8,
+      0
+    ]
+  },
+  "software": {
+    "numpy": "2.2.6",
+    "torch": "2.5.1+cu124",
+    "triton": "3.1.0",
+    "cuda": "12.4"
+  },
+  "ptx_checks": {
+    "no_fp32_fma": true,
+    "no_ftz": true,
+    "no_tensorcore_instructions": true,
+    "sha256": {
+      "tiny_rectangular__pad": "9f21288793e6c934fc9448eb27b3e5deae40f78f6a80a8cf6daa2751c85202f7",
+      "tiny_rectangular__conv_forward": "55d341d4cdc104be6ae5c7da9b160f74add7ac5b6f1489663444740d9f26bb1a",
+      "tiny_rectangular__conv_dinput": "8ad691a3058fcd39152287c8555d809867ab5639466e7fb8ad37e3f3e3533f12",
+      "tiny_rectangular__conv_dweight": "00ef5a89e75799ab9ad52e717462847f4510e99897882d9320ba4775de408ba6",
+      "tiny_swapped__pad": "d799f4fd5ad02ee3c60ecfc9f5bd0c21b2ef33cbef5d0c7322f341c53198b32d",
+      "tiny_swapped__conv_forward": "a7396e4f49fe16f48eddead1526f3d480175803e8fd54d0a435b0fbc47b36337",
+      "tiny_swapped__conv_dinput": "ffbbfcf3c340f913bccd368fd49176f134d362e18ba6029e38e021c397eaa67c",
+      "tiny_swapped__conv_dweight": "f132744e6e5a0379df65dc70d544227d90fbfe65dd07b8245e496cb3f8e131fb",
+      "representative_c32__pad": "561346782360779ef14269439d5e80b31df322a55d587f609e8ee0d8d81b766c",
+      "representative_c32__conv_forward": "1afdcb2c04ee4c40649f9849f9049fe7fcf06bfafc0584cb9e74eb1f7a7d36c8",
+      "representative_c32__conv_dinput": "14d7beccc11604ca90a439286d8b368d0c245c2ee03e5e2d282959319ead0c72",
+      "representative_c32__conv_dweight": "c91a78e6f66ca9c7e7d8bd3a48e2464267e330dadd3a6c58797ad4d34f4afbee",
+      "dense_activation_optimizer__pad": "561346782360779ef14269439d5e80b31df322a55d587f609e8ee0d8d81b766c",
+      "dense_activation_optimizer__conv_forward": "1afdcb2c04ee4c40649f9849f9049fe7fcf06bfafc0584cb9e74eb1f7a7d36c8",
+      "dense_activation_optimizer__conv_dinput": "14d7beccc11604ca90a439286d8b368d0c245c2ee03e5e2d282959319ead0c72",
+      "dense_activation_optimizer__conv_dweight": "c91a78e6f66ca9c7e7d8bd3a48e2464267e330dadd3a6c58797ad4d34f4afbee",
+      "dense_activation_optimizer__mm": "8f1c930e223458102ad83726a506e9513c84913dc08a3852135a45cdce74238b",
+      "dense_activation_optimizer__rows": "2995a8259b8d6f77bc4d403858ee0624124699e83a83deac82cb40efad45a16e",
+      "dense_activation_optimizer__relu": "c899303b98f6b35dd07f70ed46bc8d0e99b36b5b4eb0a338c9240adf7e0ad5ac",
+      "dense_activation_optimizer__drelu": "dab3dbdabd6c99db62e648b565f5642032926c99b763612f9824b1aa4b97c048",
+      "dense_activation_optimizer__momentum": "4cf27090beb73b1d8ade09bc85477c413f3c8c173b5a3407e690e2537bc3532d",
+      "dense_activation_optimizer__normalize": "3808dffd8dfa8b24d2881b06371fedefac81548631af535e4af277b02ed60595",
+      "dense_activation_optimizer__bias": "45ccbf0a4aa176d053945c4368ab6173f7570b98630243ba15c99524b4776153",
+      "dense_activation_optimizer__delta": "68975aff73c6ce6da4b6b337ab577ba69bb1171d8f96b51086a0ea52e06c9041"
+    }
+  },
+  "scope": "Primitive feasibility and correctness only; no MNIST data, no trained model, no submission benchmark or accuracy claim.",
+  "completed_at_utc": "2026-09-11T05:57:20.673063+00:00"
+}

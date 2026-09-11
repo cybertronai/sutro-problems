@@ -4,7 +4,7 @@
 predicted test labels (digits 0–9) meeting the accuracy requirement for the tier.
 
 - **MNIST-small:** 600 train / 600 test, 3 × 3 images; **at least 60% mean accuracy**.
-- **MNIST-medium:** 6,000 train / 6,000 test, 9 × 9 images; **at least 98% mean accuracy**.
+- **MNIST-medium:** 10,000 train / 10,000 test, 9 × 9 images; error targets **10%, 8%, 6%, 4%, 2%** (accuracy **90%, 92%, 94%, 96%, 98%**).
 - **MNIST-large:** classic MNIST, 60,000 train / 10,000 test, 28 × 28 images; **at least 98% accuracy** (9,800/10,000 correct).
 
 Small and medium use disjoint random subsets of the original 60,000 MNIST
@@ -42,6 +42,7 @@ Execution times use **milliseconds (ms)**, energies use **millijoules (mJ)**, ar
 
 | Accuracy | Time (ms) | Energy (mJ) | Area (mm²) | Time to score (s) | Time on A100 (ms) | Energy on A100 (mJ) | Submission |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| 97.8% ± 0.1 pp | 4,900,000 | 12,000 | 8.9 | 11 | 13,000 | 780,000 | [Three ConvNets · 4% error target](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-convnet-v4-20260911/) |
 | 98.1% ± 0.1 pp | — | — | — | — | 5.9 × 10⁴ | 1.7 × 10⁶ | [Three ConvNets](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-convnet-11draw-20260911/) |
 | 96% | 93,000 | 200 | 0.63 | 2.7 | 4,700 | 150,000 | [512-unit MLP](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-affine-20260911/) |
 

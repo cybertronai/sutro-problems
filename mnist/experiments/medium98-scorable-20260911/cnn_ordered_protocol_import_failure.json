@@ -1,0 +1,55 @@
+{
+  "frozen_at_utc": "2026-09-11T22:16:22.348575+00:00",
+  "attempt_target_percent": 97,
+  "published_requirement_percent": 98,
+  "purpose": "Training-only validation of exact ordered-FP32 CNN, including new fixed seed-only schedules",
+  "source_sha256": {
+    "cnn_ordered_modal.py": "1ec8a9ded3f2edaf6020c6b05e3030e96fdf4a0cc79b53c5d56e2db31ea71fac",
+    "cnn_softmax_runner.py": "3c1e3f8117a986526704d2cae095cdb6fe46c3b9192d5d6eca7d3681cd2c04b8",
+    "ordered_backend/ops.py": "8fa76136767540a86d9d6cb9f30b3f8985dcf4e6724d93c4d2ba5951b502138e",
+    "ordered_backend/network.py": "90b68b2d43ee3a2033d51579757280bc40210909dc1347f454f91678977ddf16",
+    "ordered_backend/schedule.py": "e11ec4da5157f611547070551f1e8a5f4c4130e3b0a92eb354fe2a2c5d7dd7da"
+  },
+  "config": {
+    "id": "softmax-c32-d3-lr0.03",
+    "width": 32,
+    "depth": 3,
+    "learning_rate": 0.03,
+    "head_width": 128,
+    "epochs": 150,
+    "batch_size": 128,
+    "momentum": 0.9,
+    "weight_decay": 0.0001,
+    "loss": "approx_softmax_gradient",
+    "normalization": "4*x-0.5",
+    "augmentation": "mild_affine",
+    "dropout": 0.0,
+    "batchnorm": false,
+    "pooling": "none",
+    "conv_bias": false,
+    "head_bias": true,
+    "initialization": "He uniform fan_in for all weights; zero biases"
+  },
+  "seeds": [
+    11,
+    22,
+    33
+  ],
+  "input_allowlist": [
+    "train_images",
+    "train_labels"
+  ],
+  "input_sha256": {
+    "train_images": "3c2c9d7cc3103e05c6e72e8b39ad7ae8f93fcbea8b23ac5f43ffacd9a9c4653b",
+    "train_labels": "91633f2c00fe471cb130fb6831c3d7dca5899bd926a1c899d873826dfd62e617"
+  },
+  "split_sha256": "3d1c0a0ad72cc023c4afe0d36941abba75a2dd4dba54262fa48025386afc5d47",
+  "native_screen_file": "cnn_softmax_summary.json",
+  "native_screen_sha256": "b56f3f8742d030665f0a0e838b0d41fb2e479c543dbf2bb4a49ad678556efcf1",
+  "checkpoint_rule": "Maximum validation correct, minimum FP64-reduced half-Brier diagnostic from ordered-FP32 probabilities, earliest epoch",
+  "ensemble_rule": "Ordered FP32 raw-logit sum starting positive zero for seeds11,22,33 at each common epoch; argmax, no division. Select a common epoch by highest ensemble validation correct, lowest half-Brier diagnostic, earliest epoch. Individual best checkpoints are diagnostics only.",
+  "schedule": "PCG64 seed-only schedules, explicit four-neighbor bilinear arithmetic and scalar-ordered separate FP32 operations; differs from preliminary native CUDA schedule/reductions",
+  "test_gate": "No test arrays accepted; freeze formal learner after this stage before preparing eleven new draws",
+  "container_image": "ghcr.io/ab-10/wikitext-bench@sha256:95de89319ba89c53a91d5440a5db4ff46f68b05031062c0a760ec3caa48dc42f",
+  "test_arrays_accessed": false
+}

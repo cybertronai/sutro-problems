@@ -24,6 +24,7 @@ import numpy as np
 DEFAULT_SEED = 20260910
 DEFAULT_PROFILE = "competition-v2"
 REFERENCE_PROFILE = "reference-20260910"
+MEDIUM_ERROR_PROFILE = "medium-error-targets-v1"
 SOURCE_BASE = "https://ossci-datasets.s3.amazonaws.com/mnist/"
 SOURCES = {
     "train_images": (
@@ -65,7 +66,10 @@ REFERENCE_TIERS = {
     }
     for name, tier in TIERS.items()
 }
-PROFILES = {DEFAULT_PROFILE: TIERS, REFERENCE_PROFILE: REFERENCE_TIERS}
+MEDIUM_ERROR_TIERS = {name: dict(tier) for name, tier in TIERS.items()}
+MEDIUM_ERROR_TIERS['medium'].update(train_count=10000, test_count=10000, test_offset=10000)
+PROFILES = {DEFAULT_PROFILE: TIERS, REFERENCE_PROFILE: REFERENCE_TIERS,
+            MEDIUM_ERROR_PROFILE: MEDIUM_ERROR_TIERS}
 
 
 def file_hash(path: Path, algorithm: str = "sha256") -> str:
@@ -202,9 +206,9 @@ def prepare(
             "seed_derivation": "SeedSequence(seed).spawn(2): child 0 official train, child 1 official test",
             "selection": (
                 "Without replacement; small/medium train use official-training permutation "
-                "prefixes and test use prefixes starting at offset 6000; large uses both "
+                "prefixes and test use the declared per-tier offsets; large uses both "
                 "complete official splits"
-                if profile == DEFAULT_PROFILE else
+                if profile != REFERENCE_PROFILE else
                 "Without replacement; nested prefixes of independent official-split permutations"
             ),
             "source_splits": {

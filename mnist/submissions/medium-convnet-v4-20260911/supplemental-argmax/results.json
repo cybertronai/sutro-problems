@@ -1,0 +1,152 @@
+{
+  "schema_version": 1,
+  "completed_at_utc": "2026-09-11T22:30:26.412842+00:00",
+  "scope": "Separate same-source regeneration of the final 10000-row argmax specialization; not PTX captured from the original timed invocation. No full learner or timing was rerun.",
+  "source_sha256": {
+    "capture_argmax_modal.py": "1b2be393d34a1232a85f1e61c270b8230c769c9077dd56bc3cdd0a629cf887ed",
+    "ordered_backend/ops.py": "8fa76136767540a86d9d6cb9f30b3f8985dcf4e6724d93c4d2ba5951b502138e",
+    "ensemble.py": "469ea2f57bb6a094be482f7dc9be9a6df9851bf33584361f1ad9d9f5281afa3b",
+    "modal_run.py": "fa939d31725f28f082b37388ab2e189042c6f8a05c2d6473154b3948b180b2c2"
+  },
+  "protocol_sha256": "7eb0ecbd1111626ca42281caa0007812ab8402fa5c703fbd5563edb593942563",
+  "original_benchmark_result_sha256": "c4248069aca53169eea3d9b4ef92dfaf6b0b491c6e6981b40cfad942ad59ae01",
+  "software": {
+    "torch": "2.5.1+cu124",
+    "triton": "3.1.0",
+    "numpy": "2.2.6",
+    "cuda": "12.4",
+    "image": "ghcr.io/ab-10/wikitext-bench@sha256:95de89319ba89c53a91d5440a5db4ff46f68b05031062c0a760ec3caa48dc42f"
+  },
+  "hardware": {
+    "name": "NVIDIA A100-SXM4-40GB",
+    "uuid": "b6423922-c8cd-8c4d-cd60-085c2fb73fea",
+    "compute_capability": [
+      8,
+      0
+    ]
+  },
+  "compiler": {
+    "python": "3.11.15",
+    "source_sha256": {
+      "compiler/compiler.py": "dc767c8fadcf23ea82d79e257c37d44077eae7f681cf967565fd43e9c017937b",
+      "backends/nvidia/compiler.py": "a979896b9c0acfd41dd953b90bdc4b10968f7c0b45a286eae3f829aaddb2bb55"
+    },
+    "kernel_name": "_argmax",
+    "specialization": {
+      "B": 10000,
+      "BLOCK": 128
+    },
+    "launch_grid": [
+      79
+    ],
+    "launch_options": {
+      "num_warps": 4,
+      "enable_fp_fusion": false
+    },
+    "ptx_version": "8.4",
+    "ptx_target": "sm_80",
+    "metadata": {
+      "allow_fp8e4b15": true,
+      "allow_fp8e4nv": false,
+      "allowed_dot_input_precisions": [
+        "tf32",
+        "tf32x3",
+        "ieee"
+      ],
+      "backend_name": "cuda",
+      "cluster_dims": [
+        1,
+        1,
+        1
+      ],
+      "debug": null,
+      "default_dot_input_precision": "tf32",
+      "enable_fp_fusion": false,
+      "extern_libs": [
+        [
+          "libdevice",
+          "/usr/local/lib/python3.11/site-packages/triton/backends/nvidia/lib/libdevice.10.bc"
+        ]
+      ],
+      "hash": "dc0075ddf596895e28cacbde4adfaa5c6288395b16c5d9171a5876dcc6d8ab5e",
+      "max_num_imprecise_acc_default": 0,
+      "maxnreg": null,
+      "name": "_argmax",
+      "num_ctas": 1,
+      "num_stages": 3,
+      "num_warps": 4,
+      "ptx_version": null,
+      "shared": 0,
+      "target": "GPUTarget(backend='cuda', arch=80, warp_size=32)"
+    },
+    "bundled_ptxas_sha256": "94dda54a1673940d56d3072c64ef7aacb125a1e64394586e10f77a7a5ff0ff87",
+    "bundled_ptxas_version": "ptxas: NVIDIA (R) Ptx optimizing assembler\nCopyright (c) 2005-2024 NVIDIA Corporation\nBuilt on Tue_Feb_27_16:15:50_PST_2024\nCuda compilation tools, release 12.4, V12.4.99\nBuild cuda_12.4.r12.4/compiler.33961263_0"
+  },
+  "checks": [
+    {
+      "name": "finite_random",
+      "rows": 10000,
+      "all_predictions_match": true,
+      "input_shape": [
+        10000,
+        10
+      ],
+      "input_dtype": "float32",
+      "output_shape": [
+        10000
+      ],
+      "output_dtype": "int64",
+      "input_sha256": "fd4af0789a6a96cfdd3217e1241969bc426c7a5adc1c30b4b5bf236fd486b2cd",
+      "output_sha256": "b1b4737c66084da3a8542be5a318e06d1587be701bcf2c31e4fe0b03fe55e436",
+      "first_eight_predictions": [
+        7,
+        6,
+        5,
+        4,
+        1,
+        8,
+        2,
+        5
+      ],
+      "last_prediction": 7
+    },
+    {
+      "name": "ties_and_boundary_rows",
+      "rows": 10000,
+      "all_predictions_match": true,
+      "input_shape": [
+        10000,
+        10
+      ],
+      "input_dtype": "float32",
+      "output_shape": [
+        10000
+      ],
+      "output_dtype": "int64",
+      "input_sha256": "d03aeaff357658fc2ec6d82ca7dd78deba3b427a169fd142a3faa8b9ce2f6747",
+      "output_sha256": "96f4fe3a16c7c98d473eb7fe2a78b77ff04a011dbcfeb69a7b316e820d51c3ba",
+      "first_eight_predictions": [
+        0,
+        0,
+        2,
+        0,
+        3,
+        1,
+        9,
+        9
+      ],
+      "last_prediction": 4
+    }
+  ],
+  "all_passed": true,
+  "instruction_audit": {
+    "fp32_fma_or_mad": false,
+    "flush_to_zero": false,
+    "tensor_core": false
+  },
+  "ptx_file": "argmax__a920f0fb68c22452.ptx",
+  "ptx_sha256": "a920f0fb68c224523675ddf26ff42fc9ed9bcf296498af05a4ce2e0bfd4f4c86",
+  "dataset_loaded": false,
+  "learned_parameters_loaded": false,
+  "original_predictions_loaded": false
+}
