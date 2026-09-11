@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="MNIST-medium: train-only validation, a frozen MLP, compact exact model scores, and complete-task A100 measurements.">
+<title>MNIST-medium submission session · Sutro problems</title><style>
+:root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
+*{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
+header{background:#103c47;color:white;padding:36px max(24px,calc((100vw - 1060px)/2)) 26px}
+header p{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#bfd9da}
+header .brand{font-size:27px;font-weight:680;margin:6px 0 18px}nav{display:flex;gap:9px;flex-wrap:wrap}
+nav a{color:#edf8f8;border:1px solid #5c8088;padding:6px 13px;border-radius:5px;text-decoration:none;font-size:14px}
+nav a.active{background:#fff;color:#103c47}main{max-width:1120px;margin:0 auto;padding:32px 30px 70px;background:white;min-height:60vh}
+h1{font:700 36px/1.2 Georgia,serif;letter-spacing:-.015em;margin:10px 0 24px}h2{font-size:24px;line-height:1.35;margin:38px 0 16px;border-top:1px solid var(--line);padding-top:24px}
+h3{font-size:19px;margin:28px 0 8px}p{margin:12px 0}a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
+code{font-size:.84em;background:#edf2f3;padding:2px 5px;border-radius:3px;overflow-wrap:anywhere}pre{padding:18px;overflow:auto;background:#edf2f3;border:1px solid var(--line);border-radius:6px;font-size:14px;line-height:1.5}
+pre code{padding:0;background:none;overflow-wrap:normal}table{border-collapse:collapse;display:block;max-width:100%;overflow:auto;margin:22px 0;font-size:15px}th,td{padding:10px 14px;border:1px solid var(--line);vertical-align:top}th{background:#eaf2f3;text-align:left}tr:nth-child(even) td{background:#f8fafb}
+blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;background:#fffaed}blockquote p{margin:6px 0}li{margin:9px 0}footer{max-width:1120px;margin:auto;padding:22px 30px 40px;font-size:13px;color:var(--muted)}.toc{padding:18px 24px;background:#f4f8f8;border:1px solid var(--line);border-radius:6px}.toc ul{margin:0;padding-left:20px}.toc li{margin:3px 0}.toc a{text-decoration:none}
+@media(max-width:600px){main{padding:24px 18px 44px}h1{font-size:29px}header{padding:24px 18px}table{font-size:13px}th,td{padding:8px}}
+</style></head>
+<body><header><p>Sutro problems · Submission attempt · September 2026</p><div class="brand">MNIST-medium / 98% target attempt</div><nav><a class="" href="index.html">Results & reproduction</a><a class="active" href="session.html">Session export</a><a class="" href="ambiguities.html">Ambiguities & problems</a></nav></header>
+<main><h1 id="mnist-medium-submission-session">MNIST-medium submission session</h1>
+<p>Exported at <strong>2026-09-11T04:45:49.498280+00:00</strong>. Session <code>01a08e2a-6729-7bb2-acf7-0b1561daea2a</code>.</p>
+<p>Visible user/assistant messages from the medium submission request through the export cutoff. Internal reasoning, system/developer instructions, environment metadata and raw tool payloads are excluded. Measured results and selected commands are preserved separately in the report and source artifacts.</p>
+<p>This is a conversation export, not a reconstruction of private reasoning. It is a snapshot: publication checks after this cutoff are recorded in the accompanying report.</p>
+<h2 id="1-user-2026-09-11t043328069z">1. User · 2026-09-11T04:33:28.069Z</h2>
+<p>Now attempt to do the mnist medium submission according to these rules (98% accuracy target),l submitting a lower one is acceptable if target too high</p>
+<h2 id="2-assistant-2026-09-11t043332849z">2. Assistant · 2026-09-11T04:33:32.849Z</h2>
+<p>I’ll attempt MNIST-medium with a 98% target, reuse the compact scoring approach, and measure the complete learning task on an A100. I’ll first check the available medium-tier results and choose a bounded training experiment; if it falls short, I’ll submit the measured result with that clearly stated.</p>
+<h2 id="3-assistant-2026-09-11t043602476z">3. Assistant · 2026-09-11T04:36:02.476Z</h2>
+<p>The earlier 98% result used a larger dataset and a CNN. For this submission, I’m testing 12 fresh MLP configurations on a training-only validation split, then freezing one before evaluating the 6,000 test examples. I’ll report both your 98% goal and the repository’s existing 98.14% threshold.</p>
+<h2 id="4-assistant-2026-09-11t043820706z">4. Assistant · 2026-09-11T04:38:20.706Z</h2>
+<p>The compact scorer now handles medium-sized programs containing tens to hundreds of billions of instructions in about 2–3 seconds. Streaming test images keeps modeled memory below the existing limit. Validation results so far are around 95–96%; the remaining predeclared runs will determine the final configuration.</p>
+<h2 id="5-assistant-2026-09-11t044120119z">5. Assistant · 2026-09-11T04:41:20.119Z</h2>
+<p>The search is complete. The frozen choice is a 512-unit network trained for 200 epochs; it scored 1,151/1,200 on validation, below 98%. I’m now training it on all 6,000 examples with the predeclared final seed, then evaluating the test set once and measuring the A100 implementation.</p>
+<h2 id="6-assistant-2026-09-11t044258071z">6. Assistant · 2026-09-11T04:42:58.071Z</h2>
+<p>The final test result is <strong>5,755/6,000 correct (96%)</strong>, 125 predictions short of your 98% goal. I’ll submit this lower-accuracy attempt as authorized. Independent CPU verification and the actual A100 benchmark are now running; no further tuning will use the test result.</p>
+<h2 id="7-assistant-2026-09-11t044407163z">7. Assistant · 2026-09-11T04:44:07.163Z</h2>
+<p>Independent verification passes, including a fresh full refit using only the allowed inputs. The A100 also matches every learned parameter, output score, and prediction exactly. Its full-task runtime is about 4,700 ms; the energy trials are still finishing.</p>
+<h2 id="8-assistant-2026-09-11t044540955z">8. Assistant · 2026-09-11T04:45:40.955Z</h2>
+<p>Measurements are complete: the model scores <strong>93,000 ms, 200 mJ, and 0.63 mm²</strong>, with scoring taking <strong>2.7 s</strong>. The A100 averages <strong>4,700 ms and 150,000 mJ</strong> per complete task. I’m publishing the report, session export, and separate ambiguity notes, then opening the submission PR with the missed accuracy target prominently labeled.</p></main><footer>Standalone record. Model scores use declared conventions; acceptance remains subject to review. <a href="https://github.com/cybertronai/sutro-problems">Repository</a> · <a href="../">All submission reports</a></footer></body></html>

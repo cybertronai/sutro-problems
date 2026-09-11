@@ -1,0 +1,64 @@
+{
+  "all_passed": true,
+  "checks": [
+    "Executed source and frozen configuration hashes match the published files.",
+    "All 47114 learned parameter words match the independent CPU refit.",
+    "All 60000 output-score words match the independent CPU output-score artifact.",
+    "All 6000 GPU predictions match the fixed CPU learner predictions.",
+    "Direct execution, captured complete tasks, and final post-trial parameters/scores/predictions all match.",
+    "The three independently generated CPU oracle artifacts match their recorded hashes; source isolates them from GPU inputs.",
+    "All eight PTX hashes match; no FP32 FMA or flush-to-zero instruction appears.",
+    "Full-query mutation and bounded two-minibatch training-label mutation affect outputs/state and pass ordered-reference checks.",
+    "All task/replay counts, CUDA and wall intervals, NVML deltas, paired idle powers, and adjusted energies recompute exactly.",
+    "The input-hash allowlist is exactly the three learning inputs and matches all canonical medium array hashes."
+  ],
+  "summary": {
+    "median_a100_time_ms": 4746.828776041667,
+    "median_idle_adjusted_energy_mj": 155058.4905522917,
+    "minimum_idle_adjusted_energy_mj": 152586.4407490815,
+    "maximum_idle_adjusted_energy_mj": 156048.61490218886,
+    "before_or_after_idle_sensitivity_mj": [
+      152350.79527136008,
+      156277.51956754221
+    ],
+    "maximum_before_after_idle_power_difference_w": 0.09926138593711897,
+    "trials": 3,
+    "tasks_per_trial": [
+      3,
+      3,
+      3
+    ],
+    "active_interval_seconds": [
+      14.243936380500003,
+      14.249124958500005,
+      14.230107489000005
+    ],
+    "ptx_bytes_by_kernel": {
+      "normalize": 2531,
+      "initialize": 2652,
+      "hidden": 3085,
+      "delta2": 3578,
+      "delta1": 7580,
+      "update": 4754,
+      "inference_hidden": 3067,
+      "inference_output": 14199
+    },
+    "total_ptx_bytes": 41446,
+    "graph_objects_stored": 3,
+    "captured_kernel_nodes": 804,
+    "mean_a100_time_ms": 4745.701388888889,
+    "mean_idle_adjusted_energy_mj": 154564.51540118735
+  },
+  "gpu_results_sha256": "27ad7e775fece82ba637358f4913058b9ed6c188e31078646a0577b3dbd11dfd",
+  "cpu_parameters_npz_sha256": "94a0a3cf02d14607170ed29f05b49b136e75a80126c1ee938ed5562e23bc1e4c",
+  "cpu_output_scores_npy_sha256": "6cec2b75f3370b0f62ea8ca086b8ea97659e7537722b398a603adaf2331fb233",
+  "cpu_predictions_npy_sha256": "003d17ac237465d12fe3e55f124b51ee6752e6761e290916e5de395e95e9b036",
+  "limitations": [
+    "GPU-resident steady-state throughput; transfers, allocations, JIT, graph capture and validation excluded.",
+    "The CPU comparison oracle remains host-only and never initializes GPU training.",
+    "Changed-training-label correctness is independently checked on two complete minibatches, not a second full 200-epoch fit.",
+    "Each timed task still performs all 200 epochs and all 6000 predictions from reset seed-only weights.",
+    "NVML energy covers the whole GPU board and uses paired idle subtraction; it is not per-kernel metering."
+  ],
+  "headline_statistic": "Arithmetic mean of the three trial values; raw means and medians both retained."
+}

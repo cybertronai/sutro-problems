@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="MNIST-medium: train-only validation, a frozen MLP, compact exact model scores, and complete-task A100 measurements.">
+<title>MNIST-medium: an attempt at 98% accuracy · Sutro problems</title><style>
+:root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
+*{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
+header{background:#103c47;color:white;padding:36px max(24px,calc((100vw - 1060px)/2)) 26px}
+header p{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#bfd9da}
+header .brand{font-size:27px;font-weight:680;margin:6px 0 18px}nav{display:flex;gap:9px;flex-wrap:wrap}
+nav a{color:#edf8f8;border:1px solid #5c8088;padding:6px 13px;border-radius:5px;text-decoration:none;font-size:14px}
+nav a.active{background:#fff;color:#103c47}main{max-width:1120px;margin:0 auto;padding:32px 30px 70px;background:white;min-height:60vh}
+h1{font:700 36px/1.2 Georgia,serif;letter-spacing:-.015em;margin:10px 0 24px}h2{font-size:24px;line-height:1.35;margin:38px 0 16px;border-top:1px solid var(--line);padding-top:24px}
+h3{font-size:19px;margin:28px 0 8px}p{margin:12px 0}a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
+code{font-size:.84em;background:#edf2f3;padding:2px 5px;border-radius:3px;overflow-wrap:anywhere}pre{padding:18px;overflow:auto;background:#edf2f3;border:1px solid var(--line);border-radius:6px;font-size:14px;line-height:1.5}
+pre code{padding:0;background:none;overflow-wrap:normal}table{border-collapse:collapse;display:block;max-width:100%;overflow:auto;margin:22px 0;font-size:15px}th,td{padding:10px 14px;border:1px solid var(--line);vertical-align:top}th{background:#eaf2f3;text-align:left}tr:nth-child(even) td{background:#f8fafb}
+blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;background:#fffaed}blockquote p{margin:6px 0}li{margin:9px 0}footer{max-width:1120px;margin:auto;padding:22px 30px 40px;font-size:13px;color:var(--muted)}.toc{padding:18px 24px;background:#f4f8f8;border:1px solid var(--line);border-radius:6px}.toc ul{margin:0;padding-left:20px}.toc li{margin:3px 0}.toc a{text-decoration:none}
+@media(max-width:600px){main{padding:24px 18px 44px}h1{font-size:29px}header{padding:24px 18px}table{font-size:13px}th,td{padding:8px}}
+</style></head>
+<body><header><p>Sutro problems · Submission attempt · September 2026</p><div class="brand">MNIST-medium / 98% target attempt</div><nav><a class="active" href="index.html">Results & reproduction</a><a class="" href="session.html">Session export</a><a class="" href="ambiguities.html">Ambiguities & problems</a></nav></header>
+<main><h1 id="mnist-medium-an-attempt-at-98-accuracy">MNIST-medium: an attempt at 98% accuracy</h1>
+<p>The fixed network achieves <strong>5,755/6,000 correct (96%)</strong> on the canonical
+MNIST-medium split. It <strong>does not meet your 98% goal</strong> and <strong>does not meet the
+repository's 98.14% requirement</strong>. The attempt is 125 correct predictions short of your 98% goal and 134 short of the repository threshold.
+This report records the attempted solution and its measured performance.</p>
+<p><strong>Frozen algorithm:</strong> 81 → 512 ReLU → 10; 200 epochs; learning rate 0.1; batch size 30; seed 101. It learns from all 6,000 supplied training
+examples and predicts all 6,000 test examples. Configuration selection uses
+only a training-data validation split; the final seed and configuration were
+frozen before the test labels were opened.</p>
+<p>Contributors: Yaroslav Bulatov (task and requirements), Codex (implementation,
+experiments, measurements, and reporting). No W&amp;B run was created; evidence is
+preserved in the files linked below. Publication is a submission attempt, not
+benchmark acceptance.</p>
+<div class="toc">
+<ul>
+<li><a href="#mnist-medium-an-attempt-at-98-accuracy">MNIST-medium: an attempt at 98% accuracy</a><ul>
+<li><a href="#results-in-the-same-units">Results in the same units</a></li>
+<li><a href="#train-only-selection-and-the-target">Train-only selection and the target</a></li>
+<li><a href="#exact-learning-algorithm">Exact learning algorithm</a></li>
+<li><a href="#compact-program-and-modeled-area">Compact program and modeled area</a></li>
+<li><a href="#numerical-and-scoring-verification">Numerical and scoring verification</a></li>
+<li><a href="#a100-implementation-and-measurements">A100 implementation and measurements</a></li>
+<li><a href="#provenance-and-reproduction">Provenance and reproduction</a></li>
+<li><a href="#reproduce-the-a100-measurements">Reproduce the A100 measurements</a></li>
+<li><a href="#model-scoring-and-report-generation">Model scoring and report generation</a></li>
+<li><a href="#download-the-evidence">Download the evidence</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<h2 id="results-in-the-same-units">Results in the same units</h2>
+<p>Execution times use <strong>ms</strong>, energies <strong>mJ</strong>, modeled area <strong>mm²</strong>, and scoring
+time <strong>s</strong>. Human values have two significant figures; exact prediction counts,
+thresholds, and raw measurements remain unrounded in the evidence. In these
+units, energy in mJ equals power in W multiplied by time in ms.</p>
+<table>
+<thead>
+<tr>
+<th>Execution</th>
+<th style="text-align: right;">Accuracy</th>
+<th style="text-align: right;">Time (ms)</th>
+<th style="text-align: right;">Energy (mJ)</th>
+<th style="text-align: right;">Area (mm²)</th>
+<th style="text-align: right;">Time to score (s)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Dally v4, complete learning task</td>
+<td style="text-align: right;">96% (5,755/6,000)</td>
+<td style="text-align: right;">93,000</td>
+<td style="text-align: right;">200</td>
+<td style="text-align: right;">0.63</td>
+<td style="text-align: right;">2.7</td>
+</tr>
+<tr>
+<td>A100, complete learning task; three-trial mean</td>
+<td style="text-align: right;">96% (5,755/6,000)</td>
+<td style="text-align: right;">4,700</td>
+<td style="text-align: right;">150,000</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">—</td>
+</tr>
+</tbody>
+</table>
+<p>Every measured A100 task resets parameters, prepares inputs and targets, trains
+the full frozen epoch budget, and predicts all test labels. The comparison
+covers the same learning algorithm. The physical energy accounting differs:
+the theoretical model prices scratch accesses, while NVML measures GPU-board
+energy after subtracting idle power. Modeled area counts occupied scratch cells. The ratio of A100 to modeled time is
+0.051; the energy ratio is 790.</p>
+<h2 id="train-only-selection-and-the-target">Train-only selection and the target</h2>
+<p>The predeclared grid contains 12 training runs: widths 128, 256, and 512; learning
+rates 0.01, 0.03, 0.1, and 0.2. Each finite run is examined at epochs 25, 50, 100,
+200, and 300. A fixed PCG64 permutation with seed 20260913 partitions only the
+training arrays into 4,800 fitting examples and 1,200 validation examples. The
+split is not stratified. All search runs initialize with seed 11.</p>
+<p>The selection rule first seeks 1,176/1,200 validation predictions (98%), choosing
+the least <code>epochs × width</code> work among candidates that meet it. If none meets it,
+the rule maximizes validation correct, breaking ties by work, width, then rate.
+One configuration and final seed 101 are frozen; it is refitted from scratch on
+all 6,000 training examples. Predictions are saved before separate evaluation.
+There is no further configuration or seed search after test evaluation.</p>
+<p>Best observed checkpoint within each predeclared width/rate run:</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Width</th>
+<th style="text-align: right;">Learning rate</th>
+<th style="text-align: right;">Epochs</th>
+<th style="text-align: right;">Validation accuracy</th>
+<th style="text-align: right;">Fitting accuracy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">128</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: right;">300</td>
+<td style="text-align: right;">95% (1143/1200)</td>
+<td style="text-align: right;">98% (4706/4800)</td>
+</tr>
+<tr>
+<td style="text-align: right;">128</td>
+<td style="text-align: right;">0.03</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">95% (1142/1200)</td>
+<td style="text-align: right;">98% (4699/4800)</td>
+</tr>
+<tr>
+<td style="text-align: right;">128</td>
+<td style="text-align: right;">0.1</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">95% (1141/1200)</td>
+<td style="text-align: right;">99% (4748/4800)</td>
+</tr>
+<tr>
+<td style="text-align: right;">128</td>
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">95% (1135/1200)</td>
+<td style="text-align: right;">99% (4758/4800)</td>
+</tr>
+<tr>
+<td style="text-align: right;">256</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: right;">300</td>
+<td style="text-align: right;">95% (1142/1200)</td>
+<td style="text-align: right;">99% (4737/4800)</td>
+</tr>
+<tr>
+<td style="text-align: right;">256</td>
+<td style="text-align: right;">0.03</td>
+<td style="text-align: right;">300</td>
+<td style="text-align: right;">96% (1147/1200)</td>
+<td style="text-align: right;">100% (4787/4800)</td>
+</tr>
+<tr>
+<td style="text-align: right;">256</td>
+<td style="text-align: right;">0.1</td>
+<td style="text-align: right;">300</td>
+<td style="text-align: right;">95% (1139/1200)</td>
+<td style="text-align: right;">100% (4796/4800)</td>
+</tr>
+<tr>
+<td style="text-align: right;">256</td>
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;">50</td>
+<td style="text-align: right;">95% (1144/1200)</td>
+<td style="text-align: right;">99% (4759/4800)</td>
+</tr>
+<tr>
+<td style="text-align: right;">512</td>
+<td style="text-align: right;">0.01</td>
+<td style="text-align: right;">200</td>
+<td style="text-align: right;">96% (1148/1200)</td>
+<td style="text-align: right;">99% (4746/4800)</td>
+</tr>
+<tr>
+<td style="text-align: right;">512</td>
+<td style="text-align: right;">0.03</td>
+<td style="text-align: right;">300</td>
+<td style="text-align: right;">96% (1148/1200)</td>
+<td style="text-align: right;">100% (4798/4800)</td>
+</tr>
+<tr>
+<td style="text-align: right;">512</td>
+<td style="text-align: right;">0.1</td>
+<td style="text-align: right;">200</td>
+<td style="text-align: right;">96% (1151/1200)</td>
+<td style="text-align: right;">100% (4798/4800)</td>
+</tr>
+<tr>
+<td style="text-align: right;">512</td>
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">95% (1138/1200)</td>
+<td style="text-align: right;">99% (4768/4800)</td>
+</tr>
+</tbody>
+</table>
+<p>The selected validation result is <strong>1151/1,200</strong>.
+The complete checkpoint records, nonfinite stops if any, split indices, source
+hashes, selection rule, and freeze timestamps are retained in the raw evidence.
+One validation example changes accuracy by about 0.083 percentage points; tiny
+ranking differences are not strong generalization evidence.</p>
+<p>This is a bounded attempt using an algorithm that can be exactly represented
+by the current compact IL. It does not establish that 98% is impossible for
+MNIST-medium. The historical 98.14% result used a deeper CNN, a different
+10,000/10,000 dataset, AdamW, cross-entropy, and other modeling choices. Its
+weights are not reused: some examples in that historical training set occur in
+the current test split. Only algorithm ideas and published summary results
+inform the choice of model family.</p>
+<h2 id="exact-learning-algorithm">Exact learning algorithm</h2>
+<p>Input pixels are transformed as <code>FP32(FP32(x × 4) − 0.5)</code>. The first layer uses
+ReLU and the second is linear. The loss is half squared error against one-hot
+targets, averaged over each batch. Batches contain 30 contiguous examples in
+supplied order, without shuffling, giving 200 updates per epoch.</p>
+<p>PCG64 seed 101 generates input weights uniformly within <code>[-1/9, 1/9]</code> and output
+weights within <code>[-1/sqrt(width), 1/sqrt(width)]</code>; biases start at zero. The initial
+parameter words are data-independent program constants. Generating these
+constants is outside model/GPU execution; writing/resetting them is included.</p>
+<p>For a batch, compute <code>hidden = ReLU(x @ W1 + b1)</code>, <code>output = hidden @ W2 + b2</code>,
+<code>delta2 = output − target</code>, and <code>delta1 = (delta2 @ old_W2.T) * (hidden &gt; 0)</code>.
+Sum gradients in ascending batch-row order and subtract
+<code>FP32(learning_rate / 30) × gradient</code> from every parameter. All backpropagation
+uses pre-update weights. Products and additions round separately to FP32 with
+no fusion. Reduction indices increase monotonically. Inference chooses the
+first class on an exact maximum-score tie.</p>
+<h2 id="compact-program-and-modeled-area">Compact program and modeled area</h2>
+<p>The model is single-core-with-tape, v4, pinned at
+<code>26abcca402de647381d31286d42dfbb7a001763d</code>. The builder emits fixed loops, affine addresses,
+and priced primitive instructions. It uses the unchanged compact scorer from
+the prior study; no free matrix operation or learner-specific cost certificate
+is introduced.</p>
+<p>The program receives <strong>978,000 input words</strong>, executes
+<strong>247,121,890,842 primitive instructions</strong> with
+<strong>736,336,410,842 charged operand accesses</strong>, and sends 6,000
+predictions. Fixed half-diamond placement determines each scratch access cost.
+Tape operations retain their zero-access-cost convention at the pinned revision.</p>
+<p>The medium builder streams test queries after training: receive one image,
+normalize it, run inference, send a prediction, then reuse the query buffer.
+It allocates <strong>630,235 scratch words</strong>,
+reported as <strong>0.63 mm²</strong> at one square
+micrometre per word. This is occupied cell area, excluding tape and instruction
+storage, not a bounding rectangle or A100 allocation. Streaming keeps the
+program within the existing scorer's allocation and initialization-proof guards.</p>
+<p>The canonical program hash is <code>09258c87abec502d08622e0e800f1865ef1bc54e15d89eed238dade08ac0e828</code>. The serialized IL
+has 46,819 syntax nodes and 46,757
+primitive leaves. Exact affine address histograms aggregate all dynamic reads
+and writes. Source aliases and unchosen select operands retain their charges.</p>
+<p>The reported static scoring time is the median of
+3 complete calls, including schema,
+bounds and definite-initialization validation, placement, histograms, exact
+integer sums, and canonical hashing. Program construction, JSON loading, numeric training, accuracy
+evaluation, and file output are excluded. Scoring runs on Intel(R) Core(TM) i9-9880H CPU @ 2.30GHz
+with 16 logical processors and
+64 GiB RAM; Python
+3.11.13 and NumPy 2.4.6.
+Native integer units convert as
+<code>time_ticks_0_2_ps / 5e9</code> ms, <code>energy_fj / 1e12</code> mJ, and
+<code>area_um2_occupied_cells / 1e6</code> mm².</p>
+<h2 id="numerical-and-scoring-verification">Numerical and scoring verification</h2>
+<p>The CPU learner's matrix operations are checked against explicit ordered FP32
+reductions for the medium shapes, including transposed gradients and row sums.
+A complete training epoch is compared in both implementations. The entire
+final GPU run is checked against all CPU parameter words, every output-score
+word, and every prediction, before and after timing.</p>
+<p>The generalized builder also passes four tests: unchanged small-program
+regression, independently expanded toy semantics including 81-feature inputs,
+per-address cost agreement, and allocation/guard behavior. These establish
+different properties. The full medium program is not expanded and interpreted
+instruction by instruction, and a second slow ordered CPU replay of every
+training epoch is not performed.</p>
+<p>The allowed-input-only CLI check removes test labels and source indices, then
+refits the model and reproduces the saved outputs. Independent verification
+records the exact scope, source fingerprints, matrix checks, and timings.
+The primary CPU refit took <strong>41,000 ms</strong>,
+separate from the static scoring time and A100 measurements.</p>
+<h2 id="a100-implementation-and-measurements">A100 implementation and measurements</h2>
+<p>Hardware: <strong>NVIDIA A100-SXM4-40GB</strong>. Software: Python 3.11.15,
+PyTorch 2.5.1+cu124, Triton 3.1.0, NumPy 2.2.6,
+CUDA 12.4, NVIDIA driver 580.95.05,
+NVML 13.580.95.05, and <code>nvidia-ml-py</code> 12.560.30.
+Container: <code>ghcr.io/ab-10/wikitext-bench@sha256:95de89319ba89c53a91d5440a5db4ff46f68b05031062c0a760ec3caa48dc42f</code>.</p>
+<p>The manual Triton implementation preserves ascending FP32 reductions and
+disables fusion. Large reduction loops remain runtime loops to keep compilation
+bounded. It is a port of the fixed algorithm, not an automatic IL-to-PTX compiler.</p>
+<p>Three CUDA graphs hold initialization, one complete training epoch, and
+inference. Each measured task runs initialization once, the epoch graph
+200 times, and inference once. A graph replay is therefore not
+an entire task; the trial counters record complete tasks separately. All
+parameter reset and training are repeated. The GPU materializes all output
+scores for verification, and that extra work is included in its measurements.</p>
+<p>Independent CPU parameters, scores, and predictions are host-only verification
+oracles. They are not copied to the GPU or consulted by learner kernels. The
+GPU learner receives only the three allowed data arrays and seed-only initial
+literals. Changed-query and bounded changed-training-label checks exercise
+input dependence; their exact scope is retained in the GPU evidence.</p>
+<p>Each of the three trials executes three complete tasks, about 14,000 ms of
+active work. Each 3,000 ms idle sample follows a 3,000 ms settling gap, before
+and after the active window. CUDA events and wall time measure complete repeated
+tasks. NVML cumulative
+board energy is differenced over each active interval, then adjusted by the
+mean of bracketing idle power measurements. Per-task mJ is
+<code>1000 × (active_J − mean_idle_W × active_seconds) / complete_tasks</code>.
+The subtraction uses the NVML interval; no negative value is clipped.</p>
+<table>
+<thead>
+<tr>
+<th>Trial</th>
+<th style="text-align: right;">Accuracy</th>
+<th style="text-align: right;">Complete tasks</th>
+<th style="text-align: right;">Time (ms/task)</th>
+<th style="text-align: right;">Raw energy (mJ/task)</th>
+<th style="text-align: right;">Paired-idle energy (mJ/task)</th>
+<th style="text-align: right;">Before-only / after-only energy (mJ/task)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td style="text-align: right;">96% (5,755/6,000)</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">4,700</td>
+<td style="text-align: right;">430,000</td>
+<td style="text-align: right;">150,000</td>
+<td style="text-align: right;">150,000 / 150,000</td>
+</tr>
+<tr>
+<td>2</td>
+<td style="text-align: right;">96% (5,755/6,000)</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">4,700</td>
+<td style="text-align: right;">430,000</td>
+<td style="text-align: right;">160,000</td>
+<td style="text-align: right;">160,000 / 150,000</td>
+</tr>
+<tr>
+<td>3</td>
+<td style="text-align: right;">96% (5,755/6,000)</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">4,700</td>
+<td style="text-align: right;">430,000</td>
+<td style="text-align: right;">160,000</td>
+<td style="text-align: right;">160,000 / 160,000</td>
+</tr>
+</tbody>
+</table>
+<p>Mean task time is <strong>4,700 ms</strong> (sample SD
+3.4 ms).
+Mean idle-adjusted board energy is <strong>150,000 mJ</strong> (sample SD
+1,800 mJ).
+The raw counter readings, idle measurements, graph/task counts, trial durations,
+hardware telemetry, and both one-sided baseline alternatives are retained.</p>
+<p>Transfers, allocations, compilation, graph capture, verification, cold start,
+and host CPU energy are excluded. Repeated GPU-resident tasks may benefit from
+cache residency. These measurements describe this implementation and boundary;
+they are not a claim of optimal A100 performance or calibrated per-kernel energy.</p>
+<h2 id="provenance-and-reproduction">Provenance and reproduction</h2>
+<p>Dataset: <code>competition-v2</code>, canonical seed 20260910, 6,000/6,000 disjoint examples
+from the original MNIST training pool, area-downsampled to 9 × 9. Allowed array
+content SHA-256 values, C-order little-endian:</p>
+<ul>
+<li><code>train_images</code>: <code>3c2c9d7cc3103e05c6e72e8b39ad7ae8f93fcbea8b23ac5f43ffacd9a9c4653b</code>.</li>
+<li><code>train_labels</code>: <code>91633f2c00fe471cb130fb6831c3d7dca5899bd926a1c899d873826dfd62e617</code>.</li>
+<li><code>test_images</code>: <code>f121936f4b6b0c2eebef773444fc45e72832d1c84948a50969a909467d6b1003</code>.</li>
+</ul>
+<p>Predictions: <code>fba860ddadbb7007536ed08736f6e834588f01cec812fad375e55bf58fbd1133</code>.
+Output scores: <code>dba18d2265ce7ecc376a03088342ec7da971534c2fbfd66df4e96f24ca5d7c3a</code>.
+GPU source: <code>1f981a617cf49680f281a9015b159c85d3b444cb0883ab52d56773470bee3cb5</code>.
+Further manifest, parameter, source, and PTX hashes are preserved in the evidence.</p>
+<p>The submission branch is <code>codex/mnist-medium-submission</code>. After it is merged,
+the same commands work on <code>main</code>. Run from the repository root:</p>
+<pre><code class="language-sh">git clone --branch codex/mnist-medium-submission https://github.com/cybertronai/sutro-problems.git
+cd sutro-problems
+python3.11 -m venv .venv-medium
+.venv-medium/bin/python -m pip install -r mnist/submissions/medium-affine-20260911/requirements.txt
+.venv-medium/bin/python -m mnist.code.data --output mnist/data --seed 20260910
+S=mnist/submissions/medium-affine-20260911
+.venv-medium/bin/python &quot;$S/learner.py&quot; --data mnist/data/medium.npz --config &quot;$S/config.json&quot; --output /tmp/mnist-medium-reproduction
+.venv-medium/bin/python -m mnist.code.evaluate --tier medium --predictions /tmp/mnist-medium-reproduction/predictions.npy --data-dir mnist/data --output /tmp/mnist-medium-reproduction/accuracy.json
+.venv-medium/bin/python &quot;$S/score.py&quot; --config &quot;$S/config.json&quot; --output /tmp/mnist-medium-reproduction
+.venv-medium/bin/python &quot;$S/verify.py&quot; --data mnist/data/medium.npz --config &quot;$S/config.json&quot; --artifacts /tmp/mnist-medium-reproduction --output /tmp/mnist-medium-reproduction/verification.json
+</code></pre>
+<p>The evaluator reports the repository threshold; the verifier reports both the
+requested and repository thresholds. Valid predictions below a threshold still
+produce a successful evaluator command with <code>meets_accuracy_target=false</code>.
+This flag checks classification accuracy, not complete benchmark acceptance.</p>
+<p>The learner imports numerical routines from the checked-in
+<code>mnist/experiments/accuracy-il-20260911/accuracy_study.py</code>. The model builder uses
+the unchanged <code>il.py</code> in that directory. Neither dependency loads saved weights
+or predictions. Canonical input array hashes are checked against
+<code>mnist/doc/dataset_manifest.json</code>. The learner reads only <code>train_images</code>,
+<code>train_labels</code>, and <code>test_images</code>; separate evaluation and verification code
+may read test labels after predictions are fixed.</p>
+<p>Verification compares a fresh complete fit with the retained parameter, score,
+and prediction bits, including a learner CLI run whose NPZ contains only the
+three allowed members. It independently checks ordered reductions on multiple
+shapes, one complete training epoch, and final inference. It does not replay
+every epoch through the independent ordered reference or numerically expand the
+full affine program. Small expanded-program tests and an exact regression to
+the previous small program are recorded in <code>model-ir-validation.json</code>.</p>
+<p>The optional search reproduction below is substantially more work than
+reproducing the selected learner. It writes to a separate directory and refuses
+to overwrite existing search evidence. It reads training data only and does
+not replace the frozen submission configuration:</p>
+<pre><code class="language-sh">.venv-medium/bin/python &quot;$S/search.py&quot; --data mnist/data/medium.npz --output /tmp/mnist-medium-search
+</code></pre>
+<h2 id="reproduce-the-a100-measurements">Reproduce the A100 measurements</h2>
+<p>With configured Modal credentials and <code>uv</code> installed, first generate the CPU
+artifacts above, then run:</p>
+<pre><code class="language-sh">uvx --with numpy==2.2.6 modal==1.5.5 run &quot;$S/gpu_benchmark.py&quot; --data mnist/data/medium.npz --config &quot;$S/config.json&quot; --reference /tmp/mnist-medium-reproduction --output /tmp/mnist-medium-gpu
+.venv-medium/bin/python -m mnist.code.evaluate --tier medium --predictions /tmp/mnist-medium-gpu/gpu_predictions.npy --data-dir mnist/data --output /tmp/mnist-medium-gpu/accuracy.json
+</code></pre>
+<p>The reference directory must contain <code>parameters.npz</code> with <code>w1</code>, <code>b1</code>, <code>w2</code>,
+and <code>b2</code>, plus <code>output-scores.npy</code> and <code>predictions.npy</code>. These are host-only
+verification oracles: no learned oracle weights, scores, or predictions are
+copied to the GPU or supplied to its learner kernels. Full parameter, score,
+and prediction bits are checked against the CPU artifacts before and after
+measurement. The remote container pins NumPy 2.2.6; the local CPU and scoring
+environment pins NumPy 2.4.6.</p>
+<p>Each complete task replays three captured graph types: initialization once,
+the one-epoch graph E times, and inference once, for E + 2 graph replays.
+Initialization transforms training and test pixels, creates targets, and resets
+parameters. Every task trains afresh. Three trials measure repeated,
+GPU-resident complete tasks. Transfers, allocations, JIT compilation, capture,
+verification, and host energy are excluded. The manually implemented GPU
+kernels follow the learner equations; they are not generated by an automatic
+IL-to-PTX compiler.</p>
+<h2 id="model-scoring-and-report-generation">Model scoring and report generation</h2>
+<p>The proposed <code>sutro-affine-v4/0.1</code> representation encodes bounded loops and
+affine addresses, then counts every expanded v4 primitive and memory access.
+Training data remain resident while test queries are received, normalized,
+classified, and emitted one at a time. This keeps the searched models below
+the unchanged scorer's one-million-word memory guard. The GPU uses its own
+parallel buffer layout; the model's occupied scratch area is not GPU memory
+usage or die area.</p>
+<p>The scorer validates the restricted program, proves initialized reads under
+its supported rules, constructs placement and per-address histograms, and
+sums exact costs. It does not execute the billions of primitive instructions
+numerically. Its timing excludes program construction, JSON loading, numerical
+training, accuracy checks, and file output.</p>
+<p>Human-readable results use two significant figures: execution time in ms,
+energy in mJ, occupied scratch-cell area in mm², and time to score in s.
+Exact measurements and the model's native ps/fJ/µm² quantities remain in JSON.
+In these display units, <code>E_mJ = P_W × t_ms</code>.</p>
+<p>To rebuild the report and Pages files from retained evidence:</p>
+<pre><code class="language-sh">.venv-medium/bin/python -m pip install -r &quot;$S/requirements-report.txt&quot;
+.venv-medium/bin/python &quot;$S/write_report.py&quot;
+.venv-medium/bin/python &quot;$S/build_pages.py&quot;
+</code></pre>
+<p>Report generation does not rerun training or GPU trials. The readable session
+is a timestamped snapshot of visible user and assistant messages; hidden
+reasoning, system instructions, and tool payloads are omitted.</p>
+<ul>
+<li><a href="https://cybertronai.github.io/sutro-problems/docs/submissions/medium-affine-20260911/">Standalone report</a></li>
+<li><a href="https://cybertronai.github.io/sutro-problems/docs/submissions/medium-affine-20260911/ambiguities.html">Separate ambiguities and problems</a></li>
+<li><a href="https://cybertronai.github.io/sutro-problems/docs/submissions/medium-affine-20260911/session.html">Human-readable session</a></li>
+</ul>
+<h2 id="download-the-evidence">Download the evidence</h2>
+<ul>
+<li><a href="config.json">Frozen configuration</a>, <a href="predeclared_plan.json">predeclared search plan</a>, <a href="validation_results.json">validation results</a>, <a href="validation_split.json">split indices</a>.</li>
+<li><a href="learner.py">Learner</a>, <a href="cpu_results.json">CPU results</a>, <a href="predictions.npy">predictions</a>, <a href="parameters.npz">parameters</a>, <a href="output-scores.npy">output scores</a>.</li>
+<li><a href="accuracy.json">Official accuracy evaluation</a>, <a href="goal-status.json">requested 98% goal status</a>.</li>
+<li><a href="program.il.json">Compact program</a>, <a href="model_ir.py">builder</a>, <a href="score.py">score wrapper</a>, <a href="model-score.json">model scores</a>, <a href="model-score-audit.json">independent count audit</a>, <a href="model-ir-validation.json">builder validation</a>.</li>
+<li><a href="verify.py">Independent verifier</a>, <a href="verification.json">verification evidence</a>.</li>
+<li><a href="gpu_benchmark.py">GPU source</a>, <a href="gpu_results.json">GPU results</a>, <a href="gpu-notes.md">measurement notes</a>.</li>
+<li><a href="ambiguities.html">Separate ambiguities and problems</a>, <a href="session.html">human-readable session</a>.</li>
+</ul></main><footer>Standalone record. Model scores use declared conventions; acceptance remains subject to review. <a href="https://github.com/cybertronai/sutro-problems">Repository</a> · <a href="../">All submission reports</a></footer></body></html>
