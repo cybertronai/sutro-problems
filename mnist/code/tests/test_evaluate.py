@@ -103,10 +103,10 @@ class AccuracyTargetTests(unittest.TestCase):
         self.assertEqual(at["accuracy_target_percent"], 98.0)
 
     def test_published_targets_and_canonical_required_counts(self):
-        expected = {"small": "60", "medium": "98.14", "large": "98"}
+        expected = {"small": "60", "medium": "98", "large": "98"}
         self.assertEqual(json.loads(ACCURACY_TARGETS_PATH.read_text()), expected)
         for tier, total, required in (("small", 600, 360),
-                                      ("medium", 6000, 5889),
+                                      ("medium", 6000, 5880),
                                       ("large", 10000, 9800)):
             with self.subTest(tier=tier):
                 target = load_accuracy_target(tier)

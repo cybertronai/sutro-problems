@@ -53,12 +53,12 @@ is prescribed.
 | Tier | Required accuracy | Minimum correct predictions over the evaluation | Evaluation basis |
 | --- | ---: | ---: | --- |
 | MNIST-small | 60% mean | 3,960 / 6,600 across 11 draws | Historical fixed-split feasibility informed the target; evaluate the current algorithm across 11 new dataset draws |
-| MNIST-medium | 98.14% mean | 64,773 / 66,000 across 11 draws | Target adopted from the neighboring historical evaluation; evaluate it across 11 current 6,000/6,000 draws |
+| MNIST-medium | 98% mean | 64,680 / 66,000 across 11 draws | Evaluate the frozen algorithm across 11 current 6,000/6,000 draws |
 | MNIST-large | 98% | 9,800 / 10,000 on the official test split | Existing full-size task; no random-subset evaluation is introduced for large |
 
-The medium target adopts the reported historical mean as a policy requirement
-for the current 6,000/6,000 tier; it is not a measurement on that current split.
-The reference run's three accuracies were 98.18%, 98.19%, and 98.05%.
+The medium target is 98%. The neighboring historical evaluation informed its
+development but used a different dataset protocol. That reference run's three
+accuracies were 98.18%, 98.19%, and 98.05%.
 [Reference results and W&B runs](#reference-results) preserve the original
 protocol and evidence. The small target was informed by the
 [current-split feasibility study](https://cybertronai.github.io/sutro-problems/docs/submissions/accuracy-il-20260911/).
@@ -68,10 +68,9 @@ mean across all 11 dataset draws**, not to every draw and not to mean minus SD.
 All draws within a tier have the same test size, so compare
 `sum(correct) / (11 * test_examples_per_draw)` to the exact target fraction.
 Equivalently, `required_total_correct = ceil(11 * test_examples_per_draw * target_percent / 100)`.
-For medium, the repository's 98.14% target requires **64,773 / 66,000** correct;
-the separately requested 98% goal requires **64,680 / 66,000**. Do not multiply
-the rounded single-draw threshold of 5,889 by 11. A rounded display percentage
-does not establish a pass.
+For medium, the 98% target requires **64,680 / 66,000** correct. Apply the exact
+fraction to the aggregate count; a rounded display percentage does not establish
+a pass.
 
 The existing evaluator reads the decimal target strings from
 [accuracy_targets.json](doc/accuracy_targets.json) and evaluates **one dataset**.
@@ -142,7 +141,7 @@ training-seed variability, not variability across subsets of the 60,000 pool.
 | Problem | Image resolution | Training examples | Test examples | Accuracy requirement | Source |
 | --- | --- | ---: | ---: | ---: | --- |
 | MNIST-small | 3 × 3 | 600 | 600 | 60% mean over 11 draws | Disjoint random subsets of the original 60,000 MNIST training examples |
-| MNIST-medium | 9 × 9 | 6,000 | 6,000 | 98.14% mean over 11 draws | Disjoint random subsets of the original 60,000 MNIST training examples |
+| MNIST-medium | 9 × 9 | 6,000 | 6,000 | 98% mean over 11 draws | Disjoint random subsets of the original 60,000 MNIST training examples |
 | MNIST-large | 28 × 28 | 60,000 | 10,000 | 98% | Classic MNIST training and test splits, in full |
 
 Small and medium are sampled **without replacement**, with no train/test overlap.
