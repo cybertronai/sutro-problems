@@ -1,0 +1,1288 @@
+{
+  "tier": "medium",
+  "smoke": false,
+  "group": "mnist-20260910",
+  "entity": "yaroslavvb",
+  "project": "sutro-mnist-tiers",
+  "dataset_sha256": "1c5332004d6ab673aa26594ef73e1937b7ab5fa57da9e88b9169b3e037df2fb2",
+  "hardware": "NVIDIA A100-SXM4-40GB",
+  "torch_version": "2.5.1+cu124",
+  "numpy_version": "2.2.6",
+  "wandb_version": "0.30.0",
+  "python_version": "3.11.15",
+  "selection": {
+    "trial_id": "medium-17-cnn",
+    "config": {
+      "trial_id": "medium-17-cnn",
+      "architecture": "cnn",
+      "width": 32,
+      "depth": 3,
+      "dropout": 0.2,
+      "lr": 0.001,
+      "weight_decay": 0.001,
+      "batch_size": 128,
+      "epochs": 60,
+      "pooling": "none"
+    },
+    "mean_val_accuracy": 0.9825,
+    "mean_val_loss": 0.08277223587036132,
+    "val_accuracy_std": 0.0013228756555323175,
+    "selected_epochs": 50,
+    "parameters": 352106,
+    "seeds": [
+      11,
+      22,
+      33
+    ]
+  },
+  "finalists": [
+    {
+      "trial_id": "medium-17-cnn",
+      "config": {
+        "trial_id": "medium-17-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 3,
+        "dropout": 0.2,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "none"
+      },
+      "mean_val_accuracy": 0.9825,
+      "mean_val_loss": 0.08277223587036132,
+      "val_accuracy_std": 0.0013228756555323175,
+      "selected_epochs": 50,
+      "parameters": 352106,
+      "seeds": [
+        11,
+        22,
+        33
+      ]
+    },
+    {
+      "trial_id": "medium-12-cnn",
+      "config": {
+        "trial_id": "medium-12-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 3,
+        "dropout": 0.2,
+        "lr": 0.003,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "max"
+      },
+      "mean_val_accuracy": 0.9823333333333334,
+      "mean_val_loss": 0.09615988794962566,
+      "val_accuracy_std": 0.0010408329997330763,
+      "selected_epochs": 52,
+      "parameters": 85866,
+      "seeds": [
+        11,
+        22,
+        33
+      ]
+    },
+    {
+      "trial_id": "medium-07-cnn",
+      "config": {
+        "trial_id": "medium-07-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 2,
+        "dropout": 0.1,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "max"
+      },
+      "mean_val_accuracy": 0.9806666666666667,
+      "mean_val_loss": 0.07594990603129069,
+      "val_accuracy_std": 0.001755942292142151,
+      "selected_epochs": 28,
+      "parameters": 76586,
+      "seeds": [
+        11,
+        22,
+        33
+      ]
+    }
+  ],
+  "search_runs": [
+    {
+      "name": "medium-search-medium-00-linear-s11",
+      "config": {
+        "trial_id": "medium-00-linear",
+        "architecture": "linear",
+        "width": 0,
+        "depth": 0,
+        "dropout": 0.0,
+        "lr": 0.01,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60
+      },
+      "seed": 11,
+      "phase": "search",
+      "parameters": 820,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 24,
+        "learning_rate": 0.006856002952771976,
+        "elapsed_seconds": 2.055504484,
+        "train/loss": 0.29712432670593264,
+        "train/accuracy": 0.912625,
+        "val/loss": 0.3357292327880859,
+        "val/accuracy": 0.9025
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 0.00020671527970258824,
+        "elapsed_seconds": 4.379777156000001,
+        "train/loss": 0.28680399894714353,
+        "train/accuracy": 0.915375,
+        "val/loss": 0.3382846832275391,
+        "val/accuracy": 0.896
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/bek3g8ho",
+      "wandb_id": "bek3g8ho"
+    },
+    {
+      "name": "medium-search-medium-01-mlp-s11",
+      "config": {
+        "trial_id": "medium-01-mlp",
+        "architecture": "mlp",
+        "width": 128,
+        "depth": 2,
+        "dropout": 0.1,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60
+      },
+      "seed": 11,
+      "phase": "search",
+      "parameters": 28298,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 46,
+        "learning_rate": 0.00016351767721859182,
+        "elapsed_seconds": 6.840178560000002,
+        "train/loss": 0.034414910078048706,
+        "train/accuracy": 0.992375,
+        "val/loss": 0.11568548583984375,
+        "val/accuracy": 0.963
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 2.0671527970258823e-05,
+        "elapsed_seconds": 8.862206798000003,
+        "train/loss": 0.0313121829032898,
+        "train/accuracy": 0.9935,
+        "val/loss": 0.1176599006652832,
+        "val/accuracy": 0.963
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/bs6vbijg",
+      "wandb_id": "bs6vbijg"
+    },
+    {
+      "name": "medium-search-medium-02-mlp-s11",
+      "config": {
+        "trial_id": "medium-02-mlp",
+        "architecture": "mlp",
+        "width": 256,
+        "depth": 2,
+        "dropout": 0.1,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60
+      },
+      "seed": 11,
+      "phase": "search",
+      "parameters": 89354,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 54,
+        "learning_rate": 5.2545591016371184e-05,
+        "elapsed_seconds": 7.799274423,
+        "train/loss": 0.007853361427783966,
+        "train/accuracy": 0.999125,
+        "val/loss": 0.12541058731079102,
+        "val/accuracy": 0.969
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 2.0671527970258823e-05,
+        "elapsed_seconds": 8.649353520999995,
+        "train/loss": 0.00759543764591217,
+        "train/accuracy": 0.999,
+        "val/loss": 0.12726572799682617,
+        "val/accuracy": 0.968
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/x0tx8msx",
+      "wandb_id": "x0tx8msx"
+    },
+    {
+      "name": "medium-search-medium-03-mlp-s11",
+      "config": {
+        "trial_id": "medium-03-mlp",
+        "architecture": "mlp",
+        "width": 256,
+        "depth": 2,
+        "dropout": 0.2,
+        "lr": 0.003,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60
+      },
+      "seed": 11,
+      "phase": "search",
+      "parameters": 89354,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 59,
+        "learning_rate": 6.80528138086381e-05,
+        "elapsed_seconds": 8.693004479999999,
+        "train/loss": 0.0003620197642594576,
+        "train/accuracy": 1.0,
+        "val/loss": 0.1373197898864746,
+        "val/accuracy": 0.9735
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 6.201458391077647e-05,
+        "elapsed_seconds": 8.831480470999999,
+        "train/loss": 0.0003538514953106642,
+        "train/accuracy": 1.0,
+        "val/loss": 0.1393008041381836,
+        "val/accuracy": 0.9735
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/ndlyzey1",
+      "wandb_id": "ndlyzey1"
+    },
+    {
+      "name": "medium-search-medium-04-mlp-s11",
+      "config": {
+        "trial_id": "medium-04-mlp",
+        "architecture": "mlp",
+        "width": 256,
+        "depth": 3,
+        "dropout": 0.1,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60
+      },
+      "seed": 11,
+      "phase": "search",
+      "parameters": 155146,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 25,
+        "learning_rate": 0.0006614183272437244,
+        "elapsed_seconds": 4.736454533,
+        "train/loss": 0.01433569198846817,
+        "train/accuracy": 0.996,
+        "val/loss": 0.11655170440673829,
+        "val/accuracy": 0.969
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 2.0671527970258823e-05,
+        "elapsed_seconds": 11.319389489999999,
+        "train/loss": 0.002321063384413719,
+        "train/accuracy": 0.999625,
+        "val/loss": 0.14017516326904297,
+        "val/accuracy": 0.9675
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/np8tle0c",
+      "wandb_id": "np8tle0c"
+    },
+    {
+      "name": "medium-search-medium-05-mlp-s11",
+      "config": {
+        "trial_id": "medium-05-mlp",
+        "architecture": "mlp",
+        "width": 512,
+        "depth": 2,
+        "dropout": 0.2,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60
+      },
+      "seed": 11,
+      "phase": "search",
+      "parameters": 309770,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 33,
+        "learning_rate": 0.00045878105299885,
+        "elapsed_seconds": 4.749292183000001,
+        "train/loss": 0.005239101469516754,
+        "train/accuracy": 0.9995,
+        "val/loss": 0.1270529556274414,
+        "val/accuracy": 0.97
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 2.0671527970258823e-05,
+        "elapsed_seconds": 8.901645838,
+        "train/loss": 0.0020853446871042253,
+        "train/accuracy": 0.999875,
+        "val/loss": 0.13494140243530273,
+        "val/accuracy": 0.9685
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/lym1hqxt",
+      "wandb_id": "lym1hqxt"
+    },
+    {
+      "name": "medium-search-medium-06-cnn-s11",
+      "config": {
+        "trial_id": "medium-06-cnn",
+        "architecture": "cnn",
+        "width": 16,
+        "depth": 2,
+        "dropout": 0.1,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "max"
+      },
+      "seed": 11,
+      "phase": "search",
+      "parameters": 19610,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 44,
+        "learning_rate": 0.00020163300838557983,
+        "elapsed_seconds": 8.422395797000007,
+        "train/loss": 0.0024323945194482804,
+        "train/accuracy": 1.0,
+        "val/loss": 0.08601031112670898,
+        "val/accuracy": 0.9775
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 2.0671527970258823e-05,
+        "elapsed_seconds": 11.293229316999998,
+        "train/loss": 0.0015546985119581224,
+        "train/accuracy": 1.0,
+        "val/loss": 0.0868196029663086,
+        "val/accuracy": 0.976
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/6sitxils",
+      "wandb_id": "6sitxils"
+    },
+    {
+      "name": "medium-search-medium-07-cnn-s11",
+      "config": {
+        "trial_id": "medium-07-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 2,
+        "dropout": 0.1,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "max"
+      },
+      "seed": 11,
+      "phase": "search",
+      "parameters": 76586,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 28,
+        "learning_rate": 0.0005866528878697133,
+        "elapsed_seconds": 5.033944203999994,
+        "train/loss": 0.000714532122015953,
+        "train/accuracy": 1.0,
+        "val/loss": 0.07403342056274415,
+        "val/accuracy": 0.9825
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 2.0671527970258823e-05,
+        "elapsed_seconds": 10.708553437999996,
+        "train/loss": 0.00023376990854740142,
+        "train/accuracy": 1.0,
+        "val/loss": 0.07691109466552734,
+        "val/accuracy": 0.9815
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/cijncjl2",
+      "wandb_id": "cijncjl2"
+    },
+    {
+      "name": "medium-search-medium-08-cnn-s11",
+      "config": {
+        "trial_id": "medium-08-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 2,
+        "dropout": 0.1,
+        "lr": 0.003,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "max"
+      },
+      "seed": 11,
+      "phase": "search",
+      "parameters": 76586,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 49,
+        "learning_rate": 0.0003407450182688274,
+        "elapsed_seconds": 8.749761273000004,
+        "train/loss": 4.5183791778981685e-05,
+        "train/accuracy": 1.0,
+        "val/loss": 0.09176168060302735,
+        "val/accuracy": 0.9805
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 6.201458391077647e-05,
+        "elapsed_seconds": 10.73796650700001,
+        "train/loss": 4.415140068158507e-05,
+        "train/accuracy": 1.0,
+        "val/loss": 0.09442599868774414,
+        "val/accuracy": 0.9795
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/flldr87l",
+      "wandb_id": "flldr87l"
+    },
+    {
+      "name": "medium-search-medium-09-cnn-s11",
+      "config": {
+        "trial_id": "medium-09-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 2,
+        "dropout": 0.2,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "max"
+      },
+      "seed": 11,
+      "phase": "search",
+      "parameters": 76586,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 31,
+        "learning_rate": 0.0005100000000000003,
+        "elapsed_seconds": 5.713059525999995,
+        "train/loss": 0.001035579465329647,
+        "train/accuracy": 1.0,
+        "val/loss": 0.07130567932128906,
+        "val/accuracy": 0.981
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 2.0671527970258823e-05,
+        "elapsed_seconds": 10.88746995999999,
+        "train/loss": 0.00021677901223301888,
+        "train/accuracy": 1.0,
+        "val/loss": 0.0779302978515625,
+        "val/accuracy": 0.98
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/5wi9dh0y",
+      "wandb_id": "5wi9dh0y"
+    },
+    {
+      "name": "medium-search-medium-10-cnn-s11",
+      "config": {
+        "trial_id": "medium-10-cnn",
+        "architecture": "cnn",
+        "width": 48,
+        "depth": 2,
+        "dropout": 0.1,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "max"
+      },
+      "seed": 11,
+      "phase": "search",
+      "parameters": 170938,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 24,
+        "learning_rate": 0.0006856002952771974,
+        "elapsed_seconds": 4.527909003000005,
+        "train/loss": 0.0007796669006347656,
+        "train/accuracy": 1.0,
+        "val/loss": 0.08456917572021484,
+        "val/accuracy": 0.9795
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 2.0671527970258823e-05,
+        "elapsed_seconds": 11.430635652999996,
+        "train/loss": 0.00011917483992874622,
+        "train/accuracy": 1.0,
+        "val/loss": 0.08924731063842774,
+        "val/accuracy": 0.9765
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/1gq0esed",
+      "wandb_id": "1gq0esed"
+    },
+    {
+      "name": "medium-search-medium-11-cnn-s11",
+      "config": {
+        "trial_id": "medium-11-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 3,
+        "dropout": 0.1,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "max"
+      },
+      "seed": 11,
+      "phase": "search",
+      "parameters": 85866,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 23,
+        "learning_rate": 0.0007093009551071423,
+        "elapsed_seconds": 5.293037053000006,
+        "train/loss": 0.00019487958028912544,
+        "train/accuracy": 1.0,
+        "val/loss": 0.08201372146606445,
+        "val/accuracy": 0.9795
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 2.0671527970258823e-05,
+        "elapsed_seconds": 13.406428154999986,
+        "train/loss": 5.703158676624298e-05,
+        "train/accuracy": 1.0,
+        "val/loss": 0.08481212997436524,
+        "val/accuracy": 0.978
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/xgqxi1hy",
+      "wandb_id": "xgqxi1hy"
+    },
+    {
+      "name": "medium-search-medium-12-cnn-s11",
+      "config": {
+        "trial_id": "medium-12-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 3,
+        "dropout": 0.2,
+        "lr": 0.003,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "max"
+      },
+      "seed": 11,
+      "phase": "search",
+      "parameters": 85866,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 56,
+        "learning_rate": 0.0001100890353550696,
+        "elapsed_seconds": 12.097307139000009,
+        "train/loss": 1.2092950870282949e-05,
+        "train/accuracy": 1.0,
+        "val/loss": 0.10644552230834961,
+        "val/accuracy": 0.9835
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 6.201458391077647e-05,
+        "elapsed_seconds": 12.920468763000002,
+        "train/loss": 1.133980811573565e-05,
+        "train/accuracy": 1.0,
+        "val/loss": 0.10834763336181641,
+        "val/accuracy": 0.982
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/wgy9572v",
+      "wandb_id": "wgy9572v"
+    },
+    {
+      "name": "medium-search-medium-13-cnn-s11",
+      "config": {
+        "trial_id": "medium-13-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 2,
+        "dropout": 0.1,
+        "lr": 0.001,
+        "weight_decay": 0.01,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "max"
+      },
+      "seed": 11,
+      "phase": "search",
+      "parameters": 76586,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 44,
+        "learning_rate": 0.00020163300838557983,
+        "elapsed_seconds": 7.935074248999996,
+        "train/loss": 0.00032425856962800027,
+        "train/accuracy": 1.0,
+        "val/loss": 0.07488820266723632,
+        "val/accuracy": 0.9825
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 2.0671527970258823e-05,
+        "elapsed_seconds": 10.744253519000011,
+        "train/loss": 0.00025624819844961166,
+        "train/accuracy": 1.0,
+        "val/loss": 0.07511530685424804,
+        "val/accuracy": 0.982
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/xc29rzvd",
+      "wandb_id": "xc29rzvd"
+    },
+    {
+      "name": "medium-search-medium-14-cnn-s11",
+      "config": {
+        "trial_id": "medium-14-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 2,
+        "dropout": 0.1,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 256,
+        "epochs": 60,
+        "pooling": "max"
+      },
+      "seed": 11,
+      "phase": "search",
+      "parameters": 76586,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 45,
+        "learning_rate": 0.00018212600288415972,
+        "elapsed_seconds": 4.496242424999991,
+        "train/loss": 0.0010269297063350677,
+        "train/accuracy": 1.0,
+        "val/loss": 0.07145859146118164,
+        "val/accuracy": 0.9795
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 2.0671527970258823e-05,
+        "elapsed_seconds": 5.92957408800001,
+        "train/loss": 0.0008667383641004562,
+        "train/accuracy": 1.0,
+        "val/loss": 0.07392501831054688,
+        "val/accuracy": 0.9785
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/jvntxsba",
+      "wandb_id": "jvntxsba"
+    },
+    {
+      "name": "medium-search-medium-15-cnn-s11",
+      "config": {
+        "trial_id": "medium-15-cnn",
+        "architecture": "cnn",
+        "width": 16,
+        "depth": 2,
+        "dropout": 0.1,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "none"
+      },
+      "seed": 11,
+      "phase": "search",
+      "parameters": 86170,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 32,
+        "learning_rate": 0.0004843553814409577,
+        "elapsed_seconds": 7.012342779000022,
+        "train/loss": 0.0007327844351530075,
+        "train/accuracy": 1.0,
+        "val/loss": 0.09734085464477539,
+        "val/accuracy": 0.978
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 2.0671527970258823e-05,
+        "elapsed_seconds": 11.902739604000004,
+        "train/loss": 0.00031720674037933347,
+        "train/accuracy": 1.0,
+        "val/loss": 0.10268166732788087,
+        "val/accuracy": 0.976
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/ive7rahm",
+      "wandb_id": "ive7rahm"
+    },
+    {
+      "name": "medium-search-medium-16-cnn-s11",
+      "config": {
+        "trial_id": "medium-16-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 2,
+        "dropout": 0.1,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "none"
+      },
+      "seed": 11,
+      "phase": "search",
+      "parameters": 342826,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 31,
+        "learning_rate": 0.0005100000000000003,
+        "elapsed_seconds": 5.420024845,
+        "train/loss": 0.0003904549591243267,
+        "train/accuracy": 0.999875,
+        "val/loss": 0.09101129531860351,
+        "val/accuracy": 0.978
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 2.0671527970258823e-05,
+        "elapsed_seconds": 11.038771275000016,
+        "train/loss": 8.831153344362974e-05,
+        "train/accuracy": 1.0,
+        "val/loss": 0.09504497146606446,
+        "val/accuracy": 0.975
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/bd3boprn",
+      "wandb_id": "bd3boprn"
+    },
+    {
+      "name": "medium-search-medium-17-cnn-s11",
+      "config": {
+        "trial_id": "medium-17-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 3,
+        "dropout": 0.2,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "none"
+      },
+      "seed": 11,
+      "phase": "search",
+      "parameters": 352106,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 50,
+        "learning_rate": 9.905142170674232e-05,
+        "elapsed_seconds": 11.373224548999985,
+        "train/loss": 2.60152209084481e-05,
+        "train/accuracy": 1.0,
+        "val/loss": 0.07346558952331543,
+        "val/accuracy": 0.9835
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 2.0671527970258823e-05,
+        "elapsed_seconds": 13.422206095999996,
+        "train/loss": 2.4648378137499095e-05,
+        "train/accuracy": 1.0,
+        "val/loss": 0.07405184936523437,
+        "val/accuracy": 0.9835
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/irfm99uw",
+      "wandb_id": "irfm99uw"
+    },
+    {
+      "name": "medium-replicate-medium-17-cnn-s22",
+      "config": {
+        "trial_id": "medium-17-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 3,
+        "dropout": 0.2,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "none"
+      },
+      "seed": 22,
+      "phase": "replicate",
+      "parameters": 352106,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 19,
+        "learning_rate": 0.0007980147736233118,
+        "elapsed_seconds": 3.976529656999986,
+        "train/loss": 0.00037518476881086824,
+        "train/accuracy": 1.0,
+        "val/loss": 0.07979952430725097,
+        "val/accuracy": 0.983
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 2.0671527970258823e-05,
+        "elapsed_seconds": 12.560049136999993,
+        "train/loss": 2.567733684554696e-05,
+        "train/accuracy": 1.0,
+        "val/loss": 0.0813655662536621,
+        "val/accuracy": 0.983
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/j5gu9kor",
+      "wandb_id": "j5gu9kor"
+    },
+    {
+      "name": "medium-replicate-medium-17-cnn-s33",
+      "config": {
+        "trial_id": "medium-17-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 3,
+        "dropout": 0.2,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "none"
+      },
+      "seed": 33,
+      "phase": "replicate",
+      "parameters": 352106,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 50,
+        "learning_rate": 9.905142170674232e-05,
+        "elapsed_seconds": 11.339221854000016,
+        "train/loss": 2.500603045336902e-05,
+        "train/accuracy": 1.0,
+        "val/loss": 0.09505159378051758,
+        "val/accuracy": 0.981
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 2.0671527970258823e-05,
+        "elapsed_seconds": 13.417674620000014,
+        "train/loss": 2.1984809543937445e-05,
+        "train/accuracy": 1.0,
+        "val/loss": 0.09803490829467773,
+        "val/accuracy": 0.9805
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/jwrqh8fp",
+      "wandb_id": "jwrqh8fp"
+    },
+    {
+      "name": "medium-replicate-medium-12-cnn-s22",
+      "config": {
+        "trial_id": "medium-12-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 3,
+        "dropout": 0.2,
+        "lr": 0.003,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "max"
+      },
+      "seed": 22,
+      "phase": "replicate",
+      "parameters": 85866,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 52,
+        "learning_rate": 0.00022022040944309938,
+        "elapsed_seconds": 11.508748424999965,
+        "train/loss": 1.159507519332692e-05,
+        "train/accuracy": 1.0,
+        "val/loss": 0.09372742462158203,
+        "val/accuracy": 0.982
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 6.201458391077647e-05,
+        "elapsed_seconds": 13.153527881999992,
+        "train/loss": 1.1018288729246705e-05,
+        "train/accuracy": 1.0,
+        "val/loss": 0.09537339782714843,
+        "val/accuracy": 0.9805
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/a4235ke9",
+      "wandb_id": "a4235ke9"
+    },
+    {
+      "name": "medium-replicate-medium-12-cnn-s33",
+      "config": {
+        "trial_id": "medium-12-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 3,
+        "dropout": 0.2,
+        "lr": 0.003,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "max"
+      },
+      "seed": 33,
+      "phase": "replicate",
+      "parameters": 85866,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 33,
+        "learning_rate": 0.0013763431589965494,
+        "elapsed_seconds": 7.044609382000033,
+        "train/loss": 2.261623099911958e-05,
+        "train/accuracy": 1.0,
+        "val/loss": 0.08830671691894532,
+        "val/accuracy": 0.9815
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 6.201458391077647e-05,
+        "elapsed_seconds": 12.809397773,
+        "train/loss": 1.1692609987221659e-05,
+        "train/accuracy": 1.0,
+        "val/loss": 0.0962041015625,
+        "val/accuracy": 0.9805
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/ykqaf1da",
+      "wandb_id": "ykqaf1da"
+    },
+    {
+      "name": "medium-replicate-medium-07-cnn-s22",
+      "config": {
+        "trial_id": "medium-07-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 2,
+        "dropout": 0.1,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "max"
+      },
+      "seed": 22,
+      "phase": "replicate",
+      "parameters": 76586,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 13,
+        "learning_rate": 0.0009064183272437242,
+        "elapsed_seconds": 2.4205561059999923,
+        "train/loss": 0.009218646347522735,
+        "train/accuracy": 0.998875,
+        "val/loss": 0.07696254348754883,
+        "val/accuracy": 0.979
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 2.0671527970258823e-05,
+        "elapsed_seconds": 11.074776901000007,
+        "train/loss": 0.0002422707751393318,
+        "train/accuracy": 1.0,
+        "val/loss": 0.08233118057250977,
+        "val/accuracy": 0.9765
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/gukr0igw",
+      "wandb_id": "gukr0igw"
+    },
+    {
+      "name": "medium-replicate-medium-07-cnn-s33",
+      "config": {
+        "trial_id": "medium-07-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 2,
+        "dropout": 0.1,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "max"
+      },
+      "seed": 33,
+      "phase": "replicate",
+      "parameters": 76586,
+      "epochs": 60,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13075630366802216,
+        "std": 0.2416219264268875
+      },
+      "best": {
+        "epoch": 42,
+        "learning_rate": 0.00024312687284263698,
+        "elapsed_seconds": 7.427021397999965,
+        "train/loss": 0.0003955707363784313,
+        "train/accuracy": 1.0,
+        "val/loss": 0.0768537540435791,
+        "val/accuracy": 0.9805
+      },
+      "last": {
+        "epoch": 60,
+        "learning_rate": 2.0671527970258823e-05,
+        "elapsed_seconds": 10.589248943999962,
+        "train/loss": 0.0002810053527355194,
+        "train/accuracy": 1.0,
+        "val/loss": 0.07939802932739258,
+        "val/accuracy": 0.9785
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/1p212513",
+      "wandb_id": "1p212513"
+    }
+  ],
+  "final_runs": [
+    {
+      "name": "medium-final-medium-17-cnn-s101",
+      "config": {
+        "trial_id": "medium-17-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 3,
+        "dropout": 0.2,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "none"
+      },
+      "seed": 101,
+      "phase": "final",
+      "parameters": 352106,
+      "epochs": 50,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13094526529312134,
+        "std": 0.24194130301475525
+      },
+      "best": null,
+      "last": {
+        "epoch": 50,
+        "learning_rate": 9.905142170674232e-05,
+        "elapsed_seconds": 12.732757765999963,
+        "train/loss": 2.4023967050015925e-05,
+        "train/accuracy": 1.0
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/b02t0xdi",
+      "wandb_id": "b02t0xdi",
+      "checkpoint": "checkpoints/medium-final-medium-17-cnn-s101.pt",
+      "test": {
+        "loss": 0.08454391937255859,
+        "accuracy": 0.9818
+      }
+    },
+    {
+      "name": "medium-final-medium-17-cnn-s102",
+      "config": {
+        "trial_id": "medium-17-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 3,
+        "dropout": 0.2,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "none"
+      },
+      "seed": 102,
+      "phase": "final",
+      "parameters": 352106,
+      "epochs": 50,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13094526529312134,
+        "std": 0.24194130301475525
+      },
+      "best": null,
+      "last": {
+        "epoch": 50,
+        "learning_rate": 9.905142170674232e-05,
+        "elapsed_seconds": 12.903785276000008,
+        "train/loss": 3.118490409106016e-05,
+        "train/accuracy": 1.0
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/79tnclhp",
+      "wandb_id": "79tnclhp",
+      "checkpoint": "checkpoints/medium-final-medium-17-cnn-s102.pt",
+      "test": {
+        "loss": 0.08575009346008301,
+        "accuracy": 0.9819
+      }
+    },
+    {
+      "name": "medium-final-medium-17-cnn-s103",
+      "config": {
+        "trial_id": "medium-17-cnn",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 3,
+        "dropout": 0.2,
+        "lr": 0.001,
+        "weight_decay": 0.001,
+        "batch_size": 128,
+        "epochs": 60,
+        "pooling": "none"
+      },
+      "seed": 103,
+      "phase": "final",
+      "parameters": 352106,
+      "epochs": 50,
+      "schedule_epochs": 60,
+      "normalization": {
+        "mean": 0.13094526529312134,
+        "std": 0.24194130301475525
+      },
+      "best": null,
+      "last": {
+        "epoch": 50,
+        "learning_rate": 9.905142170674232e-05,
+        "elapsed_seconds": 12.613867413000037,
+        "train/loss": 2.346000000834465e-05,
+        "train/accuracy": 1.0
+      },
+      "wandb_url": "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/xjmlhkwj",
+      "wandb_id": "xjmlhkwj",
+      "checkpoint": "checkpoints/medium-final-medium-17-cnn-s103.pt",
+      "test": {
+        "loss": 0.09015059280395508,
+        "accuracy": 0.9805
+      }
+    }
+  ],
+  "test_accuracy_mean": 0.9814,
+  "test_accuracy_std": 0.0007810249675906434
+}

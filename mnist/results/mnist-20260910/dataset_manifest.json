@@ -1,0 +1,309 @@
+{
+  "dataset": "MNIST",
+  "format_version": 1,
+  "resize": {
+    "boundary": "Pixel i covers [i,i+1); output j covers [j*28/size,(j+1)*28/size)",
+    "implementation": "Integer-scaled overlap endpoints, float32 weights and matrix multiplication",
+    "layout": "N,1,H,W",
+    "method": "Exact separable box-area overlap averaging",
+    "normalization": "Convert uint8 to float32 and divide by 255 before resizing",
+    "pixel_dtype": "float32",
+    "range": [
+      0.0,
+      1.0
+    ]
+  },
+  "sampling": {
+    "algorithm": "numpy.random.PCG64",
+    "indices": "Zero-based rows of the original official split, before resizing",
+    "seed_derivation": "SeedSequence(seed).spawn(2): child 0 train, child 1 test",
+    "selection": "Without replacement; nested prefixes of independent official-split permutations",
+    "test_source": "Official MNIST 10,000-example test split",
+    "train_source": "Official MNIST 60,000-example training split"
+  },
+  "seed": 20260910,
+  "sources": {
+    "test_images": {
+      "bytes": 1648877,
+      "md5": "9fb629c4189551a2d022fa330f9573f3",
+      "path": "raw/t10k-images-idx3-ubyte.gz",
+      "sha256": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+      "url": "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz"
+    },
+    "test_labels": {
+      "bytes": 4542,
+      "md5": "ec29112dd5afa0611ce80d1b7f02629c",
+      "path": "raw/t10k-labels-idx1-ubyte.gz",
+      "sha256": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6",
+      "url": "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz"
+    },
+    "train_images": {
+      "bytes": 9912422,
+      "md5": "f68b3c2dcbeaaa9fbdd348bbdeb94873",
+      "path": "raw/train-images-idx3-ubyte.gz",
+      "sha256": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+      "url": "https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz"
+    },
+    "train_labels": {
+      "bytes": 28881,
+      "md5": "d53e105ee54ea40749a09fcbcd1e9432",
+      "path": "raw/train-labels-idx1-ubyte.gz",
+      "sha256": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+      "url": "https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz"
+    }
+  },
+  "tiers": {
+    "large": {
+      "arrays": {
+        "test_images": {
+          "dtype": "float32",
+          "sha256_c_order_little_endian": "a0bea0f5d624972fb5de4249713a27c40d4d4741331435c5cabec2e241157cc6",
+          "shape": [
+            10000,
+            1,
+            28,
+            28
+          ]
+        },
+        "test_indices": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "57944bd48cc9fb580b430f06429c5fa86677d59ab83a8c7c6f735820e32c4b1a",
+          "shape": [
+            10000
+          ]
+        },
+        "test_labels": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "b5a3bf413e2132cdba5edb29419f716d76800be10760dc8b1635c2da5ec502c7",
+          "shape": [
+            10000
+          ]
+        },
+        "train_images": {
+          "dtype": "float32",
+          "sha256_c_order_little_endian": "361bdc05f9f43eb1e8d8b1d04ccf5b39dd57adc2fa2257e36cbe2af1b2558a02",
+          "shape": [
+            60000,
+            1,
+            28,
+            28
+          ]
+        },
+        "train_indices": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "bcd5f711e30cd0dc47d7b017f11d498946c3a63f465eda560cfc53a059b3574f",
+          "shape": [
+            60000
+          ]
+        },
+        "train_labels": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "96810c3f1ddbec63362411dc1c2f6d72be92d40d7ab6c6ffb8fd323ca69b0677",
+          "shape": [
+            60000
+          ]
+        }
+      },
+      "bytes": 18630857,
+      "class_histograms": {
+        "test": [
+          980,
+          1135,
+          1032,
+          1010,
+          982,
+          892,
+          958,
+          1028,
+          974,
+          1009
+        ],
+        "train": [
+          5923,
+          6742,
+          5958,
+          6131,
+          5842,
+          5421,
+          5918,
+          6265,
+          5851,
+          5949
+        ]
+      },
+      "path": "large.npz",
+      "sha256": "53cf203b108cd498c1b80026b5d6c2c90967a8773615c13328ef2c5d12a85876",
+      "size": 28,
+      "test_count": 10000,
+      "train_count": 60000
+    },
+    "medium": {
+      "arrays": {
+        "test_images": {
+          "dtype": "float32",
+          "sha256_c_order_little_endian": "b526e37c4a9c2bbfebe7b09bda3c1bed7e85b6d354fa155cb1439407fa560903",
+          "shape": [
+            10000,
+            1,
+            9,
+            9
+          ]
+        },
+        "test_indices": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "57944bd48cc9fb580b430f06429c5fa86677d59ab83a8c7c6f735820e32c4b1a",
+          "shape": [
+            10000
+          ]
+        },
+        "test_labels": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "b5a3bf413e2132cdba5edb29419f716d76800be10760dc8b1635c2da5ec502c7",
+          "shape": [
+            10000
+          ]
+        },
+        "train_images": {
+          "dtype": "float32",
+          "sha256_c_order_little_endian": "3b550382b711ce19632089287d21e4be5c3d743e2f39da0f6572bac333516ea4",
+          "shape": [
+            10000,
+            1,
+            9,
+            9
+          ]
+        },
+        "train_indices": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "1c0a53bc90cae9773e6a0be679c07b78f9780559dfc283fdca1dba4c0c8a4974",
+          "shape": [
+            10000
+          ]
+        },
+        "train_labels": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "b8d8b51064aed6e7ded9fdbaa105aa72446b14267e5aa414eff01b4a72acc95a",
+          "shape": [
+            10000
+          ]
+        }
+      },
+      "bytes": 2772998,
+      "class_histograms": {
+        "test": [
+          980,
+          1135,
+          1032,
+          1010,
+          982,
+          892,
+          958,
+          1028,
+          974,
+          1009
+        ],
+        "train": [
+          979,
+          1128,
+          1001,
+          1022,
+          970,
+          871,
+          969,
+          1073,
+          1001,
+          986
+        ]
+      },
+      "path": "medium.npz",
+      "sha256": "1c5332004d6ab673aa26594ef73e1937b7ab5fa57da9e88b9169b3e037df2fb2",
+      "size": 9,
+      "test_count": 10000,
+      "train_count": 10000
+    },
+    "small": {
+      "arrays": {
+        "test_images": {
+          "dtype": "float32",
+          "sha256_c_order_little_endian": "35e3c52e5c795a2d173c2ee810d0e375ff0e8cf60c63265acda20500fceb74ba",
+          "shape": [
+            1000,
+            1,
+            3,
+            3
+          ]
+        },
+        "test_indices": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "70a923c2af55f33bf01cd62a402203a1a667ada79af4e9b2bd396927723cc783",
+          "shape": [
+            1000
+          ]
+        },
+        "test_labels": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "ca8d77f14e658b6ed6dd7546426e0f7daab6a4c24afb050de2ddf4b2a3ca61cd",
+          "shape": [
+            1000
+          ]
+        },
+        "train_images": {
+          "dtype": "float32",
+          "sha256_c_order_little_endian": "b1124e34e89e5a216c6775449865762973f9c1819a75173f0ffc635e58122c93",
+          "shape": [
+            1000,
+            1,
+            3,
+            3
+          ]
+        },
+        "train_indices": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "5edc9703c061b5dae3f46da0f6f7d39ca379cfeef017116b89399a1fcf7b493a",
+          "shape": [
+            1000
+          ]
+        },
+        "train_labels": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "667ca2e3bb1346efb9d09f7aff9eda0843a9dc3da89cce0452b2b35bc6c123b9",
+          "shape": [
+            1000
+          ]
+        }
+      },
+      "bytes": 65532,
+      "class_histograms": {
+        "test": [
+          80,
+          123,
+          108,
+          95,
+          99,
+          105,
+          75,
+          90,
+          104,
+          121
+        ],
+        "train": [
+          100,
+          120,
+          108,
+          87,
+          91,
+          83,
+          105,
+          115,
+          83,
+          108
+        ]
+      },
+      "path": "small.npz",
+      "sha256": "b5cab1e475c3a6d8d35bf5c27e27bddee55f33baab20c178a50b053b764a78ca",
+      "size": 3,
+      "test_count": 1000,
+      "train_count": 1000
+    }
+  }
+}
