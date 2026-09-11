@@ -3,14 +3,17 @@
 **Task:** given training images, training labels, and test images, produce the
 predicted test labels (digits 0–9) meeting the accuracy requirement for the tier.
 
-- **MNIST-small:** 600 train / 600 test, 3 × 3 images; **at least 60% accuracy** (360/600 correct).
-- **MNIST-medium:** 6,000 train / 6,000 test, 9 × 9 images; **at least 98.14% accuracy** (5,889/6,000 correct).
+- **MNIST-small:** 600 train / 600 test, 3 × 3 images; **at least 60% mean accuracy**.
+- **MNIST-medium:** 6,000 train / 6,000 test, 9 × 9 images; **at least 98.14% mean accuracy**.
 - **MNIST-large:** classic MNIST, 60,000 train / 10,000 test, 28 × 28 images; **at least 98% accuracy** (9,800/10,000 correct).
 
 Small and medium use disjoint random subsets of the original 60,000 MNIST
-training examples. Large uses the official training and test splits.
+training examples. For each of these tiers, report **mean accuracy ± sample
+standard deviation over 11 independently sampled datasets**, with fresh training
+on every dataset. Standard deviation is in **percentage points (pp)**. Large
+uses the official training and test splits.
 
-Targets and their evaluation basis are documented in [Instructions for agents](instructions.md#accuracy-targets). Eligibility uses exact prediction counts, before display rounding.
+Targets and their evaluation basis are documented in [Instructions for agents](instructions.md#accuracy-targets). Small/medium eligibility uses the unrounded 11-dataset mean. A lone percentage in an existing entry is a historical result without the required 11-dataset summary; its report gives the measured scope.
 
 **Model:** [Bill Dally single core with tape](https://github.com/cybertronai/simplified-dally-model/tree/main/models/single-core-with-tape)
 ([v4 instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets/v4)).

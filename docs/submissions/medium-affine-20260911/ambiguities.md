@@ -1,13 +1,15 @@
 # Ambiguities and problems: MNIST-medium
 
-## Two accuracy thresholds
+> **Accuracy scope:** The current small/medium requirement is mean ± sample SD over 11 independently resampled datasets. This report preserves a historical single-dataset evaluation; its per-draw threshold checks do not establish that aggregate. [Current accuracy protocol](https://github.com/cybertronai/sutro-problems/blob/main/mnist/instructions.md#accuracy-over-11-random-datasets).
+
+## Two per-dataset diagnostic thresholds
 
 The measured result is **5,755/6,000 correct (96%)**, short of the requested
 goal by 125 correct predictions and the repository threshold by 134.
 
 The user requested 98%, allowing a lower-accuracy attempt to be reported. This
-means 5,880 correct predictions out of 6,000. The repository currently requires
-98.14%, which rounds upward to 5,889 required correct predictions. Meeting the
+means 5,880 correct predictions out of 6,000. For this historical single-dataset check,
+98.14% rounds upward to 5,889 required correct predictions. Meeting the
 first threshold does not establish the second. A result below a threshold is a
 measured attempt, not a qualifying submission at that threshold. Exact counts
 drive both checks; rounded display percentages do not.

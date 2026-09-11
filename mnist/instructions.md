@@ -7,14 +7,17 @@
 Open a pull request adding your solution under `mnist/submissions/<name>/`.
 Include the source or generator, instructions to reproduce training, prediction,
 and scoring calculations, and a link to a standalone report naming the dataset
-tier, contributors, test accuracy (`correct` / `total`), dataset checksum, and any
-W&B runs.
+tier, contributors, accuracy **mean ± sample standard deviation over 11 dataset
+draws** for small/medium, each draw's `correct` / `total`, dataset seeds and
+checksums, the learner seed policy, and any W&B runs. Large retains its official
+split evaluation.
 
 Add a row to the matching tier's results table on the [MNIST page](README.md),
 with a link to its standalone report. Preserve the MNIST page’s task outline,
 dataset definitions, model, submission instructions, and competition diagram.
-Keep individual submission entries concise: show **Accuracy** as a percentage
-only, with **Time**, **Energy**, **Area**, **Time to score**,
+Keep individual submission entries concise: show **Accuracy** as mean percentage
+± sample standard deviation in percentage points for the 11-dataset evaluation
+(for example, `98.2% ± 0.3 pp`), with **Time**, **Energy**, **Area**, **Time to score**,
 **Time on A100**, and **Energy on A100**, giving units, metric definitions,
 measurement commands, and hardware/software versions in the report. Put
 per-submission `correct` / `total` counts, qualification notes, measurement
@@ -32,7 +35,9 @@ on an A100 with an ISA or toolchain of your choice (for example,
 its runtime in **ms** and idle-adjusted energy in **mJ** measured via NVML.
 Use **ms** and **mJ** for the theoretical scores too, **mm²** for Area, and **s** for Time to score.
 Convert occupied-cell area from µm² by dividing by 10⁶; the cell/grid convention is unchanged.
-Display measured values with two significant figures; exact counts and target thresholds are not rounded. Include the
+Display cost measurements with two significant figures. Display accuracy means
+and standard deviations to one decimal place, retaining full precision in the
+report's data files; exact counts and target thresholds are not rounded. Include the
 background needed to reproduce these calculations in the standalone report.
 The included evaluator checks classification accuracy only; it does not calculate
 these scoring metrics.
@@ -45,36 +50,99 @@ is prescribed.
 
 ## Accuracy targets
 
-| Tier | Required accuracy | Minimum correct predictions | Evaluation basis |
+| Tier | Required accuracy | Minimum correct predictions over the evaluation | Evaluation basis |
 | --- | ---: | ---: | --- |
-| MNIST-small | 60% | 360 / 600 | Current 600/600 study: all three fixed seeds at 300 epochs and above exceeded 60% |
-| MNIST-medium | 98.14% | 5,889 / 6,000 | Mean test accuracy from the neighboring “Build MNIST competition tiers” evaluation; historical 10,000/10,000 split |
-| MNIST-large | 98% | 9,800 / 10,000 | User-selected requirement; the neighboring evaluation prepared this dataset but did not train a large baseline |
+| MNIST-small | 60% mean | 3,960 / 6,600 across 11 draws | Historical fixed-split feasibility informed the target; evaluate the current algorithm across 11 new dataset draws |
+| MNIST-medium | 98.14% mean | 64,773 / 66,000 across 11 draws | Target adopted from the neighboring historical evaluation; evaluate it across 11 current 6,000/6,000 draws |
+| MNIST-large | 98% | 9,800 / 10,000 on the official test split | Existing full-size task; no random-subset evaluation is introduced for large |
 
 The medium target adopts the reported historical mean as a policy requirement
 for the current 6,000/6,000 tier; it is not a measurement on that current split.
 The reference run's three accuracies were 98.18%, 98.19%, and 98.05%.
 [Reference results and W&B runs](#reference-results) preserve the original
-protocol and evidence. The small target is supported by the
+protocol and evidence. The small target was informed by the
 [current-split feasibility study](https://cybertronai.github.io/sutro-problems/docs/submissions/accuracy-il-20260911/).
 
-Targets are inclusive and eligibility uses exact counts:
-`required_correct = ceil(total * target_percent / 100)`.
-In particular, 98.14% of 6,000 is 5,888.4, so medium requires 5,889 correct
-predictions. A rounded display percentage does not establish a pass.
-The evaluator reads the decimal target strings from
-[accuracy_targets.json](doc/accuracy_targets.json).
+Targets are inclusive. For small/medium, apply the threshold to the **unrounded
+mean across all 11 dataset draws**, not to every draw and not to mean minus SD.
+All draws within a tier have the same test size, so compare
+`sum(correct) / (11 * test_examples_per_draw)` to the exact target fraction.
+Equivalently, `required_total_correct = ceil(11 * test_examples_per_draw * target_percent / 100)`.
+For medium, the repository's 98.14% target requires **64,773 / 66,000** correct;
+the separately requested 98% goal requires **64,680 / 66,000**. Do not multiply
+the rounded single-draw threshold of 5,889 by 11. A rounded display percentage
+does not establish a pass.
 
-The historical 1NN attempt scored 308/600: it met the former 50% small target,
-but does not meet the current 60% target. Saved historical measurements and
-session exports retain their original results and chronology.
+The existing evaluator reads the decimal target strings from
+[accuracy_targets.json](doc/accuracy_targets.json) and evaluates **one dataset**.
+Its per-draw `meets_accuracy_target` flag is a diagnostic, not certification of
+the new 11-draw mean requirement. Retain all per-draw outputs and aggregate
+accuracy using the rule below. Large keeps its existing single-split check.
+
+The historical 1NN attempt scored 308/600: it met the former 50% small target
+and fell below the later 60% single-draw diagnostic threshold. Its 11-draw mean
+has not been evaluated. Saved historical measurements and session exports retain
+their original results and chronology.
+
+## Accuracy over 11 random datasets
+
+For **MNIST-small and MNIST-medium**, one accuracy evaluation consists of
+**11 independently sampled dataset draws** from the original **60,000 MNIST
+training examples**. Both the training subset and the test subset are resampled
+on every draw. Preserve the tier's image resolution and train/test counts.
+Within each draw, sample without replacement and keep training and test rows
+disjoint. Different draws may overlap: each draw starts again from the full
+60,000-example pool. Do not partition that pool into 11 mutually exclusive blocks.
+
+Predeclare the 11 dataset seeds and the complete learner/selection procedure
+before inspecting any of the 11 test results. Each fit may access only that
+draw's permitted arrays. Save and hash all 11 prediction artifacts before
+opening the test labels for aggregate scoring. Freeze the architecture, hyperparameters, stopping
+rule, ensemble rule, and training-randomness policy. Any validation used by the
+procedure must come only from the current draw's training subset. Reset weights,
+optimizer state, learned normalization statistics, and other learned state for
+every draw. Do not transfer learned state or labels between draws, even if a
+previous draw's training rows appear in a later draw's test set. State whether
+training randomness is held fixed across draws or follows a predeclared seed
+schedule; in the latter case, the reported variation includes both dataset and
+training randomness.
+
+For draw `i`, let `a_i = 100 * correct_i / total_i`. Report:
+
+- **Mean accuracy (%)**: `mean = sum(a_i) / 11`.
+- **Sample standard deviation (pp)**: `SD = sqrt(sum((a_i - mean)**2) / 10)`
+  (`ddof=1`). This is the standard deviation across dataset-level accuracies,
+  not across individual image outcomes, and not a standard error or confidence
+  interval.
+- In the standalone report: all 11 dataset seeds, manifests/checksums, learner
+  seeds, prediction artifacts, and individual `correct` / `total` results.
+
+Report the summary as **mean ± SD**, for example `98.2% ± 0.3 pp`; that example
+is formatting only, not a measured result. Include all 11 draws, without choosing
+favorable draws or dropping low accuracies. Incomplete runs do not provide the
+required summary. Extra training-seed replications on one draw may be reported
+separately as seed variability; **11 training seeds on one fixed dataset do not
+replace 11 dataset draws**. An ensemble is one learner: compute its accuracy once
+per dataset draw after training all its members on that draw.
+
+The existing single-dataset studies, including the ConvNet study's three final
+training seeds and fixed ensemble, do **not** establish this 11-draw mean or SD.
+Keep their historical counts and scope visible in their reports. Leave unmeasured
+SDs unavailable; do not invent zero or relabel training-seed SD as dataset SD.
+Accuracy aggregation does not change the units or scope of the separate Dally
+model scores and A100 measurements; reports must identify the dataset used for
+those measurements.
+
+**MNIST-large is unchanged:** it uses all 60,000 official training examples and
+all 10,000 official test examples. Repeating training on that fixed split measures
+training-seed variability, not variability across subsets of the 60,000 pool.
 
 ## Datasets
 
 | Problem | Image resolution | Training examples | Test examples | Accuracy requirement | Source |
 | --- | --- | ---: | ---: | ---: | --- |
-| MNIST-small | 3 × 3 | 600 | 600 | 60% | Disjoint random subsets of the original 60,000 MNIST training examples |
-| MNIST-medium | 9 × 9 | 6,000 | 6,000 | 98.14% | Disjoint random subsets of the original 60,000 MNIST training examples |
+| MNIST-small | 3 × 3 | 600 | 600 | 60% mean over 11 draws | Disjoint random subsets of the original 60,000 MNIST training examples |
+| MNIST-medium | 9 × 9 | 6,000 | 6,000 | 98.14% mean over 11 draws | Disjoint random subsets of the original 60,000 MNIST training examples |
 | MNIST-large | 28 × 28 | 60,000 | 10,000 | 98% | Classic MNIST training and test splits, in full |
 
 Small and medium are sampled **without replacement**, with no train/test overlap.
@@ -113,7 +181,8 @@ and stopping epochs were selected using a fixed stratified 20% validation split
 within the training set. Final models were then refitted on all training examples
 with seeds 101, 102, and 103 and evaluated once each. The table reports their
 mean and sample standard deviation, not an ensemble or the best test seed. Seed
-SD describes training variability on one fixed dataset, not a confidence interval.
+SD describes training variability on one fixed dataset, not the new 11-draw
+dataset variability and not a confidence interval.
 
 | Seed | Historical small accuracy | W&B run | Historical medium accuracy | W&B run |
 | ---: | ---: | --- | ---: | --- |
@@ -144,7 +213,15 @@ this page. Preparation downloads the original gzip IDX files from the
 [torchvision](https://github.com/pytorch/vision/blob/main/torchvision/datasets/mnist.py)
 and verifies their published MD5 checksums before parsing.
 
-The canonical seed is **20260910**. Two PCG64 generators derived from
+The seed **20260910** identifies the published reference draw for reproduction
+and regression checks; it is not the complete accuracy-scoring distribution.
+For the 11-draw evaluation, call the generator with each predeclared dataset seed
+and a separate output directory, preserving each manifest. A seed change must
+also use that draw's manifest for input validation: historical learners that
+hard-code the reference hashes need a per-draw input interface before they can
+be evaluated this way.
+
+For any dataset seed, two PCG64 generators derived from
 `numpy.random.SeedSequence(seed).spawn(2)` permute the official training and test
 splits. From the training permutation, medium takes positions `[0:6000]` for
 training and `[6000:12000]` for testing; small takes `[0:600]` and `[6000:6600]`.
@@ -221,10 +298,12 @@ mnist/.venv/bin/python -m mnist.code.evaluate \
 
 The evaluator reports accuracy as a fraction, integer `correct` and `total`, a
 confusion matrix (rows = true classes; columns = predictions), and per-class
-accuracy. It also reports `accuracy_target_percent`, `required_correct`, and
-`meets_accuracy_target`, using exact integer/rational comparison. Valid input
+accuracy for one dataset. It also reports `accuracy_target_percent`,
+`required_correct`, and `meets_accuracy_target` for that one dataset, using exact
+integer/rational comparison. For small/medium, aggregate 11 such runs as described
+above; a single flag does not evaluate the 11-draw requirement. Valid input
 still produces a successful CLI exit when it is below target; inspect
-`meets_accuracy_target` for the classification requirement. This flag does not
+`meets_accuracy_target` for the per-draw classification diagnostic. This flag does not
 certify the dataset, training protocol, model costs, or hardware measurements.
 Energy is not measured by this command.
 

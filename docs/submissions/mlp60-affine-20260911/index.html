@@ -18,8 +18,11 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 </style></head>
 <body><header><p>Sutro problems · Submission attempt · September 2026</p><div class="brand">MNIST-small / 60% target</div><nav><a class="active" href="index.html">Results & reproduction</a><a class="" href="session.html">Session export</a><a class="" href="ambiguities.html">Ambiguities & problems</a></nav></header>
 <main><h1 id="mnist-small-a-submission-for-the-60-target">MNIST-small: a submission for the 60% target</h1>
+<blockquote>
+<p><strong>Accuracy scope:</strong> These are historical results on one fixed dataset. The current small/medium rule requires <strong>mean ± sample SD over 11 independently resampled datasets</strong>; that aggregate has not been measured here. Threshold checks below describe the fixed dataset. Training-seed repeats do not supply across-dataset SD. <a href="https://github.com/cybertronai/sutro-problems/blob/main/mnist/instructions.md#accuracy-over-11-random-datasets">Current accuracy protocol</a>.</p>
+</blockquote>
 <p><strong>374/600 correct (62%)</strong> on the canonical 600-training / 600-test, 3 × 3
-MNIST-small dataset. The fixed 32-unit network exceeds the current requirement
+MNIST-small dataset. The fixed 32-unit network exceeds the per-draw diagnostic threshold
 of <strong>360/600 (60%)</strong> by 14 correct predictions. Both the model scores and the
 A100 measurements cover fresh training and all 600 predictions.</p>
 <p>Contributors: Yaroslav Bulatov (task and benchmark requirements) and Codex
@@ -146,7 +149,7 @@ that study did not save its full output-score matrix.</p>
 <p>Running the actual learner CLI with only <code>train_images</code>, <code>train_labels</code>, and
 <code>test_images</code> in the input archive produces identical outputs. Changing every
 training label to <code>(label + 1) % 10</code> changes learned parameters and 589 predictions.
-The separate evaluator confirms the exact current target, independent of rounded
+The separate evaluator confirms the exact per-draw threshold, independent of rounded
 display percentages. Test labels are never learner inputs.</p>
 <table>
 <thead>

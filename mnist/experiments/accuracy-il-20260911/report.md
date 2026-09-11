@@ -1,8 +1,10 @@
 # Higher accuracy, practical scoring
 
+> **Accuracy scope:** These are historical results on one fixed dataset. The current small/medium rule requires **mean ± sample SD over 11 independently resampled datasets**; that aggregate has not been measured here. Threshold checks below describe the fixed dataset. Training-seed repeats do not supply across-dataset SD. [Current accuracy protocol](https://github.com/cybertronai/sutro-problems/blob/main/mnist/instructions.md#accuracy-over-11-random-datasets).
+
 **MNIST-small · exploratory results · 11 September 2026**
 
-**The official MNIST-small accuracy target is now 60%, and this study meets that accuracy requirement.** A 32-hidden-unit network trained for 300 epochs cleared it with all three predeclared seeds. These tables preserve the original exploratory study and its CPU/model measurements. A 65% target was reached by only one run; 70% and 75% were not reached. This finite search does not establish an upper limit on accuracy.
+**On its fixed dataset, this study clears the 60% MNIST-small threshold; the current 11-dataset requirement has not been evaluated.** A 32-hidden-unit network trained for 300 epochs cleared it with all three predeclared seeds. These tables preserve the original exploratory study and its CPU/model measurements. A 65% target was reached by only one run; 70% and 75% were not reached. This finite search does not establish an upper limit on accuracy.
 
 **Scoring the training algorithm is practical with a compact intermediate language.** The tested neural networks represent up to 24 billion primitive instructions, yet exact cost aggregation takes about 0.13 s. Numerical training and accuracy verification are separate. No MLP A100 runtime or energy was measured in this study.
 
@@ -28,7 +30,7 @@ Each count below is correct predictions out of the same 600 test examples, in se
 | H32 · 10,000 epochs | 381 / 389 / 387 | 64% | 0.69 |
 | H128 · 3,000 epochs | 384 / 388 / 385 | 64% | 0.35 |
 
-The original 1NN baseline scored **308/600 (51%)**, below the current **60%** requirement of **360/600** correct. It remains a historical measurement reference. All neural-network configurations use learning rate 0.2 and minibatches of 30. H denotes hidden-layer width.
+The original 1NN baseline scored **308/600 (51%)**, below the per-draw **60%** diagnostic threshold of **360/600** correct. It remains a historical measurement reference. All neural-network configurations use learning rate 0.2 and minibatches of 30. H denotes hidden-layer width.
 
 | Target | Required correct / 600 | Runs meeting it | Interpretation |
 | ---: | ---: | ---: | --- |
@@ -44,7 +46,7 @@ The original 1NN baseline scored **308/600 (51%)**, below the current **60%** re
 
 Every MLP score includes explicit scratch initialization, dataset tape operations, pixel transformation, one-hot target construction, initial weight writes, all training updates, inference, and output selection. Costs use the same pinned Dally v4 conventions as the 1NN baseline. Area is occupied scratch-cell area with the declared fixed placement, displayed in mm². The exact internal convention remains one µm² per word; divide the saved µm² total by 10⁶ for display.
 
-Accuracy columns show the rounded mean, exact correct counts out of 600 in seed order 101 / 102 / 103, and the number of seeds meeting the current 60% requirement. Pass/fail uses the exact 360/600 threshold.
+Accuracy columns show the rounded mean, exact correct counts out of 600 in seed order 101 / 102 / 103, and the number of seeds meeting the per-draw 60% threshold. Pass/fail uses the exact 360/600 threshold.
 
 | Configuration | Accuracy (mean; correct / 600 by seed; ≥60%) | Model time (ms) | Model energy (mJ) | Area (mm²) |
 | --- | --- | ---: | ---: | ---: |
@@ -86,7 +88,7 @@ For context, the CPU reference actually performed training and inference. The ta
 | H32 · 10,000 epochs | 64% mean; 381 / 389 / 387; 3/3 pass | 21000 | Not measured in this study |
 | H128 · 3,000 epochs | 64% mean; 384 / 388 / 385; 3/3 pass | 11000 | Not measured in this study |
 
-The already measured **1NN** comparison remains a historical reference: its **308/600 (51%)** accuracy is below the current **60%** target.
+The already measured **1NN** comparison remains a historical reference: its **308/600 (51%)** accuracy is below the per-draw **60%** threshold.
 
 | Quantity | Dally model | A100 measured |
 | --- | ---: | ---: |

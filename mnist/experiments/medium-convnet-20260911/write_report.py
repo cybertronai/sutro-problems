@@ -23,8 +23,9 @@ def main():
     official = 'meets' if chosen['targets']['repository']['meets_target'] else 'does not meet'
     text = [
         '# MNIST-medium: ConvNet accuracy study', '',
-        f'**The fixed three-ConvNet ensemble reached {ensemble["correct"]:,} / 6,000 correct ({percent(ensemble["correct"],6000)}), clearing both accuracy thresholds.** ' + f'The validation-selected {role} scored {chosen["correct"]:,} / 6,000 correct ({percent(chosen["correct"],6000)}). '
-        f'It {outcome} the requested 98% goal and {official} the repository’s 98.14% threshold. '
+        '> **Accuracy scope:** These are historical results on one fixed dataset. The current small/medium rule requires **mean ± sample SD over 11 independently resampled datasets**; that aggregate has not been measured here. Threshold checks below describe the fixed dataset. Training-seed repeats do not supply across-dataset SD. [Current accuracy protocol](https://github.com/cybertronai/sutro-problems/blob/main/mnist/instructions.md#accuracy-over-11-random-datasets).', '',
+        f'**The fixed three-ConvNet ensemble reached {ensemble["correct"]:,} / 6,000 correct ({percent(ensemble["correct"],6000)}), clearing both per-dataset accuracy thresholds.** ' + f'The validation-selected {role} scored {chosen["correct"]:,} / 6,000 correct ({percent(chosen["correct"],6000)}). '
+        f'On this dataset it {outcome} the requested 98% goal and {official} the repository’s 98.14% threshold. '
         'Exact counts determine these checks; accuracy percentages are rounded to one decimal place.', '',
         'Ten ConvNet variants were trained from scratch, followed by six validation replications and three final full-data fits. '
         'Model selection used only training labels. The final architecture, epoch count, seeds, and ensemble rule were frozen before the ConvNet test evaluation. '

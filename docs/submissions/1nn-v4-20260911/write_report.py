@@ -51,9 +51,11 @@ def main():
     versions = gpu['versions']
     report = f'''# MNIST-small: a reproducible 1NN submission attempt
 
-**308 / 600 correct · 51% accuracy · below the current 60% target.**
+> **Accuracy scope:** These are historical results on one fixed dataset. The current small/medium rule requires **mean ± sample SD over 11 independently resampled datasets**; that aggregate has not been measured here. Threshold checks below describe the fixed dataset. Training-seed repeats do not supply across-dataset SD. [Current accuracy protocol](https://github.com/cybertronai/sutro-problems/blob/main/mnist/instructions.md#accuracy-over-11-random-datasets).
 
-This historical attempt met the 50% requirement in effect when it was submitted. The current requirement is 360/600 correct; the saved result is 52 predictions short.
+**308 / 600 correct · 51% accuracy · below the per-draw 60% threshold.**
+
+This historical attempt met the 50% requirement in effect when it was submitted. The per-draw 60% diagnostic threshold is 360/600 correct; the saved result is 52 predictions short.
 
 This fixed 1-nearest-neighbor algorithm learns by memorizing the 600 supplied training examples, then labels each of the 600 test images with the label of its nearest training image. It uses the nine supplied pixel values directly. No neural-network training, extra data, pretrained weights or hyperparameter search is involved. This is a baseline attempt, with no claim of optimal accuracy, time or energy.
 
@@ -84,7 +86,7 @@ Measurement-window durations also use milliseconds. Unit conversions: **1 ms = 1
 
 Both modeled and GPU task scopes include learning/memorization and all 600 predictions. Dataset preparation, the one training-only validation check, and host evaluation are outside those task scopes. The GPU additionally writes nearest-row indices and distances for verification; those writes are included in its measured runtime and energy. The CPU reference's {significant(cpu['cpu_reference_wall_seconds']*1000)} ms host runtime is supplementary and is **not** the model's Time or Time to score.
 
-**The original 50% threshold margin was eight examples.** The unchanged 308/600 result does not pass the current 60% requirement. There is no measurement of generalization across alternative dataset samples, and no post-test algorithm or hyperparameter changes were made. Detailed rule gaps and experimental limitations are in the [separate ambiguities and problems report](ambiguities.html).
+**The original 50% threshold margin was eight examples.** The unchanged 308/600 result does not pass the per-draw 60% diagnostic threshold. There is no measurement of generalization across alternative dataset samples, and no post-test algorithm or hyperparameter changes were made. Detailed rule gaps and experimental limitations are in the [separate ambiguities and problems report](ambiguities.html).
 
 ## Dataset and selection record
 

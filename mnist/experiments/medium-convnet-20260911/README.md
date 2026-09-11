@@ -1,5 +1,7 @@
 # MNIST-medium ConvNet accuracy study
 
+> **Accuracy scope:** This is a one-dataset study. The current small/medium requirement is mean ± sample SD over 11 independently resampled datasets; those aggregate statistics have not been measured here.
+
 **The fixed ensemble reached 98.2% (5,894 / 6,000). The validation-selected single model reached 97.8% (5,868 / 6,000).** The frozen selection remains unchanged; promoting the diagnostic ensemble after test evaluation would be test-informed.
 
 This experiment tests ten ConvNet configurations on the canonical 6,000 / 6,000, 9 × 9 problem, with six validation replications and three frozen full-data fits. It is the accuracy stage requested before translation and measurement. Exact outcomes are in `test_results.json`; the report explains selection, counts, and limitations. No ConvNet theoretical score or controlled performance/energy measurement is claimed.

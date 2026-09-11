@@ -1,5 +1,7 @@
 # MNIST-small: potential ambiguities and problems
 
+> **Accuracy scope:** The current small/medium requirement is mean ± sample SD over 11 independently resampled datasets. This report preserves a historical single-dataset evaluation; its per-draw threshold checks do not establish that aggregate. [Current accuracy protocol](https://github.com/cybertronai/sutro-problems/blob/main/mnist/instructions.md#accuracy-over-11-random-datasets).
+
 Audit date: 2026-09-10 (local time). This audit examined Sutro rules/code at `e70f9c9e1db65b62d9256f7b1f9b668cf4c48909` and the computation-model specification at `26abcca402de647381d31286d42dfbb7a001763d`. Severity measures the effect on validity or comparison, not whether an honest, explicitly qualified submission can proceed.
 
 ## Open issues
@@ -25,7 +27,7 @@ Audit date: 2026-09-10 (local time). This audit examined Sutro rules/code at `e7
 ## Submission-specific evidence and limitations
 
 - The candidate was fixed **1-nearest-neighbor with ordered float32 squared Euclidean distance and first-training-row tie breaking**, selected before final test scoring. Its one training-only sanity check used a deterministic 480/120 split, scoring **63/120 (52.50%)**. No alternative candidate or hyperparameter search is reported. Code inspection can establish what the submitted program does; the session chronology is the evidence for when the candidate was fixed.
-- Final test accuracy was **308/600 (51%)**, just **eight correct predictions above the original 300/600 threshold**. It passed that historical fixed-dataset target, but is below the current 360/600 requirement. It is one dataset and one fixed split: it does not measure variation across resampled datasets or establish a robust margin above 50% in a broader population.
+- Final test accuracy was **308/600 (51%)**, just **eight correct predictions above the original 300/600 threshold**. It passed that historical fixed-dataset target, but is below the per-draw 360/600 diagnostic threshold. It is one dataset and one fixed split: it does not measure variation across resampled datasets or establish a robust margin above 50% in a broader population.
 - The learner validates shape, dtype and canonical SHA-256 for all **three allowed learner arrays** before prediction. It accesses no `test_labels` array or source-index arrays. A separate audit verified all **six** canonical arrays, including source indices and test-label bytes for integrity only; its all-six check should be retained with the submission.
 - The CPU reference materializes a 600 × 600 distance matrix; it is an algorithmic reference. Its measured wall time and peak memory must not be presented as the tape machine metrics of a separate streaming implementation. The final report must identify the scored tape program and the measured A100 implementation separately.
 

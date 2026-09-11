@@ -38,8 +38,9 @@ def main():
     rows = sorted(accuracy['configurations'], key=lambda r: (r['width'], r['epochs']))
     baseline = scoring['baseline']
     lines = ['# Higher accuracy, practical scoring', '',
+    '> **Accuracy scope:** These are historical results on one fixed dataset. The current small/medium rule requires **mean ± sample SD over 11 independently resampled datasets**; that aggregate has not been measured here. Threshold checks below describe the fixed dataset. Training-seed repeats do not supply across-dataset SD. [Current accuracy protocol](https://github.com/cybertronai/sutro-problems/blob/main/mnist/instructions.md#accuracy-over-11-random-datasets).', '',
     '**MNIST-small · exploratory results · 11 September 2026**', '',
-    '**The official MNIST-small accuracy target is now 60%, and this study meets that accuracy requirement.** A 32-hidden-unit network trained for 300 epochs cleared it with all three predeclared seeds. These tables preserve the original exploratory study and its CPU/model measurements. A 65% target was reached by only one run; 70% and 75% were not reached. This finite search does not establish an upper limit on accuracy.', '',
+    '**On its fixed dataset, this study clears the 60% MNIST-small threshold; the current 11-dataset requirement has not been evaluated.** A 32-hidden-unit network trained for 300 epochs cleared it with all three predeclared seeds. These tables preserve the original exploratory study and its CPU/model measurements. A 65% target was reached by only one run; 70% and 75% were not reached. This finite search does not establish an upper limit on accuracy.', '',
     '**Scoring the training algorithm is practical with a compact intermediate language.** The tested neural networks represent up to 24 billion primitive instructions, yet exact cost aggregation takes about '+display(max(r['median_static_score_seconds'] for r in scores.values()))+' s. Numerical training and accuracy verification are separate. No MLP A100 runtime or energy was measured in this study.', '',
     'A separate [H32 / 300 epochs / seed 101 A100 submission](https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/) carries this frozen candidate forward and reports its GPU verification and measurement status. The tables below retain the original study scope. Other configurations and seeds remain unmeasured on A100.', '',
     '[TOC]', '',
@@ -53,7 +54,7 @@ def main():
     for row in rows:
         counts = ' / '.join(str(v) for v in row['correct_by_seed'])
         lines.append(f"| {label(row)} | {counts} | {row['mean_accuracy_percent']:.2g}% | {row['sample_sd_percentage_points']:.2g} |")
-    lines += ['', 'The original 1NN baseline scored **308/600 (51%)**, below the current **60%** requirement of **360/600** correct. It remains a historical measurement reference. All neural-network configurations use learning rate 0.2 and minibatches of 30. H denotes hidden-layer width.', '',
+    lines += ['', 'The original 1NN baseline scored **308/600 (51%)**, below the per-draw **60%** diagnostic threshold of **360/600** correct. It remains a historical measurement reference. All neural-network configurations use learning rate 0.2 and minibatches of 30. H denotes hidden-layer width.', '',
     '| Target | Required correct / 600 | Runs meeting it | Interpretation |',
     '| ---: | ---: | ---: | --- |']
     for target, interpretation in [(55,'Reached by every tested run.'),(60,'Reached by every seed at 300 epochs and above.'),
@@ -63,7 +64,7 @@ def main():
     lines += ['', '**Target checks use exact counts, not rounded display percentages.** The single run above 65% was H32 / 1,000 epochs / seed 102, with 405/600 correct (about 68%). Its other two seeds scored 383/600 and 376/600. Choosing that seed after viewing the test result would need separate validation. The best training-validation configuration was H32 / 10,000 epochs; its three test results were 381/600, 389/600, and 387/600.', '',
     '## Complete-task model costs', '',
     'Every MLP score includes explicit scratch initialization, dataset tape operations, pixel transformation, one-hot target construction, initial weight writes, all training updates, inference, and output selection. Costs use the same pinned Dally v4 conventions as the 1NN baseline. Area is occupied scratch-cell area with the declared fixed placement, displayed in mm². The exact internal convention remains one µm² per word; divide the saved µm² total by 10⁶ for display.', '',
-    'Accuracy columns show the rounded mean, exact correct counts out of 600 in seed order 101 / 102 / 103, and the number of seeds meeting the current 60% requirement. Pass/fail uses the exact 360/600 threshold.', '',
+    'Accuracy columns show the rounded mean, exact correct counts out of 600 in seed order 101 / 102 / 103, and the number of seeds meeting the per-draw 60% threshold. Pass/fail uses the exact 360/600 threshold.', '',
     '| Configuration | Accuracy (mean; correct / 600 by seed; ≥60%) | Model time (ms) | Model energy (mJ) | Area (mm²) |',
     '| --- | --- | ---: | ---: | ---: |',
     f"| Original 1NN | 51%; 308/600; below 60% | {display(baseline['time_ps']/1e9)} | {display(baseline['energy_fj']/1e12)} | {area_display(baseline['area_um2_occupied_cells'])} |"]
@@ -90,7 +91,7 @@ def main():
         low, high = display(min(elapsed)), display(max(elapsed))
         interval = low if low == high else f'{low}–{high}'
         lines.append(f"| {label(row)} | {accuracy_label(row)} | {interval} | Not measured in this study |")
-    lines += ['', 'The already measured **1NN** comparison remains a historical reference: its **308/600 (51%)** accuracy is below the current **60%** target.', '',
+    lines += ['', 'The already measured **1NN** comparison remains a historical reference: its **308/600 (51%)** accuracy is below the per-draw **60%** threshold.', '',
     '| Quantity | Dally model | A100 measured |', '| --- | ---: | ---: |',
     '| Time (ms) | 1.7 | 0.0069 |', '| Energy (mJ) | 0.0019 | 0.52 |', '',
     'A100 values are GPU-resident steady-state complete-task throughput and idle-adjusted NVML energy, including training memorization. Host transfer, compilation, warm-up, and idle baseline selection have different boundaries. See the original submission for raw trials and baseline sensitivity. No A100 values have been extrapolated to the MLPs.', '',

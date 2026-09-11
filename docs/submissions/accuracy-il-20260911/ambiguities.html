@@ -20,6 +20,9 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <body><header><p>Sutro problems · Feasibility study · September 2026</p>
 <div class="brand">MNIST-small / Higher accuracy &amp; compact scoring</div><nav><a class="" href="index.html">Results</a><a class="" href="il.html">Intermediate language</a><a class="" href="protocol.html">Study protocol</a><a class="active" href="ambiguities.html">Ambiguities</a><a class="" href="session.html">Session export</a></nav></header>
 <main><h1 id="ambiguities-and-remaining-work">Ambiguities and remaining work</h1>
+<blockquote>
+<p><strong>Accuracy scope:</strong> The current small/medium requirement is mean ± sample SD over 11 independently resampled datasets. This report preserves a historical single-dataset evaluation; its per-draw threshold checks do not establish that aggregate. <a href="https://github.com/cybertronai/sutro-problems/blob/main/mnist/instructions.md#accuracy-over-11-random-datasets">Current accuracy protocol</a>.</p>
+</blockquote>
 <p>This report separates resolved display/scoring issues from decisions needed before treating the MLP experiments as new benchmark submissions.</p>
 <table>
 <thead>
@@ -38,8 +41,8 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <td>A displayed mean of 65% can be slightly below 65% before rounding. Eligibility must use exact counts: 390/600 is required for 65%. Each seed's count is published.</td>
 </tr>
 <tr>
-<td>Current accuracy requirement</td>
-<td>The official MNIST-small target is now 60%, requiring 360/600 correct. Every seed at 300 epochs and above meets it in this experiment. The original 1NN result, 308/600 (51%), is below the current target and remains a historical measurement reference. Meeting the accuracy requirement does not establish the other submission requirements for every tested model; this study retains its original CPU/model measurement scope. A 65% target was met by one of 15 runs; 70% and 75% were not reached, which does not establish a universal ceiling.</td>
+<td>Historical single-dataset threshold</td>
+<td>The 60% per-draw diagnostic threshold is 360/600 correct; the current 11-draw mean and SD have not been measured. Every seed at 300 epochs and above meets it in this experiment. The original 1NN result, 308/600 (51%), is below that per-draw threshold and remains a historical measurement reference. Meeting the accuracy requirement does not establish the other submission requirements for every tested model; this study retains its original CPU/model measurement scope. A 65% target was met by one of 15 runs; 70% and 75% were not reached, which does not establish a universal ceiling.</td>
 </tr>
 <tr>
 <td>Public test-set reuse</td>

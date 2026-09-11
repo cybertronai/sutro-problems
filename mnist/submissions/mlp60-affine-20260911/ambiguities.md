@@ -1,8 +1,10 @@
 # Ambiguities and problems: the 60% submission
 
-The fixed network scores **374/600 correct (62%)**, above the current **60%**
-requirement. This establishes classification qualification on the supplied
-dataset, subject to the benchmark decisions below.
+> **Accuracy scope:** The current small/medium requirement is mean ± sample SD over 11 independently resampled datasets. This report preserves a historical single-dataset evaluation; its per-draw threshold checks do not establish that aggregate. [Current accuracy protocol](https://github.com/cybertronai/sutro-problems/blob/main/mnist/instructions.md#accuracy-over-11-random-datasets).
+
+The fixed network scores **374/600 correct (62%)**, above the per-draw **60%** diagnostic threshold. This established the
+classification threshold on that fixed dataset, subject to the benchmark
+decisions below; the 11-draw mean and SD remain unmeasured.
 
 ## Selection after the public study
 

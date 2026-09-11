@@ -1,6 +1,8 @@
 # MNIST-medium: ConvNet accuracy study
 
-**The fixed three-ConvNet ensemble reached 5,894 / 6,000 correct (98.2%), clearing both accuracy thresholds.** The validation-selected single ConvNet, seed 101 scored 5,868 / 6,000 correct (97.8%). It does not meet the requested 98% goal and does not meet the repository’s 98.14% threshold. Exact counts determine these checks; accuracy percentages are rounded to one decimal place.
+> **Accuracy scope:** These are historical results on one fixed dataset. The current small/medium rule requires **mean ± sample SD over 11 independently resampled datasets**; that aggregate has not been measured here. Threshold checks below describe the fixed dataset. Training-seed repeats do not supply across-dataset SD. [Current accuracy protocol](https://github.com/cybertronai/sutro-problems/blob/main/mnist/instructions.md#accuracy-over-11-random-datasets).
+
+**The fixed three-ConvNet ensemble reached 5,894 / 6,000 correct (98.2%), clearing both per-dataset accuracy thresholds.** The validation-selected single ConvNet, seed 101 scored 5,868 / 6,000 correct (97.8%). On this dataset it does not meet the requested 98% goal and does not meet the repository’s 98.14% threshold. Exact counts determine these checks; accuracy percentages are rounded to one decimal place.
 
 Ten ConvNet variants were trained from scratch, followed by six validation replications and three final full-data fits. Model selection used only training labels. The final architecture, epoch count, seeds, and ensemble rule were frozen before the ConvNet test evaluation. **This is the accuracy phase: no cost translation, scoring run, or complete-task performance/energy benchmark has been performed for these ConvNets.**
 

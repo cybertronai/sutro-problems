@@ -1,5 +1,7 @@
 # MNIST-medium: an attempt at 98% accuracy
 
+> **Accuracy scope:** These are historical results on one fixed dataset. The current small/medium rule requires **mean ± sample SD over 11 independently resampled datasets**; that aggregate has not been measured here. Threshold checks below describe the fixed dataset. Training-seed repeats do not supply across-dataset SD. [Current accuracy protocol](https://github.com/cybertronai/sutro-problems/blob/main/mnist/instructions.md#accuracy-over-11-random-datasets).
+
 The fixed network achieves **5,755/6,000 correct (96%)** on the canonical
 MNIST-medium split. It **does not meet your 98% goal** and **does not meet the
 repository's 98.14% requirement**. The attempt is 125 correct predictions short of your 98% goal and 134 short of the repository threshold.

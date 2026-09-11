@@ -44,8 +44,10 @@ def main():
     readme = (HERE/'README.md').read_text().split('## Reproduce from a clone\n',1)[1]
     text = f'''# MNIST-small: a submission for the 60% target
 
+> **Accuracy scope:** These are historical results on one fixed dataset. The current small/medium rule requires **mean ± sample SD over 11 independently resampled datasets**; that aggregate has not been measured here. Threshold checks below describe the fixed dataset. Training-seed repeats do not supply across-dataset SD. [Current accuracy protocol](https://github.com/cybertronai/sutro-problems/blob/main/mnist/instructions.md#accuracy-over-11-random-datasets).
+
 **374/600 correct (62%)** on the canonical 600-training / 600-test, 3 × 3
-MNIST-small dataset. The fixed 32-unit network exceeds the current requirement
+MNIST-small dataset. The fixed 32-unit network exceeds the per-draw diagnostic threshold
 of **360/600 (60%)** by 14 correct predictions. Both the model scores and the
 A100 measurements cover fresh training and all 600 predictions.
 
@@ -153,7 +155,7 @@ that study did not save its full output-score matrix.
 Running the actual learner CLI with only `train_images`, `train_labels`, and
 `test_images` in the input archive produces identical outputs. Changing every
 training label to `(label + 1) % 10` changes learned parameters and 589 predictions.
-The separate evaluator confirms the exact current target, independent of rounded
+The separate evaluator confirms the exact per-draw threshold, independent of rounded
 display percentages. Test labels are never learner inputs.
 
 | Separate host work | Accuracy checked | Time (ms) | Scope |

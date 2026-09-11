@@ -20,8 +20,11 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <body><header><p>Sutro problems · Feasibility study · September 2026</p>
 <div class="brand">MNIST-small / Higher accuracy &amp; compact scoring</div><nav><a class="active" href="index.html">Results</a><a class="" href="il.html">Intermediate language</a><a class="" href="protocol.html">Study protocol</a><a class="" href="ambiguities.html">Ambiguities</a><a class="" href="session.html">Session export</a></nav></header>
 <main><h1 id="higher-accuracy-practical-scoring">Higher accuracy, practical scoring</h1>
+<blockquote>
+<p><strong>Accuracy scope:</strong> These are historical results on one fixed dataset. The current small/medium rule requires <strong>mean ± sample SD over 11 independently resampled datasets</strong>; that aggregate has not been measured here. Threshold checks below describe the fixed dataset. Training-seed repeats do not supply across-dataset SD. <a href="https://github.com/cybertronai/sutro-problems/blob/main/mnist/instructions.md#accuracy-over-11-random-datasets">Current accuracy protocol</a>.</p>
+</blockquote>
 <p><strong>MNIST-small · exploratory results · 11 September 2026</strong></p>
-<p><strong>The official MNIST-small accuracy target is now 60%, and this study meets that accuracy requirement.</strong> A 32-hidden-unit network trained for 300 epochs cleared it with all three predeclared seeds. These tables preserve the original exploratory study and its CPU/model measurements. A 65% target was reached by only one run; 70% and 75% were not reached. This finite search does not establish an upper limit on accuracy.</p>
+<p><strong>On its fixed dataset, this study clears the 60% MNIST-small threshold; the current 11-dataset requirement has not been evaluated.</strong> A 32-hidden-unit network trained for 300 epochs cleared it with all three predeclared seeds. These tables preserve the original exploratory study and its CPU/model measurements. A 65% target was reached by only one run; 70% and 75% were not reached. This finite search does not establish an upper limit on accuracy.</p>
 <p><strong>Scoring the training algorithm is practical with a compact intermediate language.</strong> The tested neural networks represent up to 24 billion primitive instructions, yet exact cost aggregation takes about 0.13 s. Numerical training and accuracy verification are separate. No MLP A100 runtime or energy was measured in this study.</p>
 <p>A separate <a href="https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/">H32 / 300 epochs / seed 101 A100 submission</a> carries this frozen candidate forward and reports its GPU verification and measurement status. The tables below retain the original study scope. Other configurations and seeds remain unmeasured on A100.</p>
 <div class="toc">
@@ -86,7 +89,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 </tr>
 </tbody>
 </table>
-<p>The original 1NN baseline scored <strong>308/600 (51%)</strong>, below the current <strong>60%</strong> requirement of <strong>360/600</strong> correct. It remains a historical measurement reference. All neural-network configurations use learning rate 0.2 and minibatches of 30. H denotes hidden-layer width.</p>
+<p>The original 1NN baseline scored <strong>308/600 (51%)</strong>, below the per-draw <strong>60%</strong> diagnostic threshold of <strong>360/600</strong> correct. It remains a historical measurement reference. All neural-network configurations use learning rate 0.2 and minibatches of 30. H denotes hidden-layer width.</p>
 <table>
 <thead>
 <tr>
@@ -132,7 +135,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <p><strong>Target checks use exact counts, not rounded display percentages.</strong> The single run above 65% was H32 / 1,000 epochs / seed 102, with 405/600 correct (about 68%). Its other two seeds scored 383/600 and 376/600. Choosing that seed after viewing the test result would need separate validation. The best training-validation configuration was H32 / 10,000 epochs; its three test results were 381/600, 389/600, and 387/600.</p>
 <h2 id="complete-task-model-costs">Complete-task model costs</h2>
 <p>Every MLP score includes explicit scratch initialization, dataset tape operations, pixel transformation, one-hot target construction, initial weight writes, all training updates, inference, and output selection. Costs use the same pinned Dally v4 conventions as the 1NN baseline. Area is occupied scratch-cell area with the declared fixed placement, displayed in mm². The exact internal convention remains one µm² per word; divide the saved µm² total by 10⁶ for display.</p>
-<p>Accuracy columns show the rounded mean, exact correct counts out of 600 in seed order 101 / 102 / 103, and the number of seeds meeting the current 60% requirement. Pass/fail uses the exact 360/600 threshold.</p>
+<p>Accuracy columns show the rounded mean, exact correct counts out of 600 in seed order 101 / 102 / 103, and the number of seeds meeting the per-draw 60% threshold. Pass/fail uses the exact 360/600 threshold.</p>
 <table>
 <thead>
 <tr>
@@ -292,7 +295,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 </tr>
 </tbody>
 </table>
-<p>The already measured <strong>1NN</strong> comparison remains a historical reference: its <strong>308/600 (51%)</strong> accuracy is below the current <strong>60%</strong> target.</p>
+<p>The already measured <strong>1NN</strong> comparison remains a historical reference: its <strong>308/600 (51%)</strong> accuracy is below the per-draw <strong>60%</strong> threshold.</p>
 <table>
 <thead>
 <tr>
