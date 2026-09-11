@@ -1,0 +1,25 @@
+{
+  "profile": "medium-error-targets-v1",
+  "image_size": 9,
+  "train_examples_per_draw": 10000,
+  "test_examples_per_draw": 10000,
+  "draws": 11,
+  "source": "Disjoint random subsets of the original 60000 training examples; resample both subsets for every draw",
+  "error_targets_percent": [
+    "2",
+    "3",
+    "5",
+    "8",
+    "12"
+  ],
+  "accuracy_targets_percent": [
+    "98",
+    "97",
+    "95",
+    "92",
+    "88"
+  ],
+  "aggregation": "Unrounded mean across all 11 draws; report sample standard deviation in percentage points with ddof=1",
+  "level_spacing": "Approximately factor 1.5 between adjacent error tolerances; lower error is harder",
+  "current_submission_qualifying_error_percent": "3"
+}
