@@ -32,12 +32,14 @@ Execution times use **milliseconds (ms)**, energies use **millijoules (mJ)**, ar
 
 | Accuracy | Time (ms) | Energy (mJ) | Area (mm²) | Time to score (s) | Time on A100 (ms) | Energy on A100 (mJ) | Submission |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| 62% (374/600) | 93 | 0.11 | 0.020* | 0.081 | 71‡ | 2,000‡ | [32-unit MLP — 60% target](submissions/mlp60-affine-20260911/) |
 | 51% (308/600) | 1.7 | 0.0019 | 0.0060* | 35 | 0.0069† | 0.52† | [1NN — historical baseline](submissions/1nn-v4-20260911/) |
 
 **The historical 1NN entry is below the current 60% requirement.** It met the 50% requirement in effect when submitted.
 
 *Occupied scratch-cell area under the submission's declared FP32/tape conventions.
 †A100 GPU-resident, steady-state complete-task throughput and idle-adjusted NVML energy; training memorization included. See the report for boundaries and baseline sensitivity.
+‡A100 mean of three trials; each task resets parameters, trains all 300 epochs, and predicts 600 labels. Static scoring uses the proposed compact affine v4 format; acceptance remains subject to review.
 
 [Higher-accuracy and compact-scoring study](https://cybertronai.github.io/sutro-problems/docs/submissions/accuracy-il-20260911/):
 all three seeds at 300 epochs and above exceeded 60%; one of 15 runs exceeded 65%.
