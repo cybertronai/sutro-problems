@@ -18,7 +18,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 </style></head>
 <body><header><p>Sutro problems · Submission attempt · September 2026</p><div class="brand">MNIST-small / 1-nearest-neighbor</div><nav><a class="active" href="index.html">Results & reproduction</a><a class="" href="session.html">Session export</a><a class="" href="ambiguities.html">Ambiguities & problems</a></nav></header>
 <main><h1 id="mnist-small-a-reproducible-1nn-submission-attempt">MNIST-small: a reproducible 1NN submission attempt</h1>
-<p><strong>308 / 600 correct · 51.33% accuracy · current 50% target met.</strong></p>
+<p><strong>308 / 600 correct · 51% accuracy · current 50% target met.</strong></p>
 <p>This fixed 1-nearest-neighbor algorithm learns by memorizing the 600 supplied training examples, then labels each of the 600 test images with the label of its nearest training image. It uses the nine supplied pixel values directly. No neural-network training, extra data, pretrained weights or hyperparameter search is involved. This is a baseline attempt, with no claim of optimal accuracy, time or energy.</p>
 <p>The submission was merged in <a href="https://github.com/cybertronai/sutro-problems/pull/64">PR #64</a>. <a href="https://github.com/cybertronai/sutro-problems/tree/main/mnist/submissions/1nn-v4-20260911">Submission source</a>. Its model scores depend on the explicit numeric, tape and area conventions below. They are calculated by a submission-owned interpreter, because the linked specification does not provide an authoritative executable scorer. The A100 measurements are actual NVML and CUDA-event observations.</p>
 <p>Contributors: Codex (implementation, experiments and report), with independent scorer, GPU and rules-review agents; requested by <code>yaroslavvb</code>. Run date: September 10, 2026 Pacific / September 11 UTC. No W&amp;B runs were created for this attempt. Before publication, main was rechecked at <code>1ede666</code>: the README now explicitly calls the model scores theoretical and allows an A100 ISA of choice. Dataset, target and v4 requirements are unchanged. The A100 source is a hand-written equivalent Triton implementation; it is not mechanically generated from the v4 text.</p>
@@ -39,7 +39,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 </ul>
 </div>
 <h2 id="results-and-metric-boundaries">Results and metric boundaries</h2>
-<p>All task runtimes use <strong>picoseconds (ps)</strong> and all energies use <strong>femtojoules (fJ)</strong>, so the theoretical and measured results share the same units. Each task includes 600 training examples and 600 test predictions. Per-task runtime and energy values in the comparison and trial tables are rounded to four significant figures; exact model totals are given below, and the measured energy's baseline sensitivity is reported separately.</p>
+<p>All task runtimes use <strong>picoseconds (ps)</strong> and all energies use <strong>femtojoules (fJ)</strong>, so the theoretical and measured results share the same units. Each task includes 600 training examples and 600 test predictions. Per-task runtime and energy values in the comparison and trial tables are rounded to two significant figures; exact totals are retained in the linked measurement files, and the measured energy's baseline sensitivity is reported separately.</p>
 <table>
 <thead>
 <tr>
@@ -51,13 +51,13 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <tbody>
 <tr>
 <td><strong>Time (ps)</strong></td>
-<td style="text-align: right;"><strong>1.682 × 10⁹</strong></td>
-<td style="text-align: right;"><strong>6.947 × 10⁶</strong></td>
+<td style="text-align: right;"><strong>1.7 × 10⁹</strong></td>
+<td style="text-align: right;"><strong>6.9 × 10⁶</strong></td>
 </tr>
 <tr>
 <td><strong>Energy (fJ)</strong></td>
-<td style="text-align: right;"><strong>1.876 × 10⁹</strong></td>
-<td style="text-align: right;"><strong>5.198 × 10¹¹</strong></td>
+<td style="text-align: right;"><strong>1.9 × 10⁹</strong></td>
+<td style="text-align: right;"><strong>5.2 × 10¹¹</strong></td>
 </tr>
 </tbody>
 </table>
@@ -73,23 +73,23 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <tbody>
 <tr>
 <td>Accuracy</td>
-<td style="text-align: right;"><strong>308/600 = 51.3333%</strong></td>
+<td style="text-align: right;"><strong>308/600 = 51%</strong></td>
 <td>Canonical fixed small test split</td>
 </tr>
 <tr>
 <td>Area, occupied-cell convention</td>
-<td style="text-align: right;"><strong>6,014 µm² = 0.006014 mm²</strong></td>
+<td style="text-align: right;"><strong>6.0 × 10³ µm²</strong></td>
 <td>Peak 6,014 allocated 32-bit scratch words, 24,056 bytes</td>
 </tr>
 <tr>
 <td>Time to score</td>
-<td style="text-align: right;"><strong>34.899 s</strong></td>
+<td style="text-align: right;"><strong>3.5 × 10¹³ ps</strong></td>
 <td>Host runtime of one full generator/interpreter/accounting run on Intel Core i9-9880H, 2.30 GHz</td>
 </tr>
 </tbody>
 </table>
-<p>Host scoring runtime and measurement-window duration are reported in seconds. Unit conversions: <strong>1 µs = 10⁶ ps</strong> and <strong>1 J = 10¹⁵ fJ</strong>.</p>
-<p>Both modeled and GPU task scopes include learning/memorization and all 600 predictions. Dataset preparation, the one training-only validation check, and host evaluation are outside those task scopes. The GPU additionally writes nearest-row indices and distances for verification; those writes are included in its measured runtime and energy. The CPU reference's 1.124 × 10¹⁰ ps host runtime is supplementary and is <strong>not</strong> the model's Time or Time to score.</p>
+<p>Host scoring runtime and measurement-window duration also use picoseconds in the tables. Unit conversions: <strong>1 µs = 10⁶ ps</strong> and <strong>1 J = 10¹⁵ fJ</strong>.</p>
+<p>Both modeled and GPU task scopes include learning/memorization and all 600 predictions. Dataset preparation, the one training-only validation check, and host evaluation are outside those task scopes. The GPU additionally writes nearest-row indices and distances for verification; those writes are included in its measured runtime and energy. The CPU reference's 1.1 × 10¹⁰ ps host runtime is supplementary and is <strong>not</strong> the model's Time or Time to score.</p>
 <p><strong>The threshold margin is eight examples.</strong> This establishes a pass on this particular fixed split. There is no measurement of generalization across alternative dataset samples, and no post-test algorithm or hyperparameter changes were made. Detailed rule gaps and experimental limitations are in the <a href="ambiguities.html">separate ambiguities and problems report</a>.</p>
 <h2 id="dataset-and-selection-record">Dataset and selection record</h2>
 <p>The task is <code>competition-v2</code>, seed <strong>20260910</strong>: 600 training and 600 test images at <strong>3 × 3</strong>, from disjoint subsets of the original 60,000-example MNIST training pool. The small training rows are positions <code>[0:600]</code> and test rows <code>[6000:6600]</code> in the documented PCG64 permutation. Pixels are normalized float32 box-area averages. This is the current 600/600 task, distinct from the historical 1,000/1,000 experiment. See the <a href="https://github.com/cybertronai/sutro-problems/blob/e70f9c9e1db65b62d9256f7b1f9b668cf4c48909/mnist/instructions.md">pinned task instructions</a>.</p>
@@ -180,7 +180,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 </tr>
 </tbody>
 </table>
-<p>There are <strong>22,316,400 charged reads</strong> and <strong>11,159,400 charged writes</strong>, totaling <strong>33,475,800 accesses</strong>. Each persistent training word is read 600 times: 3,600,000 persistent reads. The remaining 29,875,800 hot accesses are at the 50-unit floors. An independent count formula sums the exact placement costs of the persistent reads and the hot-access floors. It agrees exactly with the full interpreter's <strong>1,875,974,400 fJ</strong> and <strong>1,682,197,200 ps</strong>. Time is accumulated as integer 0.2 ps ticks to avoid rounding in score summation.</p>
+<p>There are <strong>22,316,400 charged reads</strong> and <strong>11,159,400 charged writes</strong>, totaling <strong>33,475,800 accesses</strong>. Each persistent training word is read 600 times: 3,600,000 persistent reads. The remaining 29,875,800 hot accesses are at the 50-unit floors. An independent count formula sums the exact placement costs of the persistent reads and the hot-access floors. It agrees exactly with the full interpreter's <strong>1.9 × 10⁹ fJ</strong> and <strong>1.7 × 10⁹ ps</strong> (rounded here; exact equality was checked). Time is accumulated as integer 0.2 ps ticks to avoid rounding in score summation.</p>
 <p>Time to score starts immediately before machine construction and includes instruction generation, all scratch-state checks, FP32 execution and integer cost accounting. It excludes dataset loading, placement generation, independent verification, result writing and optional text-IR emission. Host: Intel Core i9-9880H (8 physical / 16 logical CPUs), macOS 26.6.2, Python 3.11.13, NumPy 2.4.6; one Python interpreter, with possible concurrent work on the host. It is a measured single-run host duration, not a stable hardware-independent score.</p>
 <p>The emitted 11,171,400-instruction text was also replayed through the parser and interpreter. The compressed 11.1 MB trace is generated on demand rather than duplicated in Git; its expanded SHA-256 is <code>f6f657cc159160050e73d1df8ae169b313b795f3d1b1a45a72ad4f757383ef2b</code>. The generator, a sample, placement/access CSV, and replay result are published. Self-tests cover the specification's 450 fJ/300 ps example, distant free tape I/O, read-before-write rejection, source/destination aliasing and nearest-neighbor ties.</p>
 <h2 id="measured-a100-runtime-and-nvml-energy">Measured A100 runtime and NVML energy</h2>
@@ -198,7 +198,7 @@ E_task_fJ = (((counter_after_mJ - counter_before_mJ)/1000
 <tr>
 <th>Trial</th>
 <th style="text-align: right;">Full tasks</th>
-<th style="text-align: right;">Active NVML window (s)</th>
+<th style="text-align: right;">Active NVML window (ps)</th>
 <th style="text-align: right;">Raw board energy (fJ)</th>
 <th style="text-align: right;">Idle before / after (W)</th>
 <th style="text-align: right;">CUDA time/task (ps)</th>
@@ -209,33 +209,33 @@ E_task_fJ = (((counter_after_mJ - counter_before_mJ)/1000
 <tr>
 <td>1</td>
 <td style="text-align: right;">340,480</td>
-<td style="text-align: right;">2.377255</td>
-<td style="text-align: right;">3.57029 × 10¹⁷</td>
-<td style="text-align: right;">81.215 / 82.923</td>
-<td style="text-align: right;">6.974 × 10⁶</td>
-<td style="text-align: right;">4.756 × 10¹¹</td>
+<td style="text-align: right;">2.4 × 10¹²</td>
+<td style="text-align: right;">3.6 × 10¹⁷</td>
+<td style="text-align: right;">81 / 83</td>
+<td style="text-align: right;">7.0 × 10⁶</td>
+<td style="text-align: right;">4.8 × 10¹¹</td>
 </tr>
 <tr>
 <td>2</td>
 <td style="text-align: right;">340,480</td>
-<td style="text-align: right;">2.376813</td>
-<td style="text-align: right;">3.58194 × 10¹⁷</td>
-<td style="text-align: right;">64.112 / 79.863</td>
-<td style="text-align: right;">6.972 × 10⁶</td>
-<td style="text-align: right;">5.495 × 10¹¹</td>
+<td style="text-align: right;">2.4 × 10¹²</td>
+<td style="text-align: right;">3.6 × 10¹⁷</td>
+<td style="text-align: right;">64 / 80</td>
+<td style="text-align: right;">7.0 × 10⁶</td>
+<td style="text-align: right;">5.5 × 10¹¹</td>
 </tr>
 <tr>
 <td>3</td>
 <td style="text-align: right;">340,480</td>
-<td style="text-align: right;">2.350739</td>
-<td style="text-align: right;">3.54074 × 10¹⁷</td>
-<td style="text-align: right;">64.181 / 82.272</td>
-<td style="text-align: right;">6.894 × 10⁶</td>
-<td style="text-align: right;">5.344 × 10¹¹</td>
+<td style="text-align: right;">2.4 × 10¹²</td>
+<td style="text-align: right;">3.5 × 10¹⁷</td>
+<td style="text-align: right;">64 / 82</td>
+<td style="text-align: right;">6.9 × 10⁶</td>
+<td style="text-align: right;">5.3 × 10¹¹</td>
 </tr>
 </tbody>
 </table>
-<p>Mean host wall throughput is <strong>6.947 × 10⁶ ps/task</strong>. Across trials, CUDA-event time ranges <strong>6.894 × 10⁶–6.974 × 10⁶ ps</strong>, and idle-adjusted energy ranges <strong>4.756 × 10¹¹–5.495 × 10¹¹ fJ/task</strong>. Using either the before-only or after-only idle baseline across these trials yields <strong>4.696 × 10¹¹–6.045 × 10¹¹ fJ/task</strong>. This is baseline sensitivity, not a confidence interval. Idle power drifts materially; energy deserves fewer significant figures than the raw counters provide.</p>
+<p>Mean host wall throughput is <strong>6.9 × 10⁶ ps/task</strong>. Across trials, CUDA-event time ranges <strong>6.9 × 10⁶–7.0 × 10⁶ ps</strong>, and idle-adjusted energy ranges <strong>4.8 × 10¹¹–5.5 × 10¹¹ fJ/task</strong>. Using either the before-only or after-only idle baseline across these trials yields <strong>4.7 × 10¹¹–6.0 × 10¹¹ fJ/task</strong>. This is baseline sensitivity, not a confidence interval. Idle power drifts materially; energy deserves fewer significant figures than the raw counters provide.</p>
 <p>The active trial target was three seconds; the actual windows in the table are authoritative. Observed throughput differed from calibration, producing shorter active windows; the cause was not measured. No GPU clock or power limit was changed by the benchmark. These are warm, repeated, cache-resident throughput measurements. Host/device transfers, allocation, compilation, graph capture, validation, startup, host energy and facility overhead are excluded. NVML measures GPU board energy, not individual instructions. Comparing its energy directly with the model's tape-excluded scratch score does not establish physical prediction accuracy of the model.</p>
 <p>GPU outputs agree with all <strong>600</strong> canonical CPU predictions, all <strong>600</strong> nearest indices and all <strong>600</strong> winning FP32 distance bit patterns. Additional checks use fresh random queries and changed training labels to verify runtime input dependence. Changing training labels changes all 600 corresponding predicted labels. The saved PTX has no FP32 FMA.</p>
 <p>Three preliminary remote launches failed before energy trials: a missing C compiler, a Triton language alias scoping requirement, and unavailable Modal package metadata. These were environment/reporting fixes; none changed the algorithm or selected among measured trials. Failure excerpts and successful raw logs are retained in <code>gpu_run_history.txt</code>.</p>

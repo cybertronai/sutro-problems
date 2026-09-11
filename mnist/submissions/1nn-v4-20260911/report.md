@@ -1,6 +1,6 @@
 # MNIST-small: a reproducible 1NN submission attempt
 
-**308 / 600 correct · 51.33% accuracy · current 50% target met.**
+**308 / 600 correct · 51% accuracy · current 50% target met.**
 
 This fixed 1-nearest-neighbor algorithm learns by memorizing the 600 supplied training examples, then labels each of the 600 test images with the label of its nearest training image. It uses the nine supplied pixel values directly. No neural-network training, extra data, pretrained weights or hyperparameter search is involved. This is a baseline attempt, with no claim of optimal accuracy, time or energy.
 
@@ -12,24 +12,24 @@ Contributors: Codex (implementation, experiments and report), with independent s
 
 ## Results and metric boundaries
 
-All task runtimes use **picoseconds (ps)** and all energies use **femtojoules (fJ)**, so the theoretical and measured results share the same units. Each task includes 600 training examples and 600 test predictions. Per-task runtime and energy values in the comparison and trial tables are rounded to four significant figures; exact model totals are given below, and the measured energy's baseline sensitivity is reported separately.
+All task runtimes use **picoseconds (ps)** and all energies use **femtojoules (fJ)**, so the theoretical and measured results share the same units. Each task includes 600 training examples and 600 test predictions. Per-task runtime and energy values in the comparison and trial tables are rounded to two significant figures; exact totals are retained in the linked measurement files, and the measured energy's baseline sensitivity is reported separately.
 
 | Performance per complete task | Theoretical model | Measured A100, mean |
 | --- | ---: | ---: |
-| **Time (ps)** | **1.682 × 10⁹** | **6.947 × 10⁶** |
-| **Energy (fJ)** | **1.876 × 10⁹** | **5.198 × 10¹¹** |
+| **Time (ps)** | **1.7 × 10⁹** | **6.9 × 10⁶** |
+| **Energy (fJ)** | **1.9 × 10⁹** | **5.2 × 10¹¹** |
 
 The model sums charged scratch accesses and excludes tape I/O. The A100 time is CUDA-event steady-state graph throughput including the memorization copy; its energy is idle-adjusted GPU board energy from NVML. The shared units make the numerical scales directly comparable; the measurement boundaries remain as documented here.
 
 | Supporting metric | Result | Meaning |
 | --- | ---: | --- |
-| Accuracy | **308/600 = 51.3333%** | Canonical fixed small test split |
-| Area, occupied-cell convention | **6,014 µm² = 0.006014 mm²** | Peak 6,014 allocated 32-bit scratch words, 24,056 bytes |
-| Time to score | **34.899 s** | Host runtime of one full generator/interpreter/accounting run on Intel Core i9-9880H, 2.30 GHz |
+| Accuracy | **308/600 = 51%** | Canonical fixed small test split |
+| Area, occupied-cell convention | **6.0 × 10³ µm²** | Peak 6,014 allocated 32-bit scratch words, 24,056 bytes |
+| Time to score | **3.5 × 10¹³ ps** | Host runtime of one full generator/interpreter/accounting run on Intel Core i9-9880H, 2.30 GHz |
 
-Host scoring runtime and measurement-window duration are reported in seconds. Unit conversions: **1 µs = 10⁶ ps** and **1 J = 10¹⁵ fJ**.
+Host scoring runtime and measurement-window duration also use picoseconds in the tables. Unit conversions: **1 µs = 10⁶ ps** and **1 J = 10¹⁵ fJ**.
 
-Both modeled and GPU task scopes include learning/memorization and all 600 predictions. Dataset preparation, the one training-only validation check, and host evaluation are outside those task scopes. The GPU additionally writes nearest-row indices and distances for verification; those writes are included in its measured runtime and energy. The CPU reference's 1.124 × 10¹⁰ ps host runtime is supplementary and is **not** the model's Time or Time to score.
+Both modeled and GPU task scopes include learning/memorization and all 600 predictions. Dataset preparation, the one training-only validation check, and host evaluation are outside those task scopes. The GPU additionally writes nearest-row indices and distances for verification; those writes are included in its measured runtime and energy. The CPU reference's 1.1 × 10¹⁰ ps host runtime is supplementary and is **not** the model's Time or Time to score.
 
 **The threshold margin is eight examples.** This establishes a pass on this particular fixed split. There is no measurement of generalization across alternative dataset samples, and no post-test algorithm or hyperparameter changes were made. Detailed rule gaps and experimental limitations are in the [separate ambiguities and problems report](ambiguities.html).
 
@@ -87,7 +87,7 @@ The [single-core-with-tape cost model](https://github.com/cybertronai/simplified
 | select | 718,800 |
 | **Total** | **11,171,400** |
 
-There are **22,316,400 charged reads** and **11,159,400 charged writes**, totaling **33,475,800 accesses**. Each persistent training word is read 600 times: 3,600,000 persistent reads. The remaining 29,875,800 hot accesses are at the 50-unit floors. An independent count formula sums the exact placement costs of the persistent reads and the hot-access floors. It agrees exactly with the full interpreter's **1,875,974,400 fJ** and **1,682,197,200 ps**. Time is accumulated as integer 0.2 ps ticks to avoid rounding in score summation.
+There are **22,316,400 charged reads** and **11,159,400 charged writes**, totaling **33,475,800 accesses**. Each persistent training word is read 600 times: 3,600,000 persistent reads. The remaining 29,875,800 hot accesses are at the 50-unit floors. An independent count formula sums the exact placement costs of the persistent reads and the hot-access floors. It agrees exactly with the full interpreter's **1.9 × 10⁹ fJ** and **1.7 × 10⁹ ps** (rounded here; exact equality was checked). Time is accumulated as integer 0.2 ps ticks to avoid rounding in score summation.
 
 Time to score starts immediately before machine construction and includes instruction generation, all scratch-state checks, FP32 execution and integer cost accounting. It excludes dataset loading, placement generation, independent verification, result writing and optional text-IR emission. Host: Intel Core i9-9880H (8 physical / 16 logical CPUs), macOS 26.6.2, Python 3.11.13, NumPy 2.4.6; one Python interpreter, with possible concurrent work on the host. It is a measured single-run host duration, not a stable hardware-independent score.
 
@@ -110,13 +110,13 @@ E_task_fJ = (((counter_after_mJ - counter_before_mJ)/1000
 
 Counter-read timestamps use the midpoint of the host call, and query latencies are retained. Negative adjusted values are not silently clipped. Reported aggregate values are the means over the three trials.
 
-| Trial | Full tasks | Active NVML window (s) | Raw board energy (fJ) | Idle before / after (W) | CUDA time/task (ps) | Adjusted energy/task (fJ) |
+| Trial | Full tasks | Active NVML window (ps) | Raw board energy (fJ) | Idle before / after (W) | CUDA time/task (ps) | Adjusted energy/task (fJ) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
-| 1 | 340,480 | 2.377255 | 3.57029 × 10¹⁷ | 81.215 / 82.923 | 6.974 × 10⁶ | 4.756 × 10¹¹ |
-| 2 | 340,480 | 2.376813 | 3.58194 × 10¹⁷ | 64.112 / 79.863 | 6.972 × 10⁶ | 5.495 × 10¹¹ |
-| 3 | 340,480 | 2.350739 | 3.54074 × 10¹⁷ | 64.181 / 82.272 | 6.894 × 10⁶ | 5.344 × 10¹¹ |
+| 1 | 340,480 | 2.4 × 10¹² | 3.6 × 10¹⁷ | 81 / 83 | 7.0 × 10⁶ | 4.8 × 10¹¹ |
+| 2 | 340,480 | 2.4 × 10¹² | 3.6 × 10¹⁷ | 64 / 80 | 7.0 × 10⁶ | 5.5 × 10¹¹ |
+| 3 | 340,480 | 2.4 × 10¹² | 3.5 × 10¹⁷ | 64 / 82 | 6.9 × 10⁶ | 5.3 × 10¹¹ |
 
-Mean host wall throughput is **6.947 × 10⁶ ps/task**. Across trials, CUDA-event time ranges **6.894 × 10⁶–6.974 × 10⁶ ps**, and idle-adjusted energy ranges **4.756 × 10¹¹–5.495 × 10¹¹ fJ/task**. Using either the before-only or after-only idle baseline across these trials yields **4.696 × 10¹¹–6.045 × 10¹¹ fJ/task**. This is baseline sensitivity, not a confidence interval. Idle power drifts materially; energy deserves fewer significant figures than the raw counters provide.
+Mean host wall throughput is **6.9 × 10⁶ ps/task**. Across trials, CUDA-event time ranges **6.9 × 10⁶–7.0 × 10⁶ ps**, and idle-adjusted energy ranges **4.8 × 10¹¹–5.5 × 10¹¹ fJ/task**. Using either the before-only or after-only idle baseline across these trials yields **4.7 × 10¹¹–6.0 × 10¹¹ fJ/task**. This is baseline sensitivity, not a confidence interval. Idle power drifts materially; energy deserves fewer significant figures than the raw counters provide.
 
 The active trial target was three seconds; the actual windows in the table are authoritative. Observed throughput differed from calibration, producing shorter active windows; the cause was not measured. No GPU clock or power limit was changed by the benchmark. These are warm, repeated, cache-resident throughput measurements. Host/device transfers, allocation, compilation, graph capture, validation, startup, host energy and facility overhead are excluded. NVML measures GPU board energy, not individual instructions. Comparing its energy directly with the model's tape-excluded scratch score does not establish physical prediction accuracy of the model.
 

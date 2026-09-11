@@ -7,7 +7,7 @@ BASE = 'https://github.com/cybertronai/sutro-problems/blob/e70f9c9e1db65b62d9256
 SPEC = 'https://github.com/cybertronai/simplified-dally-model/blob/26abcca402de647381d31286d42dfbb7a001763d'
 
 
-def scientific(value, digits=4):
+def scientific(value, digits=2):
     """Scientific notation with fixed significant figures and readable exponents."""
     mantissa, exponent = f"{value:.{digits - 1}e}".split('e')
     superscript = str(int(exponent)).translate(str.maketrans('-0123456789', '⁻⁰¹²³⁴⁵⁶⁷⁸⁹'))
@@ -26,9 +26,9 @@ def main():
     a100_energy_fj = joules * 1e15
     rows = []
     for trial in gpu['trials']:
-        rows.append(f"| {trial['trial']} | {trial['invocations']:,} | {trial['active']['duration_s']:.6f} | "
-                    f"{scientific(trial['active']['energy_j']*1e15, 6)} | {trial['idle_before']['average_power_w']:.3f} / "
-                    f"{trial['idle_after']['average_power_w']:.3f} | {scientific(trial['cuda_event_us_per_invocation']*1e6)} | "
+        rows.append(f"| {trial['trial']} | {trial['invocations']:,} | {scientific(trial['active']['duration_s']*1e12)} | "
+                    f"{scientific(trial['active']['energy_j']*1e15)} | {trial['idle_before']['average_power_w']:.0f} / "
+                    f"{trial['idle_after']['average_power_w']:.0f} | {scientific(trial['cuda_event_us_per_invocation']*1e6)} | "
                     f"{scientific(trial['idle_adjusted_j_per_invocation']*1e15)} |")
     sensitivity = [trial[key]*1e15 for trial in gpu['trials'] for key in
                    ('before_only_adjusted_j_per_invocation','after_only_adjusted_j_per_invocation')]
@@ -38,7 +38,7 @@ def main():
     versions = gpu['versions']
     report = f'''# MNIST-small: a reproducible 1NN submission attempt
 
-**308 / 600 correct · 51.33% accuracy · current 50% target met.**
+**308 / 600 correct · 51% accuracy · current 50% target met.**
 
 This fixed 1-nearest-neighbor algorithm learns by memorizing the 600 supplied training examples, then labels each of the 600 test images with the label of its nearest training image. It uses the nine supplied pixel values directly. No neural-network training, extra data, pretrained weights or hyperparameter search is involved. This is a baseline attempt, with no claim of optimal accuracy, time or energy.
 
@@ -50,7 +50,7 @@ Contributors: Codex (implementation, experiments and report), with independent s
 
 ## Results and metric boundaries
 
-All task runtimes use **picoseconds (ps)** and all energies use **femtojoules (fJ)**, so the theoretical and measured results share the same units. Each task includes 600 training examples and 600 test predictions. Per-task runtime and energy values in the comparison and trial tables are rounded to four significant figures; exact model totals are given below, and the measured energy's baseline sensitivity is reported separately.
+All task runtimes use **picoseconds (ps)** and all energies use **femtojoules (fJ)**, so the theoretical and measured results share the same units. Each task includes 600 training examples and 600 test predictions. Per-task runtime and energy values in the comparison and trial tables are rounded to two significant figures; exact totals are retained in the linked measurement files, and the measured energy's baseline sensitivity is reported separately.
 
 | Performance per complete task | Theoretical model | Measured A100, mean |
 | --- | ---: | ---: |
@@ -61,11 +61,11 @@ The model sums charged scratch accesses and excludes tape I/O. The A100 time is 
 
 | Supporting metric | Result | Meaning |
 | --- | ---: | --- |
-| Accuracy | **{acc['correct']}/{acc['total']} = {acc['accuracy']*100:.4f}%** | Canonical fixed small test split |
-| Area, occupied-cell convention | **{model['area_um2_occupied_cells']:,} µm² = 0.006014 mm²** | Peak {model['peak_allocated_scratch_words']:,} allocated 32-bit scratch words, {model['peak_allocated_scratch_bytes']:,} bytes |
-| Time to score | **{model['time_to_score_seconds']:.3f} s** | Host runtime of one full generator/interpreter/accounting run on Intel Core i9-9880H, 2.30 GHz |
+| Accuracy | **{acc['correct']}/{acc['total']} = {acc['accuracy']*100:.2g}%** | Canonical fixed small test split |
+| Area, occupied-cell convention | **{scientific(model['area_um2_occupied_cells'])} µm²** | Peak {model['peak_allocated_scratch_words']:,} allocated 32-bit scratch words, {model['peak_allocated_scratch_bytes']:,} bytes |
+| Time to score | **{scientific(model['time_to_score_seconds']*1e12)} ps** | Host runtime of one full generator/interpreter/accounting run on Intel Core i9-9880H, 2.30 GHz |
 
-Host scoring runtime and measurement-window duration are reported in seconds. Unit conversions: **1 µs = 10⁶ ps** and **1 J = 10¹⁵ fJ**.
+Host scoring runtime and measurement-window duration also use picoseconds in the tables. Unit conversions: **1 µs = 10⁶ ps** and **1 J = 10¹⁵ fJ**.
 
 Both modeled and GPU task scopes include learning/memorization and all 600 predictions. Dataset preparation, the one training-only validation check, and host evaluation are outside those task scopes. The GPU additionally writes nearest-row indices and distances for verification; those writes are included in its measured runtime and energy. The CPU reference's {scientific(cpu['cpu_reference_wall_seconds']*1e12)} ps host runtime is supplementary and is **not** the model's Time or Time to score.
 
@@ -125,7 +125,7 @@ The [single-core-with-tape cost model]({SPEC}/models/single-core-with-tape/READM
 | select | 718,800 |
 | **Total** | **11,171,400** |
 
-There are **22,316,400 charged reads** and **11,159,400 charged writes**, totaling **33,475,800 accesses**. Each persistent training word is read 600 times: 3,600,000 persistent reads. The remaining 29,875,800 hot accesses are at the 50-unit floors. An independent count formula sums the exact placement costs of the persistent reads and the hot-access floors. It agrees exactly with the full interpreter's **1,875,974,400 fJ** and **1,682,197,200 ps**. Time is accumulated as integer 0.2 ps ticks to avoid rounding in score summation.
+There are **22,316,400 charged reads** and **11,159,400 charged writes**, totaling **33,475,800 accesses**. Each persistent training word is read 600 times: 3,600,000 persistent reads. The remaining 29,875,800 hot accesses are at the 50-unit floors. An independent count formula sums the exact placement costs of the persistent reads and the hot-access floors. It agrees exactly with the full interpreter's **1.9 × 10⁹ fJ** and **1.7 × 10⁹ ps** (rounded here; exact equality was checked). Time is accumulated as integer 0.2 ps ticks to avoid rounding in score summation.
 
 Time to score starts immediately before machine construction and includes instruction generation, all scratch-state checks, FP32 execution and integer cost accounting. It excludes dataset loading, placement generation, independent verification, result writing and optional text-IR emission. Host: Intel Core i9-9880H (8 physical / 16 logical CPUs), macOS 26.6.2, Python {model['host']['python'].split()[0]}, NumPy {model['host']['numpy']}; one Python interpreter, with possible concurrent work on the host. It is a measured single-run host duration, not a stable hardware-independent score.
 
@@ -148,7 +148,7 @@ E_task_fJ = (((counter_after_mJ - counter_before_mJ)/1000
 
 Counter-read timestamps use the midpoint of the host call, and query latencies are retained. Negative adjusted values are not silently clipped. Reported aggregate values are the means over the three trials.
 
-| Trial | Full tasks | Active NVML window (s) | Raw board energy (fJ) | Idle before / after (W) | CUDA time/task (ps) | Adjusted energy/task (fJ) |
+| Trial | Full tasks | Active NVML window (ps) | Raw board energy (fJ) | Idle before / after (W) | CUDA time/task (ps) | Adjusted energy/task (fJ) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 {chr(10).join(rows)}
 
