@@ -125,7 +125,7 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--predictions", type=Path, required=True)
     parser.add_argument("--tier", choices=("small", "medium", "large"), required=True)
     parser.add_argument("--data-dir", type=Path, default=Path("mnist/data"))
-    parser.add_argument("--error-target", choices=("10", "8", "6", "4", "2"),
+    parser.add_argument("--error-target", choices=("2", "3", "5", "8", "12"),
                         help="MNIST-medium error-rate target in percent; select explicitly for the new 10000/10000 profile")
     parser.add_argument("--output", type=Path, help="Also save the JSON score to this path")
     arguments = parser.parse_args(argv)

@@ -6,13 +6,21 @@ accuracy, complete model scores, A100 measurements, and reproduction commands.
 
 ## What counts as a successful attempt
 
-The latest request defines five medium error targets: **10%, 8%, 6%, 4%, 2%**.
-This submission attempts **4% error**, using eleven draws of **10,000 training
-and 10,000 query examples** at 9×9 resolution. The former 6,000/6,000 protocol
-and intermediate 90%, 97%, and 98% requests are superseded for this attempt.
-Historical reports retain their original scope and are not directly comparable.
-The inclusive 4% threshold requires 105,600 / 110,000 correct; the result is
+The latest request defines five medium error targets: **2%, 3%, 5%, 8%, 12%**,
+spaced by roughly a factor of 1.5 in error tolerance. Lower error is harder; this
+does not establish a fixed factor in training time, energy or scoring difficulty.
+The completed result uses eleven draws of **10,000 training and 10,000 query
+examples** at 9×9 resolution, and now qualifies at the **3% error** level.
+The inclusive 3% threshold requires 106,700 / 110,000 correct; the result is
 107,534 correct. It does not meet the strictest 2% level (107,800 required).
+
+The user corrected the levels after the experiment was complete. This is a
+post-evaluation reclassification, not a newly predeclared 3% experiment. Frozen
+protocol, configuration, evaluator, accuracy and audit records retain the
+original 4% target and previous five levels. `target-assessment.json` links those
+records by hash and applies the revised thresholds. All predictions, learned
+state, model costs and GPU measurements are unchanged. Historical reports retain
+their original scope and are not directly comparable across dataset protocols.
 The decision uses exact counts. Sample SD uses the eleven dataset accuracies
 and denominator ten; it is in percentage points, not a standard error.
 

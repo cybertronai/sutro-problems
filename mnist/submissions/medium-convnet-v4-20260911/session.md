@@ -1,6 +1,6 @@
 # MNIST-medium submission session
 
-Visible conversation through **2026-09-11T22:33:18.658841+00:00**.
+Visible conversation through **2026-09-11T22:37:55.311548+00:00**.
 
 Visible user and assistant messages from the medium-submission request through the stated cutoff, including user answers to asynchronous clarification questions. Internal reasoning, system/developer instructions, AGENTS/environment metadata, raw tools and the source session file are excluded. The sequence preserves target changes; the accompanying report states the final evaluated task.
 
@@ -125,3 +125,27 @@ All three A100 trials are complete: median runtime is **13,000 ms** and idle-adj
 ## 29. Assistant · 2026-09-11T22:31:56.966Z
 
 The independent audit passed, including the accuracy statistics, model costs, raw NVML calculations, and A100 output equivalence. A fresh preparation run also reproduced every input-array hash for all 11 draws. I’m now publishing the report, separate ambiguities report, and human-readable session export, then opening the submission PR.
+
+## 30. Assistant · 2026-09-11T22:34:02.883Z
+
+The report bundle is pushed to `main`, and GitHub Pages is building it. I’m opening the formal PR with the five-target rules, concise README entry, implementation, and scoring evidence, then checking that the deployed pages match the reviewed files.
+
+## 31. Assistant · 2026-09-11T22:35:48.701Z
+
+Submitted the fully scored 4% attempt: **2.2% ± 0.1 pp error** (**97.8% accuracy**) across 11 draws of **10,000 train + 10,000 test**.
+
+Exact model scores and A100 measurements are complete. The five-target rules and README entry are in the open PR; reports and session export are live.
+
+[PR #70](https://github.com/cybertronai/sutro-problems/pull/70) · [Report](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-convnet-v4-20260911/) · [Ambiguities](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-convnet-v4-20260911/ambiguities.html) · [Session](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-convnet-v4-20260911/session.html)
+
+## 32. User · 2026-09-11T22:35:52.198Z
+
+actually, error targets will be 2%, 3%, 5%, 8%, 12%, about 1.5 increase in difficulty per level
+
+## 33. Assistant · 2026-09-11T22:36:00.292Z
+
+I’ll update the five levels to **2%, 3%, 5%, 8%, and 12% error** and label the completed attempt against the **3% level**, which its measured 2.2% error clears.
+
+## 34. Assistant · 2026-09-11T22:37:25.794Z
+
+The revised levels correspond to **98%, 97%, 95%, 92%, and 88% accuracy**. The existing result clears the 3% error threshold by **834 correct predictions**. I’m recording that as a reclassification, preserving the original experiment and measurements.

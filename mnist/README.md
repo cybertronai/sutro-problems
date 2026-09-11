@@ -4,7 +4,7 @@
 predicted test labels (digits 0–9) meeting the accuracy requirement for the tier.
 
 - **MNIST-small:** 600 train / 600 test, 3 × 3 images; **at least 60% mean accuracy**.
-- **MNIST-medium:** 10,000 train / 10,000 test, 9 × 9 images; error targets **10%, 8%, 6%, 4%, 2%** (accuracy **90%, 92%, 94%, 96%, 98%**).
+- **MNIST-medium:** 10,000 train / 10,000 test, 9 × 9 images; error targets **2%, 3%, 5%, 8%, 12%** (accuracy **98%, 97%, 95%, 92%, 88%**).
 - **MNIST-large:** classic MNIST, 60,000 train / 10,000 test, 28 × 28 images; **at least 98% accuracy** (9,800/10,000 correct).
 
 Small and medium use disjoint random subsets of the original 60,000 MNIST
