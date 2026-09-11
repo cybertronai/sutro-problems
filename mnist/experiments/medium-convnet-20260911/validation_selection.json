@@ -1,0 +1,187 @@
+{
+  "ranked_candidates": [
+    {
+      "config": {
+        "id": "cnn-09",
+        "architecture": "cnn",
+        "width": 64,
+        "depth": 3,
+        "activation": "gelu",
+        "pooling": "none",
+        "dropout": 0.2,
+        "learning_rate": 0.001,
+        "weight_decay": 0.001,
+        "augmentation": "mild_affine",
+        "batch_size": 128,
+        "epochs": 100,
+        "head_width": 256,
+        "image_size": 9
+      },
+      "parameter_count": 1404618,
+      "seeds": [
+        11,
+        22,
+        33
+      ],
+      "mean_best_validation_correct": 1174.6666666666667,
+      "mean_best_validation_loss": 0.10332182433870103,
+      "best_epochs_by_seed": {
+        "11": 71,
+        "22": 88,
+        "33": 70
+      },
+      "refit_epochs": 71,
+      "individual_correct_by_seed": {
+        "11": 1178,
+        "22": 1173,
+        "33": 1173
+      },
+      "validation_logits_average_ensemble_correct": 1174,
+      "ensemble_accumulation": "float64 arithmetic mean of three float32 raw-logit arrays",
+      "validation_total": 1200,
+      "selected_inference": "single",
+      "ensemble_selection_rule": "Strictly higher validation correct count than fixed primary seed11 checkpoint; ties favor single"
+    },
+    {
+      "config": {
+        "id": "cnn-08",
+        "architecture": "cnn",
+        "width": 32,
+        "depth": 3,
+        "activation": "gelu",
+        "pooling": "none",
+        "dropout": 0.2,
+        "learning_rate": 0.001,
+        "weight_decay": 0.001,
+        "augmentation": "mild_affine",
+        "batch_size": 128,
+        "epochs": 100,
+        "head_width": 128,
+        "image_size": 9
+      },
+      "parameter_count": 352106,
+      "seeds": [
+        11,
+        22,
+        33
+      ],
+      "mean_best_validation_correct": 1173.3333333333333,
+      "mean_best_validation_loss": 0.10612091461817423,
+      "best_epochs_by_seed": {
+        "11": 82,
+        "22": 72,
+        "33": 89
+      },
+      "refit_epochs": 82,
+      "individual_correct_by_seed": {
+        "11": 1177,
+        "22": 1176,
+        "33": 1167
+      },
+      "validation_logits_average_ensemble_correct": 1173,
+      "ensemble_accumulation": "float64 arithmetic mean of three float32 raw-logit arrays",
+      "validation_total": 1200
+    },
+    {
+      "config": {
+        "id": "cnn-10",
+        "architecture": "cnn",
+        "width": 64,
+        "depth": 4,
+        "activation": "gelu",
+        "pooling": "none",
+        "dropout": 0.2,
+        "learning_rate": 0.001,
+        "weight_decay": 0.001,
+        "augmentation": "mild_affine",
+        "batch_size": 128,
+        "epochs": 100,
+        "head_width": 256,
+        "image_size": 9
+      },
+      "parameter_count": 1441610,
+      "seeds": [
+        11,
+        22,
+        33
+      ],
+      "mean_best_validation_correct": 1173.3333333333333,
+      "mean_best_validation_loss": 0.10919000307718912,
+      "best_epochs_by_seed": {
+        "33": 59,
+        "11": 61,
+        "22": 80
+      },
+      "refit_epochs": 61,
+      "individual_correct_by_seed": {
+        "33": 1176,
+        "11": 1174,
+        "22": 1170
+      },
+      "validation_logits_average_ensemble_correct": 1172,
+      "ensemble_accumulation": "float64 arithmetic mean of three float32 raw-logit arrays",
+      "validation_total": 1200
+    }
+  ],
+  "preferred_candidate": {
+    "config": {
+      "id": "cnn-09",
+      "architecture": "cnn",
+      "width": 64,
+      "depth": 3,
+      "activation": "gelu",
+      "pooling": "none",
+      "dropout": 0.2,
+      "learning_rate": 0.001,
+      "weight_decay": 0.001,
+      "augmentation": "mild_affine",
+      "batch_size": 128,
+      "epochs": 100,
+      "head_width": 256,
+      "image_size": 9
+    },
+    "parameter_count": 1404618,
+    "seeds": [
+      11,
+      22,
+      33
+    ],
+    "mean_best_validation_correct": 1174.6666666666667,
+    "mean_best_validation_loss": 0.10332182433870103,
+    "best_epochs_by_seed": {
+      "11": 71,
+      "22": 88,
+      "33": 70
+    },
+    "refit_epochs": 71,
+    "individual_correct_by_seed": {
+      "11": 1178,
+      "22": 1173,
+      "33": 1173
+    },
+    "validation_logits_average_ensemble_correct": 1174,
+    "ensemble_accumulation": "float64 arithmetic mean of three float32 raw-logit arrays",
+    "validation_total": 1200,
+    "selected_inference": "single",
+    "ensemble_selection_rule": "Strictly higher validation correct count than fixed primary seed11 checkpoint; ties favor single"
+  },
+  "provenance": {
+    "protocol_sha256": "67836b89de36ff69738dcbe45280792d78c7217e61ba8fc4efd37ba7530e571b",
+    "source_sha256": {
+      "runner.py": "a6d44bfce1fb19de6a876626770b2d0251e775c7bf96d89a47e2e69d2ee43999",
+      "modal_train.py": "88a592e836d444703c392fdbc56477fd0dbfa5751b561b02d6c815a50f7709d8"
+    },
+    "input_sha256": {
+      "train_images": "3c2c9d7cc3103e05c6e72e8b39ad7ae8f93fcbea8b23ac5f43ffacd9a9c4653b",
+      "train_labels": "91633f2c00fe471cb130fb6831c3d7dca5899bd926a1c899d873826dfd62e617"
+    },
+    "split_file_sha256": "e0bef11a8ec70ed9a81e74bb58ea63a8cfa09ea6e7a21e5870d045458d1e0c81",
+    "allowed_input_arrays": [
+      "train_images",
+      "train_labels"
+    ]
+  },
+  "test_arrays_accessed": false,
+  "phase_gate": "STOP: final configuration, epochs, seeds, and ensemble policy must be frozen before separate refit/test",
+  "created_at_utc": "2026-09-11T05:10:25.396652+00:00"
+}
