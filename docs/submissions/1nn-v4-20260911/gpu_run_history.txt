@@ -1,0 +1,828 @@
+MNIST-small A100 run history
+
+Three setup failures occurred before measured trials. All trials from the successful run are retained. ANSI terminal styling and local absolute source paths have been normalized.
+
+
+========================================================================
+gpu_attempt1_missing_compiler.log
+========================================================================
+Downloading numpy (6.3MiB)
+ Downloaded numpy
+Installed 30 packages in 91ms
+✓ Initialized. View run at 
+https://modal.com/apps/yaroslavvb/main/ap-p5ci3vbpYclOvChpFE2GYc
+Building image im-X6R9mZQirau1ZGUMmA4A7x
+
+=> Step 0: FROM base
+
+=> Step 1: RUN python -m pip install numpy==2.2.6 nvidia-ml-py==12.560.30
+Looking in indexes: http://pypi-mirror.modal.local:5555/simple
+Collecting numpy==2.2.6
+  Downloading http://pypi-mirror.modal.local:5555/simple/numpy/numpy-2.2.6-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (62 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 62.0/62.0 kB 18.4 MB/s eta 0:00:00
+Requirement already satisfied: nvidia-ml-py==12.560.30 in /usr/local/lib/python3.11/site-packages (12.560.30)
+Downloading http://pypi-mirror.modal.local:5555/simple/numpy/numpy-2.2.6-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (16.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.8/16.8 MB 174.3 MB/s eta 0:00:00
+Installing collected packages: numpy
+  Attempting uninstall: numpy
+    Found existing installation: numpy 2.1.3
+    Uninstalling numpy-2.1.3:
+      Successfully uninstalled numpy-2.1.3
+Successfully installed numpy-2.2.6
+
+[notice] A new release of pip is available: 24.0 -> 26.2.1
+[notice] To update, run: pip install --upgrade pip
+Saving image...
+Image saved, took 494.67ms
+
+Built image im-X6R9mZQirau1ZGUMmA4A7x in 6.57s
+
+
+✓ Created objects.
+├── 🔨 Created mount 
+│   <checkout>/mnist/submissions/1nn-v4-20260911/
+│   gpu_benchmark.py
+└── 🔨 Created function benchmark.
+Traceback (most recent call last):
+  File "/pkg/modal/_runtime/container_io_manager.py", line 987, in handle_input_exception
+    yield
+  File "/pkg/modal/_container_entrypoint.py", line 189, in run_input_sync
+    values = io_context.call_function_sync()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/container_io_manager.py", line 266, in call_function_sync
+    expected_value_or_values = self.finalized_function.callable(*args, **kwargs)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/gpu_benchmark.py", line 121, in benchmark
+    compiled_predict = invocation()
+                       ^^^^^^^^^^^^
+  File "/root/gpu_benchmark.py", line 112, in invocation
+    memorize_kernel[(triton.cdiv(600 * 9, 1024),)](
+  File "/usr/local/lib/python3.11/site-packages/triton/runtime/jit.py", line 345, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/runtime/jit.py", line 607, in run
+    device = driver.active.get_current_device()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/runtime/driver.py", line 23, in __getattr__
+    self._initialize_obj()
+  File "/usr/local/lib/python3.11/site-packages/triton/runtime/driver.py", line 20, in _initialize_obj
+    self._obj = self._init_fn()
+                ^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/runtime/driver.py", line 9, in _create_driver
+    return actives[0]()
+           ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/backends/nvidia/driver.py", line 371, in __init__
+    self.utils = CudaUtils()  # TODO: make static
+                 ^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/backends/nvidia/driver.py", line 80, in __init__
+    mod = compile_module_from_src(Path(os.path.join(dirname, "driver.c")).read_text(), "cuda_utils")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/backends/nvidia/driver.py", line 57, in compile_module_from_src
+    so = _build(name, src_path, tmpdir, library_dirs(), include_dir, libraries)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/runtime/build.py", line 32, in _build
+    raise RuntimeError("Failed to find C compiler. Please specify via CC environment variable.")
+RuntimeError: Failed to find C compiler. Please specify via CC environment variable.
+Stopping app - uncaught exception raised locally: RuntimeError('Failed to find C compiler. Please specify via CC environment variable.').
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ <checkout>/mnist/submissions/1nn-v4-20260911/ │
+│ gpu_benchmark.py:349 in main                                                 │
+│                                                                              │
+│   348 │   assert payload["train_labels"]["shape"] == (600,)                  │
+│ ❱ 349 │   result, ptx = benchmark.remote(payload, hashlib.sha256(Path(__file │
+│   350 │   (destination / "gpu_results.json").write_text(json.dumps(result, i │
+│                                                                              │
+│ /Users/yaroslavvb/.cache/uv/archive-v0/qYjMYmvTiJvC0rkAnfk0d/lib/python3.13/ │
+│ site-packages/modal/_object.py:46 in wrapped                                 │
+│                                                                              │
+│    45 │   │   await self.hydrate()                                           │
+│ ❱  46 │   │   return await method(self, *args, **kwargs)                     │
+│    47                                                                        │
+│                                                                              │
+│ /Users/yaroslavvb/.cache/uv/archive-v0/qYjMYmvTiJvC0rkAnfk0d/lib/python3.13/ │
+│ site-packages/modal/_functions.py:1893 in remote                             │
+│                                                                              │
+│   1892 │   │                                                                 │
+│ ❱ 1893 │   │   return await self._call_function(args, kwargs)                │
+│   1894                                                                       │
+│                                                                              │
+│ /Users/yaroslavvb/.cache/uv/archive-v0/qYjMYmvTiJvC0rkAnfk0d/lib/python3.13/ │
+│ site-packages/modal/_functions.py:1830 in _call_function                     │
+│                                                                              │
+│   1829 │   │                                                                 │
+│ ❱ 1830 │   │   return await invocation.run_function()                        │
+│   1831                                                                       │
+│                                                                              │
+│ /Users/yaroslavvb/.cache/uv/archive-v0/qYjMYmvTiJvC0rkAnfk0d/lib/python3.13/ │
+│ site-packages/modal/_functions.py:503 in run_function                        │
+│                                                                              │
+│    502 │   │   │   # No more retries left.                                   │
+│ ❱  503 │   │   │   return await _process_result(                             │
+│    504 │   │   │   │   await_response.output.result, await_response.output.d │
+│                                                                              │
+│ /Users/yaroslavvb/.cache/uv/archive-v0/qYjMYmvTiJvC0rkAnfk0d/lib/python3.13/ │
+│ site-packages/modal/_utils/function_utils.py:572 in _process_result          │
+│                                                                              │
+│   571 │   │   │                                                              │
+│ ❱ 572 │   │   │   raise exc_with_hints(exc)                                  │
+│   573                                                                        │
+│                                                                              │
+│     ...Remote call to Modal Function (ta-01M272XS11YQK94C2P3GMRSMCR)...      │
+│                                                                              │
+│ /root/gpu_benchmark.py:121 in benchmark                                      │
+│                                                                              │
+│ ❱ 121 compiled_predict = invocation()                                        │
+│                                                                              │
+│                                                                              │
+│ /root/gpu_benchmark.py:112 in invocation                                     │
+│                                                                              │
+│ ❱ 112 memorize_kernel[(triton.cdiv(600 * 9, 1024),)](                        │
+│                                                                              │
+│                                                                              │
+│ /usr/local/lib/python3.11/site-packages/triton/runtime/jit.py:345 in         │
+│ <lambda>                                                                     │
+│                                                                              │
+│ ❱ 345 return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args │
+│                                                                              │
+│                                                                              │
+│ /usr/local/lib/python3.11/site-packages/triton/runtime/jit.py:607 in run     │
+│                                                                              │
+│ ❱ 607 device = driver.active.get_current_device()                            │
+│                                                                              │
+│                                                                              │
+│ /usr/local/lib/python3.11/site-packages/triton/runtime/driver.py:23 in       │
+│ __getattr__                                                                  │
+│                                                                              │
+│ ❱ 23 self._initialize_obj()                                                  │
+│                                                                              │
+│                                                                              │
+│ /usr/local/lib/python3.11/site-packages/triton/runtime/driver.py:20 in       │
+│ _initialize_obj                                                              │
+│                                                                              │
+│ ❱ 20 self._obj = self._init_fn()                                             │
+│                                                                              │
+│                                                                              │
+│ /usr/local/lib/python3.11/site-packages/triton/runtime/driver.py:9 in        │
+│ _create_driver                                                               │
+│                                                                              │
+│ ❱ 9 return actives[0]()                                                      │
+│                                                                              │
+│                                                                              │
+│ /usr/local/lib/python3.11/site-packages/triton/backends/nvidia/driver.py:371 │
+│ in __init__                                                                  │
+│                                                                              │
+│ ❱ 371 self.utils = CudaUtils()  # TODO: make static                          │
+│                                                                              │
+│                                                                              │
+│ /usr/local/lib/python3.11/site-packages/triton/backends/nvidia/driver.py:80  │
+│ in __init__                                                                  │
+│                                                                              │
+│ ❱ 80 mod = compile_module_from_src(Path(os.path.join(dirname, "driver.c")).r │
+│                                                                              │
+│                                                                              │
+│ /usr/local/lib/python3.11/site-packages/triton/backends/nvidia/driver.py:57  │
+│ in compile_module_from_src                                                   │
+│                                                                              │
+│ ❱ 57 so = _build(name, src_path, tmpdir, library_dirs(), include_dir, librar │
+│                                                                              │
+│                                                                              │
+│ /usr/local/lib/python3.11/site-packages/triton/runtime/build.py:32 in _build │
+│                                                                              │
+│ ❱ 32 raise RuntimeError("Failed to find C compiler. Please specify via CC en │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+RuntimeError: Failed to find C compiler. Please specify via CC environment 
+variable.
+
+
+========================================================================
+gpu_attempt2_triton_scope.log
+========================================================================
+✓ Initialized. View run at 
+https://modal.com/apps/yaroslavvb/main/ap-pEh7P7fTfHBQl9dpB0UKzM
+Building image im-MXQjCu2MIDX4RehF94IUIB
+
+=> Step 0: FROM base
+
+=> Step 1: RUN apt-get update
+Get:1 http://deb.debian.org/debian trixie InRelease [140 kB]
+Get:2 http://deb.debian.org/debian trixie-updates InRelease [47.3 kB]
+Get:3 http://deb.debian.org/debian-security trixie-security InRelease [43.4 kB]
+Get:4 http://deb.debian.org/debian trixie/main amd64 Packages [9673 kB]
+Get:5 http://deb.debian.org/debian trixie-updates/main amd64 Packages [4412 B]
+Get:6 http://deb.debian.org/debian-security trixie-security/main amd64 Packages [256 kB]
+Fetched 10.2 MB in 1s (12.1 MB/s)
+Reading package lists...
+
+=> Step 2: RUN apt-get install -y gcc
+Reading package lists...
+Building dependency tree...
+Reading state information...
+The following additional packages will be installed:
+  binutils binutils-common binutils-x86-64-linux-gnu cpp cpp-14
+  cpp-14-x86-64-linux-gnu cpp-x86-64-linux-gnu gcc-14 gcc-14-x86-64-linux-gnu
+  gcc-x86-64-linux-gnu libasan8 libatomic1 libbinutils libc-bin libc-dev-bin
+  libc6 libc6-dev libcc1-0 libcrypt-dev libctf-nobfd0 libctf0 libgcc-14-dev
+  libgomp1 libgprofng0 libhwasan0 libisl23 libitm1 libjansson4 liblsan0
+  libmpc3 libmpfr6 libquadmath0 libsframe1 libtsan2 libubsan1 linux-libc-dev
+  manpages manpages-dev rpcsvc-proto
+Suggested packages:
+  binutils-doc gprofng-gui binutils-gold cpp-doc gcc-14-locales cpp-14-doc
+  gcc-multilib make autoconf automake libtool flex bison gdb gcc-doc
+  gcc-14-multilib gcc-14-doc gdb-x86-64-linux-gnu libc-devtools glibc-doc
+  man-browser
+The following NEW packages will be installed:
+  binutils binutils-common binutils-x86-64-linux-gnu cpp cpp-14
+  cpp-14-x86-64-linux-gnu cpp-x86-64-linux-gnu gcc gcc-14
+  gcc-14-x86-64-linux-gnu gcc-x86-64-linux-gnu libasan8 libatomic1 libbinutils
+  libc-dev-bin libc6-dev libcc1-0 libcrypt-dev libctf-nobfd0 libctf0
+  libgcc-14-dev libgomp1 libgprofng0 libhwasan0 libisl23 libitm1 libjansson4
+  liblsan0 libmpc3 libmpfr6 libquadmath0 libsframe1 libtsan2 libubsan1
+  linux-libc-dev manpages manpages-dev rpcsvc-proto
+The following packages will be upgraded:
+  libc-bin libc6
+2 upgraded, 38 newly installed, 0 to remove and 20 not upgraded.
+Need to get 64.1 MB of archives.
+After this operation, 223 MB of additional disk space will be used.
+Get:1 http://deb.debian.org/debian trixie/main amd64 libc6 amd64 2.41-12+deb13u3 [2850 kB]
+Get:2 http://deb.debian.org/debian trixie/main amd64 libc-bin amd64 2.41-12+deb13u3 [638 kB]
+Get:3 http://deb.debian.org/debian trixie/main amd64 manpages all 6.9.1-1 [1393 kB]
+Get:4 http://deb.debian.org/debian trixie/main amd64 libsframe1 amd64 2.44-3 [78.4 kB]
+Get:5 http://deb.debian.org/debian trixie/main amd64 binutils-common amd64 2.44-3 [2509 kB]
+Get:6 http://deb.debian.org/debian trixie/main amd64 libbinutils amd64 2.44-3 [534 kB]
+Get:7 http://deb.debian.org/debian trixie/main amd64 libgprofng0 amd64 2.44-3 [808 kB]
+Get:8 http://deb.debian.org/debian trixie/main amd64 libctf-nobfd0 amd64 2.44-3 [156 kB]
+Get:9 http://deb.debian.org/debian trixie/main amd64 libctf0 amd64 2.44-3 [88.6 kB]
+Get:10 http://deb.debian.org/debian trixie/main amd64 libjansson4 amd64 2.14-2+b3 [39.8 kB]
+Get:11 http://deb.debian.org/debian trixie/main amd64 binutils-x86-64-linux-gnu amd64 2.44-3 [1014 kB]
+Get:12 http://deb.debian.org/debian trixie/main amd64 binutils amd64 2.44-3 [265 kB]
+Get:13 http://deb.debian.org/debian trixie/main amd64 libisl23 amd64 0.27-1 [659 kB]
+Get:14 http://deb.debian.org/debian trixie/main amd64 libmpfr6 amd64 4.2.2-1 [729 kB]
+Get:15 http://deb.debian.org/debian trixie/main amd64 libmpc3 amd64 1.3.1-1+b3 [52.2 kB]
+Get:16 http://deb.debian.org/debian trixie/main amd64 cpp-14-x86-64-linux-gnu amd64 14.2.0-19 [11.0 MB]
+Get:17 http://deb.debian.org/debian trixie/main amd64 cpp-14 amd64 14.2.0-19 [1280 B]
+Get:18 http://deb.debian.org/debian trixie/main amd64 cpp-x86-64-linux-gnu amd64 4:14.2.0-1 [4840 B]
+Get:19 http://deb.debian.org/debian trixie/main amd64 cpp amd64 4:14.2.0-1 [1568 B]
+Get:20 http://deb.debian.org/debian trixie/main amd64 libcc1-0 amd64 14.2.0-19 [42.8 kB]
+Get:21 http://deb.debian.org/debian trixie/main amd64 libgomp1 amd64 14.2.0-19 [137 kB]
+Get:22 http://deb.debian.org/debian trixie/main amd64 libitm1 amd64 14.2.0-19 [26.0 kB]
+Get:23 http://deb.debian.org/debian trixie/main amd64 libatomic1 amd64 14.2.0-19 [9308 B]
+Get:24 http://deb.debian.org/debian trixie/main amd64 libasan8 amd64 14.2.0-19 [2725 kB]
+Get:25 http://deb.debian.org/debian trixie/main amd64 liblsan0 amd64 14.2.0-19 [1204 kB]
+Get:26 http://deb.debian.org/debian trixie/main amd64 libtsan2 amd64 14.2.0-19 [2460 kB]
+Get:27 http://deb.debian.org/debian trixie/main amd64 libubsan1 amd64 14.2.0-19 [1074 kB]
+Get:28 http://deb.debian.org/debian trixie/main amd64 libhwasan0 amd64 14.2.0-19 [1488 kB]
+Get:29 http://deb.debian.org/debian trixie/main amd64 libquadmath0 amd64 14.2.0-19 [145 kB]
+Get:30 http://deb.debian.org/debian trixie/main amd64 libgcc-14-dev amd64 14.2.0-19 [2672 kB]
+Get:31 http://deb.debian.org/debian trixie/main amd64 gcc-14-x86-64-linux-gnu amd64 14.2.0-19 [21.4 MB]
+Get:32 http://deb.debian.org/debian trixie/main amd64 gcc-14 amd64 14.2.0-19 [540 kB]
+Get:33 http://deb.debian.org/debian trixie/main amd64 gcc-x86-64-linux-gnu amd64 4:14.2.0-1 [1436 B]
+Get:34 http://deb.debian.org/debian trixie/main amd64 gcc amd64 4:14.2.0-1 [5136 B]
+Get:35 http://deb.debian.org/debian trixie/main amd64 libc-dev-bin amd64 2.41-12+deb13u3 [59.8 kB]
+Get:36 http://deb.debian.org/debian-security trixie-security/main amd64 linux-libc-dev all 6.12.107-1 [2919 kB]
+Get:37 http://deb.debian.org/debian trixie/main amd64 libcrypt-dev amd64 1:4.4.38-1 [119 kB]
+Get:38 http://deb.debian.org/debian trixie/main amd64 rpcsvc-proto amd64 1.4.3-1 [63.3 kB]
+Get:39 http://deb.debian.org/debian trixie/main amd64 libc6-dev amd64 2.41-12+deb13u3 [1992 kB]
+Get:40 http://deb.debian.org/debian trixie/main amd64 manpages-dev all 6.9.1-1 [2122 kB]
+debconf: unable to initialize frontend: Dialog
+debconf: (No usable dialog-like program is installed, so the dialog based frontend cannot be used. at /usr/share/perl5/Debconf/FrontEnd/Dialog.pm line 79, <STDIN> line 40.)
+debconf: falling back to frontend: Readline
+debconf: unable to initialize frontend: Readline
+debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC entries checked: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.40.1 /usr/local/share/perl/5.40.1 /usr/lib/x86_64-linux-gnu/perl5/5.40 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.40 /usr/share/perl/5.40 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 8, <STDIN> line 40.)
+debconf: falling back to frontend: Teletype
+debconf: unable to initialize frontend: Teletype
+debconf: (This frontend requires a controlling tty.)
+debconf: falling back to frontend: Noninteractive
+Preconfiguring packages ...
+Fetched 64.1 MB in 8s (7964 kB/s)
+(Reading database ... 
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%(Reading database ... 35%
+(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%
+(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 5645 files and directories currently installed.)
+Preparing to unpack .../libc6_2.41-12+deb13u3_amd64.deb ...
+debconf: unable to initialize frontend: Dialog
+debconf: (No usable dialog-like program is installed, so the dialog based frontend cannot be used. at /usr/share/perl5/Debconf/FrontEnd/Dialog.pm line 79.)
+debconf: falling back to frontend: Readline
+debconf: unable to initialize frontend: Readline
+debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC entries checked: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.40.1 /usr/local/share/perl/5.40.1 /usr/lib/x86_64-linux-gnu/perl5/5.40 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.40 /usr/share/perl/5.40 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 8.)
+debconf: falling back to frontend: Teletype
+debconf: unable to initialize frontend: Teletype
+debconf: (This frontend requires a controlling tty.)
+debconf: falling back to frontend: Noninteractive
+Unpacking libc6:amd64 (2.41-12+deb13u3) over (2.41-12+deb13u2) ...
+Setting up libc6:amd64 (2.41-12+deb13u3) ...
+debconf: unable to initialize frontend: Dialog
+debconf: (No usable dialog-like program is installed, so the dialog based frontend cannot be used. at /usr/share/perl5/Debconf/FrontEnd/Dialog.pm line 79.)
+debconf: falling back to frontend: Readline
+debconf: unable to initialize frontend: Readline
+debconf: (Can't locate Term/ReadLine.pm in @INC (you may need to install the Term::ReadLine module) (@INC entries checked: /etc/perl /usr/local/lib/x86_64-linux-gnu/perl/5.40.1 /usr/local/share/perl/5.40.1 /usr/lib/x86_64-linux-gnu/perl5/5.40 /usr/share/perl5 /usr/lib/x86_64-linux-gnu/perl-base /usr/lib/x86_64-linux-gnu/perl/5.40 /usr/share/perl/5.40 /usr/local/lib/site_perl) at /usr/share/perl5/Debconf/FrontEnd/Readline.pm line 8.)
+debconf: falling back to frontend: Teletype
+debconf: unable to initialize frontend: Teletype
+debconf: (This frontend requires a controlling tty.)
+debconf: falling back to frontend: Noninteractive
+(Reading database ... 
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%(Reading database ... 35%(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%(Reading database ... 85%(Reading database ... 90%
+(Reading database ... 95%(Reading database ... 100%
+(Reading database ... 5645 files and directories currently installed.)
+Preparing to unpack .../libc-bin_2.41-12+deb13u3_amd64.deb ...
+Unpacking libc-bin (2.41-12+deb13u3) over (2.41-12+deb13u2) ...
+Setting up libc-bin (2.41-12+deb13u3) ...
+Selecting previously unselected package manpages.
+(Reading database ... 
+(Reading database ... 5%
+(Reading database ... 10%
+(Reading database ... 15%
+(Reading database ... 20%
+(Reading database ... 25%
+(Reading database ... 30%(Reading database ... 35%
+(Reading database ... 40%(Reading database ... 45%(Reading database ... 50%(Reading database ... 55%(Reading database ... 60%(Reading database ... 65%(Reading database ... 70%(Reading database ... 75%(Reading database ... 80%
+(Reading database ... 85%(Reading database ... 90%(Reading database ... 95%(Reading database ... 100%(Reading database ... 5645 files and directories currently installed.)
+Preparing to unpack .../00-manpages_6.9.1-1_all.deb ...
+Unpacking manpages (6.9.1-1) ...
+Selecting previously unselected package libsframe1:amd64.
+Preparing to unpack .../01-libsframe1_2.44-3_amd64.deb ...
+Unpacking libsframe1:amd64 (2.44-3) ...
+Selecting previously unselected package binutils-common:amd64.
+Preparing to unpack .../02-binutils-common_2.44-3_amd64.deb ...
+Unpacking binutils-common:amd64 (2.44-3) ...
+Selecting previously unselected package libbinutils:amd64.
+Preparing to unpack .../03-libbinutils_2.44-3_amd64.deb ...
+Unpacking libbinutils:amd64 (2.44-3) ...
+Selecting previously unselected package libgprofng0:amd64.
+Preparing to unpack .../04-libgprofng0_2.44-3_amd64.deb ...
+Unpacking libgprofng0:amd64 (2.44-3) ...
+Selecting previously unselected package libctf-nobfd0:amd64.
+Preparing to unpack .../05-libctf-nobfd0_2.44-3_amd64.deb ...
+Unpacking libctf-nobfd0:amd64 (2.44-3) ...
+Selecting previously unselected package libctf0:amd64.
+Preparing to unpack .../06-libctf0_2.44-3_amd64.deb ...
+Unpacking libctf0:amd64 (2.44-3) ...
+Selecting previously unselected package libjansson4:amd64.
+Preparing to unpack .../07-libjansson4_2.14-2+b3_amd64.deb ...
+Unpacking libjansson4:amd64 (2.14-2+b3) ...
+Selecting previously unselected package binutils-x86-64-linux-gnu.
+Preparing to unpack .../08-binutils-x86-64-linux-gnu_2.44-3_amd64.deb ...
+Unpacking binutils-x86-64-linux-gnu (2.44-3) ...
+Selecting previously unselected package binutils.
+Preparing to unpack .../09-binutils_2.44-3_amd64.deb ...
+Unpacking binutils (2.44-3) ...
+Selecting previously unselected package libisl23:amd64.
+Preparing to unpack .../10-libisl23_0.27-1_amd64.deb ...
+Unpacking libisl23:amd64 (0.27-1) ...
+Selecting previously unselected package libmpfr6:amd64.
+Preparing to unpack .../11-libmpfr6_4.2.2-1_amd64.deb ...
+Unpacking libmpfr6:amd64 (4.2.2-1) ...
+Selecting previously unselected package libmpc3:amd64.
+Preparing to unpack .../12-libmpc3_1.3.1-1+b3_amd64.deb ...
+Unpacking libmpc3:amd64 (1.3.1-1+b3) ...
+Selecting previously unselected package cpp-14-x86-64-linux-gnu.
+Preparing to unpack .../13-cpp-14-x86-64-linux-gnu_14.2.0-19_amd64.deb ...
+Unpacking cpp-14-x86-64-linux-gnu (14.2.0-19) ...
+Selecting previously unselected package cpp-14.
+Preparing to unpack .../14-cpp-14_14.2.0-19_amd64.deb ...
+Unpacking cpp-14 (14.2.0-19) ...
+Selecting previously unselected package cpp-x86-64-linux-gnu.
+Preparing to unpack .../15-cpp-x86-64-linux-gnu_4%3a14.2.0-1_amd64.deb ...
+Unpacking cpp-x86-64-linux-gnu (4:14.2.0-1) ...
+Selecting previously unselected package cpp.
+Preparing to unpack .../16-cpp_4%3a14.2.0-1_amd64.deb ...
+Unpacking cpp (4:14.2.0-1) ...
+Selecting previously unselected package libcc1-0:amd64.
+Preparing to unpack .../17-libcc1-0_14.2.0-19_amd64.deb ...
+Unpacking libcc1-0:amd64 (14.2.0-19) ...
+Selecting previously unselected package libgomp1:amd64.
+Preparing to unpack .../18-libgomp1_14.2.0-19_amd64.deb ...
+Unpacking libgomp1:amd64 (14.2.0-19) ...
+Selecting previously unselected package libitm1:amd64.
+Preparing to unpack .../19-libitm1_14.2.0-19_amd64.deb ...
+Unpacking libitm1:amd64 (14.2.0-19) ...
+Selecting previously unselected package libatomic1:amd64.
+Preparing to unpack .../20-libatomic1_14.2.0-19_amd64.deb ...
+Unpacking libatomic1:amd64 (14.2.0-19) ...
+Selecting previously unselected package libasan8:amd64.
+Preparing to unpack .../21-libasan8_14.2.0-19_amd64.deb ...
+Unpacking libasan8:amd64 (14.2.0-19) ...
+Selecting previously unselected package liblsan0:amd64.
+Preparing to unpack .../22-liblsan0_14.2.0-19_amd64.deb ...
+Unpacking liblsan0:amd64 (14.2.0-19) ...
+Selecting previously unselected package libtsan2:amd64.
+Preparing to unpack .../23-libtsan2_14.2.0-19_amd64.deb ...
+Unpacking libtsan2:amd64 (14.2.0-19) ...
+Selecting previously unselected package libubsan1:amd64.
+Preparing to unpack .../24-libubsan1_14.2.0-19_amd64.deb ...
+Unpacking libubsan1:amd64 (14.2.0-19) ...
+Selecting previously unselected package libhwasan0:amd64.
+Preparing to unpack .../25-libhwasan0_14.2.0-19_amd64.deb ...
+Unpacking libhwasan0:amd64 (14.2.0-19) ...
+Selecting previously unselected package libquadmath0:amd64.
+Preparing to unpack .../26-libquadmath0_14.2.0-19_amd64.deb ...
+Unpacking libquadmath0:amd64 (14.2.0-19) ...
+Selecting previously unselected package libgcc-14-dev:amd64.
+Preparing to unpack .../27-libgcc-14-dev_14.2.0-19_amd64.deb ...
+Unpacking libgcc-14-dev:amd64 (14.2.0-19) ...
+Selecting previously unselected package gcc-14-x86-64-linux-gnu.
+Preparing to unpack .../28-gcc-14-x86-64-linux-gnu_14.2.0-19_amd64.deb ...
+Unpacking gcc-14-x86-64-linux-gnu (14.2.0-19) ...
+Selecting previously unselected package gcc-14.
+Preparing to unpack .../29-gcc-14_14.2.0-19_amd64.deb ...
+Unpacking gcc-14 (14.2.0-19) ...
+Selecting previously unselected package gcc-x86-64-linux-gnu.
+Preparing to unpack .../30-gcc-x86-64-linux-gnu_4%3a14.2.0-1_amd64.deb ...
+Unpacking gcc-x86-64-linux-gnu (4:14.2.0-1) ...
+Selecting previously unselected package gcc.
+Preparing to unpack .../31-gcc_4%3a14.2.0-1_amd64.deb ...
+Unpacking gcc (4:14.2.0-1) ...
+Selecting previously unselected package libc-dev-bin.
+Preparing to unpack .../32-libc-dev-bin_2.41-12+deb13u3_amd64.deb ...
+Unpacking libc-dev-bin (2.41-12+deb13u3) ...
+Selecting previously unselected package linux-libc-dev.
+Preparing to unpack .../33-linux-libc-dev_6.12.107-1_all.deb ...
+Unpacking linux-libc-dev (6.12.107-1) ...
+Selecting previously unselected package libcrypt-dev:amd64.
+Preparing to unpack .../34-libcrypt-dev_1%3a4.4.38-1_amd64.deb ...
+Unpacking libcrypt-dev:amd64 (1:4.4.38-1) ...
+Selecting previously unselected package rpcsvc-proto.
+Preparing to unpack .../35-rpcsvc-proto_1.4.3-1_amd64.deb ...
+Unpacking rpcsvc-proto (1.4.3-1) ...
+Selecting previously unselected package libc6-dev:amd64.
+Preparing to unpack .../36-libc6-dev_2.41-12+deb13u3_amd64.deb ...
+Unpacking libc6-dev:amd64 (2.41-12+deb13u3) ...
+Selecting previously unselected package manpages-dev.
+Preparing to unpack .../37-manpages-dev_6.9.1-1_all.deb ...
+Unpacking manpages-dev (6.9.1-1) ...
+Setting up manpages (6.9.1-1) ...
+Setting up binutils-common:amd64 (2.44-3) ...
+Setting up linux-libc-dev (6.12.107-1) ...
+Setting up libctf-nobfd0:amd64 (2.44-3) ...
+Setting up libgomp1:amd64 (14.2.0-19) ...
+Setting up libsframe1:amd64 (2.44-3) ...
+Setting up libjansson4:amd64 (2.14-2+b3) ...
+Setting up rpcsvc-proto (1.4.3-1) ...
+Setting up libmpfr6:amd64 (4.2.2-1) ...
+Setting up libquadmath0:amd64 (14.2.0-19) ...
+Setting up libmpc3:amd64 (1.3.1-1+b3) ...
+Setting up libatomic1:amd64 (14.2.0-19) ...
+Setting up libubsan1:amd64 (14.2.0-19) ...
+Setting up libhwasan0:amd64 (14.2.0-19) ...
+Setting up libcrypt-dev:amd64 (1:4.4.38-1) ...
+Setting up libasan8:amd64 (14.2.0-19) ...
+Setting up libtsan2:amd64 (14.2.0-19) ...
+Setting up libbinutils:amd64 (2.44-3) ...
+Setting up libisl23:amd64 (0.27-1) ...
+Setting up libc-dev-bin (2.41-12+deb13u3) ...
+Setting up libcc1-0:amd64 (14.2.0-19) ...
+Setting up liblsan0:amd64 (14.2.0-19) ...
+Setting up libitm1:amd64 (14.2.0-19) ...
+Setting up libctf0:amd64 (2.44-3) ...
+Setting up manpages-dev (6.9.1-1) ...
+Setting up libgprofng0:amd64 (2.44-3) ...
+Setting up cpp-14-x86-64-linux-gnu (14.2.0-19) ...
+Setting up cpp-14 (14.2.0-19) ...
+Setting up libc6-dev:amd64 (2.41-12+deb13u3) ...
+Setting up libgcc-14-dev:amd64 (14.2.0-19) ...
+Setting up binutils-x86-64-linux-gnu (2.44-3) ...
+Setting up cpp-x86-64-linux-gnu (4:14.2.0-1) ...
+Setting up binutils (2.44-3) ...
+Setting up cpp (4:14.2.0-1) ...
+Setting up gcc-14-x86-64-linux-gnu (14.2.0-19) ...
+Setting up gcc-x86-64-linux-gnu (4:14.2.0-1) ...
+Setting up gcc-14 (14.2.0-19) ...
+Setting up gcc (4:14.2.0-1) ...
+Processing triggers for libc-bin (2.41-12+deb13u3) ...
+Saving image...
+Image saved, took 670.81ms
+
+Built image im-MXQjCu2MIDX4RehF94IUIB in 19.60s
+
+
+Building image im-LHXV2prPrRea4zrN4cPl86
+
+=> Step 0: FROM base
+
+=> Step 1: RUN python -m pip install numpy==2.2.6 nvidia-ml-py==12.560.30
+Looking in indexes: http://pypi-mirror.modal.local:5555/simple
+Collecting numpy==2.2.6
+  Downloading http://pypi-mirror.modal.local:5555/simple/numpy/numpy-2.2.6-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl.metadata (62 kB)
+     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 62.0/62.0 kB 136.1 MB/s eta 0:00:00
+Requirement already satisfied: nvidia-ml-py==12.560.30 in /usr/local/lib/python3.11/site-packages (12.560.30)
+Downloading http://pypi-mirror.modal.local:5555/simple/numpy/numpy-2.2.6-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl (16.8 MB)
+   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 16.8/16.8 MB 158.4 MB/s eta 0:00:00
+Installing collected packages: numpy
+  Attempting uninstall: numpy
+    Found existing installation: numpy 2.1.3
+    Uninstalling numpy-2.1.3:
+      Successfully uninstalled numpy-2.1.3
+Successfully installed numpy-2.2.6
+
+[notice] A new release of pip is available: 24.0 -> 26.2.1
+[notice] To update, run: pip install --upgrade pip
+Saving image...
+Image saved, took 1.52s
+
+Built image im-LHXV2prPrRea4zrN4cPl86 in 8.44s
+
+
+✓ Created objects.
+├── 🔨 Created mount 
+│   <checkout>/mnist/submissions/1nn-v4-20260911/
+│   gpu_benchmark.py
+└── 🔨 Created function benchmark.
+Traceback (most recent call last):
+  File "/pkg/modal/_runtime/container_io_manager.py", line 987, in handle_input_exception
+    yield
+  File "/pkg/modal/_container_entrypoint.py", line 189, in run_input_sync
+    values = io_context.call_function_sync()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/container_io_manager.py", line 266, in call_function_sync
+    expected_value_or_values = self.finalized_function.callable(*args, **kwargs)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/gpu_benchmark.py", line 121, in benchmark
+    compiled_predict = invocation()
+                       ^^^^^^^^^^^^
+  File "/root/gpu_benchmark.py", line 112, in invocation
+    memorize_kernel[(triton.cdiv(600 * 9, 1024),)](
+  File "/usr/local/lib/python3.11/site-packages/triton/runtime/jit.py", line 345, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/runtime/jit.py", line 662, in run
+    kernel = self.compile(
+             ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/compiler/compiler.py", line 276, in compile
+    module = src.make_ir(options, codegen_fns, context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/compiler/compiler.py", line 113, in make_ir
+    return ast_to_ttir(self.fn, self, context=context, options=options, codegen_fns=codegen_fns)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+triton.compiler.errors.CompilationError: at 1:47:
+def memorize_kernel(X, Y, MODEL_X, MODEL_Y, N: tl.constexpr,
+                                               ^
+NameError('tl is not defined')
+Stopping app - uncaught exception raised locally: ExecutionError('Could not deserialize remote exception due to local error:\nDeserialization failed because the \'triton\' module is not available in the local environment.\nThis can happen if your local environment does not have the remote exception definitions.\nHere is the remote traceback:\nTraceback (most recent call last):\n  File "/pkg/modal/_runtime/container_io_manager.py", line 987, in handle_input_exception\n    yield\n  File "/pkg/modal/_container_entrypoint.py", line 189, in run_input_sync\n    values = io_context.call_function_sync()\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/pkg/modal/_runtime/container_io_manager.py", line 266, in call_function_sync\n    expected_value_or_values = self.finalized_function.callable(*args, **kwargs)\n                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/root/gpu_benchmark.py", line 121, in benchmark\n    compiled_predict = invocation()\n                       ^^^^^^^^^^^^\n  File "/root/gpu_.
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /Users/yaroslavvb/.cache/uv/archive-v0/qYjMYmvTiJvC0rkAnfk0d/lib/python3.13/ │
+│ site-packages/modal/_serialization.py:117 in deserialize                     │
+│                                                                              │
+│   116 │   try:                                                               │
+│ ❱ 117 │   │   return Unpickler(client, io.BytesIO(s)).load()                 │
+│   118 │   except AttributeError as exc:                                      │
+╰──────────────────────────────────────────────────────────────────────────────╯
+ModuleNotFoundError: No module named 'triton'
+
+The above exception was the direct cause of the following exception:
+
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ <checkout>/mnist/submissions/1nn-v4-20260911/ │
+│ gpu_benchmark.py:349 in main                                                 │
+│                                                                              │
+│   348 │   assert payload["train_labels"]["shape"] == (600,)                  │
+│ ❱ 349 │   result, ptx = benchmark.remote(payload, hashlib.sha256(Path(__file │
+│   350 │   (destination / "gpu_results.json").write_text(json.dumps(result, i │
+│                                                                              │
+│ /Users/yaroslavvb/.cache/uv/archive-v0/qYjMYmvTiJvC0rkAnfk0d/lib/python3.13/ │
+│ site-packages/modal/_object.py:46 in wrapped                                 │
+│                                                                              │
+│    45 │   │   await self.hydrate()                                           │
+│ ❱  46 │   │   return await method(self, *args, **kwargs)                     │
+│    47                                                                        │
+│                                                                              │
+│ /Users/yaroslavvb/.cache/uv/archive-v0/qYjMYmvTiJvC0rkAnfk0d/lib/python3.13/ │
+│ site-packages/modal/_functions.py:1893 in remote                             │
+│                                                                              │
+│   1892 │   │                                                                 │
+│ ❱ 1893 │   │   return await self._call_function(args, kwargs)                │
+│   1894                                                                       │
+│                                                                              │
+│ /Users/yaroslavvb/.cache/uv/archive-v0/qYjMYmvTiJvC0rkAnfk0d/lib/python3.13/ │
+│ site-packages/modal/_functions.py:1830 in _call_function                     │
+│                                                                              │
+│   1829 │   │                                                                 │
+│ ❱ 1830 │   │   return await invocation.run_function()                        │
+│   1831                                                                       │
+│                                                                              │
+│ /Users/yaroslavvb/.cache/uv/archive-v0/qYjMYmvTiJvC0rkAnfk0d/lib/python3.13/ │
+│ site-packages/modal/_functions.py:503 in run_function                        │
+│                                                                              │
+│    502 │   │   │   # No more retries left.                                   │
+│ ❱  503 │   │   │   return await _process_result(                             │
+│    504 │   │   │   │   await_response.output.result, await_response.output.d │
+│                                                                              │
+│ /Users/yaroslavvb/.cache/uv/archive-v0/qYjMYmvTiJvC0rkAnfk0d/lib/python3.13/ │
+│ site-packages/modal/_utils/function_utils.py:547 in _process_result          │
+│                                                                              │
+│   546 │   │   │   except DeserializationError as deser_exc:                  │
+│ ❱ 547 │   │   │   │   raise ExecutionError(                                  │
+│   548 │   │   │   │   │   "Could not deserialize remote exception due to loc │
+╰──────────────────────────────────────────────────────────────────────────────╯
+ExecutionError: Could not deserialize remote exception due to local error:
+Deserialization failed because the 'triton' module is not available in the local
+environment.
+This can happen if your local environment does not have the remote exception 
+definitions.
+Here is the remote traceback:
+Traceback (most recent call last):
+  File "/pkg/modal/_runtime/container_io_manager.py", line 987, in 
+handle_input_exception
+    yield
+  File "/pkg/modal/_container_entrypoint.py", line 189, in run_input_sync
+    values = io_context.call_function_sync()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/container_io_manager.py", line 266, in 
+call_function_sync
+    expected_value_or_values = self.finalized_function.callable(*args, **kwargs)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/gpu_benchmark.py", line 121, in benchmark
+    compiled_predict = invocation()
+                       ^^^^^^^^^^^^
+  File "/root/gpu_benchmark.py", line 112, in invocation
+    memorize_kernel[(triton.cdiv(600 * 9, 1024),)](
+  File "/usr/local/lib/python3.11/site-packages/triton/runtime/jit.py", line 
+345, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, 
+**kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/runtime/jit.py", line 
+662, in run
+    kernel = self.compile(
+             ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/compiler/compiler.py", 
+line 276, in compile
+    module = src.make_ir(options, codegen_fns, context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/compiler/compiler.py", 
+line 113, in make_ir
+    return ast_to_ttir(self.fn, self, context=context, options=options, 
+codegen_fns=codegen_fns)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
+triton.compiler.errors.CompilationError: at 1:47:
+def memorize_kernel(X, Y, MODEL_X, MODEL_Y, N: tl.constexpr,
+                                               ^
+NameError('tl is not defined')
+
+
+
+========================================================================
+gpu_attempt3_modal_metadata.log
+========================================================================
+✓ Initialized. View run at 
+https://modal.com/apps/yaroslavvb/main/ap-3UBx5fTmPVFdMnBg1sVu0V
+✓ Created objects.
+├── 🔨 Created mount 
+│   <checkout>/mnist/submissions/1nn-v4-20260911/
+│   gpu_benchmark.py
+└── 🔨 Created function benchmark.
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.11/importlib/metadata/__init__.py", line 563, in from_name
+    return next(cls.discover(name=name))
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+StopIteration
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/pkg/modal/_runtime/container_io_manager.py", line 987, in handle_input_exception
+    yield
+  File "/pkg/modal/_container_entrypoint.py", line 189, in run_input_sync
+    values = io_context.call_function_sync()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/container_io_manager.py", line 266, in call_function_sync
+    expected_value_or_values = self.finalized_function.callable(*args, **kwargs)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/gpu_benchmark.py", line 251, in benchmark
+    "modal": importlib.metadata.version("modal"),
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/importlib/metadata/__init__.py", line 1009, in version
+    return distribution(distribution_name).version
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/importlib/metadata/__init__.py", line 982, in distribution
+    return Distribution.from_name(distribution_name)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/importlib/metadata/__init__.py", line 565, in from_name
+    raise PackageNotFoundError(name)
+importlib.metadata.PackageNotFoundError: No package metadata was found for modal
+Stopping app - uncaught exception raised locally: PackageNotFoundError('modal').
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ <checkout>/mnist/submissions/1nn-v4-20260911/ │
+│ gpu_benchmark.py:351 in main                                                 │
+│                                                                              │
+│   350 │   assert payload["train_labels"]["shape"] == (600,)                  │
+│ ❱ 351 │   result, ptx = benchmark.remote(payload, hashlib.sha256(Path(__file │
+│   352 │   (destination / "gpu_results.json").write_text(json.dumps(result, i │
+│                                                                              │
+│ /Users/yaroslavvb/.cache/uv/archive-v0/qYjMYmvTiJvC0rkAnfk0d/lib/python3.13/ │
+│ site-packages/modal/_object.py:46 in wrapped                                 │
+│                                                                              │
+│    45 │   │   await self.hydrate()                                           │
+│ ❱  46 │   │   return await method(self, *args, **kwargs)                     │
+│    47                                                                        │
+│                                                                              │
+│ /Users/yaroslavvb/.cache/uv/archive-v0/qYjMYmvTiJvC0rkAnfk0d/lib/python3.13/ │
+│ site-packages/modal/_functions.py:1893 in remote                             │
+│                                                                              │
+│   1892 │   │                                                                 │
+│ ❱ 1893 │   │   return await self._call_function(args, kwargs)                │
+│   1894                                                                       │
+│                                                                              │
+│ /Users/yaroslavvb/.cache/uv/archive-v0/qYjMYmvTiJvC0rkAnfk0d/lib/python3.13/ │
+│ site-packages/modal/_functions.py:1830 in _call_function                     │
+│                                                                              │
+│   1829 │   │                                                                 │
+│ ❱ 1830 │   │   return await invocation.run_function()                        │
+│   1831                                                                       │
+│                                                                              │
+│ /Users/yaroslavvb/.cache/uv/archive-v0/qYjMYmvTiJvC0rkAnfk0d/lib/python3.13/ │
+│ site-packages/modal/_functions.py:503 in run_function                        │
+│                                                                              │
+│    502 │   │   │   # No more retries left.                                   │
+│ ❱  503 │   │   │   return await _process_result(                             │
+│    504 │   │   │   │   await_response.output.result, await_response.output.d │
+│                                                                              │
+│ /Users/yaroslavvb/.cache/uv/archive-v0/qYjMYmvTiJvC0rkAnfk0d/lib/python3.13/ │
+│ site-packages/modal/_utils/function_utils.py:572 in _process_result          │
+│                                                                              │
+│   571 │   │   │                                                              │
+│ ❱ 572 │   │   │   raise exc_with_hints(exc)                                  │
+│   573                                                                        │
+│                                                                              │
+│     ...Remote call to Modal Function (ta-01M2730EEBERG7SKB9ZN03T46R)...      │
+│                                                                              │
+│ /root/gpu_benchmark.py:251 in benchmark                                      │
+│                                                                              │
+│ ❱ 251 "modal": importlib.metadata.version("modal"),                          │
+│                                                                              │
+│                                                                              │
+│ /usr/local/lib/python3.11/importlib/metadata/__init__.py:1009 in version     │
+│                                                                              │
+│ ❱ 1009 return distribution(distribution_name).version                        │
+│                                                                              │
+│                                                                              │
+│ /usr/local/lib/python3.11/importlib/metadata/__init__.py:982 in distribution │
+│                                                                              │
+│ ❱ 982 return Distribution.from_name(distribution_name)                       │
+│                                                                              │
+│                                                                              │
+│ /usr/local/lib/python3.11/importlib/metadata/__init__.py:565 in from_name    │
+│                                                                              │
+│ ❱ 565 raise PackageNotFoundError(name)                                       │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+PackageNotFoundError: No package metadata was found for modal
+
+
+========================================================================
+gpu_run.log
+========================================================================
+✓ Initialized. View run at 
+https://modal.com/apps/yaroslavvb/main/ap-H7hV3ukcmkKQayOpOmxoG3
+✓ Created objects.
+├── 🔨 Created mount 
+│   <checkout>/mnist/submissions/1nn-v4-20260911/
+│   gpu_benchmark.py
+└── 🔨 Created function benchmark.
+{"trial": 1, "graph_replays": 2660, "invocations_per_graph": 128, "invocations": 340480, "idle_before": {"start": {"energy_mj": 4135396652, "time_s": 6.91431216, "query_latency_s": 0.0035149859999998867}, "end": {"energy_mj": 4135559422, "time_s": 8.918505663000001, "query_latency_s": 0.0033543540000007255}, "duration_s": 2.0041935030000015, "energy_j": 162.77, "average_power_w": 81.21471292884432}, "idle_after": {"start": {"energy_mj": 4135916451, "time_s": 11.307357704000001, "query_latency_s": 0.0024813400000009977}, "end": {"energy_mj": 4136082598, "time_s": 13.310986907, "query_latency_s": 0.002894856000001056}, "duration_s": 2.003629202999999, "energy_j": 166.147, "average_power_w": 82.92302774946131}, "active": {"start": {"energy_mj": 4135559422, "time_s": 8.9268720325, "query_latency_s": 0.0026555730000001887}, "end": {"energy_mj": 4135916451, "time_s": 11.3041268125, "query_latency_s": 0.0027025830000013684}, "duration_s": 2.3772547799999995, "energy_j": 357.029, "average_power_w": 150.1854168108982}, "telemetry_before": {"temperature_c": 34, "power_w": 64.369, "graphics_clock_mhz": 1095, "memory_clock_mhz": 1215, "throttle_reasons_mask": 0}, "telemetry_after": {"temperature_c": 40, "power_w": 156.878, "graphics_clock_mhz": 1410, "memory_clock_mhz": 1215, "throttle_reasons_mask": 0}, "paired_idle_power_w": 82.06887033915282, "idle_adjusted_energy_j": 161.93038569704876, "idle_adjusted_j_per_invocation": 0.0004755944128790201, "unadjusted_j_per_invocation": 0.0010486049107142857, "before_only_adjusted_j_per_invocation": 0.0004815581986712203, "after_only_adjusted_j_per_invocation": 0.00046963062708682004, "cuda_event_duration_s": 2.374443115234375, "cuda_event_us_per_invocation": 6.973810841266374, "wall_duration_s": 2.374565271, "wall_us_per_invocation": 6.974169616423872}
+{"trial": 2, "graph_replays": 2660, "invocations_per_graph": 128, "invocations": 340480, "idle_before": {"start": {"energy_mj": 4136082598, "time_s": 13.314396401500002, "query_latency_s": 0.0027117329999999384}, "end": {"energy_mj": 4136211025, "time_s": 15.317571556499999, "query_latency_s": 0.0028477149999996954}, "duration_s": 2.0031751549999974, "energy_j": 128.427, "average_power_w": 64.11171767952571}, "idle_after": {"start": {"energy_mj": 4136569219, "time_s": 17.7009838195, "query_latency_s": 0.002493868999998483}, "end": {"energy_mj": 4136729322, "time_s": 19.705692067, "query_latency_s": 0.004700945999999817}, "duration_s": 2.0047082475000018, "energy_j": 160.103, "average_power_w": 79.86349145800074}, "active": {"start": {"energy_mj": 4136211025, "time_s": 15.321060477500001, "query_latency_s": 0.0031451909999997696}, "end": {"energy_mj": 4136569219, "time_s": 17.697873199500002, "query_latency_s": 0.0027051330000027463}, "duration_s": 2.3768127220000004, "energy_j": 358.194, "average_power_w": 150.70350166192014}, "telemetry_before": {"temperature_c": 34, "power_w": 63.88, "graphics_clock_mhz": 1095, "memory_clock_mhz": 1215, "throttle_reasons_mask": 0}, "telemetry_after": {"temperature_c": 40, "power_w": 157.152, "graphics_clock_mhz": 1410, "memory_clock_mhz": 1215, "throttle_reasons_mask": 0}, "paired_idle_power_w": 71.98760456876323, "idle_adjusted_energy_j": 187.0929456346582, "idle_adjusted_j_per_invocation": 0.000549497608184499, "unadjusted_j_per_invocation": 0.0010520265507518798, "before_only_adjusted_j_per_invocation": 0.0006044773666295552, "after_only_adjusted_j_per_invocation": 0.0004945178497394429, "cuda_event_duration_s": 2.373727294921875, "cuda_event_us_per_invocation": 6.971708455480131, "wall_duration_s": 2.3738770700000025, "wall_us_per_invocation": 6.972148349389106}
+{
+  "cuda_event_us_per_invocation": {
+    "mean": 6.946576627573573,
+    "median": 6.971708455480131,
+    "min": 6.894210585974212,
+    "max": 6.973810841266374,
+    "sample_stddev": 0.04536250369069144
+  },
+  "wall_us_per_invocation": {
+    "mean": 6.946977587523499,
+    "median": 6.972148349389106,
+    "min": 6.894614796757518,
+    "max": 6.974169616423872,
+    "sample_stddev": 0.04535876731909532
+  },
+  "idle_adjusted_j_per_invocation": {
+    "mean": 0.0005198152854860636,
+    "median": 0.0005343538353946716,
+    "min": 0.0004755944128790201,
+    "max": 0.000549497608184499,
+    "sample_stddev": 3.903777201856881e-05
+  },
+  "unadjusted_j_per_invocation": {
+    "mean": 0.0010468524827694236,
+    "median": 0.0010486049107142857,
+    "min": 0.0010399259868421053,
+    "max": 0.0010520265507518798,
+    "sample_stddev": 6.237721099094151e-06
+  }
+}
+{"trial": 3, "graph_replays": 2660, "invocations_per_graph": 128, "invocations": 340480, "idle_before": {"start": {"energy_mj": 4136729322, "time_s": 19.709923905, "query_latency_s": 0.0026953739999981963}, "end": {"energy_mj": 4136857913, "time_s": 21.713477771, "query_latency_s": 0.0033497740000001386}, "duration_s": 2.0035538660000007, "energy_j": 128.591, "average_power_w": 64.18145385665412}, "idle_after": {"start": {"energy_mj": 4137211987, "time_s": 24.0718373465, "query_latency_s": 0.0034080249999988155}, "end": {"energy_mj": 4137376822, "time_s": 26.075368763, "query_latency_s": 0.003020018000000846}, "duration_s": 2.0035314164999996, "energy_j": 164.835, "average_power_w": 82.27223124254914}, "active": {"start": {"energy_mj": 4136857913, "time_s": 21.7174438005, "query_latency_s": 0.0037902309999999773}, "end": {"energy_mj": 4137211987, "time_s": 24.0681829575, "query_latency_s": 0.002721553000000654}, "duration_s": 2.3507391569999996, "energy_j": 354.074, "average_power_w": 150.62241122995005}, "telemetry_before": {"temperature_c": 35, "power_w": 64.096, "graphics_clock_mhz": 1095, "memory_clock_mhz": 1215, "throttle_reasons_mask": 0}, "telemetry_after": {"temperature_c": 40, "power_w": 157.487, "graphics_clock_mhz": 1410, "memory_clock_mhz": 1215, "throttle_reasons_mask": 0}, "paired_idle_power_w": 73.22684254960163, "idle_adjusted_energy_j": 181.93679387517778, "idle_adjusted_j_per_invocation": 0.0005343538353946716, "unadjusted_j_per_invocation": 0.0010399259868421053, "before_only_adjusted_j_per_invocation": 0.0005968049320546714, "after_only_adjusted_j_per_invocation": 0.00047190273873467164, "cuda_event_duration_s": 2.3473408203125, "cuda_event_us_per_invocation": 6.894210585974212, "wall_duration_s": 2.347478446, "wall_us_per_invocation": 6.894614796757518}
+Stopping app - local entrypoint completed.
+✓ App completed. View run at 
+https://modal.com/apps/yaroslavvb/main/ap-H7hV3ukcmkKQayOpOmxoG3

@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Reproducible MNIST-small 1-nearest-neighbor submission attempt, model scores and measured A100 energy.">
+<title>MNIST-small: a reproducible 1NN submission attempt · Sutro problems</title><style>
+:root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
+*{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
+header{background:#103c47;color:white;padding:36px max(24px,calc((100vw - 1060px)/2)) 26px}
+header p{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#bfd9da}
+header .brand{font-size:27px;font-weight:680;margin:6px 0 18px}nav{display:flex;gap:9px;flex-wrap:wrap}
+nav a{color:#edf8f8;border:1px solid #5c8088;padding:6px 13px;border-radius:5px;text-decoration:none;font-size:14px}
+nav a.active{background:#fff;color:#103c47}main{max-width:1120px;margin:0 auto;padding:32px 30px 70px;background:white;min-height:60vh}
+h1{font:700 36px/1.2 Georgia,serif;letter-spacing:-.015em;margin:10px 0 24px}h2{font-size:24px;line-height:1.35;margin:38px 0 16px;border-top:1px solid var(--line);padding-top:24px}
+h3{font-size:19px;margin:28px 0 8px}p{margin:12px 0}a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
+code{font-size:.84em;background:#edf2f3;padding:2px 5px;border-radius:3px;overflow-wrap:anywhere}pre{padding:18px;overflow:auto;background:#edf2f3;border:1px solid var(--line);border-radius:6px;font-size:14px;line-height:1.5}
+pre code{padding:0;background:none;overflow-wrap:normal}table{border-collapse:collapse;display:block;max-width:100%;overflow:auto;margin:22px 0;font-size:15px}th,td{padding:10px 14px;border:1px solid var(--line);vertical-align:top}th{background:#eaf2f3;text-align:left}tr:nth-child(even) td{background:#f8fafb}
+blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;background:#fffaed}blockquote p{margin:6px 0}li{margin:9px 0}footer{max-width:1120px;margin:auto;padding:22px 30px 40px;font-size:13px;color:var(--muted)}.toc{padding:18px 24px;background:#f4f8f8;border:1px solid var(--line);border-radius:6px}.toc ul{margin:0;padding-left:20px}.toc li{margin:3px 0}.toc a{text-decoration:none}
+@media(max-width:600px){main{padding:24px 18px 44px}h1{font-size:29px}header{padding:24px 18px}table{font-size:13px}th,td{padding:8px}}
+</style></head>
+<body><header><p>Sutro problems · Submission attempt · September 2026</p><div class="brand">MNIST-small / 1-nearest-neighbor</div><nav><a class="active" href="index.html">Results & reproduction</a><a class="" href="session.html">Session export</a><a class="" href="ambiguities.html">Ambiguities & problems</a></nav></header>
+<main><h1 id="mnist-small-a-reproducible-1nn-submission-attempt">MNIST-small: a reproducible 1NN submission attempt</h1>
+<p><strong>308 / 600 correct · 51.33% accuracy · current 50% target met.</strong></p>
+<p>This fixed 1-nearest-neighbor algorithm learns by memorizing the 600 supplied training examples, then labels each of the 600 test images with the label of its nearest training image. It uses the nine supplied pixel values directly. No neural-network training, extra data, pretrained weights or hyperparameter search is involved. This is a baseline attempt, with no claim of optimal accuracy, time or energy.</p>
+<p>The attempt is ready for submission review. <a href="https://github.com/cybertronai/sutro-problems/tree/codex/mnist-small-1nn-submission/mnist/submissions/1nn-v4-20260911">Submission source branch</a>. Its model scores depend on the explicit numeric, tape and area conventions below. They are calculated by a submission-owned interpreter, because the linked specification does not provide an authoritative executable scorer. The A100 measurements are actual NVML and CUDA-event observations.</p>
+<p>Contributors: Codex (implementation, experiments and report), with independent scorer, GPU and rules-review agents; requested by <code>yaroslavvb</code>. Run date: September 10, 2026 Pacific / September 11 UTC. No W&amp;B runs were created for this attempt. Before publication, main was rechecked at <code>1ede666</code>: the README now explicitly calls the model scores theoretical and allows an A100 ISA of choice. Dataset, target and v4 requirements are unchanged. The A100 source is a hand-written equivalent Triton implementation; it is not mechanically generated from the v4 text.</p>
+<div class="toc">
+<ul>
+<li><a href="#mnist-small-a-reproducible-1nn-submission-attempt">MNIST-small: a reproducible 1NN submission attempt</a><ul>
+<li><a href="#results-and-metric-boundaries">Results and metric boundaries</a></li>
+<li><a href="#dataset-and-selection-record">Dataset and selection record</a></li>
+<li><a href="#algorithm-and-numerical-convention">Algorithm and numerical convention</a></li>
+<li><a href="#explicit-tape-program-and-placement">Explicit tape program and placement</a></li>
+<li><a href="#model-score-derivation-and-verification">Model score derivation and verification</a></li>
+<li><a href="#measured-a100-runtime-and-nvml-energy">Measured A100 runtime and NVML energy</a></li>
+<li><a href="#reproduction">Reproduction</a></li>
+<li><a href="#accuracy-by-class">Accuracy by class</a></li>
+<li><a href="#artifacts">Artifacts</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<h2 id="results-and-metric-boundaries">Results and metric boundaries</h2>
+<table>
+<thead>
+<tr>
+<th>Metric</th>
+<th style="text-align: right;">Result</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Accuracy</td>
+<td style="text-align: right;"><strong>308/600 = 51.3333%</strong></td>
+<td>Canonical fixed small test split</td>
+</tr>
+<tr>
+<td>Model Time</td>
+<td style="text-align: right;"><strong>1.6821972 ms</strong></td>
+<td>Sum of all charged scratch-access times; tape I/O excluded by model</td>
+</tr>
+<tr>
+<td>Model Energy</td>
+<td style="text-align: right;"><strong>1.8759744 µJ</strong></td>
+<td>Sum of all charged scratch-access energies; tape I/O excluded by model</td>
+</tr>
+<tr>
+<td>Area, occupied-cell convention</td>
+<td style="text-align: right;"><strong>6,014 µm² = 0.006014 mm²</strong></td>
+<td>Peak 6,014 allocated 32-bit scratch words, 24,056 bytes</td>
+</tr>
+<tr>
+<td>Time to score</td>
+<td style="text-align: right;"><strong>34.899 s</strong></td>
+<td>One full generator/interpreter/accounting run on Intel Core i9-9880H, 2.30 GHz</td>
+</tr>
+<tr>
+<td>Time on A100</td>
+<td style="text-align: right;"><strong>6.947 µs per complete task</strong></td>
+<td>Mean CUDA-event steady-state graph throughput, including memorization copy</td>
+</tr>
+<tr>
+<td>Energy on A100</td>
+<td style="text-align: right;"><strong>0.00051982 J per complete task (0.520 mJ)</strong></td>
+<td>Mean idle-adjusted GPU board energy from NVML cumulative counters</td>
+</tr>
+</tbody>
+</table>
+<p>Both modeled and GPU task scopes include learning/memorization and all 600 predictions. Dataset preparation, the one training-only validation check, and host evaluation are outside those task scopes. The GPU additionally writes nearest-row indices and distances for verification; those writes are included in its measured runtime and energy. The CPU reference's 11.238 ms host runtime is supplementary and is <strong>not</strong> the model's Time or Time to score.</p>
+<p><strong>The threshold margin is eight examples.</strong> This establishes a pass on this particular fixed split. There is no measurement of generalization across alternative dataset samples, and no post-test algorithm or hyperparameter changes were made. Detailed rule gaps and experimental limitations are in the <a href="ambiguities.html">separate ambiguities and problems report</a>.</p>
+<h2 id="dataset-and-selection-record">Dataset and selection record</h2>
+<p>The task is <code>competition-v2</code>, seed <strong>20260910</strong>: 600 training and 600 test images at <strong>3 × 3</strong>, from disjoint subsets of the original 60,000-example MNIST training pool. The small training rows are positions <code>[0:600]</code> and test rows <code>[6000:6600]</code> in the documented PCG64 permutation. Pixels are normalized float32 box-area averages. This is the current 600/600 task, distinct from the historical 1,000/1,000 experiment. See the <a href="https://github.com/cybertronai/sutro-problems/blob/e70f9c9e1db65b62d9256f7b1f9b668cf4c48909/mnist/instructions.md">pinned task instructions</a>.</p>
+<p>The original MNIST gzip checksums were verified during fresh dataset regeneration. All six regenerated array-content hashes, shapes and dtypes match the canonical manifest; the train/test source-index overlap is zero. The learner decodes only <code>train_images</code>, <code>train_labels</code>, and <code>test_images</code>. Test labels are consulted separately by the official accuracy evaluator. An independent CLI check removed the test-label and source-index members entirely and reproduced every prediction. The NPZ file checksum is bookkeeping after prediction and does not affect learned labels.</p>
+<table>
+<thead>
+<tr>
+<th>Identifier</th>
+<th>SHA-256</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Canonical small NPZ used here</td>
+<td><code>300384c0bcaf8c380d6ef2ff5013656b861d720f5c99f55cf93fbe1dbbfa046e</code></td>
+</tr>
+<tr>
+<td>Train images, C-order little-endian</td>
+<td><code>1d123f4ff4c0fa6975ee07f5e647971713284515c4e10b88b943a257fdcb7ca5</code></td>
+</tr>
+<tr>
+<td>Train labels, C-order little-endian int64</td>
+<td><code>948baa48cdcf75b8b0187a9a5f2a1dcec108998dbfd0081cccc396bfb14321aa</code></td>
+</tr>
+<tr>
+<td>Test images, C-order little-endian</td>
+<td><code>9c0793497fb028e7f6ecea5819377502d4e25990aea59578db9ba6f52ba69a09</code></td>
+</tr>
+<tr>
+<td>600 predicted labels, little-endian int64</td>
+<td><code>4c6b5f9b1c8a77f04388904ca86e67a6f4ec99b7e00847d6df728bd4fcb48579</code></td>
+</tr>
+</tbody>
+</table>
+<p>The NPZ identity happens to match the checked-in container hash in this environment; array hashes are the portable identity independent of ZIP metadata. Float32 resizing reduction order may still differ across numerical libraries, so reproduction must check the array hashes rather than assume equality.</p>
+<p>Before test scoring, the single fixed candidate was checked on a training-only 480/120 split using PCG64 seed 20260911: <strong>63/120 = 52.5%</strong>. The full 600 training examples were then used to produce frozen test predictions. No choices of k, weighting, scaling or distance metric were searched. Exact training/validation row indices are retained in <code>cpu_results.json</code>.</p>
+<h2 id="algorithm-and-numerical-convention">Algorithm and numerical convention</h2>
+<p>For each query q and training row i, initialize d to FP32 zero. For feature j from 0 through 8, calculate <code>t = float32(q[j] - x[i,j])</code>, then <code>s = float32(t*t)</code>, then <code>d = float32(d+s)</code>. Choose the smallest distance; equal distances keep the lowest index in the supplied training array (0–599). Output that row's training label. Squared distance suffices, so no square root or division is needed.</p>
+<p>Every subtraction, multiplication and addition rounds separately to IEEE binary32, round-to-nearest ties-to-even. Fused multiply-add is disabled in Triton and checked in generated PTX. The independent NumPy implementation and scalar model interpreter agree on all predictions. GPU validation additionally confirms every winning index and bit pattern of every winning distance.</p>
+<h2 id="explicit-tape-program-and-placement">Explicit tape program and placement</h2>
+<p>The <a href="https://github.com/cybertronai/simplified-dally-model/blob/26abcca402de647381d31286d42dfbb7a001763d/instruction-sets/v4/README.md">pinned v4 ISA</a> defines 32-bit words and tape operations but does not fix floating-point arithmetic. This submission interprets distance <code>sub</code>, <code>mul</code>, <code>add</code> and <code>cmp lt</code> as FP32 operations; <code>copy</code> and <code>select</code> move raw words; comparison produces raw integer 0 or 1. Its only <code>set</code> literal is integer zero, whose raw bits are also FP32 +0.</p>
+<p>The proposed input tape contains <strong>11,400 little-endian 32-bit words</strong>, in this fixed order:</p>
+<ol>
+<li>5,400 FP32 training pixels: training row order, then C-order pixels.</li>
+<li>600 training labels, represented as unsigned 32-bit integers 0–9 (lossless from int64).</li>
+<li>5,400 FP32 test pixels in their supplied row and pixel order.</li>
+</ol>
+<p>The output tape is 600 unsigned 32-bit predicted labels in test-row order. These serialization choices need organizer agreement for comparisons across submissions. The input tape is consumed exactly once using <code>recv</code>; each output is produced using <code>send</code>. All training data enter scratch through <code>recv</code>. Test pixels are streamed nine at a time; test labels and source indices are absent from the input tape.</p>
+<p>Scratch addresses 1–9 hold the current query, 10–14 hold five temporaries, 15–5414 hold training pixels, and 5415–6014 hold training labels. Addresses fill Manhattan half-diamond shells: increasing h, then increasing x in <code>-(h-1)..h-1</code>, with y = h − |x|. The hottest fourteen words are closest to the processor. The maximum distance is <strong>78 hops</strong>. Every allocated location is initialized before a source read.</p>
+<p>The occupied-cell convention gives <strong>6,014 µm²</strong>. The enclosing grid-cell rectangle is <strong>12,012 µm²</strong>, illustrating why occupied cells and full physical footprint must be distinguished. Processor, instruction storage, tapes and routing area have no supplied area model and are excluded. The source generator emits a fully straight-line v4 program; its Python loops generate instructions and introduce no unpriced machine loops or branches.</p>
+<h2 id="model-score-derivation-and-verification">Model score derivation and verification</h2>
+<p>The <a href="https://github.com/cybertronai/simplified-dally-model/blob/26abcca402de647381d31286d42dfbb7a001763d/models/single-core-with-tape/README.md">single-core-with-tape cost model</a> charges each non-tape scratch read at distance h <code>max(50, 2h)</code> fJ and <code>max(50, 0.8h)</code> ps. Each scratch write costs <code>max(50, 2h)</code> fJ and <code>max(50, 0.4h)</code> ps. Both reads of <code>mul t,t,t</code> count, and <code>select</code> reads its condition and both alternatives. Accesses are blocking and are summed. <code>recv</code> and <code>send</code>, including their scratch accesses, cost zero by definition.</p>
+<table>
+<thead>
+<tr>
+<th>Instruction</th>
+<th style="text-align: right;">Count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>recv / send</td>
+<td style="text-align: right;">11,400 / 600</td>
+</tr>
+<tr>
+<td>set</td>
+<td style="text-align: right;">360,000</td>
+</tr>
+<tr>
+<td>sub / mul / add</td>
+<td style="text-align: right;">3,240,000 each</td>
+</tr>
+<tr>
+<td>copy</td>
+<td style="text-align: right;">1,200</td>
+</tr>
+<tr>
+<td>cmp lt</td>
+<td style="text-align: right;">359,400</td>
+</tr>
+<tr>
+<td>select</td>
+<td style="text-align: right;">718,800</td>
+</tr>
+<tr>
+<td><strong>Total</strong></td>
+<td style="text-align: right;"><strong>11,171,400</strong></td>
+</tr>
+</tbody>
+</table>
+<p>There are <strong>22,316,400 charged reads</strong> and <strong>11,159,400 charged writes</strong>, totaling <strong>33,475,800 accesses</strong>. Each persistent training word is read 600 times: 3,600,000 persistent reads. The remaining 29,875,800 hot accesses are at the 50-unit floors. An independent count formula sums the exact placement costs of the persistent reads and the hot-access floors. It agrees exactly with the full interpreter's <strong>1,875,974,400 fJ</strong> and <strong>1,682,197,200 ps</strong>. Time is accumulated as integer 0.2 ps ticks to avoid rounding in score summation.</p>
+<p>Time to score starts immediately before machine construction and includes instruction generation, all scratch-state checks, FP32 execution and integer cost accounting. It excludes dataset loading, placement generation, independent verification, result writing and optional text-IR emission. Host: Intel Core i9-9880H (8 physical / 16 logical CPUs), macOS 26.6.2, Python 3.11.13, NumPy 2.4.6; one Python interpreter, with possible concurrent work on the host. It is a measured single-run host duration, not a stable hardware-independent score.</p>
+<p>The emitted 11,171,400-instruction text was also replayed through the parser and interpreter. The compressed 11.1 MB trace is generated on demand rather than duplicated in Git; its expanded SHA-256 is <code>f6f657cc159160050e73d1df8ae169b313b795f3d1b1a45a72ad4f757383ef2b</code>. The generator, a sample, placement/access CSV, and replay result are published. Self-tests cover the specification's 450 fJ/300 ps example, distant free tape I/O, read-before-write rejection, source/destination aliasing and nearest-neighbor ties.</p>
+<h2 id="measured-a100-runtime-and-nvml-energy">Measured A100 runtime and NVML energy</h2>
+<p>Hardware: <strong>NVIDIA A100-SXM4-40GB</strong>, 39.5 GiB visible memory, compute capability 8.0, 108 SMs, power limit 400 W. Driver 580.95.05; CUDA runtime 12.4; PyTorch 2.5.1+cu124; Triton 3.1.0; NumPy 2.2.6; NVML 13.580.95.05; <code>nvidia-ml-py</code> 12.560.30. The pinned base image digest and complete version/hardware record are saved in <code>gpu_results.json</code>.</p>
+<p>One Triton kernel copies all training pixels and labels into preallocated model memory. A second uses one program per query, compares all 600 candidates, accumulates the nine FP32 squared differences in feature order, and reduces by distance then lowest training index. The graph contains 128 complete task invocations, each with its own memorization copy. All buffers are reused; input and working data remain on the GPU.</p>
+<p>After compilation, correctness checks, warmup and graph capture, three active trials repeatedly execute this graph. CUDA events measure device elapsed time; synchronized host wall throughput is also retained. NVML's <code>nvmlDeviceGetTotalEnergyConsumption</code> supplies cumulative millijoule counters around the active window and a two-second idle interval on each side. Energy per task is:</p>
+<pre><code class="language-text">P_idle = (P_idle_before + P_idle_after) / 2
+E_task = ((counter_after - counter_before)/1000 - P_idle * active_seconds)
+         / number_of_complete_task_invocations
+</code></pre>
+<p>Counter-read timestamps use the midpoint of the host call, and query latencies are retained. Negative adjusted values are not silently clipped. Reported aggregate values are the means over the three trials.</p>
+<table>
+<thead>
+<tr>
+<th>Trial</th>
+<th style="text-align: right;">Full tasks</th>
+<th style="text-align: right;">Active NVML window (s)</th>
+<th style="text-align: right;">Raw board energy (J)</th>
+<th style="text-align: right;">Idle before / after (W)</th>
+<th style="text-align: right;">CUDA time/task (µs)</th>
+<th style="text-align: right;">Adjusted energy/task (mJ)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td style="text-align: right;">340,480</td>
+<td style="text-align: right;">2.377255</td>
+<td style="text-align: right;">357.029</td>
+<td style="text-align: right;">81.215 / 82.923</td>
+<td style="text-align: right;">6.9738</td>
+<td style="text-align: right;">0.475594</td>
+</tr>
+<tr>
+<td>2</td>
+<td style="text-align: right;">340,480</td>
+<td style="text-align: right;">2.376813</td>
+<td style="text-align: right;">358.194</td>
+<td style="text-align: right;">64.112 / 79.863</td>
+<td style="text-align: right;">6.9717</td>
+<td style="text-align: right;">0.549498</td>
+</tr>
+<tr>
+<td>3</td>
+<td style="text-align: right;">340,480</td>
+<td style="text-align: right;">2.350739</td>
+<td style="text-align: right;">354.074</td>
+<td style="text-align: right;">64.181 / 82.272</td>
+<td style="text-align: right;">6.8942</td>
+<td style="text-align: right;">0.534354</td>
+</tr>
+</tbody>
+</table>
+<p>Mean host wall throughput is <strong>6.947 µs/task</strong>. Across trials, CUDA-event time ranges <strong>6.894–6.974 µs</strong>, and idle-adjusted energy ranges <strong>0.476–0.549 mJ/task</strong>. Using either the before-only or after-only idle baseline across these trials yields <strong>0.470–0.604 mJ/task</strong>. This is baseline sensitivity, not a confidence interval. Idle power drifts materially; energy deserves fewer significant figures than the raw counters provide.</p>
+<p>The active trial target was three seconds; the actual windows in the table are authoritative. Observed throughput differed from calibration, producing shorter active windows; the cause was not measured. No GPU clock or power limit was changed by the benchmark. These are warm, repeated, cache-resident throughput measurements. Host/device transfers, allocation, compilation, graph capture, validation, startup, host energy and facility overhead are excluded. NVML measures GPU board energy, not individual instructions. Comparing its joules directly with the model's tape-excluded scratch score does not establish physical prediction accuracy of the model.</p>
+<p>GPU outputs agree with all <strong>600</strong> canonical CPU predictions, all <strong>600</strong> nearest indices and all <strong>600</strong> winning FP32 distance bit patterns. Additional checks use fresh random queries and changed training labels to verify runtime input dependence. Changing training labels changes all 600 corresponding predicted labels. The saved PTX has no FP32 FMA.</p>
+<p>Three preliminary remote launches failed before energy trials: a missing C compiler, a Triton language alias scoping requirement, and unavailable Modal package metadata. These were environment/reporting fixes; none changed the algorithm or selected among measured trials. Failure excerpts and successful raw logs are retained in <code>gpu_run_history.txt</code>.</p>
+<h2 id="reproduction">Reproduction</h2>
+<p>From a clone of the submission branch (or after it is merged), use Python 3.11 or newer. Modal GPU execution requires an already configured Modal account and incurs the account's normal compute charges.</p>
+<pre><code class="language-bash">python3 -m venv mnist/.venv
+mnist/.venv/bin/python -m pip install -r mnist/submissions/1nn-v4-20260911/requirements.txt
+mnist/.venv/bin/python -m mnist.code.data --output mnist/data --seed 20260910
+S=mnist/submissions/1nn-v4-20260911
+mnist/.venv/bin/python &quot;$S/learner.py&quot; --data mnist/data/small.npz --output /tmp/mnist-1nn-cpu
+mnist/.venv/bin/python -m mnist.code.evaluate --tier small --data-dir mnist/data \
+  --predictions /tmp/mnist-1nn-cpu/predictions.npy --output /tmp/mnist-1nn-cpu/accuracy.json
+mnist/.venv/bin/python &quot;$S/verify_learner.py&quot; --data mnist/data/small.npz
+mnist/.venv/bin/python &quot;$S/score_v4.py&quot; --self-test --data mnist/data/small.npz \
+  --output /tmp/mnist-1nn-model --emit-ir /tmp/mnist-1nn-model/program.v4.gz
+mnist/.venv/bin/python &quot;$S/score_v4.py&quot; --data mnist/data/small.npz \
+  --replay-ir /tmp/mnist-1nn-model/program.v4.gz --output /tmp/mnist-1nn-replay
+uvx --with numpy==2.2.6 modal==1.5.5 run &quot;$S/gpu_benchmark.py&quot; \
+  --data mnist/data/small.npz --output /tmp/mnist-1nn-gpu
+</code></pre>
+<p>The generator's exact model scores and predictions should match; wall-clock score time and measured GPU energy/runtime vary with the host and GPU state. Canonical array hashes must match before claiming the same dataset. The full trace takes 220,146,130 bytes uncompressed (11.1 MB gzip); it can be generated without writing uncompressed text.</p>
+<p>To render these saved results and export an available local session log:</p>
+<pre><code class="language-bash">mnist/.venv/bin/python -m pip install -r &quot;$S/requirements-report.txt&quot;
+mnist/.venv/bin/python &quot;$S/export_session.py&quot; --input /path/to/rollout.jsonl --output &quot;$S&quot;
+mnist/.venv/bin/python &quot;$S/write_report.py&quot;
+mnist/.venv/bin/python &quot;$S/build_pages.py&quot; --output docs/submissions/1nn-v4-20260911
+</code></pre>
+<p>Session export is optional for reproducing the benchmark. It includes visible user/assistant messages through its stated cutoff. Internal reasoning, system/developer prompts and raw unfiltered tool logs are excluded. The <a href="session.html">human-readable session export</a> and <a href="ambiguities.html">separate audit</a> are independent documents.</p>
+<h2 id="accuracy-by-class">Accuracy by class</h2>
+<table>
+<thead>
+<tr>
+<th>Digit</th>
+<th style="text-align: right;">Correct / total</th>
+<th style="text-align: right;">Accuracy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td style="text-align: right;">51 / 65</td>
+<td style="text-align: right;">78.46%</td>
+</tr>
+<tr>
+<td>1</td>
+<td style="text-align: right;">46 / 67</td>
+<td style="text-align: right;">68.66%</td>
+</tr>
+<tr>
+<td>2</td>
+<td style="text-align: right;">30 / 63</td>
+<td style="text-align: right;">47.62%</td>
+</tr>
+<tr>
+<td>3</td>
+<td style="text-align: right;">27 / 58</td>
+<td style="text-align: right;">46.55%</td>
+</tr>
+<tr>
+<td>4</td>
+<td style="text-align: right;">38 / 56</td>
+<td style="text-align: right;">67.86%</td>
+</tr>
+<tr>
+<td>5</td>
+<td style="text-align: right;">13 / 49</td>
+<td style="text-align: right;">26.53%</td>
+</tr>
+<tr>
+<td>6</td>
+<td style="text-align: right;">34 / 67</td>
+<td style="text-align: right;">50.75%</td>
+</tr>
+<tr>
+<td>7</td>
+<td style="text-align: right;">20 / 54</td>
+<td style="text-align: right;">37.04%</td>
+</tr>
+<tr>
+<td>8</td>
+<td style="text-align: right;">16 / 61</td>
+<td style="text-align: right;">26.23%</td>
+</tr>
+<tr>
+<td>9</td>
+<td style="text-align: right;">33 / 60</td>
+<td style="text-align: right;">55.00%</td>
+</tr>
+</tbody>
+</table>
+<p>The complete true-row/predicted-column confusion matrix is retained in the accuracy JSON.</p>
+<h2 id="artifacts">Artifacts</h2>
+<ul>
+<li><a href="README.md">Source and reproduction overview</a>, <a href="learner.py">fixed CPU learner</a>, <a href="verify_learner.py">independent learner checks</a>.</li>
+<li><a href="score_v4.py">Full v4 generator/interpreter</a>, <a href="model-score.json">model score</a>, <a href="replay-score.json">replay score</a>, <a href="placement.csv">placement and access counts</a>, <a href="scoring-notes.md">scoring conventions</a>.</li>
+<li><a href="gpu_benchmark.py">A100 Triton implementation</a>, <a href="gpu_results.json">raw measurements and versions</a>, <a href="gpu_predict.ptx">compiled PTX</a>, <a href="gpu_run_history.txt">run history</a>.</li>
+<li><a href="accuracy.json">Accuracy and confusion matrix</a>, <a href="cpu_results.json">CPU results and selection rows</a>, <a href="predictions.npy">predictions</a>, <a href="dataset_manifest.json">dataset manifest</a>, <a href="dataset_verification.json">all-six-array verification</a>.</li>
+<li><a href="session.md">Conversation Markdown</a>, <a href="session.json">conversation JSON</a>, <a href="ambiguities.md">audit Markdown</a>, <a href="learner_review.md">independent learner review</a>.</li>
+</ul></main><footer>Standalone record. Model scores use declared conventions; acceptance remains subject to review. <a href="https://github.com/cybertronai/sutro-problems">Repository</a> · <a href="../">All submission reports</a></footer></body></html>

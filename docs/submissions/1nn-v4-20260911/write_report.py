@@ -1,0 +1,201 @@
+"""Assemble the human-readable report from saved measurement artifacts."""
+import json
+from pathlib import Path
+
+HERE = Path(__file__).resolve().parent
+BASE = 'https://github.com/cybertronai/sutro-problems/blob/e70f9c9e1db65b62d9256f7b1f9b668cf4c48909'
+SPEC = 'https://github.com/cybertronai/simplified-dally-model/blob/26abcca402de647381d31286d42dfbb7a001763d'
+
+
+def main():
+    def read(name):
+        return json.loads((HERE / name).read_text())
+    cpu, acc, model, gpu = [read(name) for name in
+                            ('cpu_results.json','accuracy.json','model-score.json','gpu_results.json')]
+    summary = gpu['summary']
+    us = summary['cuda_event_us_per_invocation']['mean']
+    joules = summary['idle_adjusted_j_per_invocation']['mean']
+    rows = []
+    for trial in gpu['trials']:
+        rows.append(f"| {trial['trial']} | {trial['invocations']:,} | {trial['active']['duration_s']:.6f} | "
+                    f"{trial['active']['energy_j']:.3f} | {trial['idle_before']['average_power_w']:.3f} / "
+                    f"{trial['idle_after']['average_power_w']:.3f} | {trial['cuda_event_us_per_invocation']:.4f} | "
+                    f"{trial['idle_adjusted_j_per_invocation']*1e3:.6f} |")
+    sensitivity = [trial[key]*1e3 for trial in gpu['trials'] for key in
+                   ('before_only_adjusted_j_per_invocation','after_only_adjusted_j_per_invocation')]
+    class_rows = '\n'.join(f"| {i} | {acc['confusion_matrix'][i][i]} / {total} | {acc['per_class_accuracy'][i]*100:.2f}% |"
+                           for i, total in enumerate(acc['class_totals']))
+    hardware = gpu['hardware']
+    versions = gpu['versions']
+    report = f'''# MNIST-small: a reproducible 1NN submission attempt
+
+**308 / 600 correct · 51.33% accuracy · current 50% target met.**
+
+This fixed 1-nearest-neighbor algorithm learns by memorizing the 600 supplied training examples, then labels each of the 600 test images with the label of its nearest training image. It uses the nine supplied pixel values directly. No neural-network training, extra data, pretrained weights or hyperparameter search is involved. This is a baseline attempt, with no claim of optimal accuracy, time or energy.
+
+The attempt is ready for submission review. [Submission source branch](https://github.com/cybertronai/sutro-problems/tree/codex/mnist-small-1nn-submission/mnist/submissions/1nn-v4-20260911). Its model scores depend on the explicit numeric, tape and area conventions below. They are calculated by a submission-owned interpreter, because the linked specification does not provide an authoritative executable scorer. The A100 measurements are actual NVML and CUDA-event observations.
+
+Contributors: Codex (implementation, experiments and report), with independent scorer, GPU and rules-review agents; requested by `yaroslavvb`. Run date: September 10, 2026 Pacific / September 11 UTC. No W&B runs were created for this attempt. Before publication, main was rechecked at `1ede666`: the README now explicitly calls the model scores theoretical and allows an A100 ISA of choice. Dataset, target and v4 requirements are unchanged. The A100 source is a hand-written equivalent Triton implementation; it is not mechanically generated from the v4 text.
+
+[TOC]
+
+## Results and metric boundaries
+
+| Metric | Result | Meaning |
+| --- | ---: | --- |
+| Accuracy | **{acc['correct']}/{acc['total']} = {acc['accuracy']*100:.4f}%** | Canonical fixed small test split |
+| Model Time | **{model['time_seconds']*1e3:.7f} ms** | Sum of all charged scratch-access times; tape I/O excluded by model |
+| Model Energy | **{model['energy_joules']*1e6:.7f} µJ** | Sum of all charged scratch-access energies; tape I/O excluded by model |
+| Area, occupied-cell convention | **{model['area_um2_occupied_cells']:,} µm² = 0.006014 mm²** | Peak {model['peak_allocated_scratch_words']:,} allocated 32-bit scratch words, {model['peak_allocated_scratch_bytes']:,} bytes |
+| Time to score | **{model['time_to_score_seconds']:.3f} s** | One full generator/interpreter/accounting run on Intel Core i9-9880H, 2.30 GHz |
+| Time on A100 | **{us:.3f} µs per complete task** | Mean CUDA-event steady-state graph throughput, including memorization copy |
+| Energy on A100 | **{joules:.8f} J per complete task ({joules*1e3:.3f} mJ)** | Mean idle-adjusted GPU board energy from NVML cumulative counters |
+
+Both modeled and GPU task scopes include learning/memorization and all 600 predictions. Dataset preparation, the one training-only validation check, and host evaluation are outside those task scopes. The GPU additionally writes nearest-row indices and distances for verification; those writes are included in its measured runtime and energy. The CPU reference's {cpu['cpu_reference_wall_seconds']*1000:.3f} ms host runtime is supplementary and is **not** the model's Time or Time to score.
+
+**The threshold margin is eight examples.** This establishes a pass on this particular fixed split. There is no measurement of generalization across alternative dataset samples, and no post-test algorithm or hyperparameter changes were made. Detailed rule gaps and experimental limitations are in the [separate ambiguities and problems report](ambiguities.html).
+
+## Dataset and selection record
+
+The task is `competition-v2`, seed **20260910**: 600 training and 600 test images at **3 × 3**, from disjoint subsets of the original 60,000-example MNIST training pool. The small training rows are positions `[0:600]` and test rows `[6000:6600]` in the documented PCG64 permutation. Pixels are normalized float32 box-area averages. This is the current 600/600 task, distinct from the historical 1,000/1,000 experiment. See the [pinned task instructions]({BASE}/mnist/instructions.md).
+
+The original MNIST gzip checksums were verified during fresh dataset regeneration. All six regenerated array-content hashes, shapes and dtypes match the canonical manifest; the train/test source-index overlap is zero. The learner decodes only `train_images`, `train_labels`, and `test_images`. Test labels are consulted separately by the official accuracy evaluator. An independent CLI check removed the test-label and source-index members entirely and reproduced every prediction. The NPZ file checksum is bookkeeping after prediction and does not affect learned labels.
+
+| Identifier | SHA-256 |
+| --- | --- |
+| Canonical small NPZ used here | `{cpu['dataset_sha256_npz']}` |
+| Train images, C-order little-endian | `{cpu['allowed_input_hashes']['train_images']}` |
+| Train labels, C-order little-endian int64 | `{cpu['allowed_input_hashes']['train_labels']}` |
+| Test images, C-order little-endian | `{cpu['allowed_input_hashes']['test_images']}` |
+| 600 predicted labels, little-endian int64 | `{cpu['predictions_sha256_int64_le']}` |
+
+The NPZ identity happens to match the checked-in container hash in this environment; array hashes are the portable identity independent of ZIP metadata. Float32 resizing reduction order may still differ across numerical libraries, so reproduction must check the array hashes rather than assume equality.
+
+Before test scoring, the single fixed candidate was checked on a training-only 480/120 split using PCG64 seed 20260911: **63/120 = 52.5%**. The full 600 training examples were then used to produce frozen test predictions. No choices of k, weighting, scaling or distance metric were searched. Exact training/validation row indices are retained in `cpu_results.json`.
+
+## Algorithm and numerical convention
+
+For each query q and training row i, initialize d to FP32 zero. For feature j from 0 through 8, calculate `t = float32(q[j] - x[i,j])`, then `s = float32(t*t)`, then `d = float32(d+s)`. Choose the smallest distance; equal distances keep the lowest index in the supplied training array (0–599). Output that row's training label. Squared distance suffices, so no square root or division is needed.
+
+Every subtraction, multiplication and addition rounds separately to IEEE binary32, round-to-nearest ties-to-even. Fused multiply-add is disabled in Triton and checked in generated PTX. The independent NumPy implementation and scalar model interpreter agree on all predictions. GPU validation additionally confirms every winning index and bit pattern of every winning distance.
+
+## Explicit tape program and placement
+
+The [pinned v4 ISA]({SPEC}/instruction-sets/v4/README.md) defines 32-bit words and tape operations but does not fix floating-point arithmetic. This submission interprets distance `sub`, `mul`, `add` and `cmp lt` as FP32 operations; `copy` and `select` move raw words; comparison produces raw integer 0 or 1. Its only `set` literal is integer zero, whose raw bits are also FP32 +0.
+
+The proposed input tape contains **11,400 little-endian 32-bit words**, in this fixed order:
+
+1. 5,400 FP32 training pixels: training row order, then C-order pixels.
+2. 600 training labels, represented as unsigned 32-bit integers 0–9 (lossless from int64).
+3. 5,400 FP32 test pixels in their supplied row and pixel order.
+
+The output tape is 600 unsigned 32-bit predicted labels in test-row order. These serialization choices need organizer agreement for comparisons across submissions. The input tape is consumed exactly once using `recv`; each output is produced using `send`. All training data enter scratch through `recv`. Test pixels are streamed nine at a time; test labels and source indices are absent from the input tape.
+
+Scratch addresses 1–9 hold the current query, 10–14 hold five temporaries, 15–5414 hold training pixels, and 5415–6014 hold training labels. Addresses fill Manhattan half-diamond shells: increasing h, then increasing x in `-(h-1)..h-1`, with y = h − |x|. The hottest fourteen words are closest to the processor. The maximum distance is **{model['max_manhattan_hops']} hops**. Every allocated location is initialized before a source read.
+
+The occupied-cell convention gives **6,014 µm²**. The enclosing grid-cell rectangle is **{model['bounding_rectangle_um2']:,} µm²**, illustrating why occupied cells and full physical footprint must be distinguished. Processor, instruction storage, tapes and routing area have no supplied area model and are excluded. The source generator emits a fully straight-line v4 program; its Python loops generate instructions and introduce no unpriced machine loops or branches.
+
+## Model score derivation and verification
+
+The [single-core-with-tape cost model]({SPEC}/models/single-core-with-tape/README.md) charges each non-tape scratch read at distance h `max(50, 2h)` fJ and `max(50, 0.8h)` ps. Each scratch write costs `max(50, 2h)` fJ and `max(50, 0.4h)` ps. Both reads of `mul t,t,t` count, and `select` reads its condition and both alternatives. Accesses are blocking and are summed. `recv` and `send`, including their scratch accesses, cost zero by definition.
+
+| Instruction | Count |
+| --- | ---: |
+| recv / send | 11,400 / 600 |
+| set | 360,000 |
+| sub / mul / add | 3,240,000 each |
+| copy | 1,200 |
+| cmp lt | 359,400 |
+| select | 718,800 |
+| **Total** | **11,171,400** |
+
+There are **22,316,400 charged reads** and **11,159,400 charged writes**, totaling **33,475,800 accesses**. Each persistent training word is read 600 times: 3,600,000 persistent reads. The remaining 29,875,800 hot accesses are at the 50-unit floors. An independent count formula sums the exact placement costs of the persistent reads and the hot-access floors. It agrees exactly with the full interpreter's **1,875,974,400 fJ** and **1,682,197,200 ps**. Time is accumulated as integer 0.2 ps ticks to avoid rounding in score summation.
+
+Time to score starts immediately before machine construction and includes instruction generation, all scratch-state checks, FP32 execution and integer cost accounting. It excludes dataset loading, placement generation, independent verification, result writing and optional text-IR emission. Host: Intel Core i9-9880H (8 physical / 16 logical CPUs), macOS 26.6.2, Python {model['host']['python'].split()[0]}, NumPy {model['host']['numpy']}; one Python interpreter, with possible concurrent work on the host. It is a measured single-run host duration, not a stable hardware-independent score.
+
+The emitted 11,171,400-instruction text was also replayed through the parser and interpreter. The compressed 11.1 MB trace is generated on demand rather than duplicated in Git; its expanded SHA-256 is `{model.get('expanded_ir_uncompressed_sha256', 'f6f657cc159160050e73d1df8ae169b313b795f3d1b1a45a72ad4f757383ef2b')}`. The generator, a sample, placement/access CSV, and replay result are published. Self-tests cover the specification's 450 fJ/300 ps example, distant free tape I/O, read-before-write rejection, source/destination aliasing and nearest-neighbor ties.
+
+## Measured A100 runtime and NVML energy
+
+Hardware: **{hardware['gpu_name']}**, {hardware['gpu_total_memory_bytes']/(1024**3):.1f} GiB visible memory, compute capability {hardware['compute_capability']}, {hardware['multiprocessors']} SMs, power limit {hardware['power_limit_w']:.0f} W. Driver {versions['nvidia_driver']}; CUDA runtime {versions['cuda_runtime']}; PyTorch {versions['torch']}; Triton {versions['triton']}; NumPy {versions['numpy']}; NVML {versions['nvml']}; `nvidia-ml-py` {versions['nvidia_ml_py']}. The pinned base image digest and complete version/hardware record are saved in `gpu_results.json`.
+
+One Triton kernel copies all training pixels and labels into preallocated model memory. A second uses one program per query, compares all 600 candidates, accumulates the nine FP32 squared differences in feature order, and reduces by distance then lowest training index. The graph contains 128 complete task invocations, each with its own memorization copy. All buffers are reused; input and working data remain on the GPU.
+
+After compilation, correctness checks, warmup and graph capture, three active trials repeatedly execute this graph. CUDA events measure device elapsed time; synchronized host wall throughput is also retained. NVML's `nvmlDeviceGetTotalEnergyConsumption` supplies cumulative millijoule counters around the active window and a two-second idle interval on each side. Energy per task is:
+
+```text
+P_idle = (P_idle_before + P_idle_after) / 2
+E_task = ((counter_after - counter_before)/1000 - P_idle * active_seconds)
+         / number_of_complete_task_invocations
+```
+
+Counter-read timestamps use the midpoint of the host call, and query latencies are retained. Negative adjusted values are not silently clipped. Reported aggregate values are the means over the three trials.
+
+| Trial | Full tasks | Active NVML window (s) | Raw board energy (J) | Idle before / after (W) | CUDA time/task (µs) | Adjusted energy/task (mJ) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+{chr(10).join(rows)}
+
+Mean host wall throughput is **{summary['wall_us_per_invocation']['mean']:.3f} µs/task**. Across trials, CUDA-event time ranges **{summary['cuda_event_us_per_invocation']['min']:.3f}–{summary['cuda_event_us_per_invocation']['max']:.3f} µs**, and idle-adjusted energy ranges **{summary['idle_adjusted_j_per_invocation']['min']*1e3:.3f}–{summary['idle_adjusted_j_per_invocation']['max']*1e3:.3f} mJ/task**. Using either the before-only or after-only idle baseline across these trials yields **{min(sensitivity):.3f}–{max(sensitivity):.3f} mJ/task**. This is baseline sensitivity, not a confidence interval. Idle power drifts materially; energy deserves fewer significant figures than the raw counters provide.
+
+The active trial target was three seconds; the actual windows in the table are authoritative. Observed throughput differed from calibration, producing shorter active windows; the cause was not measured. No GPU clock or power limit was changed by the benchmark. These are warm, repeated, cache-resident throughput measurements. Host/device transfers, allocation, compilation, graph capture, validation, startup, host energy and facility overhead are excluded. NVML measures GPU board energy, not individual instructions. Comparing its joules directly with the model's tape-excluded scratch score does not establish physical prediction accuracy of the model.
+
+GPU outputs agree with all **600** canonical CPU predictions, all **600** nearest indices and all **600** winning FP32 distance bit patterns. Additional checks use fresh random queries and changed training labels to verify runtime input dependence. Changing training labels changes all 600 corresponding predicted labels. The saved PTX has no FP32 FMA.
+
+Three preliminary remote launches failed before energy trials: a missing C compiler, a Triton language alias scoping requirement, and unavailable Modal package metadata. These were environment/reporting fixes; none changed the algorithm or selected among measured trials. Failure excerpts and successful raw logs are retained in `gpu_run_history.txt`.
+
+## Reproduction
+
+From a clone of the submission branch (or after it is merged), use Python 3.11 or newer. Modal GPU execution requires an already configured Modal account and incurs the account's normal compute charges.
+
+```bash
+python3 -m venv mnist/.venv
+mnist/.venv/bin/python -m pip install -r mnist/submissions/1nn-v4-20260911/requirements.txt
+mnist/.venv/bin/python -m mnist.code.data --output mnist/data --seed 20260910
+S=mnist/submissions/1nn-v4-20260911
+mnist/.venv/bin/python "$S/learner.py" --data mnist/data/small.npz --output /tmp/mnist-1nn-cpu
+mnist/.venv/bin/python -m mnist.code.evaluate --tier small --data-dir mnist/data \\
+  --predictions /tmp/mnist-1nn-cpu/predictions.npy --output /tmp/mnist-1nn-cpu/accuracy.json
+mnist/.venv/bin/python "$S/verify_learner.py" --data mnist/data/small.npz
+mnist/.venv/bin/python "$S/score_v4.py" --self-test --data mnist/data/small.npz \\
+  --output /tmp/mnist-1nn-model --emit-ir /tmp/mnist-1nn-model/program.v4.gz
+mnist/.venv/bin/python "$S/score_v4.py" --data mnist/data/small.npz \\
+  --replay-ir /tmp/mnist-1nn-model/program.v4.gz --output /tmp/mnist-1nn-replay
+uvx --with numpy==2.2.6 modal==1.5.5 run "$S/gpu_benchmark.py" \\
+  --data mnist/data/small.npz --output /tmp/mnist-1nn-gpu
+```
+
+The generator's exact model scores and predictions should match; wall-clock score time and measured GPU energy/runtime vary with the host and GPU state. Canonical array hashes must match before claiming the same dataset. The full trace takes 220,146,130 bytes uncompressed (11.1 MB gzip); it can be generated without writing uncompressed text.
+
+To render these saved results and export an available local session log:
+
+```bash
+mnist/.venv/bin/python -m pip install -r "$S/requirements-report.txt"
+mnist/.venv/bin/python "$S/export_session.py" --input /path/to/rollout.jsonl --output "$S"
+mnist/.venv/bin/python "$S/write_report.py"
+mnist/.venv/bin/python "$S/build_pages.py" --output docs/submissions/1nn-v4-20260911
+```
+
+Session export is optional for reproducing the benchmark. It includes visible user/assistant messages through its stated cutoff. Internal reasoning, system/developer prompts and raw unfiltered tool logs are excluded. The [human-readable session export](session.html) and [separate audit](ambiguities.html) are independent documents.
+
+## Accuracy by class
+
+| Digit | Correct / total | Accuracy |
+| --- | ---: | ---: |
+{class_rows}
+
+The complete true-row/predicted-column confusion matrix is retained in the accuracy JSON.
+
+## Artifacts
+
+- [Source and reproduction overview](README.md), [fixed CPU learner](learner.py), [independent learner checks](verify_learner.py).
+- [Full v4 generator/interpreter](score_v4.py), [model score](model-score.json), [replay score](replay-score.json), [placement and access counts](placement.csv), [scoring conventions](scoring-notes.md).
+- [A100 Triton implementation](gpu_benchmark.py), [raw measurements and versions](gpu_results.json), [compiled PTX](gpu_predict.ptx), [run history](gpu_run_history.txt).
+- [Accuracy and confusion matrix](accuracy.json), [CPU results and selection rows](cpu_results.json), [predictions](predictions.npy), [dataset manifest](dataset_manifest.json), [all-six-array verification](dataset_verification.json).
+- [Conversation Markdown](session.md), [conversation JSON](session.json), [audit Markdown](ambiguities.md), [independent learner review](learner_review.md).
+'''
+    (HERE / 'report.md').write_text(report)
+    print('Wrote report.md from measured JSON artifacts')
+
+
+if __name__ == '__main__':
+    main()
