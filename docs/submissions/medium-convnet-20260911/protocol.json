@@ -1,0 +1,266 @@
+{
+  "schema_version": 1,
+  "created_at_utc": "2026-09-11T05:05:22.253905+00:00",
+  "purpose": "Accuracy-only canonical MNIST-medium ConvNet search; no hardware benchmarking or translation",
+  "dataset_profile": "competition-v2",
+  "dataset_seed": 20260910,
+  "learner_input_allowlist": [
+    "train_images",
+    "train_labels"
+  ],
+  "input_sha256": {
+    "train_images": "3c2c9d7cc3103e05c6e72e8b39ad7ae8f93fcbea8b23ac5f43ffacd9a9c4653b",
+    "train_labels": "91633f2c00fe471cb130fb6831c3d7dca5899bd926a1c899d873826dfd62e617"
+  },
+  "source_sha256": {
+    "runner.py": "a6d44bfce1fb19de6a876626770b2d0251e775c7bf96d89a47e2e69d2ee43999",
+    "modal_train.py": "88a592e836d444703c392fdbc56477fd0dbfa5751b561b02d6c815a50f7709d8"
+  },
+  "split_seed": 20260914,
+  "training_examples": 4800,
+  "validation_examples": 1200,
+  "initial_seed": 11,
+  "candidates": [
+    {
+      "id": "cnn-01",
+      "architecture": "cnn",
+      "width": 32,
+      "depth": 3,
+      "activation": "gelu",
+      "pooling": "none",
+      "dropout": 0.2,
+      "learning_rate": 0.001,
+      "weight_decay": 0.001,
+      "augmentation": "none",
+      "batch_size": 128,
+      "epochs": 100,
+      "head_width": 128,
+      "image_size": 9
+    },
+    {
+      "id": "cnn-02",
+      "architecture": "cnn",
+      "width": 48,
+      "depth": 3,
+      "activation": "gelu",
+      "pooling": "none",
+      "dropout": 0.2,
+      "learning_rate": 0.001,
+      "weight_decay": 0.001,
+      "augmentation": "none",
+      "batch_size": 128,
+      "epochs": 100,
+      "head_width": 192,
+      "image_size": 9
+    },
+    {
+      "id": "cnn-03",
+      "architecture": "cnn",
+      "width": 64,
+      "depth": 3,
+      "activation": "gelu",
+      "pooling": "none",
+      "dropout": 0.2,
+      "learning_rate": 0.001,
+      "weight_decay": 0.001,
+      "augmentation": "none",
+      "batch_size": 128,
+      "epochs": 100,
+      "head_width": 256,
+      "image_size": 9
+    },
+    {
+      "id": "cnn-04",
+      "architecture": "cnn",
+      "width": 32,
+      "depth": 4,
+      "activation": "gelu",
+      "pooling": "none",
+      "dropout": 0.2,
+      "learning_rate": 0.001,
+      "weight_decay": 0.001,
+      "augmentation": "none",
+      "batch_size": 128,
+      "epochs": 100,
+      "head_width": 128,
+      "image_size": 9
+    },
+    {
+      "id": "cnn-05",
+      "architecture": "cnn",
+      "width": 32,
+      "depth": 3,
+      "activation": "gelu",
+      "pooling": "max",
+      "dropout": 0.2,
+      "learning_rate": 0.003,
+      "weight_decay": 0.001,
+      "augmentation": "none",
+      "batch_size": 128,
+      "epochs": 100,
+      "head_width": 128,
+      "image_size": 9
+    },
+    {
+      "id": "cnn-06",
+      "architecture": "cnn",
+      "width": 32,
+      "depth": 2,
+      "activation": "gelu",
+      "pooling": "max",
+      "dropout": 0.1,
+      "learning_rate": 0.001,
+      "weight_decay": 0.01,
+      "augmentation": "none",
+      "batch_size": 128,
+      "epochs": 100,
+      "head_width": 128,
+      "image_size": 9
+    },
+    {
+      "id": "cnn-07",
+      "architecture": "cnn",
+      "width": 64,
+      "depth": 3,
+      "activation": "relu",
+      "pooling": "none",
+      "dropout": 0.2,
+      "learning_rate": 0.001,
+      "weight_decay": 0.001,
+      "augmentation": "none",
+      "batch_size": 128,
+      "epochs": 100,
+      "head_width": 256,
+      "image_size": 9
+    },
+    {
+      "id": "cnn-08",
+      "architecture": "cnn",
+      "width": 32,
+      "depth": 3,
+      "activation": "gelu",
+      "pooling": "none",
+      "dropout": 0.2,
+      "learning_rate": 0.001,
+      "weight_decay": 0.001,
+      "augmentation": "mild_affine",
+      "batch_size": 128,
+      "epochs": 100,
+      "head_width": 128,
+      "image_size": 9
+    },
+    {
+      "id": "cnn-09",
+      "architecture": "cnn",
+      "width": 64,
+      "depth": 3,
+      "activation": "gelu",
+      "pooling": "none",
+      "dropout": 0.2,
+      "learning_rate": 0.001,
+      "weight_decay": 0.001,
+      "augmentation": "mild_affine",
+      "batch_size": 128,
+      "epochs": 100,
+      "head_width": 256,
+      "image_size": 9
+    },
+    {
+      "id": "cnn-10",
+      "architecture": "cnn",
+      "width": 64,
+      "depth": 4,
+      "activation": "gelu",
+      "pooling": "none",
+      "dropout": 0.2,
+      "learning_rate": 0.001,
+      "weight_decay": 0.001,
+      "augmentation": "mild_affine",
+      "batch_size": 128,
+      "epochs": 100,
+      "head_width": 256,
+      "image_size": 9
+    }
+  ],
+  "optimizer": "AdamW, betas=(0.9,0.999), eps=1e-8, no label smoothing",
+  "scheduler": "CosineAnnealingLR, horizon100 epochs, minimum2% of initial learning rate; step after each epoch",
+  "minibatches": "New seeded CUDA permutation every epoch; retain the final partial batch",
+  "normalization": "One mean and population standard deviation from unaugmented fit images only; max(std,1e-6)",
+  "augmentation": {
+    "mild_affine": {
+      "probability": 0.5,
+      "degrees": [
+        -8,
+        8
+      ],
+      "translation_pixels_per_axis": [
+        -0.35,
+        0.35
+      ],
+      "inverse_sampling_scale": [
+        0.94,
+        1.06
+      ],
+      "interpolation": "bilinear",
+      "padding": "zeros",
+      "align_corners": false,
+      "ordering": "raw pixels before normalization; training only; no input gradients"
+    }
+  },
+  "checkpoint_selection": [
+    "maximum validation correct count",
+    "minimum validation cross-entropy",
+    "minimum parameter count",
+    "earliest epoch"
+  ],
+  "initial_ranking": [
+    "maximum best-checkpoint validation correct count",
+    "minimum corresponding validation loss",
+    "minimum parameter count",
+    "configuration id"
+  ],
+  "replication": {
+    "top_initial_candidates": 3,
+    "additional_seeds": [
+      22,
+      33
+    ],
+    "same_split_and_schedule": true
+  },
+  "replicated_ranking": [
+    "maximum mean best-checkpoint validation correct across seeds11/22/33",
+    "minimum mean corresponding validation cross-entropy",
+    "minimum parameter count",
+    "configuration id"
+  ],
+  "refit_epoch_rule": "Median of the selected architecture best-checkpoint epochs for seeds11/22/33; preserve100-epoch cosine horizon",
+  "final_seed_rule": {
+    "primary_single_seed": 101,
+    "replication_seeds": [
+      102,
+      103
+    ],
+    "never_select_best_test_seed": true
+  },
+  "ensemble_rule": "For the preferred validation-ranked architecture, compare the float64 arithmetic mean of raw float32 validation logits from best checkpoints at seeds11/22/33 against the fixed primary seed11 checkpoint. Select the ensemble only for strictly higher validation correct count; ties favor the single model. Final ensemble uses the same frozen architecture/epoch at seeds101/102/103, averaged identically; primary single uses seed101. No learned weights or test-time augmentation.",
+  "phase_gate": "Search and replicate stop before any test arrays are opened; root must freeze architecture/epoch/seeds/ensemble policy before a separate refit or test process",
+  "determinism": {
+    "torch_use_deterministic_algorithms": true,
+    "cudnn_benchmark": false,
+    "cudnn_deterministic": true,
+    "tf32_matmul": false,
+    "tf32_cudnn": false,
+    "CUBLAS_WORKSPACE_CONFIG": ":4096:8",
+    "precision": "float32, no autocast"
+  },
+  "prohibited": [
+    "pretrained weights",
+    "historical checkpoints",
+    "test arrays during search",
+    "test-label model/seed/checkpoint selection",
+    "W&B integration",
+    "energy/runtime benchmark or IL translation"
+  ],
+  "split_file_sha256": "e0bef11a8ec70ed9a81e74bb58ea63a8cfa09ea6e7a21e5870d045458d1e0c81",
+  "container_image": "ghcr.io/ab-10/wikitext-bench@sha256:95de89319ba89c53a91d5440a5db4ff46f68b05031062c0a760ec3caa48dc42f"
+}

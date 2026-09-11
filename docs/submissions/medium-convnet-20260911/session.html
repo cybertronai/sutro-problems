@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="ConvNet architecture search on the canonical MNIST-medium dataset, with training-only selection and a separate test evaluation.">
+<title>MNIST-medium ConvNet session · Sutro problems</title><style>
+:root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
+*{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
+header{background:#103c47;color:white;padding:36px max(24px,calc((100vw - 1060px)/2)) 26px}
+header p{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#bfd9da}
+header .brand{font-size:27px;font-weight:680;margin:6px 0 18px}nav{display:flex;gap:9px;flex-wrap:wrap}
+nav a{color:#edf8f8;border:1px solid #5c8088;padding:6px 13px;border-radius:5px;text-decoration:none;font-size:14px}
+nav a.active{background:#fff;color:#103c47}main{max-width:1120px;margin:0 auto;padding:32px 30px 70px;background:white;min-height:60vh}
+h1{font:700 36px/1.2 Georgia,serif;letter-spacing:-.015em;margin:10px 0 24px}h2{font-size:24px;line-height:1.35;margin:38px 0 16px;border-top:1px solid var(--line);padding-top:24px}
+h3{font-size:19px;margin:28px 0 8px}p{margin:12px 0}a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
+code{font-size:.84em;background:#edf2f3;padding:2px 5px;border-radius:3px;overflow-wrap:anywhere}pre{padding:18px;overflow:auto;background:#edf2f3;border:1px solid var(--line);border-radius:6px;font-size:14px;line-height:1.5}
+pre code{padding:0;background:none;overflow-wrap:normal}table{border-collapse:collapse;display:block;max-width:100%;overflow:auto;margin:22px 0;font-size:15px}th,td{padding:10px 14px;border:1px solid var(--line);vertical-align:top}th{background:#eaf2f3;text-align:left}tr:nth-child(even) td{background:#f8fafb}
+blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;background:#fffaed}blockquote p{margin:6px 0}li{margin:9px 0}footer{max-width:1120px;margin:auto;padding:22px 30px 40px;font-size:13px;color:var(--muted)}.toc{padding:18px 24px;background:#f4f8f8;border:1px solid var(--line);border-radius:6px}.toc ul{margin:0;padding-left:20px}.toc li{margin:3px 0}.toc a{text-decoration:none}
+@media(max-width:600px){main{padding:24px 18px 44px}h1{font-size:29px}header{padding:24px 18px}table{font-size:13px}th,td{padding:8px}}
+main img{display:block;max-width:100%;height:auto}</style></head>
+<body><header><p>Sutro problems · Accuracy study · September 2026</p><div class="brand">MNIST-medium / ConvNet accuracy study</div><nav><a class="" href="index.html">Results & reproduction</a><a class="active" href="session.html">Session export</a><a class="" href="ambiguities.html">Ambiguities & problems</a></nav></header>
+<main><h1 id="mnist-medium-convnet-session">MNIST-medium ConvNet session</h1>
+<p>Exported at <strong>2026-09-11T05:15:44.970780+00:00</strong>. Session <code>01a08e2a-6729-7bb2-acf7-0b1561daea2a</code>.</p>
+<p>Visible user/assistant messages from the ConvNet accuracy-search request through the export cutoff. Internal reasoning, system/developer instructions, environment metadata and raw tool payloads are excluded. Measured results and selected commands are preserved separately in the report and source artifacts.</p>
+<p>This is a conversation export, not a reconstruction of private reasoning. It is a snapshot: publication checks after this cutoff are recorded in the accompanying report.</p>
+<h2 id="1-user-2026-09-11t045812579z">1. User · 2026-09-11T04:58:12.579Z</h2>
+<p>Try a ConvNet instead of an MLP for the MNIST medium submission, try a few various ones to get to 98% accuracy before starting on the measurement and translation.</p>
+<h2 id="2-assistant-2026-09-11t045815735z">2. Assistant · 2026-09-11T04:58:15.735Z</h2>
+<p>I’ll test several ConvNets for MNIST-medium, selecting architectures on a training-only validation split. I’ll check the frozen candidates against the 98% goal before starting translation or performance measurements.</p>
+<h2 id="3-assistant-2026-09-11t050031585z">3. Assistant · 2026-09-11T05:00:31.585Z</h2>
+<p>The earlier successful ConvNet used a different, larger training split, so its result doesn’t establish 98% on the current task. I’ve prepared an archive containing only the current training data for this search. I’m comparing several ConvNet sizes and mild augmentation, with test labels kept out of model selection.</p>
+<h2 id="4-assistant-2026-09-11t050109598z">4. Assistant · 2026-09-11T05:01:09.598Z</h2>
+<p>The first sweep will include the historically strongest ConvNet, wider and deeper versions, a pooled model, and augmentation variants. The best candidates will get additional training seeds before selection. I’ll report exact prediction counts when checking the threshold so rounding cannot hide a shortfall.</p>
+<h2 id="5-assistant-2026-09-11t050309377z">5. Assistant · 2026-09-11T05:03:09.377Z</h2>
+<p>The search plan is fixed at ten variants, followed by two extra seeds for the top three. I’m also checking a predefined three-model ensemble on validation data, so any decision to use it happens before test evaluation. No scoring or performance measurements have started.</p>
+<h2 id="6-assistant-2026-09-11t050551633z">6. Assistant · 2026-09-11T05:05:51.633Z</h2>
+<p>The training code and validation protocol are ready. Each candidate starts from fresh weights, and the search process receives no test arrays. The test evaluator is separate and will verify that all predictions are frozen before opening the labels.</p>
+<h2 id="7-assistant-2026-09-11t050703644z">7. Assistant · 2026-09-11T05:07:03.644Z</h2>
+<p>The first four ConvNets peak at 1,167–1,170 correct out of 1,200 on validation, below the 1,176 needed for 98%. Wider models haven’t helped so far. The pooled, ReLU, and augmented variants are still running; test evaluation remains unopened.</p>
+<h2 id="8-assistant-2026-09-11t050755874z">8. Assistant · 2026-09-11T05:07:55.874Z</h2>
+<p>Two augmented ConvNets have now exceeded 98% on validation: 1,177/1,200 for the 32-channel model and 1,178/1,200 for the 64-channel model. I’ve verified the saved results and am repeating the top three configurations with two additional seeds before choosing the final learner.</p>
+<h2 id="9-assistant-2026-09-11t051127786z">9. Assistant · 2026-09-11T05:11:27.786Z</h2>
+<p>The repeated runs favor the three-layer, 64-channel ConvNet with augmentation, though results vary by seed. The predefined rule selects a single model because the validation ensemble did not improve accuracy. That choice is now frozen, and I’m refitting it on all 6,000 training examples before the test check.</p>
+<h2 id="10-assistant-2026-09-11t051324604z">10. Assistant · 2026-09-11T05:13:24.604Z</h2>
+<p>The fixed three-ConvNet ensemble reached <strong>5,894/6,000 correct</strong>, clearing both 98% and the repository’s 98.14% threshold. The validation-selected single model scored 5,868/6,000, twelve short of 98%; one other predefined seed cleared 98% narrowly.</p>
+<p>I’m documenting that distinction and publishing the accuracy evidence, session export, and separate issues report. Translation and measurement remain deferred.</p>
+<h2 id="11-assistant-2026-09-11t051538654z">11. Assistant · 2026-09-11T05:15:38.654Z</h2>
+<p>The accuracy checks and report review are complete. I’m publishing the full comparison and reproduction artifacts. The report preserves the frozen single-model choice and separately records the ensemble’s passing result, including the fact that choosing it now would use information from the test evaluation.</p></main><footer>Accuracy feasibility study. Cost translation and complete-task performance measurements are separate stages. <a href="https://github.com/cybertronai/sutro-problems">Repository</a> · <a href="../">All submission reports</a></footer></body></html>

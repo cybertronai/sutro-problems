@@ -1,0 +1,56 @@
+{
+  "provenance": {
+    "selection_sha256": "f84dab5741df39bf8a91e6865edd56708f6c4d9e335432286477a18bc1ea5ee8",
+    "protocol_sha256": "67836b89de36ff69738dcbe45280792d78c7217e61ba8fc4efd37ba7530e571b",
+    "source_sha256": {
+      "runner.py": "a6d44bfce1fb19de6a876626770b2d0251e775c7bf96d89a47e2e69d2ee43999",
+      "modal_train.py": "88a592e836d444703c392fdbc56477fd0dbfa5751b561b02d6c815a50f7709d8",
+      "refit.py": "8880271b2ac5a60e0c0cdae465e2f6a65ae066ad289121ac06dd4ebb7327b46d"
+    },
+    "input_sha256": {
+      "test_images": "f121936f4b6b0c2eebef773444fc45e72832d1c84948a50969a909467d6b1003",
+      "train_images": "3c2c9d7cc3103e05c6e72e8b39ad7ae8f93fcbea8b23ac5f43ffacd9a9c4653b",
+      "train_labels": "91633f2c00fe471cb130fb6831c3d7dca5899bd926a1c899d873826dfd62e617"
+    },
+    "validation_selection_sha256": "486450ee103902c99660fee2ee861815944836087ff7488f7327c1671393ad21",
+    "allowed_input_arrays": [
+      "test_images",
+      "train_images",
+      "train_labels"
+    ],
+    "initialization": "fresh random parameters per fixed seed",
+    "checkpoint_inputs": []
+  },
+  "selected_name": "seed101",
+  "seeds": [
+    101,
+    102,
+    103
+  ],
+  "epochs": 71,
+  "config": {
+    "id": "cnn-09",
+    "architecture": "cnn",
+    "width": 64,
+    "depth": 3,
+    "activation": "gelu",
+    "pooling": "none",
+    "dropout": 0.2,
+    "learning_rate": 0.001,
+    "weight_decay": 0.001,
+    "augmentation": "mild_affine",
+    "batch_size": 128,
+    "epochs": 100,
+    "head_width": 256,
+    "image_size": 9
+  },
+  "ensemble_accumulation": "float64 arithmetic mean of three float32 raw-logit arrays",
+  "ensemble_predictions_sha256": "8d97de79ff161dfd75ef41e5b575127ab583496a777f6b5148589424e45e0dce",
+  "ensemble_logits_sha256": "607a6d1dc9746d36a9ca9f64218a0e25395a7c1e217fd4df1628a77cbb945d6f",
+  "ensemble_file_sha256": {
+    "logits-ensemble.npy": "8425e5b562a4c7b381186f45668b04eb61b8f1a3709f3b8757e8d340d25d82db",
+    "predictions-ensemble.npy": "8bcf58b1ffab74a7c8db6d6cbaafaee6c446e5a80469f2da9511017c0cd1caf4"
+  },
+  "test_labels_opened": false,
+  "completed_at_utc": "2026-09-11T05:12:32.054490+00:00"
+}

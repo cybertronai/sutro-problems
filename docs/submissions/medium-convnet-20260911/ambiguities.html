@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="ConvNet architecture search on the canonical MNIST-medium dataset, with training-only selection and a separate test evaluation.">
+<title>MNIST-medium ConvNet: ambiguities and problems · Sutro problems</title><style>
+:root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
+*{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
+header{background:#103c47;color:white;padding:36px max(24px,calc((100vw - 1060px)/2)) 26px}
+header p{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#bfd9da}
+header .brand{font-size:27px;font-weight:680;margin:6px 0 18px}nav{display:flex;gap:9px;flex-wrap:wrap}
+nav a{color:#edf8f8;border:1px solid #5c8088;padding:6px 13px;border-radius:5px;text-decoration:none;font-size:14px}
+nav a.active{background:#fff;color:#103c47}main{max-width:1120px;margin:0 auto;padding:32px 30px 70px;background:white;min-height:60vh}
+h1{font:700 36px/1.2 Georgia,serif;letter-spacing:-.015em;margin:10px 0 24px}h2{font-size:24px;line-height:1.35;margin:38px 0 16px;border-top:1px solid var(--line);padding-top:24px}
+h3{font-size:19px;margin:28px 0 8px}p{margin:12px 0}a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
+code{font-size:.84em;background:#edf2f3;padding:2px 5px;border-radius:3px;overflow-wrap:anywhere}pre{padding:18px;overflow:auto;background:#edf2f3;border:1px solid var(--line);border-radius:6px;font-size:14px;line-height:1.5}
+pre code{padding:0;background:none;overflow-wrap:normal}table{border-collapse:collapse;display:block;max-width:100%;overflow:auto;margin:22px 0;font-size:15px}th,td{padding:10px 14px;border:1px solid var(--line);vertical-align:top}th{background:#eaf2f3;text-align:left}tr:nth-child(even) td{background:#f8fafb}
+blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;background:#fffaed}blockquote p{margin:6px 0}li{margin:9px 0}footer{max-width:1120px;margin:auto;padding:22px 30px 40px;font-size:13px;color:var(--muted)}.toc{padding:18px 24px;background:#f4f8f8;border:1px solid var(--line);border-radius:6px}.toc ul{margin:0;padding-left:20px}.toc li{margin:3px 0}.toc a{text-decoration:none}
+@media(max-width:600px){main{padding:24px 18px 44px}h1{font-size:29px}header{padding:24px 18px}table{font-size:13px}th,td{padding:8px}}
+main img{display:block;max-width:100%;height:auto}</style></head>
+<body><header><p>Sutro problems · Accuracy study · September 2026</p><div class="brand">MNIST-medium / ConvNet accuracy study</div><nav><a class="" href="index.html">Results & reproduction</a><a class="" href="session.html">Session export</a><a class="active" href="ambiguities.html">Ambiguities & problems</a></nav></header>
+<main><h1 id="mnist-medium-convnet-ambiguities-and-problems">MNIST-medium ConvNet: ambiguities and problems</h1>
+<p>This is an accuracy feasibility study on canonical MNIST-medium. Cost translation and complete-task performance measurements are separate stages.</p>
+<h2 id="two-accuracy-thresholds">Two accuracy thresholds</h2>
+<p>The requested <strong>98%</strong> goal requires <strong>5,880 / 6,000 correct</strong>. The repository's <strong>98.14%</strong> requirement requires <strong>5,889 / 6,000 correct</strong>. Both checks must use exact counts: a rounded percentage can hide the difference. This study does not change the repository's threshold.</p>
+<h2 id="the-passing-ensemble-was-not-the-validation-winner">The passing ensemble was not the validation winner</h2>
+<p>The predeclared ensemble scored <strong>5,894 / 6,000</strong>, meeting both thresholds. The validation-selected primary single model scored <strong>5,868 / 6,000</strong>, missing 98% by 12 predictions. Individual seeds 102 and 103 scored <strong>5,876</strong> and <strong>5,882</strong>; only the latter clears 98%, by two predictions, and none of the individual models clears 98.14%. The ensemble used fixed membership and averaging before evaluation, but validation had selected a single model. Promoting the ensemble now would be a test-informed choice, not a validation-selected passing submission. No such change has been made to the frozen selection.</p>
+<p>These results support feasibility on this fixed dataset, with limited margin and noticeable seed variation. The same public test set was used for the previous MLP attempt; this search isolated the test arrays from tuning, but the overall benchmark is not a blind evaluation service.</p>
+<h2 id="historical-data-and-weights">Historical data and weights</h2>
+<p>The historical ConvNet evaluation used a different 10,000 / 10,000 dataset. Its training set includes <strong>4,000 of the current 6,000 test examples</strong>. Historical learned weights would therefore contaminate this evaluation. The new search borrows architecture ideas and trains every candidate from scratch using only the current permitted training data.</p>
+<h2 id="validation-selection-and-seed-variability">Validation selection and seed variability</h2>
+<p>Trying several architectures, augmentation settings, checkpoints, and seeds makes the best validation result optimistic. Repeating promising configurations checks seed sensitivity but does not create an independent validation set. A 1,200-example validation set has only 24 errors at 98%, so a few examples can change the ranking.</p>
+<p>Final configurations, stopping epochs, seeds, and any ensemble membership must be frozen before test evaluation. All predeclared final seeds should be reported; choosing a favorable seed after test evaluation would be test-informed selection. Further experiments selected using these test results would require that disclosure.</p>
+<p>An ensemble's result must be distinguished from individual-model results. Its eventual cost must include training and evaluating every constituent model. Neither one successful seed nor an ensemble establishes that every training seed meets the accuracy target.</p>
+<h2 id="accuracy-does-not-yet-establish-a-scored-submission">Accuracy does not yet establish a scored submission</h2>
+<p>Native PyTorch accuracy is not yet a Dally-model implementation. Translation needs explicit arithmetic and the complete algorithm: initialization, augmentation, optimization, training, and prediction. Batch normalization, GELU, AdamW, and image interpolation introduce operations and numerical choices absent from the earlier MLP representation. Simplifying or approximating those operations can change predictions, so any translated implementation must be evaluated again.</p>
+<p>A compact representation can avoid enumerating every instruction during scoring, but its totals still need to account for all expanded operations and memory accesses. This accuracy phase does not establish that a suitable translation exists or that it can be scored efficiently.</p>
+<p>The A100 used for training is an experiment resource. Search/refit durations are operational records, not benchmark time or energy measurements. Unmeasured metrics must remain unmeasured. When that stage proceeds, execution time uses <strong>ms</strong>, energy <strong>mJ</strong>, occupied scratch area <strong>mm²</strong>, and time to score <strong>s</strong>, with two significant figures in human-readable tables.</p>
+<ul>
+<li><a href="index.html">Accuracy study</a></li>
+<li><a href="session.html">Visible session export</a></li>
+</ul></main><footer>Accuracy feasibility study. Cost translation and complete-task performance measurements are separate stages. <a href="https://github.com/cybertronai/sutro-problems">Repository</a> · <a href="../">All submission reports</a></footer></body></html>
