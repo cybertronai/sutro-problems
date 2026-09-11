@@ -11,12 +11,14 @@ tier, contributors, test accuracy (`correct` / `total`), dataset checksum, and a
 W&B runs.
 
 Add a row to the matching tier's results table on the [MNIST page](README.md),
-with a link to its standalone report. Keep the MNIST page to tier headings and
-submission tables: show **Accuracy** as a percentage only, with **Time**, **Energy**, **Area**, **Time to score**,
+with a link to its standalone report. Preserve the MNIST page’s task outline,
+dataset definitions, model, submission instructions, and competition diagram.
+Keep individual submission entries concise: show **Accuracy** as a percentage
+only, with **Time**, **Energy**, **Area**, **Time to score**,
 **Time on A100**, and **Energy on A100**, giving units, metric definitions,
-measurement commands, and hardware/software versions in the report. Put exact
-`correct` / `total` counts, qualification notes, footnotes, and all other commentary
-in the individual report, not the MNIST page. Use an em dash for unmeasured values;
+measurement commands, and hardware/software versions in the report. Put
+per-submission `correct` / `total` counts, qualification notes, measurement
+footnotes, and other submission-specific commentary in the individual report. Use an em dash for unmeasured values;
 do not substitute estimates for measurements without labeling them.
 
 The [competition sketch](doc/competition-overview.png) illustrates the
