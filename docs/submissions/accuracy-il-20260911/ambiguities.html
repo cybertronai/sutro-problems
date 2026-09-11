@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="MNIST-small higher-accuracy experiments and compact affine-loop scoring, with uniform ps and fJ units.">
+<meta name="description" content="MNIST-small higher-accuracy experiments and compact affine-loop scoring, with execution time in ms, energy in mJ, and scoring time in s.">
 <title>Ambiguities and remaining work · Sutro problems</title><style>
 :root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
 *{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
@@ -31,7 +31,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <tbody>
 <tr>
 <td>Mixed units and excess digits</td>
-<td>Fixed in the MNIST README and current results report: time uses ps, energy uses fJ, and performance displays use two significant figures. Historical session messages and raw machine-readable evidence retain their original wording and precision.</td>
+<td>Fixed in the MNIST README and current results report: execution time uses ms, energy uses mJ, and time to score uses s, and performance displays use two significant figures. Historical session messages and raw machine-readable evidence retain their original wording and precision.</td>
 </tr>
 <tr>
 <td>Rounded percentages near a target</td>
@@ -83,7 +83,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 </tr>
 <tr>
 <td>Energy and time relationship</td>
-<td>Uniform ps and fJ remove unit-conversion friction. Energy still depends on power: E(fJ) = 1000 × P(W) × t(ps). Model costs and measured idle-adjusted energy are distinct quantities even when displayed on the same unit scale.</td>
+<td>Matching ms and mJ units remove unit-conversion friction between model and hardware. Energy still depends on power: E(mJ) = P(W) × t(ms). Model costs and measured idle-adjusted energy are distinct quantities even when displayed on the same unit scale.</td>
 </tr>
 </tbody>
 </table>

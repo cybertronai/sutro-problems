@@ -4,15 +4,15 @@
 
 **A 60% accuracy target looks feasible on this fixed dataset.** A 32-hidden-unit network trained for 300 epochs cleared it with all three predeclared seeds. A 65% target was reached by only one run; 70% and 75% were not reached. This finite search does not establish an upper limit on accuracy.
 
-**Scoring the training algorithm is practical with a compact intermediate language.** The tested neural networks represent up to 24 billion primitive instructions, yet exact cost aggregation takes about 1.3 × 10¹¹ ps. Numerical training and accuracy verification are separate. These MLPs have no measured A100 runtime or energy yet.
+**Scoring the training algorithm is practical with a compact intermediate language.** The tested neural networks represent up to 24 billion primitive instructions, yet exact cost aggregation takes about 0.13 s. Numerical training and accuracy verification are separate. These MLPs have no measured A100 runtime or energy yet.
 
 [TOC]
 
 ## One display convention
 
-All performance tables use **picoseconds (ps)** for time and **femtojoules (fJ)** for energy, with **two significant figures**. Prediction counts, model dimensions, and exact target thresholds retain their integer values. Raw JSON preserves full measurements and exact integer cost totals.
+Execution times use **milliseconds (ms)**, energies use **millijoules (mJ)**, and **time to score uses seconds (s)**, with **two significant figures**. Prediction counts, model dimensions, and exact target thresholds retain their integer values. Raw JSON preserves full measurements and exact integer cost totals.
 
-A picosecond is 10⁻¹² seconds; a femtojoule is 10⁻¹⁵ joules. They measure different quantities, related by **E(fJ) = 1000 × P(W) × t(ps)**. At 1 mW, the numerical values of energy in fJ and time in ps are equal. Common units let model and hardware values be compared without a hidden unit conversion; they do not equate their measurement boundaries.
+Energy and time use matching milli prefixes: **E(mJ) = P(W) × t(ms)**. At 1 W, their numerical values are equal. Model and measured execution share ms and mJ; host scoring work is shown separately in s. The raw scorer retains exact internal ps ticks and fJ counts, converted only for display.
 
 ## Higher accuracy results
 
@@ -42,14 +42,14 @@ The original 1NN baseline scored **308/600 (51%)**. All neural-network configura
 
 Every MLP score includes explicit scratch initialization, dataset tape operations, pixel transformation, one-hot target construction, initial weight writes, all training updates, inference, and output selection. Costs use the same pinned Dally v4 conventions as the 1NN baseline. Area is occupied scratch-cell area with the declared fixed placement.
 
-| Configuration | Model time (ps) | Model energy (fJ) | Area (µm²) |
+| Configuration | Model time (ms) | Model energy (mJ) | Area (µm²) |
 | --- | ---: | ---: | ---: |
-| Original 1NN | 1.7 × 10⁹ | 1.9 × 10⁹ | 6.0 × 10³ |
-| H32 · 100 epochs | 3.1 × 10¹⁰ | 3.8 × 10¹⁰ | 2.0 × 10⁴ |
-| H32 · 300 epochs | 9.3 × 10¹⁰ | 1.1 × 10¹¹ | 2.0 × 10⁴ |
-| H32 · 1,000 epochs | 3.1 × 10¹¹ | 3.8 × 10¹¹ | 2.0 × 10⁴ |
-| H32 · 10,000 epochs | 3.1 × 10¹² | 3.8 × 10¹² | 2.0 × 10⁴ |
-| H128 · 3,000 epochs | 4.0 × 10¹² | 6.1 × 10¹² | 2.8 × 10⁴ |
+| Original 1NN | 1.7 | 0.0019 | 6.0 × 10³ |
+| H32 · 100 epochs | 31 | 0.038 | 2.0 × 10⁴ |
+| H32 · 300 epochs | 93 | 0.11 | 2.0 × 10⁴ |
+| H32 · 1,000 epochs | 310 | 0.38 | 2.0 × 10⁴ |
+| H32 · 10,000 epochs | 3100 | 3.8 | 2.0 × 10⁴ |
+| H128 · 3,000 epochs | 4000 | 6.1 | 2.8 × 10⁴ |
 
 All three seeds of each configuration have identical model costs: only the seed-dependent literal bits differ. The learner uses separately rounded FP32 multiplication and addition with ascending reduction order. The cost model charges memory reads and writes; it is not a hardware power simulator.
 
@@ -57,37 +57,37 @@ All three seeds of each configuration have identical model costs: only the seed-
 
 These timings include schema, address-bound and initialization checks, placement, exact access histograms, integer cost sums, and canonical program hashing. They exclude JSON loading, file output, numerical training, and accuracy verification. Each timing is the median of five complete scoring calls on the same host and Python environment.
 
-| Configuration | Expanded instructions | Compact JSON bytes | Static scoring time (ps) |
+| Configuration | Expanded instructions | Compact JSON bytes | Time to score (s) |
 | --- | ---: | ---: | ---: |
-| Original 1NN | 1.1 × 10⁷ | 8.8 × 10³ | 1.9 × 10¹⁰ |
-| H32 · 100 epochs | 2.1 × 10⁸ | 1.8 × 10⁵ | 7.9 × 10¹⁰ |
-| H32 · 300 epochs | 6.2 × 10⁸ | 1.8 × 10⁵ | 7.8 × 10¹⁰ |
-| H32 · 1,000 epochs | 2.1 × 10⁹ | 1.8 × 10⁵ | 7.9 × 10¹⁰ |
-| H32 · 10,000 epochs | 2.1 × 10¹⁰ | 1.8 × 10⁵ | 7.8 × 10¹⁰ |
-| H128 · 3,000 epochs | 2.4 × 10¹⁰ | 4.6 × 10⁵ | 1.3 × 10¹¹ |
+| Original 1NN | 1.1 × 10⁷ | 8.8 × 10³ | 0.019 |
+| H32 · 100 epochs | 2.1 × 10⁸ | 1.8 × 10⁵ | 0.079 |
+| H32 · 300 epochs | 6.2 × 10⁸ | 1.8 × 10⁵ | 0.078 |
+| H32 · 1,000 epochs | 2.1 × 10⁹ | 1.8 × 10⁵ | 0.079 |
+| H32 · 10,000 epochs | 2.1 × 10¹⁰ | 1.8 × 10⁵ | 0.078 |
+| H128 · 3,000 epochs | 2.4 × 10¹⁰ | 4.6 × 10⁵ | 0.13 |
 
 At fixed width H32, increasing training from 100 to 10,000 epochs multiplies the training cost by 100 while the static scoring time stays nearly constant. The epoch loop changes repetition count, not accessed addresses. The compact representation does not forgive the repeated work: each occurrence contributes its full v4 cost.
 
-The original 1NN interpreter took about **3.5 × 10¹³ ps** while also executing each FP32 instruction. That is a different workload from static cost evaluation. The new number is not an end-to-end verification speedup. A separate scaling stress test, without an accuracy claim, also scored a 41-billion-instruction program; raw measurements use a separately recorded Python/NumPy environment.
+The original 1NN interpreter took about **35 s** while also executing each FP32 instruction. That is a different workload from static cost evaluation. The new number is not an end-to-end verification speedup. A separate scaling stress test, without an accuracy claim, also scored a 41-billion-instruction program; raw measurements use a separately recorded Python/NumPy environment.
 
 ## Measured execution and comparison boundaries
 
 For context, the CPU reference actually performed training and inference. The table gives the range across the three final seeds. Timing begins after input transformation, one-hot conversion, and parameter initialization; it excludes the independent ordered-reduction checks. Those operations are included in the theoretical IL costs above. CPU energy was not measured.
 
-| Configuration | CPU reference training + inference time (ps) | A100 time / energy |
+| Configuration | CPU reference training + inference time (ms) | A100 time / energy |
 | --- | ---: | --- |
-| H32 · 100 epochs | 2.1 × 10¹¹ | Not measured |
-| H32 · 300 epochs | 6.2 × 10¹¹–6.3 × 10¹¹ | Not measured |
-| H32 · 1,000 epochs | 2.1 × 10¹² | Not measured |
-| H32 · 10,000 epochs | 2.1 × 10¹³ | Not measured |
-| H128 · 3,000 epochs | 1.1 × 10¹³ | Not measured |
+| H32 · 100 epochs | 210 | Not measured |
+| H32 · 300 epochs | 620–630 | Not measured |
+| H32 · 1,000 epochs | 2100 | Not measured |
+| H32 · 10,000 epochs | 21000 | Not measured |
+| H128 · 3,000 epochs | 11000 | Not measured |
 
 The already measured **1NN** comparison remains:
 
 | Quantity | Dally model | A100 measured |
 | --- | ---: | ---: |
-| Time (ps) | 1.7 × 10⁹ | 6.9 × 10⁶ |
-| Energy (fJ) | 1.9 × 10⁹ | 5.2 × 10¹¹ |
+| Time (ms) | 1.7 | 0.0069 |
+| Energy (mJ) | 0.0019 | 0.52 |
 
 A100 values are GPU-resident steady-state complete-task throughput and idle-adjusted NVML energy, including training memorization. Host transfer, compilation, warm-up, and idle baseline selection have different boundaries. See the original submission for raw trials and baseline sensitivity. No A100 values have been extrapolated to the MLPs.
 
@@ -104,7 +104,7 @@ The prototype deliberately restricts programs to fixed control flow and affine a
 - **Original 1NN:** the compact program expands byte-for-byte to the original 220 MB v4 trace. Exact model time, energy, opcode counts, and all 6,014 per-address read/write counts agree.
 - **General scorer:** 11 tests cover independent enumeration, negative strides, overlapping addresses, aliases, selection, initialization, bounds, tape semantics, overflow, and a small multi-batch MLP.
 - **MLP lowering:** two complete small training/inference programs were expanded and executed in the original interpreter with explicit comparison predicates. Every learned parameter bit, output prediction, instruction count, and model score matched the ordered reference.
-- **Full training arithmetic:** the validation-best H32 / 10,000-epoch / seed-101 run was independently repeated with explicit ordered FP32 reductions. All final parameter bits and all 600 output score vectors matched. The comparison took about **1.4 × 10¹⁴ ps**.
+- **Full training arithmetic:** the validation-best H32 / 10,000-epoch / seed-101 run was independently repeated with explicit ordered FP32 reductions. All final parameter bits and all 600 output score vectors matched. The comparison took about **140,000 ms**.
 - **Every final run:** all 600 final score vectors matched explicit ordered reductions. Canonical dataset hashes, source hashes, prediction arrays, selection plans, and chronology are saved.
 
 The full 24-billion-instruction MLP trace was not expanded and interpreted. The evidence combines independent scorer checks, small end-to-end lowering checks, source review, and a full ordered numerical training check. Official acceptance of the IL and a complete MLP A100 submission remain future work.

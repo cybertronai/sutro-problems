@@ -26,7 +26,7 @@ def render(source, current):
     style = base.STYLE + '\n@media(max-width:600px){header .brand{font-size:22px}th,td{padding:7px}table{font-size:12px}}'
     return f'''<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="MNIST-small higher-accuracy experiments and compact affine-loop scoring, with uniform ps and fJ units.">
+<meta name="description" content="MNIST-small higher-accuracy experiments and compact affine-loop scoring, with execution time in ms, energy in mJ, and scoring time in s.">
 <title>{html.escape(title)} · Sutro problems</title><style>{style}</style></head>
 <body><header><p>Sutro problems · Feasibility study · September 2026</p>
 <div class="brand">MNIST-small / Higher accuracy &amp; compact scoring</div><nav>{nav}</nav></header>

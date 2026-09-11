@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="description" content="MNIST-small higher-accuracy experiments and compact affine-loop scoring, with uniform ps and fJ units.">
+<meta name="description" content="MNIST-small higher-accuracy experiments and compact affine-loop scoring, with execution time in ms, energy in mJ, and scoring time in s.">
 <title>Higher accuracy, practical scoring · Sutro problems</title><style>
 :root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
 *{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
@@ -22,7 +22,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <main><h1 id="higher-accuracy-practical-scoring">Higher accuracy, practical scoring</h1>
 <p><strong>MNIST-small · exploratory results · 11 September 2026</strong></p>
 <p><strong>A 60% accuracy target looks feasible on this fixed dataset.</strong> A 32-hidden-unit network trained for 300 epochs cleared it with all three predeclared seeds. A 65% target was reached by only one run; 70% and 75% were not reached. This finite search does not establish an upper limit on accuracy.</p>
-<p><strong>Scoring the training algorithm is practical with a compact intermediate language.</strong> The tested neural networks represent up to 24 billion primitive instructions, yet exact cost aggregation takes about 1.3 × 10¹¹ ps. Numerical training and accuracy verification are separate. These MLPs have no measured A100 runtime or energy yet.</p>
+<p><strong>Scoring the training algorithm is practical with a compact intermediate language.</strong> The tested neural networks represent up to 24 billion primitive instructions, yet exact cost aggregation takes about 0.13 s. Numerical training and accuracy verification are separate. These MLPs have no measured A100 runtime or energy yet.</p>
 <div class="toc">
 <ul>
 <li><a href="#higher-accuracy-practical-scoring">Higher accuracy, practical scoring</a><ul>
@@ -39,8 +39,8 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 </ul>
 </div>
 <h2 id="one-display-convention">One display convention</h2>
-<p>All performance tables use <strong>picoseconds (ps)</strong> for time and <strong>femtojoules (fJ)</strong> for energy, with <strong>two significant figures</strong>. Prediction counts, model dimensions, and exact target thresholds retain their integer values. Raw JSON preserves full measurements and exact integer cost totals.</p>
-<p>A picosecond is 10⁻¹² seconds; a femtojoule is 10⁻¹⁵ joules. They measure different quantities, related by <strong>E(fJ) = 1000 × P(W) × t(ps)</strong>. At 1 mW, the numerical values of energy in fJ and time in ps are equal. Common units let model and hardware values be compared without a hidden unit conversion; they do not equate their measurement boundaries.</p>
+<p>Execution times use <strong>milliseconds (ms)</strong>, energies use <strong>millijoules (mJ)</strong>, and <strong>time to score uses seconds (s)</strong>, with <strong>two significant figures</strong>. Prediction counts, model dimensions, and exact target thresholds retain their integer values. Raw JSON preserves full measurements and exact integer cost totals.</p>
+<p>Energy and time use matching milli prefixes: <strong>E(mJ) = P(W) × t(ms)</strong>. At 1 W, their numerical values are equal. Model and measured execution share ms and mJ; host scoring work is shown separately in s. The raw scorer retains exact internal ps ticks and fJ counts, converted only for display.</p>
 <h2 id="higher-accuracy-results">Higher accuracy results</h2>
 <p>Each count below is correct predictions out of the same 600 test examples, in seed order 101 / 102 / 103. The shortlist and all 15 prediction arrays were frozen before test evaluation. Means and sample standard deviations describe seed variation on this fixed test set, not population uncertainty.</p>
 <table>
@@ -135,46 +135,46 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <thead>
 <tr>
 <th>Configuration</th>
-<th style="text-align: right;">Model time (ps)</th>
-<th style="text-align: right;">Model energy (fJ)</th>
+<th style="text-align: right;">Model time (ms)</th>
+<th style="text-align: right;">Model energy (mJ)</th>
 <th style="text-align: right;">Area (µm²)</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Original 1NN</td>
-<td style="text-align: right;">1.7 × 10⁹</td>
-<td style="text-align: right;">1.9 × 10⁹</td>
+<td style="text-align: right;">1.7</td>
+<td style="text-align: right;">0.0019</td>
 <td style="text-align: right;">6.0 × 10³</td>
 </tr>
 <tr>
 <td>H32 · 100 epochs</td>
-<td style="text-align: right;">3.1 × 10¹⁰</td>
-<td style="text-align: right;">3.8 × 10¹⁰</td>
+<td style="text-align: right;">31</td>
+<td style="text-align: right;">0.038</td>
 <td style="text-align: right;">2.0 × 10⁴</td>
 </tr>
 <tr>
 <td>H32 · 300 epochs</td>
-<td style="text-align: right;">9.3 × 10¹⁰</td>
-<td style="text-align: right;">1.1 × 10¹¹</td>
+<td style="text-align: right;">93</td>
+<td style="text-align: right;">0.11</td>
 <td style="text-align: right;">2.0 × 10⁴</td>
 </tr>
 <tr>
 <td>H32 · 1,000 epochs</td>
-<td style="text-align: right;">3.1 × 10¹¹</td>
-<td style="text-align: right;">3.8 × 10¹¹</td>
+<td style="text-align: right;">310</td>
+<td style="text-align: right;">0.38</td>
 <td style="text-align: right;">2.0 × 10⁴</td>
 </tr>
 <tr>
 <td>H32 · 10,000 epochs</td>
-<td style="text-align: right;">3.1 × 10¹²</td>
-<td style="text-align: right;">3.8 × 10¹²</td>
+<td style="text-align: right;">3100</td>
+<td style="text-align: right;">3.8</td>
 <td style="text-align: right;">2.0 × 10⁴</td>
 </tr>
 <tr>
 <td>H128 · 3,000 epochs</td>
-<td style="text-align: right;">4.0 × 10¹²</td>
-<td style="text-align: right;">6.1 × 10¹²</td>
+<td style="text-align: right;">4000</td>
+<td style="text-align: right;">6.1</td>
 <td style="text-align: right;">2.8 × 10⁴</td>
 </tr>
 </tbody>
@@ -188,7 +188,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <th>Configuration</th>
 <th style="text-align: right;">Expanded instructions</th>
 <th style="text-align: right;">Compact JSON bytes</th>
-<th style="text-align: right;">Static scoring time (ps)</th>
+<th style="text-align: right;">Time to score (s)</th>
 </tr>
 </thead>
 <tbody>
@@ -196,76 +196,76 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <td>Original 1NN</td>
 <td style="text-align: right;">1.1 × 10⁷</td>
 <td style="text-align: right;">8.8 × 10³</td>
-<td style="text-align: right;">1.9 × 10¹⁰</td>
+<td style="text-align: right;">0.019</td>
 </tr>
 <tr>
 <td>H32 · 100 epochs</td>
 <td style="text-align: right;">2.1 × 10⁸</td>
 <td style="text-align: right;">1.8 × 10⁵</td>
-<td style="text-align: right;">7.9 × 10¹⁰</td>
+<td style="text-align: right;">0.079</td>
 </tr>
 <tr>
 <td>H32 · 300 epochs</td>
 <td style="text-align: right;">6.2 × 10⁸</td>
 <td style="text-align: right;">1.8 × 10⁵</td>
-<td style="text-align: right;">7.8 × 10¹⁰</td>
+<td style="text-align: right;">0.078</td>
 </tr>
 <tr>
 <td>H32 · 1,000 epochs</td>
 <td style="text-align: right;">2.1 × 10⁹</td>
 <td style="text-align: right;">1.8 × 10⁵</td>
-<td style="text-align: right;">7.9 × 10¹⁰</td>
+<td style="text-align: right;">0.079</td>
 </tr>
 <tr>
 <td>H32 · 10,000 epochs</td>
 <td style="text-align: right;">2.1 × 10¹⁰</td>
 <td style="text-align: right;">1.8 × 10⁵</td>
-<td style="text-align: right;">7.8 × 10¹⁰</td>
+<td style="text-align: right;">0.078</td>
 </tr>
 <tr>
 <td>H128 · 3,000 epochs</td>
 <td style="text-align: right;">2.4 × 10¹⁰</td>
 <td style="text-align: right;">4.6 × 10⁵</td>
-<td style="text-align: right;">1.3 × 10¹¹</td>
+<td style="text-align: right;">0.13</td>
 </tr>
 </tbody>
 </table>
 <p>At fixed width H32, increasing training from 100 to 10,000 epochs multiplies the training cost by 100 while the static scoring time stays nearly constant. The epoch loop changes repetition count, not accessed addresses. The compact representation does not forgive the repeated work: each occurrence contributes its full v4 cost.</p>
-<p>The original 1NN interpreter took about <strong>3.5 × 10¹³ ps</strong> while also executing each FP32 instruction. That is a different workload from static cost evaluation. The new number is not an end-to-end verification speedup. A separate scaling stress test, without an accuracy claim, also scored a 41-billion-instruction program; raw measurements use a separately recorded Python/NumPy environment.</p>
+<p>The original 1NN interpreter took about <strong>35 s</strong> while also executing each FP32 instruction. That is a different workload from static cost evaluation. The new number is not an end-to-end verification speedup. A separate scaling stress test, without an accuracy claim, also scored a 41-billion-instruction program; raw measurements use a separately recorded Python/NumPy environment.</p>
 <h2 id="measured-execution-and-comparison-boundaries">Measured execution and comparison boundaries</h2>
 <p>For context, the CPU reference actually performed training and inference. The table gives the range across the three final seeds. Timing begins after input transformation, one-hot conversion, and parameter initialization; it excludes the independent ordered-reduction checks. Those operations are included in the theoretical IL costs above. CPU energy was not measured.</p>
 <table>
 <thead>
 <tr>
 <th>Configuration</th>
-<th style="text-align: right;">CPU reference training + inference time (ps)</th>
+<th style="text-align: right;">CPU reference training + inference time (ms)</th>
 <th>A100 time / energy</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>H32 · 100 epochs</td>
-<td style="text-align: right;">2.1 × 10¹¹</td>
+<td style="text-align: right;">210</td>
 <td>Not measured</td>
 </tr>
 <tr>
 <td>H32 · 300 epochs</td>
-<td style="text-align: right;">6.2 × 10¹¹–6.3 × 10¹¹</td>
+<td style="text-align: right;">620–630</td>
 <td>Not measured</td>
 </tr>
 <tr>
 <td>H32 · 1,000 epochs</td>
-<td style="text-align: right;">2.1 × 10¹²</td>
+<td style="text-align: right;">2100</td>
 <td>Not measured</td>
 </tr>
 <tr>
 <td>H32 · 10,000 epochs</td>
-<td style="text-align: right;">2.1 × 10¹³</td>
+<td style="text-align: right;">21000</td>
 <td>Not measured</td>
 </tr>
 <tr>
 <td>H128 · 3,000 epochs</td>
-<td style="text-align: right;">1.1 × 10¹³</td>
+<td style="text-align: right;">11000</td>
 <td>Not measured</td>
 </tr>
 </tbody>
@@ -281,14 +281,14 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 </thead>
 <tbody>
 <tr>
-<td>Time (ps)</td>
-<td style="text-align: right;">1.7 × 10⁹</td>
-<td style="text-align: right;">6.9 × 10⁶</td>
+<td>Time (ms)</td>
+<td style="text-align: right;">1.7</td>
+<td style="text-align: right;">0.0069</td>
 </tr>
 <tr>
-<td>Energy (fJ)</td>
-<td style="text-align: right;">1.9 × 10⁹</td>
-<td style="text-align: right;">5.2 × 10¹¹</td>
+<td>Energy (mJ)</td>
+<td style="text-align: right;">0.0019</td>
+<td style="text-align: right;">0.52</td>
 </tr>
 </tbody>
 </table>
@@ -302,7 +302,7 @@ blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;backgro
 <li><strong>Original 1NN:</strong> the compact program expands byte-for-byte to the original 220 MB v4 trace. Exact model time, energy, opcode counts, and all 6,014 per-address read/write counts agree.</li>
 <li><strong>General scorer:</strong> 11 tests cover independent enumeration, negative strides, overlapping addresses, aliases, selection, initialization, bounds, tape semantics, overflow, and a small multi-batch MLP.</li>
 <li><strong>MLP lowering:</strong> two complete small training/inference programs were expanded and executed in the original interpreter with explicit comparison predicates. Every learned parameter bit, output prediction, instruction count, and model score matched the ordered reference.</li>
-<li><strong>Full training arithmetic:</strong> the validation-best H32 / 10,000-epoch / seed-101 run was independently repeated with explicit ordered FP32 reductions. All final parameter bits and all 600 output score vectors matched. The comparison took about <strong>1.4 × 10¹⁴ ps</strong>.</li>
+<li><strong>Full training arithmetic:</strong> the validation-best H32 / 10,000-epoch / seed-101 run was independently repeated with explicit ordered FP32 reductions. All final parameter bits and all 600 output score vectors matched. The comparison took about <strong>140,000 ms</strong>.</li>
 <li><strong>Every final run:</strong> all 600 final score vectors matched explicit ordered reductions. Canonical dataset hashes, source hashes, prediction arrays, selection plans, and chronology are saved.</li>
 </ul>
 <p>The full 24-billion-instruction MLP trace was not expanded and interpreted. The evidence combines independent scorer checks, small end-to-end lowering checks, source review, and a full ordered numerical training check. Official acceptance of the IL and a complete MLP A100 submission remain future work.</p>

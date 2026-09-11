@@ -36,7 +36,7 @@ For every primitive leaf, the scorer knows its enclosing loop domains. Their Car
 
 For an affine operand, each referenced loop contributes an arithmetic-progression histogram of addresses. Discrete convolution combines these histograms, including overlapping addresses and negative strides. A sliding-window implementation performs the convolution without enumerating the Cartesian product. Loops absent from the address merely multiply its access counts. The resulting vectors specify exact read/write multiplicities at each concrete scratch address; no fitted coefficient or learner-specific cost formula is accepted as input.
 
-With `h = |x| + y` for each cell, the aggregate score is:
+The scorer retains exact native units internally; reports convert time to ms and energy to mJ, with scoring runtime in s. With `h = |x| + y` for each cell, the internal aggregate score is:
 
 - Energy: `(reads + writes) * max(50, 2*h)` fJ.
 - Read time: `reads * max(250, 4*h)` ticks, where one tick is 0.2 ps.
@@ -63,7 +63,7 @@ The score reports input/output tape lengths but does not establish that the prog
 
 The compact 1NN has 17 primitive leaf nodes and 24 total nodes. It describes the same 11,171,400 instructions and 33,475,800 charged accesses as the original submission. Its exact scores are unchanged. The human-facing report rounds display values; machine-readable score artifacts preserve exact integers for verification.
 
-Static scoring, including schema, bounds and initialization checking, placement, histograms, integer cost sums, and canonical hashing, takes roughly 2.0 × 10¹⁰ ps on this host. The earlier interpreter took roughly 3.5 × 10¹³ ps while also executing every FP32 instruction and checking its inputs and outputs. These timings have different scopes: the compact result demonstrates inexpensive cost evaluation, not a measured end-to-end speedup of complete submission verification. Program loading and file output are excluded from both reported static timings. Repeated measurements and runtime metadata are recorded in `il-benchmark.json`. The MLP scaling experiment in `il-scaling.json` describes 100 million to 41 billion dynamic instructions at widths 16, 32, and 64 and epoch counts 100, 1,000, and 10,000. Median static scoring time stays about 8.0 × 10¹⁰–1.1 × 10¹¹ ps across those cases. These are scoring workloads, not additional accuracy measurements; no accuracy is claimed for these parameter combinations.
+Static scoring, including schema, bounds and initialization checking, placement, histograms, integer cost sums, and canonical hashing, takes roughly 0.020 s on this host. The earlier interpreter took roughly 35 s while also executing every FP32 instruction and checking its inputs and outputs. These timings have different scopes: the compact result demonstrates inexpensive cost evaluation, not a measured end-to-end speedup of complete submission verification. Program loading and file output are excluded from both reported static timings. Repeated measurements and runtime metadata are recorded in `il-benchmark.json`. The MLP scaling experiment in `il-scaling.json` describes 100 million to 41 billion dynamic instructions at widths 16, 32, and 64 and epoch counts 100, 1,000, and 10,000. Median static scoring time stays about 0.080–0.11 s across those cases. These are scoring workloads, not additional accuracy measurements; no accuracy is claimed for these parameter combinations.
 
 Run with Python and NumPy:
 

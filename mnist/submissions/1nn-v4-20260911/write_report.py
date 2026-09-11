@@ -1,5 +1,6 @@
 """Assemble the human-readable report from saved measurement artifacts."""
 import json
+import math
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -14,6 +15,18 @@ def scientific(value, digits=2):
     return f"{mantissa} × 10{superscript}"
 
 
+def significant(value, digits=2):
+    """Round display values, keeping ordinary magnitudes in decimal form."""
+    if value == 0:
+        return '0'
+    if abs(value) < 1e-4 or abs(value) >= 10000:
+        return scientific(value, digits)
+    places = digits - 1 - math.floor(math.log10(abs(value)))
+    rounded = round(value, places)
+    places = digits - 1 - math.floor(math.log10(abs(rounded)))
+    return f"{rounded:.{max(0, places)}f}"
+
+
 def main():
     def read(name):
         return json.loads((HERE / name).read_text())
@@ -22,17 +35,17 @@ def main():
     summary = gpu['summary']
     us = summary['cuda_event_us_per_invocation']['mean']
     joules = summary['idle_adjusted_j_per_invocation']['mean']
-    a100_time_ps = us * 1e6
-    a100_energy_fj = joules * 1e15
+    a100_time_ms = us / 1000
+    a100_energy_mj = joules * 1000
     rows = []
     for trial in gpu['trials']:
-        rows.append(f"| {trial['trial']} | {trial['invocations']:,} | {scientific(trial['active']['duration_s']*1e12)} | "
-                    f"{scientific(trial['active']['energy_j']*1e15)} | {trial['idle_before']['average_power_w']:.0f} / "
-                    f"{trial['idle_after']['average_power_w']:.0f} | {scientific(trial['cuda_event_us_per_invocation']*1e6)} | "
-                    f"{scientific(trial['idle_adjusted_j_per_invocation']*1e15)} |")
-    sensitivity = [trial[key]*1e15 for trial in gpu['trials'] for key in
+        rows.append(f"| {trial['trial']} | {trial['invocations']:,} | {significant(trial['active']['duration_s']*1000)} | "
+                    f"{significant(trial['active']['energy_j']*1000)} | {significant(trial['idle_before']['average_power_w'])} / "
+                    f"{significant(trial['idle_after']['average_power_w'])} | {significant(trial['cuda_event_us_per_invocation']/1000)} | "
+                    f"{significant(trial['idle_adjusted_j_per_invocation']*1000)} |")
+    sensitivity = [trial[key]*1000 for trial in gpu['trials'] for key in
                    ('before_only_adjusted_j_per_invocation','after_only_adjusted_j_per_invocation')]
-    class_rows = '\n'.join(f"| {i} | {acc['confusion_matrix'][i][i]} / {total} | {acc['per_class_accuracy'][i]*100:.2f}% |"
+    class_rows = '\n'.join(f"| {i} | {acc['confusion_matrix'][i][i]} / {total} | {acc['per_class_accuracy'][i]*100:.2g}% |"
                            for i, total in enumerate(acc['class_totals']))
     hardware = gpu['hardware']
     versions = gpu['versions']
@@ -50,12 +63,12 @@ Contributors: Codex (implementation, experiments and report), with independent s
 
 ## Results and metric boundaries
 
-All task runtimes use **picoseconds (ps)** and all energies use **femtojoules (fJ)**, so the theoretical and measured results share the same units. Each task includes 600 training examples and 600 test predictions. Per-task runtime and energy values in the comparison and trial tables are rounded to two significant figures; exact totals are retained in the linked measurement files, and the measured energy's baseline sensitivity is reported separately.
+All task runtimes use **milliseconds (ms)** and all energies use **millijoules (mJ)**, so the theoretical and measured results share the same units. **Time to score uses seconds (s)** because it measures the host scoring process. Each task includes 600 training examples and 600 test predictions. Per-task runtime and energy values in the comparison and trial tables are rounded to two significant figures; exact totals are retained in the linked measurement files, and the measured energy's baseline sensitivity is reported separately.
 
 | Performance per complete task | Theoretical model | Measured A100, mean |
 | --- | ---: | ---: |
-| **Time (ps)** | **{scientific(model['time_ps'])}** | **{scientific(a100_time_ps)}** |
-| **Energy (fJ)** | **{scientific(model['energy_fj'])}** | **{scientific(a100_energy_fj)}** |
+| **Time (ms)** | **{significant(model['time_ps']/1e9)}** | **{significant(a100_time_ms)}** |
+| **Energy (mJ)** | **{significant(model['energy_fj']/1e12)}** | **{significant(a100_energy_mj)}** |
 
 The model sums charged scratch accesses and excludes tape I/O. The A100 time is CUDA-event steady-state graph throughput including the memorization copy; its energy is idle-adjusted GPU board energy from NVML. The shared units make the numerical scales directly comparable; the measurement boundaries remain as documented here.
 
@@ -63,11 +76,11 @@ The model sums charged scratch accesses and excludes tape I/O. The A100 time is 
 | --- | ---: | --- |
 | Accuracy | **{acc['correct']}/{acc['total']} = {acc['accuracy']*100:.2g}%** | Canonical fixed small test split |
 | Area, occupied-cell convention | **{scientific(model['area_um2_occupied_cells'])} µm²** | Peak {model['peak_allocated_scratch_words']:,} allocated 32-bit scratch words, {model['peak_allocated_scratch_bytes']:,} bytes |
-| Time to score | **{scientific(model['time_to_score_seconds']*1e12)} ps** | Host runtime of one full generator/interpreter/accounting run on Intel Core i9-9880H, 2.30 GHz |
+| Time to score | **{significant(model['time_to_score_seconds'])} s** | Host runtime of one full generator/interpreter/accounting run on Intel Core i9-9880H, 2.30 GHz |
 
-Host scoring runtime and measurement-window duration also use picoseconds in the tables. Unit conversions: **1 µs = 10⁶ ps** and **1 J = 10¹⁵ fJ**.
+Measurement-window durations also use milliseconds. Unit conversions: **1 ms = 1000 µs = 10⁹ ps** and **1 mJ = 10¹² fJ**. Energy and time measure different quantities, related by **E(mJ) = P(W) × t(ms)**. The cost model retains its exact native ps/fJ accounting internally.
 
-Both modeled and GPU task scopes include learning/memorization and all 600 predictions. Dataset preparation, the one training-only validation check, and host evaluation are outside those task scopes. The GPU additionally writes nearest-row indices and distances for verification; those writes are included in its measured runtime and energy. The CPU reference's {scientific(cpu['cpu_reference_wall_seconds']*1e12)} ps host runtime is supplementary and is **not** the model's Time or Time to score.
+Both modeled and GPU task scopes include learning/memorization and all 600 predictions. Dataset preparation, the one training-only validation check, and host evaluation are outside those task scopes. The GPU additionally writes nearest-row indices and distances for verification; those writes are included in its measured runtime and energy. The CPU reference's {significant(cpu['cpu_reference_wall_seconds']*1000)} ms host runtime is supplementary and is **not** the model's Time or Time to score.
 
 **The threshold margin is eight examples.** This establishes a pass on this particular fixed split. There is no measurement of generalization across alternative dataset samples, and no post-test algorithm or hyperparameter changes were made. Detailed rule gaps and experimental limitations are in the [separate ambiguities and problems report](ambiguities.html).
 
@@ -87,7 +100,7 @@ The original MNIST gzip checksums were verified during fresh dataset regeneratio
 
 The NPZ identity happens to match the checked-in container hash in this environment; array hashes are the portable identity independent of ZIP metadata. Float32 resizing reduction order may still differ across numerical libraries, so reproduction must check the array hashes rather than assume equality.
 
-Before test scoring, the single fixed candidate was checked on a training-only 480/120 split using PCG64 seed 20260911: **63/120 = 52.5%**. The full 600 training examples were then used to produce frozen test predictions. No choices of k, weighting, scaling or distance metric were searched. Exact training/validation row indices are retained in `cpu_results.json`.
+Before test scoring, the single fixed candidate was checked on a training-only 480/120 split using PCG64 seed 20260911: **63/120 = 53%** (rounded). The full 600 training examples were then used to produce frozen test predictions. No choices of k, weighting, scaling or distance metric were searched. Exact training/validation row indices are retained in `cpu_results.json`.
 
 ## Algorithm and numerical convention
 
@@ -113,7 +126,7 @@ The occupied-cell convention gives **6,014 µm²**. The enclosing grid-cell rect
 
 ## Model score derivation and verification
 
-The [single-core-with-tape cost model]({SPEC}/models/single-core-with-tape/README.md) charges each non-tape scratch read at distance h `max(50, 2h)` fJ and `max(50, 0.8h)` ps. Each scratch write costs `max(50, 2h)` fJ and `max(50, 0.4h)` ps. Both reads of `mul t,t,t` count, and `select` reads its condition and both alternatives. Accesses are blocking and are summed. `recv` and `send`, including their scratch accesses, cost zero by definition.
+The following formulas use the specification’s **exact native units, ps and fJ**, rather than the report’s ms/mJ display units. The [single-core-with-tape cost model]({SPEC}/models/single-core-with-tape/README.md) charges each non-tape scratch read at distance h `max(50, 2h)` fJ and `max(50, 0.8h)` ps. Each scratch write costs `max(50, 2h)` fJ and `max(50, 0.4h)` ps. Both reads of `mul t,t,t` count, and `select` reads its condition and both alternatives. Accesses are blocking and are summed. `recv` and `send`, including their scratch accesses, cost zero by definition.
 
 | Instruction | Count |
 | --- | ---: |
@@ -125,11 +138,11 @@ The [single-core-with-tape cost model]({SPEC}/models/single-core-with-tape/READM
 | select | 718,800 |
 | **Total** | **11,171,400** |
 
-There are **22,316,400 charged reads** and **11,159,400 charged writes**, totaling **33,475,800 accesses**. Each persistent training word is read 600 times: 3,600,000 persistent reads. The remaining 29,875,800 hot accesses are at the 50-unit floors. An independent count formula sums the exact placement costs of the persistent reads and the hot-access floors. It agrees exactly with the full interpreter's **1.9 × 10⁹ fJ** and **1.7 × 10⁹ ps** (rounded here; exact equality was checked). Time is accumulated as integer 0.2 ps ticks to avoid rounding in score summation.
+There are **22,316,400 charged reads** and **11,159,400 charged writes**, totaling **33,475,800 accesses**. Each persistent training word is read 600 times: 3,600,000 persistent reads. The remaining 29,875,800 hot accesses are at the 50-unit floors. An independent count formula sums the exact placement costs of the persistent reads and the hot-access floors. It agrees exactly with the full interpreter's **{significant(model['energy_fj']/1e12)} mJ** and **{significant(model['time_ps']/1e9)} ms** (rounded here; exact equality was checked). Time is accumulated as integer 0.2 ps ticks to avoid rounding in score summation.
 
 Time to score starts immediately before machine construction and includes instruction generation, all scratch-state checks, FP32 execution and integer cost accounting. It excludes dataset loading, placement generation, independent verification, result writing and optional text-IR emission. Host: Intel Core i9-9880H (8 physical / 16 logical CPUs), macOS 26.6.2, Python {model['host']['python'].split()[0]}, NumPy {model['host']['numpy']}; one Python interpreter, with possible concurrent work on the host. It is a measured single-run host duration, not a stable hardware-independent score.
 
-The emitted 11,171,400-instruction text was also replayed through the parser and interpreter. The compressed 11.1 MB trace is generated on demand rather than duplicated in Git; its expanded SHA-256 is `{model.get('expanded_ir_uncompressed_sha256', 'f6f657cc159160050e73d1df8ae169b313b795f3d1b1a45a72ad4f757383ef2b')}`. The generator, a sample, placement/access CSV, and replay result are published. Self-tests cover the specification's 450 fJ/300 ps example, distant free tape I/O, read-before-write rejection, source/destination aliasing and nearest-neighbor ties.
+The emitted 11,171,400-instruction text was also replayed through the parser and interpreter. The compressed 11.1 MB trace is generated on demand rather than duplicated in Git; its expanded SHA-256 is `{model.get('expanded_ir_uncompressed_sha256', 'f6f657cc159160050e73d1df8ae169b313b795f3d1b1a45a72ad4f757383ef2b')}`. The generator, a sample, placement/access CSV, and replay result are published. Self-tests cover the specification's exact native-unit 450 fJ/300 ps example, distant free tape I/O, read-before-write rejection, source/destination aliasing and nearest-neighbor ties.
 
 ## Measured A100 runtime and NVML energy
 
@@ -137,24 +150,24 @@ Hardware: **{hardware['gpu_name']}**, {hardware['gpu_total_memory_bytes']/(1024*
 
 One Triton kernel copies all training pixels and labels into preallocated model memory. A second uses one program per query, compares all 600 candidates, accumulates the nine FP32 squared differences in feature order, and reduces by distance then lowest training index. The graph contains 128 complete task invocations, each with its own memorization copy. All buffers are reused; input and working data remain on the GPU.
 
-After compilation, correctness checks, warmup and graph capture, three active trials repeatedly execute this graph. CUDA events measure device elapsed time; synchronized host wall throughput is also retained. NVML's `nvmlDeviceGetTotalEnergyConsumption` supplies cumulative millijoule counters around the active window and a two-second idle interval on each side. Convert the cumulative-counter result to femtojoules per task:
+After compilation, correctness checks, warmup and graph capture, three active trials repeatedly execute this graph. CUDA events measure device elapsed time; synchronized host wall throughput is also retained. NVML's `nvmlDeviceGetTotalEnergyConsumption` supplies cumulative millijoule counters around the active window and a 2000 ms idle interval on each side. Convert the cumulative-counter result to millijoules per task:
 
 ```text
 P_idle_W = (P_idle_before_W + P_idle_after_W) / 2
-E_task_fJ = (((counter_after_mJ - counter_before_mJ)/1000
-              - P_idle_W * active_seconds) * 1e15)
+E_task_mJ = ((counter_after_mJ - counter_before_mJ)
+             - P_idle_W * active_ms)
             / number_of_complete_task_invocations
 ```
 
 Counter-read timestamps use the midpoint of the host call, and query latencies are retained. Negative adjusted values are not silently clipped. Reported aggregate values are the means over the three trials.
 
-| Trial | Full tasks | Active NVML window (ps) | Raw board energy (fJ) | Idle before / after (W) | CUDA time/task (ps) | Adjusted energy/task (fJ) |
+| Trial | Full tasks | Active NVML window (ms) | Raw board energy (mJ) | Idle before / after (W) | CUDA time/task (ms) | Adjusted energy/task (mJ) |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: |
 {chr(10).join(rows)}
 
-Mean host wall throughput is **{scientific(summary['wall_us_per_invocation']['mean']*1e6)} ps/task**. Across trials, CUDA-event time ranges **{scientific(summary['cuda_event_us_per_invocation']['min']*1e6)}–{scientific(summary['cuda_event_us_per_invocation']['max']*1e6)} ps**, and idle-adjusted energy ranges **{scientific(summary['idle_adjusted_j_per_invocation']['min']*1e15)}–{scientific(summary['idle_adjusted_j_per_invocation']['max']*1e15)} fJ/task**. Using either the before-only or after-only idle baseline across these trials yields **{scientific(min(sensitivity))}–{scientific(max(sensitivity))} fJ/task**. This is baseline sensitivity, not a confidence interval. Idle power drifts materially; energy deserves fewer significant figures than the raw counters provide.
+Mean host wall throughput is **{significant(summary['wall_us_per_invocation']['mean']/1000)} ms/task**. Across trials, CUDA-event time ranges **{significant(summary['cuda_event_us_per_invocation']['min']/1000)}–{significant(summary['cuda_event_us_per_invocation']['max']/1000)} ms**, and idle-adjusted energy ranges **{significant(summary['idle_adjusted_j_per_invocation']['min']*1000)}–{significant(summary['idle_adjusted_j_per_invocation']['max']*1000)} mJ/task**. Using either the before-only or after-only idle baseline across these trials yields **{significant(min(sensitivity))}–{significant(max(sensitivity))} mJ/task**. This is baseline sensitivity, not a confidence interval. Idle power drifts materially; energy deserves fewer significant figures than the raw counters provide.
 
-The active trial target was three seconds; the actual windows in the table are authoritative. Observed throughput differed from calibration, producing shorter active windows; the cause was not measured. No GPU clock or power limit was changed by the benchmark. These are warm, repeated, cache-resident throughput measurements. Host/device transfers, allocation, compilation, graph capture, validation, startup, host energy and facility overhead are excluded. NVML measures GPU board energy, not individual instructions. Comparing its energy directly with the model's tape-excluded scratch score does not establish physical prediction accuracy of the model.
+The active trial target was 3000 ms; the actual windows in the table are authoritative. Observed throughput differed from calibration, producing shorter active windows; the cause was not measured. No GPU clock or power limit was changed by the benchmark. These are warm, repeated, cache-resident throughput measurements. Host/device transfers, allocation, compilation, graph capture, validation, startup, host energy and facility overhead are excluded. NVML measures GPU board energy, not individual instructions. Comparing its energy directly with the model's tape-excluded scratch score does not establish physical prediction accuracy of the model.
 
 GPU outputs agree with all **600** canonical CPU predictions, all **600** nearest indices and all **600** winning FP32 distance bit patterns. Additional checks use fresh random queries and changed training labels to verify runtime input dependence. Changing training labels changes all 600 corresponding predicted labels. The saved PTX has no FP32 FMA.
 

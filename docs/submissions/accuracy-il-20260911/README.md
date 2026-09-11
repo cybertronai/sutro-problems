@@ -2,7 +2,7 @@
 
 This exploratory study tests 55/60/65/70/75% accuracy goals using a fixed-training-loop FP32 neural network, and implements a compact affine-loop intermediate language for exact v4 cost aggregation. It is a follow-up to the original 1NN submission, with no new MLP A100 measurements yet.
 
-Every seed at 300 epochs and above exceeded 60%. One of 15 runs exceeded 65%; none reached 70% or 75%. Compact scoring remains practical for programs representing billions of primitive instructions. Displayed time uses ps and energy uses fJ, with two significant figures.
+Every seed at 300 epochs and above exceeded 60%. One of 15 runs exceeded 65%; none reached 70% or 75%. Compact scoring remains practical for programs representing billions of primitive instructions. Execution time uses ms, energy uses mJ, and time to score uses s, with two significant figures.
 
 Read `report.md` for results and reproduction, `IL.md` for language/scorer semantics, `study-protocol.md` for the selection protocol, and `ambiguities.md` for remaining decisions. Exact results and frozen predictions are checked in beside the source.
 
