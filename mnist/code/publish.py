@@ -7,7 +7,7 @@ from pathlib import Path
 
 import wandb
 
-from mnist.report import load_dataset_manifest, load_results, verify_dataset_files
+from mnist.code.report import load_dataset_manifest, load_results, verify_dataset_files
 
 
 def publish(data_dir, results=None, entity="yaroslavvb", project="sutro-mnist-tiers"):
@@ -29,7 +29,7 @@ def publish(data_dir, results=None, entity="yaroslavvb", project="sutro-mnist-ti
         if not (source / "train.py").is_file() or not (source / "requirements.txt").is_file():
             raise ValueError(f"Archived training source is required to publish results: {source}")
     with wandb.init(entity=entity, project=project,
-                    dir=str(Path(__file__).resolve().parent),
+                    dir=str(Path(__file__).resolve().parent.parent),
                     name="competition-datasets" if results is None else "competition-results",
                     job_type="dataset" if results is None else "report",
                     config={"dataset_seed": manifest["seed"], "dataset_profile": manifest.get("profile"),
@@ -65,14 +65,14 @@ def publish(data_dir, results=None, entity="yaroslavvb", project="sutro-mnist-ti
                     artifact.add_file(path, name=f"report/{path.name}")
                     if path.suffix == ".png":
                         run.log({path.stem: wandb.Image(str(path))})
-            for path in sorted((results / "source").glob("*")):
+            for path in sorted((results / "source").rglob("*")):
                 if path.is_file():
-                    artifact.add_file(path, name=f"source/{path.name}")
+                    artifact.add_file(path, name=f"source/{path.relative_to(source).as_posix()}")
             run.log_artifact(artifact)
         # Results retain their archived training code; dataset publication snapshots current code.
         code = wandb.Artifact("mnist-competition-source", type="code")
-        for path in sorted(source.glob("*.py")):
-            code.add_file(path)
+        for path in sorted(source.rglob("*.py")):
+            code.add_file(path, name=path.relative_to(source).as_posix())
         requirements = source / "requirements.txt"
         code.add_file(requirements)
         run.log_artifact(code)

@@ -9,7 +9,7 @@ import unittest
 
 import numpy as np
 
-from mnist.evaluate import load_predictions, main, score_predictions
+from mnist.code.evaluate import load_predictions, main, score_predictions
 
 
 class ScoringTests(unittest.TestCase):

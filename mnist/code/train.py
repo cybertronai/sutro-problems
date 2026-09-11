@@ -20,7 +20,7 @@ import torch
 import torch.nn.functional as F
 import wandb
 
-from mnist.models import build_model, candidate_configs
+from mnist.code.models import build_model, candidate_configs
 
 
 def split_indices(labels, seed=4701):

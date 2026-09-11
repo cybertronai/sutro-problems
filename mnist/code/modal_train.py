@@ -8,7 +8,8 @@ import tarfile
 
 import modal
 
-HERE = Path(__file__).resolve().parent
+CODE = Path(__file__).resolve().parent
+HERE = CODE.parent
 IMAGE_REF = ("ghcr.io/ab-10/wikitext-bench@"
              "sha256:95de89319ba89c53a91d5440a5db4ff46f68b05031062c0a760ec3caa48dc42f")
 image = (modal.Image.from_registry(IMAGE_REF)
@@ -38,7 +39,7 @@ def verify_remote():
     import unittest
     import torch
     torch.set_num_threads(2)
-    suite = unittest.defaultTestLoader.discover("/workspace/mnist", pattern="test_*.py", top_level_dir="/workspace")
+    suite = unittest.defaultTestLoader.discover("/workspace/mnist/code/tests", pattern="test_*.py", top_level_dir="/workspace")
     result = unittest.TextTestRunner(verbosity=2).run(suite)
     if not result.wasSuccessful():
         raise RuntimeError("MNIST unit tests failed")
@@ -55,9 +56,9 @@ def checks():
               buffer_containers=0, scaledown_window=2, retries=0,
               timeout=2400, startup_timeout=300)
 def train_remote(tier: str, entity: str, project: str, group: str, smoke: bool):
-    from mnist.train import run_suite
+    from mnist.code.train import run_suite
     import unittest
-    suite = unittest.defaultTestLoader.discover("/workspace/mnist", pattern="test_*.py", top_level_dir="/workspace")
+    suite = unittest.defaultTestLoader.discover("/workspace/mnist/code/tests", pattern="test_*.py", top_level_dir="/workspace")
     result = unittest.TextTestRunner().run(suite)
     if not result.wasSuccessful():
         raise RuntimeError("MNIST unit tests failed")
@@ -89,8 +90,10 @@ def main(smoke: bool = False, entity: str = "yaroslavvb", project: str = "sutro-
     shutil.copy2(HERE / "data" / "manifest.json", archived_manifest)
     source = output / "source"
     source.mkdir(exist_ok=True)
-    for path in [*HERE.glob("*.py"), HERE / "requirements.txt"]:
-        shutil.copy2(path, source / path.name)
+    for path in [*CODE.rglob("*.py"), CODE / "requirements.txt"]:
+        destination = source / path.relative_to(CODE)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, destination)
     for name, summary, payload in train_remote.starmap(
             [(t, entity, project, group + ("-smoke" if smoke else ""), smoke) for t in tiers],
             order_outputs=False):

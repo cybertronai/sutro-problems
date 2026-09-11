@@ -92,8 +92,8 @@ From the repository root, with Python 3.11 or newer:
 ```bash
 python3 -m venv mnist/.venv
 mnist/.venv/bin/python -m pip install 'numpy>=1.26,<3'
-mnist/.venv/bin/python -m mnist.data --output mnist/data --seed 20260910
-mnist/.venv/bin/python -m unittest mnist.test_data mnist.test_evaluate -v
+mnist/.venv/bin/python -m mnist.code.data --output mnist/data --seed 20260910
+mnist/.venv/bin/python -m unittest mnist.code.tests.test_data mnist.code.tests.test_evaluate -v
 ```
 
 The default profile is `competition-v2`, implementing the table at the top of
@@ -113,13 +113,13 @@ training permutation and the entire official test permutation.
 Pixels are converted to float32 and divided by 255. Downsampling uses separable
 box-area averaging: output pixel `j` covers `[j*28/size, (j+1)*28/size)` in each
 dimension, including fractional overlap at boundaries. Large keeps its original
-resolution. The [generator](data.py) and [canonical manifest](dataset_manifest.json)
+resolution. The [generator](code/data.py) and [canonical manifest](doc/dataset_manifest.json)
 specify source indices, shapes, dtypes, class counts, and array checksums.
 
 To reproduce the historical datasets separately:
 
 ```bash
-mnist/.venv/bin/python -m mnist.data \
+mnist/.venv/bin/python -m mnist.code.data \
   --profile reference-20260910 --output mnist/data-reference-20260910
 ```
 
@@ -131,7 +131,7 @@ profile, not the new problem datasets.
 To regenerate the reference report, pass its historical data directory explicitly:
 
 ```bash
-mnist/.venv/bin/python -m mnist.report --results mnist/results/mnist-20260910 \
+mnist/.venv/bin/python -m mnist.code.report --results mnist/results/mnist-20260910 \
   --data-dir mnist/data-reference-20260910 --output mnist/results/reference-report
 ```
 
@@ -173,7 +173,7 @@ np.save("submission.npy", predictions.astype(np.int64))
 ```
 
 ```bash
-mnist/.venv/bin/python -m mnist.evaluate \
+mnist/.venv/bin/python -m mnist.code.evaluate \
   --tier small --data-dir mnist/data --predictions submission.npy --output score.json
 ```
 
@@ -183,19 +183,19 @@ accuracy. Energy is not measured by this command.
 
 ## Baseline code
 
-The [model definitions](models.py) and [training runner](train.py) preserve the
+The [model definitions](code/models.py) and [training runner](code/train.py) preserve the
 18-configuration search used in the reference experiment. They also accept the
-new problem datasets. Install [requirements.txt](requirements.txt) in a compatible
+new problem datasets. Install [requirements.txt](code/requirements.txt) in a compatible
 PyTorch environment and use a fresh output directory and W&B group for new runs:
 
 ```bash
-python -m mnist.train --tier small --data-dir mnist/data --device cuda \
+python -m mnist.code.train --tier small --data-dir mnist/data --device cuda \
   --output mnist/results/competition-v2/small --group competition-v2
 ```
 
-The [Modal runner](modal_train.py) can run small and medium on A100 GPUs with
-configured Modal and W&B accounts. [Prediction](predict.py), [reporting](report.py),
-and [artifact publishing](publish.py) helpers are included. Data archives and
+The [Modal runner](code/modal_train.py) can run small and medium on A100 GPUs with
+configured Modal and W&B accounts. [Prediction](code/predict.py), [reporting](code/report.py),
+and [artifact publishing](code/publish.py) helpers are included. Data archives and
 model checkpoint binaries are excluded from Git. Historical JSON results,
 plots, and the exact [executed source snapshot](results/mnist-20260910/source/)
 are preserved alongside the reference report.

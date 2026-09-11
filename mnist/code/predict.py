@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from mnist.models import build_model
+from mnist.code.models import build_model
 
 
 def predict(checkpoint, dataset, output, device="cpu"):

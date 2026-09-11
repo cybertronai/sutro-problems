@@ -14,9 +14,9 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-from mnist.models import build_model, candidate_configs
-from mnist.predict import predict
-from mnist.train import evaluate, split_indices, train_one
+from mnist.code.models import build_model, candidate_configs
+from mnist.code.predict import predict
+from mnist.code.train import evaluate, split_indices, train_one
 
 
 class _OfflineTestRun:
@@ -159,7 +159,7 @@ class TrainingIntegrityTests(unittest.TestCase):
         y = torch.arange(8)
         models, results = [], []
         with tempfile.TemporaryDirectory() as directory, patch(
-            "mnist.train.wandb.init", side_effect=lambda **kwargs: _OfflineTestRun()
+            "mnist.code.train.wandb.init", side_effect=lambda **kwargs: _OfflineTestRun()
         ):
             for index, validation_value in enumerate((0., 100.)):
                 model, _, result = train_one(
@@ -184,7 +184,7 @@ class TrainingIntegrityTests(unittest.TestCase):
         x = torch.linspace(0, 1, 8 * 9).reshape(8, 1, 3, 3)
         y = torch.arange(8)
         with tempfile.TemporaryDirectory() as directory, patch(
-            "mnist.train.wandb.init", side_effect=lambda **kwargs: _OfflineTestRun()
+            "mnist.code.train.wandb.init", side_effect=lambda **kwargs: _OfflineTestRun()
         ):
             model, _, result = train_one(
                 config, tier="small", seed=17, phase="final", x=x, y=y, val=None,

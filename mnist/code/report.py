@@ -1,6 +1,6 @@
 """Render an evidence-based report from two completed MNIST tuning suites.
 
-Usage: python -m mnist.report --results mnist/results/GROUP
+Usage: python -m mnist.code.report --results mnist/results/GROUP
 The default output directory is RESULTS/report. This reads local JSON only;
 it neither imports torch nor changes or uploads any experiment results.
 """

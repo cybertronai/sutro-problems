@@ -1,6 +1,6 @@
 """Download verified MNIST and create reproducible competition tiers.
 
-Run ``python -m mnist.data --output mnist/data``. Only NumPy is required.
+Run ``python -m mnist.code.data --output mnist/data``. Only NumPy is required.
 Small and medium use disjoint samples from the official training split; large
 uses both complete official splits. Use ``--profile reference-20260910`` only to
 reproduce the earlier 1,000/10,000-example reference experiments.

@@ -12,7 +12,7 @@ from unittest import mock
 
 import numpy as np
 
-from mnist.data import (
+from mnist.code.data import (
     DEFAULT_PROFILE,
     REFERENCE_PROFILE,
     SOURCES,
@@ -148,7 +148,7 @@ class PreparedDatasetTests(unittest.TestCase):
     @classmethod
     def prepare_fixture(cls, destination, profile=DEFAULT_PROFILE):
         with mock.patch(
-            "mnist.data.download_source",
+            "mnist.code.data.download_source",
             side_effect=lambda raw_dir, filename, expected_md5: cls.raw_dir / filename,
         ), contextlib.redirect_stdout(io.StringIO()):
             return prepare(destination, profile=profile)
