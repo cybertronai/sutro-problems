@@ -1,0 +1,40 @@
+{
+  "created_at_utc": "2026-09-11T04:36:52.690557+00:00",
+  "widths": [
+    128,
+    256,
+    512
+  ],
+  "learning_rates": [
+    0.01,
+    0.03,
+    0.1,
+    0.2
+  ],
+  "checkpoint_epochs": [
+    25,
+    50,
+    100,
+    200,
+    300
+  ],
+  "search_seed": 11,
+  "final_seed": 101,
+  "validation_split_seed": 20260913,
+  "validation_fit_rows": 4800,
+  "validation_holdout_rows": 1200,
+  "batch_size": 30,
+  "algorithm": "81-H-10 ReLU, squared-error SGD, fixed contiguous minibatches, separate FP32 operations, ascending reductions, norm4x-.5",
+  "target_percent": 98,
+  "repository_target_percent": "98.14",
+  "selection": "If any checkpoint reaches 1176/1200 (98%), minimize epochs*width then width then learning_rate among those. Otherwise maximize validation_correct; break ties by epochs*width, width, learning_rate. Freeze one configuration and seed101 before opening test labels.",
+  "test_policy": "No test images or labels are opened by this script. Final learner saves predictions before a separate evaluator opens labels. No further search after test evaluation.",
+  "source_sha256": {
+    "search.py": "c2af4a811488b602305565cd064ffe25d7476dcb15646d864a89cd63937a4bf5",
+    "learner.py": "4d4f273a0cef1e2ca6d445a173f63cb13bf46ccf5de470bc8819b6ed8fa5a848"
+  },
+  "training_input_sha256": {
+    "train_images": "3c2c9d7cc3103e05c6e72e8b39ad7ae8f93fcbea8b23ac5f43ffacd9a9c4653b",
+    "train_labels": "91633f2c00fe471cb130fb6831c3d7dca5899bd926a1c899d873826dfd62e617"
+  }
+}

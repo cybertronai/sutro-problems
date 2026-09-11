@@ -50,6 +50,12 @@ The 300-epoch, seed-101 network now has a [complete A100 measurement report](htt
 
 | Accuracy | Time (ms) | Energy (mJ) | Area (mm²) | Time to score (s) | Time on A100 (ms) | Energy on A100 (mJ) | Submission |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| 96% (5,755/6,000) | 93,000 | 200 | 0.63 | 2.7 | 4,700 | 150,000 | [512-unit MLP — below target](submissions/medium-affine-20260911/) |
+
+This measured attempt is below both its requested 98% goal (5,880/6,000) and
+the repository’s 98.14% requirement (5,889/6,000). Area is occupied modeled
+scratch-cell area. A100 values are three-trial means for complete fresh
+training and prediction; the report defines exclusions and idle subtraction.
 
 ## MNIST-large
 

@@ -1,0 +1,18 @@
+MNIST-medium GPU run history
+
+Attempt 1: ap-AvWxiVCAwpjAsu9wZnxlzi
+Frozen learner: 81 input features, width 512, 200 epochs, learning rate 0.1, seed 101, minibatch 30.
+Learner GPU inputs are canonical train_images, train_labels, test_images, and seed-only initial literals.
+Independent CPU learned parameters, output scores, and predictions remain host-only comparison oracles.
+Canonical full training, all parameter/score bits, query mutation, and bounded two-minibatch label mutation passed.
+Each timed task replays initialization once, the single-epoch graph 200 times, and inference once.
+All task training and initialization work is included; three graph objects store 804 kernel nodes.
+Status: first attempt completed successfully; no implementation or measurement retry was needed.
+GPU source SHA256: 1f981a617cf49680f281a9015b159c85d3b444cb0883ab52d56773470bee3cb5
+Config SHA256: ffc2183eee55e50592996fedce9c7e08f1f2cdea778416185760631a6624df9e
+
+Three trials each ran 3 complete tasks (606 CUDA-graph replays).
+All final learned parameters and scores still matched after all three trials had completed.
+Mean complete-task A100 time: 4745.701388888889 ms.
+Mean idle-adjusted board energy: 154564.51540118735 mJ.
+Exact trials, baseline sensitivity, and checks are in gpu_results.json and gpu_validation.json.
