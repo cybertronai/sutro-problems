@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="A frozen three-ConvNet learner evaluated on eleven independent MNIST-medium dataset draws, with complete-task A100 measurements.">
+<title>MNIST-medium: three ConvNets across 11 datasets · Sutro problems</title><style>
+:root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
+*{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
+header{background:#103c47;color:white;padding:36px max(24px,calc((100vw - 1060px)/2)) 26px}
+header p{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#bfd9da}
+header .brand{font-size:27px;font-weight:680;margin:6px 0 18px}nav{display:flex;gap:9px;flex-wrap:wrap}
+nav a{color:#edf8f8;border:1px solid #5c8088;padding:6px 13px;border-radius:5px;text-decoration:none;font-size:14px}
+nav a.active{background:#fff;color:#103c47}main{max-width:1120px;margin:0 auto;padding:32px 30px 70px;background:white;min-height:60vh}
+h1{font:700 36px/1.2 Georgia,serif;letter-spacing:-.015em;margin:10px 0 24px}h2{font-size:24px;line-height:1.35;margin:38px 0 16px;border-top:1px solid var(--line);padding-top:24px}
+h3{font-size:19px;margin:28px 0 8px}p{margin:12px 0}a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
+code{font-size:.84em;background:#edf2f3;padding:2px 5px;border-radius:3px;overflow-wrap:anywhere}pre{padding:18px;overflow:auto;background:#edf2f3;border:1px solid var(--line);border-radius:6px;font-size:14px;line-height:1.5}
+pre code{padding:0;background:none;overflow-wrap:normal}table{border-collapse:collapse;display:block;max-width:100%;overflow:auto;margin:22px 0;font-size:15px}th,td{padding:10px 14px;border:1px solid var(--line);vertical-align:top}th{background:#eaf2f3;text-align:left}tr:nth-child(even) td{background:#f8fafb}
+blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;background:#fffaed}blockquote p{margin:6px 0}li{margin:9px 0}footer{max-width:1120px;margin:auto;padding:22px 30px 40px;font-size:13px;color:var(--muted)}.toc{padding:18px 24px;background:#f4f8f8;border:1px solid var(--line);border-radius:6px}.toc ul{margin:0;padding-left:20px}.toc li{margin:3px 0}.toc a{text-decoration:none}
+@media(max-width:600px){main{padding:24px 18px 44px}h1{font-size:29px}header{padding:24px 18px}table{font-size:13px}th,td{padding:8px}}
+main img{display:block;max-width:100%;height:auto}</style></head>
+<body><header><p>Sutro problems · Submission attempt · September 2026</p><div class="brand">MNIST-medium / 11-dataset ConvNet</div><nav><a class="active" href="index.html">Results & reproduction</a><a class="" href="session.html">Session export</a><a class="" href="ambiguities.html">Ambiguities & problems</a></nav></header>
+<main><h1 id="mnist-medium-three-convnets-across-11-datasets">MNIST-medium: three ConvNets across 11 datasets</h1>
+<p><strong>The frozen ensemble reached 98.1% ± 0.1 percentage points across 11 independently sampled datasets.</strong> It meets the <strong>98% mean accuracy requirement</strong> with 64,776 / 66,000 correct predictions. The unrounded total is 96 predictions above the inclusive 64,680 threshold.</p>
+<p>A100 measurements include fresh training of all three members and prediction: <strong>5.9 × 10⁴ ms</strong> and <strong>1.7 × 10⁶ mJ</strong> idle-adjusted GPU-board energy per complete task, using medians of three trials on draw 00.</p>
+<blockquote>
+<p><strong>Submission status:</strong> The accuracy requirement and A100 measurements are established. The exact Dally v4 translation and its theoretical time, energy, area, and scoring runtime remain incomplete. This is a submitted attempt for review, not a claim of complete benchmark compliance. The separate problems report and scoring-feasibility audit explain the missing work.</p>
+</blockquote>
+<div class="toc">
+<ul>
+<li><a href="#mnist-medium-three-convnets-across-11-datasets">MNIST-medium: three ConvNets across 11 datasets</a><ul>
+<li><a href="#submission-entry">Submission entry</a></li>
+<li><a href="#accuracy-on-the-11-frozen-draws">Accuracy on the 11 frozen draws</a></li>
+<li><a href="#frozen-learner">Frozen learner</a></li>
+<li><a href="#development-history-and-label-isolation">Development history and label isolation</a></li>
+<li><a href="#complete-task-a100-measurements">Complete-task A100 measurements</a></li>
+<li><a href="#theoretical-scoring-is-still-open">Theoretical scoring is still open</a></li>
+<li><a href="#reproduction-and-evidence">Reproduction and evidence</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<h2 id="submission-entry">Submission entry</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Accuracy</th>
+<th style="text-align: right;">Time (ms)</th>
+<th style="text-align: right;">Energy (mJ)</th>
+<th style="text-align: right;">Area (mm²)</th>
+<th style="text-align: right;">Time to score (s)</th>
+<th style="text-align: right;">Time on A100 (ms)</th>
+<th style="text-align: right;">Energy on A100 (mJ)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">98.1% ± 0.1 pp</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">—</td>
+<td style="text-align: right;">5.9 × 10⁴</td>
+<td style="text-align: right;">1.7 × 10⁶</td>
+</tr>
+</tbody>
+</table>
+<p>Accuracy is mean ± sample standard deviation of dataset-level accuracies. The target applies to the unrounded mean; it does not require every draw, or mean minus SD, to exceed 98%. Costs use two significant figures. Dashes mean unavailable; accuracy-evaluation duration is not substituted for time to score.</p>
+<h2 id="accuracy-on-the-11-frozen-draws">Accuracy on the 11 frozen draws</h2>
+<p><img alt="Per-dataset ensemble accuracy, with the mean, sample SD band, and 98% requirement" src="accuracy-by-draw.svg" /></p>
+<p>Both training and test subsets are resampled independently for every draw from the original 60,000 MNIST training images. Each draw has 6,000 training rows and 6,000 disjoint test rows, resized to 9 × 9 with the canonical competition-v2 area-resize procedure. Different draws may overlap. The integer dataset seeds are fixed in the protocol; they are not timestamps.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Draw</th>
+<th style="text-align: right;">Dataset seed</th>
+<th style="text-align: right;">Accuracy</th>
+<th style="text-align: right;">Correct / total</th>
+<th>Predictions</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">00</td>
+<td style="text-align: right;">20261001</td>
+<td style="text-align: right;">98.1%</td>
+<td style="text-align: right;">5,888 / 6,000</td>
+<td><a href="predictions/draw-00.npy">Array</a> · <a href="draws/draw-00.json">Manifest</a></td>
+</tr>
+<tr>
+<td style="text-align: right;">01</td>
+<td style="text-align: right;">20261002</td>
+<td style="text-align: right;">98.0%</td>
+<td style="text-align: right;">5,883 / 6,000</td>
+<td><a href="predictions/draw-01.npy">Array</a> · <a href="draws/draw-01.json">Manifest</a></td>
+</tr>
+<tr>
+<td style="text-align: right;">02</td>
+<td style="text-align: right;">20261003</td>
+<td style="text-align: right;">98.0%</td>
+<td style="text-align: right;">5,883 / 6,000</td>
+<td><a href="predictions/draw-02.npy">Array</a> · <a href="draws/draw-02.json">Manifest</a></td>
+</tr>
+<tr>
+<td style="text-align: right;">03</td>
+<td style="text-align: right;">20261004</td>
+<td style="text-align: right;">98.2%</td>
+<td style="text-align: right;">5,890 / 6,000</td>
+<td><a href="predictions/draw-03.npy">Array</a> · <a href="draws/draw-03.json">Manifest</a></td>
+</tr>
+<tr>
+<td style="text-align: right;">04</td>
+<td style="text-align: right;">20261005</td>
+<td style="text-align: right;">98.4%</td>
+<td style="text-align: right;">5,904 / 6,000</td>
+<td><a href="predictions/draw-04.npy">Array</a> · <a href="draws/draw-04.json">Manifest</a></td>
+</tr>
+<tr>
+<td style="text-align: right;">05</td>
+<td style="text-align: right;">20261006</td>
+<td style="text-align: right;">98.0%</td>
+<td style="text-align: right;">5,881 / 6,000</td>
+<td><a href="predictions/draw-05.npy">Array</a> · <a href="draws/draw-05.json">Manifest</a></td>
+</tr>
+<tr>
+<td style="text-align: right;">06</td>
+<td style="text-align: right;">20261007</td>
+<td style="text-align: right;">98.2%</td>
+<td style="text-align: right;">5,894 / 6,000</td>
+<td><a href="predictions/draw-06.npy">Array</a> · <a href="draws/draw-06.json">Manifest</a></td>
+</tr>
+<tr>
+<td style="text-align: right;">07</td>
+<td style="text-align: right;">20261008</td>
+<td style="text-align: right;">98.1%</td>
+<td style="text-align: right;">5,888 / 6,000</td>
+<td><a href="predictions/draw-07.npy">Array</a> · <a href="draws/draw-07.json">Manifest</a></td>
+</tr>
+<tr>
+<td style="text-align: right;">08</td>
+<td style="text-align: right;">20261009</td>
+<td style="text-align: right;">98.3%</td>
+<td style="text-align: right;">5,897 / 6,000</td>
+<td><a href="predictions/draw-08.npy">Array</a> · <a href="draws/draw-08.json">Manifest</a></td>
+</tr>
+<tr>
+<td style="text-align: right;">09</td>
+<td style="text-align: right;">20261010</td>
+<td style="text-align: right;">98.0%</td>
+<td style="text-align: right;">5,882 / 6,000</td>
+<td><a href="predictions/draw-09.npy">Array</a> · <a href="draws/draw-09.json">Manifest</a></td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">20261011</td>
+<td style="text-align: right;">98.1%</td>
+<td style="text-align: right;">5,886 / 6,000</td>
+<td><a href="predictions/draw-10.npy">Array</a> · <a href="draws/draw-10.json">Manifest</a></td>
+</tr>
+</tbody>
+</table>
+<p>The exact aggregate is <strong>64,776 / 66,000</strong>. <code>accuracy.json</code> retains the full-precision mean, sample SD, exact rational variance, and per-member diagnostic counts. SD uses the 11 percentages with denominator 10 (<code>ddof=1</code>); it is not SD across the three members and not a standard error. All 11 draws are retained; none was discarded or selected after evaluation.</p>
+<h2 id="frozen-learner">Frozen learner</h2>
+<p>Each member uses three padded 3 × 3 convolution layers of width 64, each followed by BatchNorm and GELU, with no pooling. A flattened 5,184-element feature vector feeds a 256-unit GELU head, dropout 0.2, and ten output logits. There are 1,404,618 trainable parameters per member. The three FP32 raw-logit arrays are averaged in FP64; argmax breaks ties toward the smallest digit.</p>
+<p>Training runs for exactly 71 epochs with AdamW (learning rate 0.001, weight decay 0.001, betas 0.9 and 0.999, epsilon 1e-8). The cosine schedule retains its original 100-epoch horizon and a 2% learning-rate floor. Minibatches contain 128 examples, retaining the final partial batch of 112. Each epoch receives a seeded shuffle. Normalization uses only that draw’s training-image mean and population standard deviation.</p>
+<p>Mild affine augmentation applies with probability 0.5: rotation within ±8°, translation within ±0.35 pixels per axis, and inverse sampling scale from 0.94 to 1.06. Bilinear sampling uses zero padding and <code>align_corners=False</code>, before normalization. Test images are normalized only and do not affect training statistics or optimizer updates.</p>
+<p>Member seeds 101, 102, and 103 are held fixed across draws. Every member starts with fresh weights, optimizer, scheduler, and normalization state. The final 71st epoch is used without validation, early stopping, checkpoint selection, or tuning on these draws. Per-epoch training diagnostics are recorded but do not select the returned model.</p>
+<h2 id="development-history-and-label-isolation">Development history and label isolation</h2>
+<p>The architecture and 71-epoch stopping rule came from the preceding ConvNet search using a training-only validation split. That study’s final single-dataset test also measured a diagnostic three-model ensemble. Choosing that ensemble for this new attempt was informed by its disclosed historical result; it is not presented as a choice made before all historical test observations. The new 11 seeds and complete procedure were frozen before this evaluation. No historical weights or learned state were reused.</p>
+<ul>
+<li>Protocol frozen: <code>2026-09-11 05:28:50 UTC</code>.</li>
+<li>All 11 prediction artifacts frozen: <code>2026-09-11 05:34:31 UTC</code>.</li>
+<li>Evaluator/evidence freeze: <code>2026-09-11 05:34:56 UTC</code>.</li>
+<li>Raw labels opened for scoring: <code>2026-09-11 05:35:00 UTC</code>.</li>
+</ul>
+<p>Trusted preparation reads the original label pool only to extract permitted training labels. It does not construct per-draw test labels. Each remote fit receives only its own draw’s training images, training labels, and test images. Raw IDX files, other draws’ archives, and pretrained checkpoints are not mounted. The separate evaluator verifies every prediction, logit, manifest, source hash, ensemble calculation, and retained checkpoint before deriving any test-label vector.</p>
+<p>An independent audit regenerated all 11 index sets and 22 resized image arrays, checked source equivalence to the earlier learner, and independently recomputed aggregate counts and sample SD. All predictions, logits, histories, and model-state hashes are retained; checkpoint binaries are retained for draw 00 only. Repeating the learner regenerates the other weights.</p>
+<h2 id="complete-task-a100-measurements">Complete-task A100 measurements</h2>
+<p>The benchmark uses draw 00 (dataset seed 20261001), chosen before measuring performance. It calls the unchanged frozen learner sequentially for seeds 101, 102, and 103, then averages their logits in FP64 and returns predictions. One complete warmup precedes three measured fresh tasks in one A100 allocation. Each measured invocation includes model initialization, optimizer initialization, normalization, all training, the per-epoch training diagnostics, test inference, CPU↔GPU transfers, tensor hashing, checkpoint serialization, and ensemble construction. No trained parameters are reused between tasks.</p>
+<table>
+<thead>
+<tr>
+<th>Measured quantity</th>
+<th style="text-align: right;">Median per complete task</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Wall time on A100 (ms), primary runtime</td>
+<td style="text-align: right;">5.9 × 10⁴</td>
+</tr>
+<tr>
+<td>CUDA-event elapsed time (ms)</td>
+<td style="text-align: right;">5.9 × 10⁴</td>
+</tr>
+<tr>
+<td>Idle-adjusted GPU-board energy (mJ), primary energy</td>
+<td style="text-align: right;">1.7 × 10⁶</td>
+</tr>
+<tr>
+<td>Gross GPU-board energy (mJ)</td>
+<td style="text-align: right;">5.5 × 10⁶</td>
+</tr>
+</tbody>
+</table>
+<p>Across the three trials, wall time ranges from 5.4 × 10⁴ to 5.9 × 10⁴ ms, and idle-adjusted energy from 1.6 × 10⁶ to 2.1 × 10⁶ mJ. The entry reports medians; the per-trial spread and both idle baselines remain visible below.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Trial</th>
+<th style="text-align: right;">Wall time (ms)</th>
+<th style="text-align: right;">Idle-adjusted energy (mJ)</th>
+<th style="text-align: right;">Idle before (W)</th>
+<th style="text-align: right;">Idle after (W)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">5.9 × 10⁴</td>
+<td style="text-align: right;">1.7 × 10⁶</td>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">66</td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">5.4 × 10⁴</td>
+<td style="text-align: right;">2.1 × 10⁶</td>
+<td style="text-align: right;">66</td>
+<td style="text-align: right;">66</td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">5.9 × 10⁴</td>
+<td style="text-align: right;">1.6 × 10⁶</td>
+<td style="text-align: right;">66</td>
+<td style="text-align: right;">66</td>
+</tr>
+</tbody>
+</table>
+<p>The wall timer excludes the bounding NVML API calls. A separately retained counter interval drives energy subtraction. Container startup, dependency imports, input delivery to the container, and result upload to this machine are excluded. CUDA-event elapsed time includes host-induced gaps between GPU work; it is not kernel-active time. The GPU and its memory are measured by NVML; host CPU and network energy are excluded.</p>
+<p>Before and after each trial, the benchmark waits three seconds for settling and samples idle energy for three seconds. Idle-adjusted energy is the gross counter delta minus the average of those two idle powers times the counter interval. The raw trials retain both baseline choices, gross energy, timing intervals, temperatures, clocks, and output-identity checks. Reference comparisons are verification only: the learner does not receive or consume reference learned parameters or answers.</p>
+<p>The pinned image uses PyTorch 2.5.1+cu124 with CUDA 12.4, cuDNN 9.1, and NumPy 2.2.6. Execution uses deterministic PyTorch/cuDNN, FP32, no autocast, and no TF32. The raw benchmark record identifies the exact GPU, driver, NVML library, and measurement environment. Results describe this implementation on this allocation, not an optimized lower bound.</p>
+<p>Measured GPU: <strong>NVIDIA A100-SXM4-40GB</strong>. Driver: <code>580.95.05</code>. NVML: <code>13.580.95.05</code>. All warmup and measured model-state hashes, FP32 logits, FP64 ensemble values, and final predictions matched draw 00 exactly.</p>
+<p>The container requests four CPU cores. The host CPU model was not recorded; because host work is included in the elapsed task, reproductions on another host may differ even with the same GPU. The GPU power limit and clocks were left at platform defaults.</p>
+<h2 id="theoretical-scoring-is-still-open">Theoretical scoring is still open</h2>
+<p>There is no complete v4 program for this learner. GELU, BatchNorm, AdamW, cross-entropy, augmentation, and FP64 ensemble arithmetic need explicit lowering to the restricted primitive set; GPU reductions and fused arithmetic need a defined numerical correspondence. A compact tensor-loop IL can describe repeated work, but every operator must expand to valid instructions with charged memory accesses. The feasibility audit documents the proposed representation and validation path. It does not claim an implemented translator.</p>
+<p>Theoretical model time, energy, area, and time to score are therefore left unavailable. Parameter count and GPU allocation do not establish occupied scratch-cell area. Any changed arithmetic needs its own accuracy evaluation before it can claim this result. The report intentionally does not equate a native PyTorch FLOP estimate with an exact model score.</p>
+<h2 id="reproduction-and-evidence">Reproduction and evidence</h2>
+<p>The accompanying README gives commands to prepare isolated inputs, run the 33 fits, freeze and evaluate predictions, repeat the A100 measurements, and rebuild these pages. Contributors: Yaroslav Bulatov (requirements), Codex (implementation, experiments, auditing, and reporting). No W&amp;B runs were created.</p>
+<ul>
+<li><a href="README.md">Reproduction instructions</a></li>
+<li><a href="accuracy.json">Exact accuracy results</a> · <a href="audit.json">Independent audit</a></li>
+<li><a href="protocol.json">Frozen protocol</a> · <a href="draw_manifest.json">Draw manifest</a></li>
+<li><a href="prediction_manifest.json">Prediction freeze</a> · <a href="evaluation_freeze.json">Evaluator freeze</a></li>
+<li><a href="learner.py">Learner source</a> · <a href="learner_equivalence.json">Source-equivalence audit</a></li>
+<li><a href="benchmark/measurements.json">Raw A100 measurements</a> · <a href="benchmark/audit.json">Independent A100 audit</a> · <a href="gpu_benchmark.py">Benchmark source</a></li>
+<li><a href="scoring-feasibility.md">Detailed scoring-feasibility audit</a></li>
+<li><a href="ambiguities.html">Separate ambiguities and problems</a></li>
+<li><a href="session.html">Human-readable session export</a></li>
+<li><a href="../medium-convnet-20260911/">Previous ConvNet development study</a></li>
+</ul></main><footer>Submission attempt. Accuracy and measured performance are separate from model-translation completeness; acceptance remains subject to review. <a href="https://github.com/cybertronai/sutro-problems">Repository</a> · <a href="../">All submission reports</a></footer></body></html>

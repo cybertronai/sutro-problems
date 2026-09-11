@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="A frozen three-ConvNet learner evaluated on eleven independent MNIST-medium dataset draws, with complete-task A100 measurements.">
+<title>MNIST-medium 11-dataset submission session · Sutro problems</title><style>
+:root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
+*{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
+header{background:#103c47;color:white;padding:36px max(24px,calc((100vw - 1060px)/2)) 26px}
+header p{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#bfd9da}
+header .brand{font-size:27px;font-weight:680;margin:6px 0 18px}nav{display:flex;gap:9px;flex-wrap:wrap}
+nav a{color:#edf8f8;border:1px solid #5c8088;padding:6px 13px;border-radius:5px;text-decoration:none;font-size:14px}
+nav a.active{background:#fff;color:#103c47}main{max-width:1120px;margin:0 auto;padding:32px 30px 70px;background:white;min-height:60vh}
+h1{font:700 36px/1.2 Georgia,serif;letter-spacing:-.015em;margin:10px 0 24px}h2{font-size:24px;line-height:1.35;margin:38px 0 16px;border-top:1px solid var(--line);padding-top:24px}
+h3{font-size:19px;margin:28px 0 8px}p{margin:12px 0}a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
+code{font-size:.84em;background:#edf2f3;padding:2px 5px;border-radius:3px;overflow-wrap:anywhere}pre{padding:18px;overflow:auto;background:#edf2f3;border:1px solid var(--line);border-radius:6px;font-size:14px;line-height:1.5}
+pre code{padding:0;background:none;overflow-wrap:normal}table{border-collapse:collapse;display:block;max-width:100%;overflow:auto;margin:22px 0;font-size:15px}th,td{padding:10px 14px;border:1px solid var(--line);vertical-align:top}th{background:#eaf2f3;text-align:left}tr:nth-child(even) td{background:#f8fafb}
+blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;background:#fffaed}blockquote p{margin:6px 0}li{margin:9px 0}footer{max-width:1120px;margin:auto;padding:22px 30px 40px;font-size:13px;color:var(--muted)}.toc{padding:18px 24px;background:#f4f8f8;border:1px solid var(--line);border-radius:6px}.toc ul{margin:0;padding-left:20px}.toc li{margin:3px 0}.toc a{text-decoration:none}
+@media(max-width:600px){main{padding:24px 18px 44px}h1{font-size:29px}header{padding:24px 18px}table{font-size:13px}th,td{padding:8px}}
+main img{display:block;max-width:100%;height:auto}</style></head>
+<body><header><p>Sutro problems · Submission attempt · September 2026</p><div class="brand">MNIST-medium / 11-dataset ConvNet</div><nav><a class="" href="index.html">Results & reproduction</a><a class="active" href="session.html">Session export</a><a class="" href="ambiguities.html">Ambiguities & problems</a></nav></header>
+<main><h1 id="mnist-medium-11-dataset-submission-session">MNIST-medium 11-dataset submission session</h1>
+<p>Exported at <strong>2026-09-11T05:44:12.705824+00:00</strong>. Session <code>01a08e2a-6729-7bb2-acf7-0b1561daea2a</code>.</p>
+<p>Visible user/assistant messages from the 98% threshold and actual-submission request through the export cutoff. Internal reasoning, system/developer instructions, environment metadata and raw tool payloads are excluded. Measured results and selected commands are preserved separately in the report and source artifacts.</p>
+<p>This is a conversation export, not a reconstruction of private reasoning. It is a snapshot: publication checks after this cutoff are recorded in the accompanying report.</p>
+<h2 id="1-user-2026-09-11t052515136z">1. User · 2026-09-11T05:25:15.136Z</h2>
+<p>Actually make the threshold just 98% and perform an actual submission.</p>
+<h2 id="2-assistant-2026-09-11t052517939z">2. Assistant · 2026-09-11T05:25:17.939Z</h2>
+<p>I’ll change MNIST-medium’s threshold to 98%, then evaluate a frozen ConvNet on 11 resampled datasets. I’ll use those results to determine whether it qualifies and complete the scoring, A100 measurements, and submission report.</p>
+<h2 id="3-assistant-2026-09-11t052958392z">3. Assistant · 2026-09-11T05:29:58.392Z</h2>
+<p>The medium threshold is now exactly 98%, requiring 64,680 correct predictions across the 11 draws. The accuracy checks pass. The frozen ConvNet evaluation is ready; translating GELU, BatchNorm, and AdamW into the scoring model’s restricted instructions will need additional work after the accuracy check.</p>
+<h2 id="4-assistant-2026-09-11t053120597z">4. Assistant · 2026-09-11T05:31:20.597Z</h2>
+<p>The threshold change is pushed. Training is running on all 11 independently resampled datasets, with fresh models and no transferred weights. All predictions will be saved before the evaluator opens the test labels.</p>
+<h2 id="5-assistant-2026-09-11t053237125z">5. Assistant · 2026-09-11T05:32:37.125Z</h2>
+<p>About half of the fresh fits have finished. I’m preparing the submission report, reproducibility files, and separate problems report while training continues. The published entry will distinguish measured results from the theoretical scores that still need a valid v4 translation.</p>
+<h2 id="6-assistant-2026-09-11t053454426z">6. Assistant · 2026-09-11T05:34:54.426Z</h2>
+<p>All 33 fits are complete, and all 11 prediction sets are frozen. The label-free audit passed. The separate evaluator can now check the aggregate accuracy; if it clears 98%, I’ll measure the complete three-model learning task on an A100.</p>
+<h2 id="7-assistant-2026-09-11t053514714z">7. Assistant · 2026-09-11T05:35:14.714Z</h2>
+<p>The ensemble passes: <strong>98.1% ± 0.1 percentage points</strong>, with 64,776 of 66,000 predictions correct—96 above the 98% threshold. I’m moving on to A100 measurements of fresh training plus prediction for all three models.</p>
+<h2 id="8-assistant-2026-09-11t053651082z">8. Assistant · 2026-09-11T05:36:51.082Z</h2>
+<p>The independent accuracy audit agrees with the result. The A100 benchmark will include the unchanged learner’s initialization, training, diagnostics, transfers, and ensemble step, so its timing reflects a complete reproducible invocation.</p>
+<h2 id="9-assistant-2026-09-11t053836958z">9. Assistant · 2026-09-11T05:38:36.958Z</h2>
+<p>The benchmark passed code review and has launched. It will check every repeated task against the frozen logits and model-state hashes. The submission will also make the remaining limitation explicit: the exact Dally v4 translation is incomplete.</p>
+<h2 id="10-assistant-2026-09-11t054019479z">10. Assistant · 2026-09-11T05:40:19.479Z</h2>
+<p>The warmup reproduced every frozen model-state hash and logit exactly. The three measured repetitions are now running; each trains all three models from scratch again.</p>
+<h2 id="11-assistant-2026-09-11t054123603z">11. Assistant · 2026-09-11T05:41:23.603Z</h2>
+<p>The first measured task passed every output check: about <strong>5.9 × 10⁴ ms</strong> and <strong>1.7 × 10⁶ mJ</strong> of idle-adjusted energy. Two trials remain; the report will use their three-trial medians and retain the raw measurements.</p>
+<h2 id="12-assistant-2026-09-11t054251869z">12. Assistant · 2026-09-11T05:42:51.869Z</h2>
+<p>Two measured tasks have passed, and the final trial is finishing. Runtime and idle-adjusted energy vary between trials, so the report will show the individual measurements and their range alongside the medians.</p>
+<h2 id="13-assistant-2026-09-11t054355493z">13. Assistant · 2026-09-11T05:43:55.493Z</h2>
+<p>All three trials and the independent measurement audit passed. The medians are <strong>5.9 × 10⁴ ms</strong> and <strong>1.7 × 10⁶ mJ</strong> per complete task. I’m publishing the report and session export, then opening the submission PR with the missing theoretical scores clearly marked.</p>
+<h2 id="execution-record">Execution record</h2>
+<p>This record summarizes reproducible actions and saved evidence; it is not a
+transcript of internal reasoning. Experiment timestamps are UTC on 2026-09-11.</p>
+<ul>
+<li>Changed the medium mean-accuracy target to exactly 98%, requiring
+  64,680 / 66,000 correct. Fourteen evaluator tests passed. Pushed the rule
+  change to <code>main</code> as <code>8daa351</code>; its Pages deployment succeeded.</li>
+<li>Froze the learner, 11 dataset seeds, member seeds, source hashes, and input
+  protocol at 05:28:50. Independently checked all 11 index sets and all
+  22 resized image arrays before GPU training.</li>
+<li>Ran 33 fresh 71-epoch ConvNet fits, using at most two A100 containers. All
+  ensemble predictions and diagnostic member outputs were frozen at 05:34:31.
+  No test-label vectors had been derived.</li>
+<li>Froze the separate evaluator and evidence at 05:34:56, then opened labels
+  for scoring at 05:35:00. Obtained 64,776 / 66,000, or 98.1% ± 0.1 pp across
+  the 11 draws. A separate implementation reproduced every count, mean, and
+  sample SD. The accuracy requirement passed by 96 correct predictions.</li>
+<li>Reviewed the exact v4 instruction set and memory rules. The frozen native
+  learner does not yet have a complete v4 lowering; theoretical metrics remain
+  unavailable. The separate feasibility audit records specific limitations.</li>
+<li>Froze the complete-task A100 measurement protocol at 05:38:24, after the
+  accuracy gate. It specifies one full warmup and three measured fresh tasks,
+  paired idle NVML measurements, unchanged source, and exact output/state checks.
+  All trials passed exact checks. Medians were 5.9 × 10⁴ ms and 1.7 × 10⁶ mJ
+  idle-adjusted GPU energy. The independent raw-measurement audit passed.
+  The final raw measurements and audit are retained with the report.</li>
+</ul>
+<p>Commands, run configuration, and all scientific evidence needed for reproduction
+are published with the submission. Raw local inputs and execution logs are not
+copied to Pages. This conversation export is a snapshot; the final PR and Pages
+deployment are verified separately when publication finishes.</p>
+<ul>
+<li><a href="https://modal.com/apps/yaroslavvb/main/ap-glciYzFFhrmErGOoUR4cOG">Accuracy run on Modal</a></li>
+<li><a href="https://modal.com/apps/yaroslavvb/main/ap-Z0OqxSrCwNovdLMdEmTGIK">Complete-task measurement run on Modal</a></li>
+</ul></main><footer>Submission attempt. Accuracy and measured performance are separate from model-translation completeness; acceptance remains subject to review. <a href="https://github.com/cybertronai/sutro-problems">Repository</a> · <a href="../">All submission reports</a></footer></body></html>

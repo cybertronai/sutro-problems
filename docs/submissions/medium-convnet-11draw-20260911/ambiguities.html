@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="A frozen three-ConvNet learner evaluated on eleven independent MNIST-medium dataset draws, with complete-task A100 measurements.">
+<title>Ambiguities and problems: MNIST-medium ConvNet submission · Sutro problems</title><style>
+:root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
+*{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
+header{background:#103c47;color:white;padding:36px max(24px,calc((100vw - 1060px)/2)) 26px}
+header p{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#bfd9da}
+header .brand{font-size:27px;font-weight:680;margin:6px 0 18px}nav{display:flex;gap:9px;flex-wrap:wrap}
+nav a{color:#edf8f8;border:1px solid #5c8088;padding:6px 13px;border-radius:5px;text-decoration:none;font-size:14px}
+nav a.active{background:#fff;color:#103c47}main{max-width:1120px;margin:0 auto;padding:32px 30px 70px;background:white;min-height:60vh}
+h1{font:700 36px/1.2 Georgia,serif;letter-spacing:-.015em;margin:10px 0 24px}h2{font-size:24px;line-height:1.35;margin:38px 0 16px;border-top:1px solid var(--line);padding-top:24px}
+h3{font-size:19px;margin:28px 0 8px}p{margin:12px 0}a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
+code{font-size:.84em;background:#edf2f3;padding:2px 5px;border-radius:3px;overflow-wrap:anywhere}pre{padding:18px;overflow:auto;background:#edf2f3;border:1px solid var(--line);border-radius:6px;font-size:14px;line-height:1.5}
+pre code{padding:0;background:none;overflow-wrap:normal}table{border-collapse:collapse;display:block;max-width:100%;overflow:auto;margin:22px 0;font-size:15px}th,td{padding:10px 14px;border:1px solid var(--line);vertical-align:top}th{background:#eaf2f3;text-align:left}tr:nth-child(even) td{background:#f8fafb}
+blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;background:#fffaed}blockquote p{margin:6px 0}li{margin:9px 0}footer{max-width:1120px;margin:auto;padding:22px 30px 40px;font-size:13px;color:var(--muted)}.toc{padding:18px 24px;background:#f4f8f8;border:1px solid var(--line);border-radius:6px}.toc ul{margin:0;padding-left:20px}.toc li{margin:3px 0}.toc a{text-decoration:none}
+@media(max-width:600px){main{padding:24px 18px 44px}h1{font-size:29px}header{padding:24px 18px}table{font-size:13px}th,td{padding:8px}}
+main img{display:block;max-width:100%;height:auto}</style></head>
+<body><header><p>Sutro problems · Submission attempt · September 2026</p><div class="brand">MNIST-medium / 11-dataset ConvNet</div><nav><a class="" href="index.html">Results & reproduction</a><a class="" href="session.html">Session export</a><a class="active" href="ambiguities.html">Ambiguities & problems</a></nav></header>
+<main><h1 id="ambiguities-and-problems-mnist-medium-convnet-submission">Ambiguities and problems: MNIST-medium ConvNet submission</h1>
+<p>This is separate from the measured-results report. It identifies incomplete
+requirements and interpretation limits for this particular submission.</p>
+<h2 id="exact-theoretical-scoring-remains-incomplete">Exact theoretical scoring remains incomplete</h2>
+<p>The frozen learner is implemented and evaluated in PyTorch on an A100. It has
+not been translated into a complete Dally v4 program. Consequently <strong>model
+time, model energy, model area, and time to score are unavailable</strong>. Passing
+the accuracy threshold and publishing an entry do not establish full benchmark
+compliance. The submission is an attempt for review with this requirement open.</p>
+<p>The v4 opcode list contains arithmetic, comparisons, selection, bitwise
+operations, copies, constants, and tape I/O. It does not supply GELU, square
+root, exponential, logarithm, sine, or cosine as primitives. BatchNorm, AdamW,
+cross-entropy, and augmentation use these operations. The FP64 ensemble also
+does not fit into one 32-bit model cell. An implementation must explicitly
+lower these functions, its fixed random schedules, and all data movement.
+GPU reductions and fused arithmetic additionally require numerical validation.</p>
+<p>A tensor-level operation count, GPU memory measurement, or parameter count
+cannot stand in for a v4 memory-access score. The proposed compact tensor-loop
+representation is a design, not a completed translation. Any changed numerical
+learner must be evaluated again under a declared protocol before inheriting an
+accuracy claim. The detailed feasibility audit gives the remaining work.</p>
+<h2 id="dataset-sampling-and-development-history">Dataset sampling and development history</h2>
+<p>Small and medium use random subsets of the original 60,000 training examples.
+The present evaluation uses <strong>11 independent draws</strong>, with both training and
+test subsets resampled. Rows do not overlap within a draw; overlap across draws
+is expected. Every learner is reset and receives only its own permitted arrays.
+The reported SD is the sample SD of 11 dataset accuracies, in percentage points;
+it is not an uncertainty interval or SD across ensemble members.</p>
+<p>The architecture and epoch count were developed in the previous search. The
+choice to submit the three-model ensemble was informed by that study's
+single-dataset test result. This is disclosed rather than presented as a choice
+made before all historical test observations. These 11 dataset seeds and the
+entire learner procedure were frozen before any new test results were opened.
+No prior learned weights or optimizer state were used.</p>
+<p>Dataset indices and source files are publicly reproducible. The freeze and
+separate evaluator provide an auditable development record, not a hidden
+evaluation service or a cryptographic guarantee against every possible form of
+outside knowledge. The actual implementation does not access test labels while
+fitting or predicting.</p>
+<h2 id="accuracy-threshold-and-rounding">Accuracy threshold and rounding</h2>
+<p>The current medium target is <strong>98% mean</strong>, inclusively. It requires <strong>64,680
+correct predictions out of 66,000</strong>. The former 98.14% policy is superseded;
+historical reports retain their original threshold comparisons. The criterion
+applies to the unrounded mean, not to every draw and not to mean minus SD.
+All 11 results are included. Mean and SD are displayed with one decimal place;
+exact counts and the full-precision summary remain in the data files.</p>
+<h2 id="a100-measurement-boundaries">A100 measurement boundaries</h2>
+<p>Performance is measured on <strong>draw 00</strong>, a predeclared representative draw. It
+does not estimate average runtime or energy over all 11 sampled datasets. The
+reported task includes training all three members afresh and forming their
+ensemble; inference-only timing would describe a different task.</p>
+<p>The unchanged learner also computes per-epoch training diagnostics, transfers
+arrays and outputs, hashes tensors, and serializes checkpoints. These costs
+are included in the measured invocation. They make this a reproduction of the
+submitted implementation, not an optimized estimate of its indispensable work.
+Container startup, imports, input delivery to the container, and result upload
+to the local machine lie outside the measured invocation. The report records
+the precise measured boundary and verification results.</p>
+<p>NVML measures the GPU board's cumulative energy counter, including memory and
+GPU idle periods during host work. Host CPU and network energy are excluded.
+Paired idle subtraction depends on GPU temperature and power state, so both
+the before and after baselines, their sensitivity, and gross energy are retained.
+Three repeat tasks measure variation on one A100 allocation, not hardware-wide
+reproducibility. A warmup precedes measured tasks; every task still starts with
+fresh model and optimizer state.</p>
+<p>The container requests four CPU cores, but its host CPU model was not recorded.
+Host work contributes to elapsed time, so this limits performance reproduction
+across hosts. GPU power limits and clocks use unmodified platform defaults.</p>
+<p>CUDA-event elapsed time includes intervals in which the GPU waits for the host
+between work submissions; it is not a sum of kernel-active durations. Wall
+time is also retained. Repeated-task wall time is the primary complete-task
+runtime in the entry, with the exact boundary stated in the results report.</p>
+<h2 id="units-and-area">Units and area</h2>
+<p>Theoretical and A100 time use <strong>ms</strong> and energy uses <strong>mJ</strong>. Thus
+<code>energy_mJ = average_power_W × time_ms</code>. Time to score uses <strong>s</strong>, and model
+area uses <strong>mm²</strong>. Displayed costs use two significant figures. Time and energy
+remain different physical quantities even when expressed on comparable scales.</p>
+<p>Model area means occupied scratch-cell area under a declared placement and
+lifetime policy. It is not A100 die area, allocated GPU memory, parameter count,
+or the enclosing rectangle around scattered cells. The 1,404,618 parameter
+words per member alone do not establish peak training workspace or a model area
+score. No such score is claimed here.</p>
+<h2 id="evidence">Evidence</h2>
+<ul>
+<li><a href="index.html">Measured results and reproduction</a></li>
+<li><a href="scoring-feasibility.md">Detailed v4 feasibility audit</a></li>
+<li><a href="protocol.json">Frozen protocol</a></li>
+<li><a href="session.html">Human-readable session</a></li>
+</ul></main><footer>Submission attempt. Accuracy and measured performance are separate from model-translation completeness; acceptance remains subject to review. <a href="https://github.com/cybertronai/sutro-problems">Repository</a> · <a href="../">All submission reports</a></footer></body></html>
