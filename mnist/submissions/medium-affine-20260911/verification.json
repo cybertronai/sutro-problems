@@ -1,0 +1,539 @@
+{
+  "all_passed": true,
+  "configuration": {
+    "width": 512,
+    "epochs": 200,
+    "learning_rate": 0.1,
+    "seed": 101,
+    "batch_size": 30,
+    "features": 81,
+    "n_train": 6000,
+    "n_test": 6000
+  },
+  "config_file_sha256": "ffc2183eee55e50592996fedce9c7e08f1f2cdea778416185760631a6624df9e",
+  "frozen_selection_protocol": {
+    "predeclared_plan_file_sha256": "5039df9a7d97d1556bcf3c6fe8275f83a639dfdb7c8e28edad4cb84687b26768",
+    "validation_split_file_sha256": "70c95a3bc10f40a391564991a73492c047dd7bdc35caed8e876c0dd4f24aadff",
+    "validation_results_file_sha256": "d64d3875f7636f8a923eaa7029130d90c4575fd9e4f555a5e54f1ee24fdf7ef5",
+    "predeclared_at_utc": "2026-09-11T04:36:52.690557+00:00",
+    "configuration_frozen_at_utc": "2026-09-11T04:40:22.167872+00:00",
+    "candidate_training_runs": 12,
+    "inspected_finite_checkpoints": 60,
+    "selected_validation_correct": 1151,
+    "validation_total": 1200,
+    "split_kind": "fixed unstratified PCG64 permutation; 4800 fit / 1200 validation",
+    "selection_recomputed_from_frozen_training_only_evidence": true
+  },
+  "canonical_allowed_input_hashes": {
+    "train_images": "3c2c9d7cc3103e05c6e72e8b39ad7ae8f93fcbea8b23ac5f43ffacd9a9c4653b",
+    "train_labels": "91633f2c00fe471cb130fb6831c3d7dca5899bd926a1c899d873826dfd62e617",
+    "test_images": "f121936f4b6b0c2eebef773444fc45e72832d1c84948a50969a909467d6b1003"
+  },
+  "all_six_canonical_arrays": {
+    "test_images": {
+      "shape": [
+        6000,
+        1,
+        9,
+        9
+      ],
+      "dtype": "float32",
+      "sha256_c_order_little_endian": "f121936f4b6b0c2eebef773444fc45e72832d1c84948a50969a909467d6b1003"
+    },
+    "test_indices": {
+      "shape": [
+        6000
+      ],
+      "dtype": "int64",
+      "sha256_c_order_little_endian": "31020fab64bb5f4a0e6ca684c35549180148f5988f59bb8abd6045ecc7263b1f"
+    },
+    "test_labels": {
+      "shape": [
+        6000
+      ],
+      "dtype": "int64",
+      "sha256_c_order_little_endian": "1f3a947f45dfc0b3fd5153dcbe757ae2e5703f9738de89f7bd87132aa756c445"
+    },
+    "train_images": {
+      "shape": [
+        6000,
+        1,
+        9,
+        9
+      ],
+      "dtype": "float32",
+      "sha256_c_order_little_endian": "3c2c9d7cc3103e05c6e72e8b39ad7ae8f93fcbea8b23ac5f43ffacd9a9c4653b"
+    },
+    "train_indices": {
+      "shape": [
+        6000
+      ],
+      "dtype": "int64",
+      "sha256_c_order_little_endian": "6ed2956b75c875c1f6821a66f235bf8bcd12cf84d0cf11467733304dd15767d5"
+    },
+    "train_labels": {
+      "shape": [
+        6000
+      ],
+      "dtype": "int64",
+      "sha256_c_order_little_endian": "91633f2c00fe471cb130fb6831c3d7dca5899bd926a1c899d873826dfd62e617"
+    }
+  },
+  "train_test_source_index_overlap_count": 0,
+  "arithmetic_shape_checks": [
+    {
+      "width": 128,
+      "operation": "hidden_forward",
+      "left_shape": [
+        30,
+        81
+      ],
+      "right_shape": [
+        81,
+        128
+      ],
+      "left_c_contiguous": true,
+      "right_c_contiguous": true,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 128,
+      "operation": "output_forward",
+      "left_shape": [
+        30,
+        128
+      ],
+      "right_shape": [
+        128,
+        10
+      ],
+      "left_c_contiguous": true,
+      "right_c_contiguous": true,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 128,
+      "operation": "hidden_backward_transposed_w2",
+      "left_shape": [
+        30,
+        10
+      ],
+      "right_shape": [
+        10,
+        128
+      ],
+      "left_c_contiguous": true,
+      "right_c_contiguous": false,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 128,
+      "operation": "w1_gradient_transposed_x",
+      "left_shape": [
+        81,
+        30
+      ],
+      "right_shape": [
+        30,
+        128
+      ],
+      "left_c_contiguous": false,
+      "right_c_contiguous": true,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 128,
+      "operation": "w2_gradient_transposed_hidden",
+      "left_shape": [
+        128,
+        30
+      ],
+      "right_shape": [
+        30,
+        10
+      ],
+      "left_c_contiguous": false,
+      "right_c_contiguous": true,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 128,
+      "operation": "all_query_hidden",
+      "left_shape": [
+        6000,
+        81
+      ],
+      "right_shape": [
+        81,
+        128
+      ],
+      "left_c_contiguous": true,
+      "right_c_contiguous": true,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 128,
+      "operation": "all_query_output",
+      "left_shape": [
+        6000,
+        128
+      ],
+      "right_shape": [
+        128,
+        10
+      ],
+      "left_c_contiguous": true,
+      "right_c_contiguous": true,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 128,
+      "operation": "hidden_bias_gradient",
+      "shape": [
+        30,
+        128
+      ],
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 128,
+      "operation": "output_bias_gradient",
+      "shape": [
+        30,
+        10
+      ],
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 256,
+      "operation": "hidden_forward",
+      "left_shape": [
+        30,
+        81
+      ],
+      "right_shape": [
+        81,
+        256
+      ],
+      "left_c_contiguous": true,
+      "right_c_contiguous": true,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 256,
+      "operation": "output_forward",
+      "left_shape": [
+        30,
+        256
+      ],
+      "right_shape": [
+        256,
+        10
+      ],
+      "left_c_contiguous": true,
+      "right_c_contiguous": true,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 256,
+      "operation": "hidden_backward_transposed_w2",
+      "left_shape": [
+        30,
+        10
+      ],
+      "right_shape": [
+        10,
+        256
+      ],
+      "left_c_contiguous": true,
+      "right_c_contiguous": false,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 256,
+      "operation": "w1_gradient_transposed_x",
+      "left_shape": [
+        81,
+        30
+      ],
+      "right_shape": [
+        30,
+        256
+      ],
+      "left_c_contiguous": false,
+      "right_c_contiguous": true,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 256,
+      "operation": "w2_gradient_transposed_hidden",
+      "left_shape": [
+        256,
+        30
+      ],
+      "right_shape": [
+        30,
+        10
+      ],
+      "left_c_contiguous": false,
+      "right_c_contiguous": true,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 256,
+      "operation": "all_query_hidden",
+      "left_shape": [
+        6000,
+        81
+      ],
+      "right_shape": [
+        81,
+        256
+      ],
+      "left_c_contiguous": true,
+      "right_c_contiguous": true,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 256,
+      "operation": "all_query_output",
+      "left_shape": [
+        6000,
+        256
+      ],
+      "right_shape": [
+        256,
+        10
+      ],
+      "left_c_contiguous": true,
+      "right_c_contiguous": true,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 256,
+      "operation": "hidden_bias_gradient",
+      "shape": [
+        30,
+        256
+      ],
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 256,
+      "operation": "output_bias_gradient",
+      "shape": [
+        30,
+        10
+      ],
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 512,
+      "operation": "hidden_forward",
+      "left_shape": [
+        30,
+        81
+      ],
+      "right_shape": [
+        81,
+        512
+      ],
+      "left_c_contiguous": true,
+      "right_c_contiguous": true,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 512,
+      "operation": "output_forward",
+      "left_shape": [
+        30,
+        512
+      ],
+      "right_shape": [
+        512,
+        10
+      ],
+      "left_c_contiguous": true,
+      "right_c_contiguous": true,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 512,
+      "operation": "hidden_backward_transposed_w2",
+      "left_shape": [
+        30,
+        10
+      ],
+      "right_shape": [
+        10,
+        512
+      ],
+      "left_c_contiguous": true,
+      "right_c_contiguous": false,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 512,
+      "operation": "w1_gradient_transposed_x",
+      "left_shape": [
+        81,
+        30
+      ],
+      "right_shape": [
+        30,
+        512
+      ],
+      "left_c_contiguous": false,
+      "right_c_contiguous": true,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 512,
+      "operation": "w2_gradient_transposed_hidden",
+      "left_shape": [
+        512,
+        30
+      ],
+      "right_shape": [
+        30,
+        10
+      ],
+      "left_c_contiguous": false,
+      "right_c_contiguous": true,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 512,
+      "operation": "all_query_hidden",
+      "left_shape": [
+        6000,
+        81
+      ],
+      "right_shape": [
+        81,
+        512
+      ],
+      "left_c_contiguous": true,
+      "right_c_contiguous": true,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 512,
+      "operation": "all_query_output",
+      "left_shape": [
+        6000,
+        512
+      ],
+      "right_shape": [
+        512,
+        10
+      ],
+      "left_c_contiguous": true,
+      "right_c_contiguous": true,
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 512,
+      "operation": "hidden_bias_gradient",
+      "shape": [
+        30,
+        512
+      ],
+      "fast_and_ordered_and_explicit_bits_equal": true
+    },
+    {
+      "width": 512,
+      "operation": "output_bias_gradient",
+      "shape": [
+        30,
+        10
+      ],
+      "fast_and_ordered_and_explicit_bits_equal": true
+    }
+  ],
+  "one_complete_ordered_training_epoch": {
+    "epochs": 1,
+    "examples": 6000,
+    "minibatches": 200,
+    "all_four_parameter_arrays_bitwise_equal": true,
+    "parameter_sha256": {
+      "w1": "5ae173edb80bd6f4c5acad9138f9b4d05cda4853021de3f6f15ec9806ee29c4d",
+      "b1": "0d9cfb2ddc6557f329ae6143f7fb86fa8fc50ca9a518f70ef9ab3b8f6c2f56a2",
+      "w2": "0eb6116a0023e3dd5b3bd3c5c7a99b7fb6c4f6c3c15e6774dbf30b64de0bfb7d",
+      "b2": "84f15444e2fd54eb4acacf56ec151e5f09d4a094a0c6e67eabfae3216c20ec45"
+    }
+  },
+  "fresh_full_training_from_allowed_only_archive": {
+    "epochs": 200,
+    "training_examples": 6000,
+    "removed_members": [
+      "test_labels",
+      "train_indices",
+      "test_indices"
+    ],
+    "all_final_parameter_score_prediction_bits_equal": true,
+    "arithmetic_engine": "declared fast einsum reductions, not slow ordered CPU replay"
+  },
+  "all_final_scores_from_saved_parameters_match_ordered_recomputation": true,
+  "parameter_sha256": {
+    "w1": "6b6beb2312bebee363e92470c27b1f4c04feed4b6b627264b4280aff9c67238c",
+    "b1": "b3957d468564209d2b9ed5f62a9f973428cf2409e2bdc5379431098b8184f7e6",
+    "w2": "76133541ebd87f06a64dc4b78fc165511ceb60a25b09bcd5149b99f1b0edbdb5",
+    "b2": "5c1087a3c826ab7c27826abe408b192de5fbe593243e0b2d8aa2fbfb543a780d"
+  },
+  "output_scores_sha256": "dba18d2265ce7ecc376a03088342ec7da971534c2fbfd66df4e96f24ca5d7c3a",
+  "predictions_sha256_int64_le": "fba860ddadbb7007536ed08736f6e834588f01cec812fad375e55bf58fbd1133",
+  "classification": {
+    "correct": 5755,
+    "total": 6000,
+    "accuracy": 0.9591666666666666,
+    "user_98_percent_goal": {
+      "accuracy_target_percent": 98.0,
+      "required_correct": 5880,
+      "meets_accuracy_target": false
+    },
+    "repository_98_14_percent_requirement": {
+      "accuracy_target_percent": 98.14,
+      "required_correct": 5889,
+      "meets_accuracy_target": false
+    }
+  },
+  "separate_evaluation_started_at_utc": "2026-09-11T04:43:43.780071+00:00",
+  "stage_wall_seconds": {
+    "all_medium_operation_shape_checks_seconds": 2.1500442791730165,
+    "one_complete_6000_example_ordered_epoch_and_fast_comparison_seconds": 1.5541999300476164,
+    "final_inference_from_saved_parameters_seconds": 0.5027819129172713,
+    "fresh_full_training_cli_allowed_only_seconds": 41.113509461982176
+  },
+  "total_verification_wall_seconds": 45.448005952872336,
+  "source_sha256": {
+    "mnist/submissions/medium-affine-20260911/verify.py": "9e4b154d6bfd19864da07f2b8e74feafabf81b9ce874d3ef160051a5e26937e1",
+    "mnist/submissions/medium-affine-20260911/learner.py": "4d4f273a0cef1e2ca6d445a173f63cb13bf46ccf5de470bc8819b6ed8fa5a848",
+    "mnist/submissions/medium-affine-20260911/search.py": "c2af4a811488b602305565cd064ffe25d7476dcb15646d864a89cd63937a4bf5",
+    "mnist/experiments/accuracy-il-20260911/accuracy_study.py": "a587ab7e322e4c1d7d154ff0a0aaf8ec3fe6fb61e86a9956f0feae43145d0a2a",
+    "mnist/code/evaluate.py": "7d834a672a5b4e161a484c53202a0b06f8703cfb6a43065034eeab5fb242f8a1",
+    "mnist/doc/accuracy_targets.json": "56f449d5d81a9feda649b5a489e9fc2af9598db936f303b13a9972eb10e982dd"
+  },
+  "reviewed_cpu_artifact_file_sha256": {
+    "cpu_results.json": "bb0c48c30ea242fbbed19a58089e5892f5468f446cf5720dd9ddc1e392f8486b",
+    "parameters.npz": "94a0a3cf02d14607170ed29f05b49b136e75a80126c1ee938ed5562e23bc1e4c",
+    "output-scores.npy": "6cec2b75f3370b0f62ea8ca086b8ea97659e7537722b398a603adaf2331fb233",
+    "predictions.npy": "003d17ac237465d12fe3e55f124b51ee6752e6761e290916e5de395e95e9b036"
+  },
+  "canonical_manifest_file_sha256": "296359c9046a8045aefdb5bc7c471c5abc2c4c5c546d6c56ca53b1299d278054",
+  "software": {
+    "python": "3.11.13 (main, Aug  8 2025, 16:51:10) [Clang 20.1.4 ]",
+    "numpy": "2.4.6",
+    "platform": "macOS-26.6.2-x86_64-i386-64bit"
+  },
+  "scope": [
+    "All medium training/inference reduction shapes and transposed gradient layouts were checked across widths 128, 256 and 512.",
+    "Exactly one complete 6000-example training epoch was independently replayed with explicit ordered float32 reductions.",
+    "The full selected training run was reproduced through the actual learner CLI with no test-label or source-index input members.",
+    "Every final score was independently recomputed from saved parameters with explicit ordered float32 reductions.",
+    "The complete selected training run was not replayed with slow ordered CPU reductions or expanded v4 interpretation.",
+    "Full GPU-versus-NumPy training equality is a separate check reported by the GPU benchmark; this file makes no GPU-validation claim.",
+    "Stored protocol timestamps, source identities and selection rules were checked; these are not an independent proof of all past test-access history.",
+    "Below-target accuracy does not make these reproducibility checks fail; both exact target statuses are reported separately."
+  ]
+}
