@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Reproducible MNIST-medium convolutional-network submission: eleven draws, exact model scoring and complete-task A100 measurements.">
+<title>Ambiguities and measurement limits · Sutro problems</title><style>
+:root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
+*{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
+header{background:#103c47;color:white;padding:36px max(24px,calc((100vw - 1060px)/2)) 26px}
+header p{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#bfd9da}
+header .brand{font-size:27px;font-weight:680;margin:6px 0 18px}nav{display:flex;gap:9px;flex-wrap:wrap}
+nav a{color:#edf8f8;border:1px solid #5c8088;padding:6px 13px;border-radius:5px;text-decoration:none;font-size:14px}
+nav a.active{background:#fff;color:#103c47}main{max-width:1120px;margin:0 auto;padding:32px 30px 70px;background:white;min-height:60vh}
+h1{font:700 36px/1.2 Georgia,serif;letter-spacing:-.015em;margin:10px 0 24px}h2{font-size:24px;line-height:1.35;margin:38px 0 16px;border-top:1px solid var(--line);padding-top:24px}
+h3{font-size:19px;margin:28px 0 8px}p{margin:12px 0}a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
+code{font-size:.84em;background:#edf2f3;padding:2px 5px;border-radius:3px;overflow-wrap:anywhere}pre{padding:18px;overflow:auto;background:#edf2f3;border:1px solid var(--line);border-radius:6px;font-size:14px;line-height:1.5}
+pre code{padding:0;background:none;overflow-wrap:normal}table{border-collapse:collapse;display:block;max-width:100%;overflow:auto;margin:22px 0;font-size:15px}th,td{padding:10px 14px;border:1px solid var(--line);vertical-align:top}th{background:#eaf2f3;text-align:left}tr:nth-child(even) td{background:#f8fafb}
+blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;background:#fffaed}blockquote p{margin:6px 0}li{margin:9px 0}footer{max-width:1120px;margin:auto;padding:22px 30px 40px;font-size:13px;color:var(--muted)}.toc{padding:18px 24px;background:#f4f8f8;border:1px solid var(--line);border-radius:6px}.toc ul{margin:0;padding-left:20px}.toc li{margin:3px 0}.toc a{text-decoration:none}
+@media(max-width:600px){main{padding:24px 18px 44px}h1{font-size:29px}header{padding:24px 18px}table{font-size:13px}th,td{padding:8px}}
+</style></head>
+<body><header><p>Sutro problems · Submission attempt · September 2026</p><div class="brand">MNIST-medium / Ordered ConvNet</div><nav><a class="" href="index.html">Results & reproduction</a><a class="" href="session.html">Session export</a><a class="active" href="ambiguities.html">Ambiguities & problems</a></nav></header>
+<main><h1 id="ambiguities-and-measurement-limits">Ambiguities and measurement limits</h1>
+<p>This document separates interpretation and measurement limits from the result
+table. The accompanying submission report records the selected algorithm,
+accuracy, complete model scores, A100 measurements, and reproduction commands.</p>
+<h2 id="what-counts-as-a-successful-attempt">What counts as a successful attempt</h2>
+<p>The latest request defines five medium error targets: <strong>10%, 8%, 6%, 4%, 2%</strong>.
+This submission attempts <strong>4% error</strong>, using eleven draws of <strong>10,000 training
+and 10,000 query examples</strong> at 9×9 resolution. The former 6,000/6,000 protocol
+and intermediate 90%, 97%, and 98% requests are superseded for this attempt.
+Historical reports retain their original scope and are not directly comparable.
+The inclusive 4% threshold requires 105,600 / 110,000 correct; the result is
+107,534 correct. It does not meet the strictest 2% level (107,800 required).
+The decision uses exact counts. Sample SD uses the eleven dataset accuracies
+and denominator ten; it is in percentage points, not a standard error.</p>
+<p>Training and query rows are disjoint within each draw. Independently drawn
+datasets may overlap because all are sampled from the same original 60,000
+training examples. Consequently the eleven numbers describe this resampling
+protocol, not eleven entirely separate source populations. Architecture
+development used a previously available training subset; overlap between that
+subset and later random query rows is possible. No fitted weights transfer
+between draws, and no per-draw query labels are provided to the learner.</p>
+<p>This is an open-data evaluation, not a hidden-label test. The data-preparation
+process reads the canonical label file to extract permitted training labels,
+but never creates query-label arrays before all predictions are frozen. The
+learner containers receive only the permitted three arrays. Development choices
+were made on a prior 4,800/1,200 training/validation split, which may overlap the
+later query rows. Thus the evidence supports a frozen algorithm on fresh random
+draws, but does not prove architecture selection was independent of every query
+example ever seen in development. A stricter interpretation forbidding even
+development overlap would require a separate development pool or an external
+hidden evaluation. No validation or model selection occurs within formal draws.</p>
+<p>The dataset CLI retains its historical default for reproducibility; current
+medium runs must explicitly select <code>medium-error-targets-v1</code>. The original
+competition sketch is illustrative; current counts and targets are those in
+the written rules, not old annotations in the sketch.</p>
+<p>Dataset preparation used NumPy 2.4.6 on macOS; the pinned GPU container used
+NumPy 2.2.6. Published input hashes detect any reproduction difference. The
+FP32 matrix multiplications in box-area resizing may depend on BLAS/platform,
+so matching package versions alone is not a universal bitwise portability
+guarantee. No such mismatch was observed in the retained checks.</p>
+<h2 id="numerical-meaning-of-v4-instructions">Numerical meaning of v4 instructions</h2>
+<p>The pinned v4 specification defines 32-bit words but does not completely define
+floating-point rounding, subnormal handling, comparison encodings, or reduction
+order. This submission declares FP32 round-to-nearest-even arithmetic, separate
+multiply and add operations, explicit ordered reductions, and raw-word
+comparison flags. Its A100 lowering is checked against an independent CPU
+reference, with emitted PTX retained for inspection. These are submission
+conventions rather than new official benchmark rules.</p>
+<p>The training probability calculation is a declared repeated-squaring
+approximation. It is part of the submitted algorithm. Its arithmetic and
+temporary storage must be scored; it is not an unpriced call to an exponential
+or softmax library. The algorithm is evaluated again after translation, because
+native library reductions and random schedules can produce different trained
+weights and predictions.</p>
+<h2 id="intermediate-language-and-scoring">Intermediate language and scoring</h2>
+<p>The compact language is a generator for a finite, statically addressed v4
+instruction stream. Loops and seed-generated lookup tables compress the program
+description. They are not new unpriced machine instructions. Each table value
+used as an immediate expands to a charged <code>set</code>; each data access expands to the
+corresponding priced scratch-memory access. Repeated source operands are charged
+each time. The scorer aggregates exact access multiplicities rather than
+interpreting every individual dynamic instruction.</p>
+<p>Random initialization, permutations, and augmentation geometry depend only on
+published seeds and fixed dimensions. They can therefore be generated when the
+program is compiled. No image, training label, fitted weight, or query result
+may be used to create those literals. Pixel interpolation, normalization,
+training, parameter updates, and inference remain part of the scored program.
+This interpretation assumes the model's uncharged instruction supply can carry
+a large generated straight-line program. The report should not be read as a
+measurement of instruction-storage size, decoder cost, or compilation energy.</p>
+<p>The scorer is a submission-supplied research implementation, not an official
+acceptance service. Its evidence includes expanded small-program execution and
+independent per-address cost comparisons. Those checks provide concrete
+evidence but do not constitute a formal proof of the implementation.</p>
+<h2 id="area-and-execution-boundaries">Area and execution boundaries</h2>
+<p>Area means occupied 1 μm² scratch cells in the declared physical placement,
+reported in mm². It excludes processor area, tape, instruction storage,
+interconnect overhead, and a fabricated-chip floorplan. It must not be equated
+with an A100's physical die area or its tensor allocation size. The A100 compiler
+may keep values in registers and use parallel kernels while preserving the
+declared numerical computation.</p>
+<p>The model includes fresh learning and every query prediction. Tape operations
+are free under the pinned model. GPU measurements use already resident inputs
+and include fresh learned-state reset, full training, inference, ensemble
+arithmetic, and launch overhead. Host/device input transfer, allocation,
+compilation, graph capture, and audit serialization are reported outside that
+boundary. Time to score is the host runtime of theoretical cost computation,
+not learner training time and not compilation time.</p>
+<h2 id="energy-and-display-units">Energy and display units</h2>
+<p>Model time and A100 time are both shown in <strong>ms</strong>; both energies are shown in
+<strong>mJ</strong>; area is shown in <strong>mm²</strong>; time to score is shown in <strong>s</strong>. This is a common
+display scale, not a claim that latency and energy have the same physical
+dimension. Conversions are 10⁹ ps per ms, 10¹² fJ per mJ, and 10⁶ μm² per mm².
+Cost tables use two significant figures, while exact values remain in JSON.</p>
+<p>NVML measures integrated GPU-board energy. Idle adjustment subtracts the mean
+of paired before/after idle powers over the active counter interval. Temperature,
+clocks, telemetry quantization, and baseline drift affect this estimate. The
+measurement record retains raw counters, gross energy, paired baselines, and
+before-only/after-only sensitivity. Host CPU energy is excluded. Repeated runs
+can reuse GPU caches; measured performance is not a cold-start service latency.</p></main><footer>Standalone record. The report states the evaluated threshold and dataset protocol. <a href="https://github.com/cybertronai/sutro-problems">Repository</a> · <a href="../">All submission reports</a></footer></body></html>

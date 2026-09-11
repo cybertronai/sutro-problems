@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Reproducible MNIST-medium convolutional-network submission: eleven draws, exact model scoring and complete-task A100 measurements.">
+<title>MNIST-medium: a fully scored 4% error submission · Sutro problems</title><style>
+:root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
+*{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
+header{background:#103c47;color:white;padding:36px max(24px,calc((100vw - 1060px)/2)) 26px}
+header p{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#bfd9da}
+header .brand{font-size:27px;font-weight:680;margin:6px 0 18px}nav{display:flex;gap:9px;flex-wrap:wrap}
+nav a{color:#edf8f8;border:1px solid #5c8088;padding:6px 13px;border-radius:5px;text-decoration:none;font-size:14px}
+nav a.active{background:#fff;color:#103c47}main{max-width:1120px;margin:0 auto;padding:32px 30px 70px;background:white;min-height:60vh}
+h1{font:700 36px/1.2 Georgia,serif;letter-spacing:-.015em;margin:10px 0 24px}h2{font-size:24px;line-height:1.35;margin:38px 0 16px;border-top:1px solid var(--line);padding-top:24px}
+h3{font-size:19px;margin:28px 0 8px}p{margin:12px 0}a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
+code{font-size:.84em;background:#edf2f3;padding:2px 5px;border-radius:3px;overflow-wrap:anywhere}pre{padding:18px;overflow:auto;background:#edf2f3;border:1px solid var(--line);border-radius:6px;font-size:14px;line-height:1.5}
+pre code{padding:0;background:none;overflow-wrap:normal}table{border-collapse:collapse;display:block;max-width:100%;overflow:auto;margin:22px 0;font-size:15px}th,td{padding:10px 14px;border:1px solid var(--line);vertical-align:top}th{background:#eaf2f3;text-align:left}tr:nth-child(even) td{background:#f8fafb}
+blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;background:#fffaed}blockquote p{margin:6px 0}li{margin:9px 0}footer{max-width:1120px;margin:auto;padding:22px 30px 40px;font-size:13px;color:var(--muted)}.toc{padding:18px 24px;background:#f4f8f8;border:1px solid var(--line);border-radius:6px}.toc ul{margin:0;padding-left:20px}.toc li{margin:3px 0}.toc a{text-decoration:none}
+@media(max-width:600px){main{padding:24px 18px 44px}h1{font-size:29px}header{padding:24px 18px}table{font-size:13px}th,td{padding:8px}}
+</style></head>
+<body><header><p>Sutro problems · Submission attempt · September 2026</p><div class="brand">MNIST-medium / Ordered ConvNet</div><nav><a class="active" href="index.html">Results & reproduction</a><a class="" href="session.html">Session export</a><a class="" href="ambiguities.html">Ambiguities & problems</a></nav></header>
+<main><h1 id="mnist-medium-a-fully-scored-4-error-submission">MNIST-medium: a fully scored 4% error submission</h1>
+<p><strong>The frozen three-ConvNet learner achieved 2.2% ± 0.1 pp mean error
+(97.8% ± 0.1 pp accuracy)</strong> across eleven independent draws, each with
+10,000 training and 10,000 held-out query examples at 9×9 resolution. It clears
+the requested <strong>4% error</strong> threshold. This package includes the complete v4
+program generator, an exact aggregate scorer, actual A100 training and prediction
+measurements, reproducible evidence, and a visible session export.</p>
+<p>Contributors: Yaroslav Bulatov (task and evaluation requirements), Codex (implementation,
+experiments, scoring and report). Prepared 11 September 2026. Acceptance remains
+subject to benchmark review; the separate ambiguity report describes the declared
+numerical, instruction-supply, development-data and measurement conventions.</p>
+<h2 id="results-on-a-common-scale">Results on a common scale</h2>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Accuracy</th>
+<th style="text-align: right;">Mean error</th>
+<th style="text-align: right;">Model time (ms)</th>
+<th style="text-align: right;">Model energy (mJ)</th>
+<th style="text-align: right;">Area (mm²)</th>
+<th style="text-align: right;">Time to score (s)</th>
+<th style="text-align: right;">A100 time (ms)</th>
+<th style="text-align: right;">A100 energy (mJ)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">97.8% ± 0.1 pp</td>
+<td style="text-align: right;">2.2% ± 0.1 pp</td>
+<td style="text-align: right;">4,900,000</td>
+<td style="text-align: right;">12,000</td>
+<td style="text-align: right;">8.9</td>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">13,000</td>
+<td style="text-align: right;">780,000</td>
+</tr>
+</tbody>
+</table>
+<p>Costs cover <strong>one complete task</strong>: fresh initialization and training of all three
+members on 10,000 examples, prediction of all 10,000 queries, and ensemble output.
+They are not per-image inference costs and are not multiplied by eleven. Accuracy
+uses all eleven draws; A100 measurements use the predeclared first draw. Model
+costs are input-independent for these fixed dimensions, epochs and seeds, so the
+same exact score applies to every draw. A100 values are medians of three trials.
+The energy column subtracts paired idle-board energy. All displayed costs use two
+significant figures; accuracy and SD use one decimal. JSON retains full precision.</p>
+<p>The A100 is about 370 times faster and uses about 65
+times the model's energy under these boundaries. This comparison puts both sets
+of numbers in the same units; it does not equate a modeled single core with an
+entire physical GPU board.</p>
+<h2 id="accuracy-and-the-five-targets">Accuracy and the five targets</h2>
+<p>There were <strong>107,534 correct predictions out of 110,000</strong>.
+The inclusive 4% threshold requires <strong>105,600 correct</strong>, giving
+a margin of <strong>1,934</strong>. The unrounded aggregate is used for the
+decision. The five requested error levels are 10%, 8%, 6%, 4%, and 2%, corresponding
+to 90%, 92%, 94%, 96%, and 98% accuracy. This is the 4% attempt; it also exceeds
+the three looser levels, but misses the 2% level by 266 correct predictions.
+No further target-specific tuning was performed after these results were opened.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Draw</th>
+<th style="text-align: right;">Dataset seed</th>
+<th style="text-align: right;">Correct / total</th>
+<th style="text-align: right;">Accuracy</th>
+<th style="text-align: right;">Error</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">20261101</td>
+<td style="text-align: right;">9,781 / 10,000</td>
+<td style="text-align: right;">97.8%</td>
+<td style="text-align: right;">2.2%</td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">20261102</td>
+<td style="text-align: right;">9,780 / 10,000</td>
+<td style="text-align: right;">97.8%</td>
+<td style="text-align: right;">2.2%</td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">20261103</td>
+<td style="text-align: right;">9,776 / 10,000</td>
+<td style="text-align: right;">97.8%</td>
+<td style="text-align: right;">2.2%</td>
+</tr>
+<tr>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">20261104</td>
+<td style="text-align: right;">9,783 / 10,000</td>
+<td style="text-align: right;">97.8%</td>
+<td style="text-align: right;">2.2%</td>
+</tr>
+<tr>
+<td style="text-align: right;">5</td>
+<td style="text-align: right;">20261105</td>
+<td style="text-align: right;">9,762 / 10,000</td>
+<td style="text-align: right;">97.6%</td>
+<td style="text-align: right;">2.4%</td>
+</tr>
+<tr>
+<td style="text-align: right;">6</td>
+<td style="text-align: right;">20261106</td>
+<td style="text-align: right;">9,789 / 10,000</td>
+<td style="text-align: right;">97.9%</td>
+<td style="text-align: right;">2.1%</td>
+</tr>
+<tr>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">20261107</td>
+<td style="text-align: right;">9,761 / 10,000</td>
+<td style="text-align: right;">97.6%</td>
+<td style="text-align: right;">2.4%</td>
+</tr>
+<tr>
+<td style="text-align: right;">8</td>
+<td style="text-align: right;">20261108</td>
+<td style="text-align: right;">9,786 / 10,000</td>
+<td style="text-align: right;">97.9%</td>
+<td style="text-align: right;">2.1%</td>
+</tr>
+<tr>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">20261109</td>
+<td style="text-align: right;">9,772 / 10,000</td>
+<td style="text-align: right;">97.7%</td>
+<td style="text-align: right;">2.3%</td>
+</tr>
+<tr>
+<td style="text-align: right;">10</td>
+<td style="text-align: right;">20261110</td>
+<td style="text-align: right;">9,766 / 10,000</td>
+<td style="text-align: right;">97.7%</td>
+<td style="text-align: right;">2.3%</td>
+</tr>
+<tr>
+<td style="text-align: right;">11</td>
+<td style="text-align: right;">20261111</td>
+<td style="text-align: right;">9,778 / 10,000</td>
+<td style="text-align: right;">97.8%</td>
+<td style="text-align: right;">2.2%</td>
+</tr>
+</tbody>
+</table>
+<p>The original 60,000 MNIST training rows form the source pool. Each dataset seed
+creates a PCG64 permutation through <code>SeedSequence(seed).spawn(2)[0]</code>; positions
+0–9,999 are training and 10,000–19,999 are queries. Sampling is without replacement
+inside each draw. Independent draws may overlap. The official MNIST test split
+is not used. Float32 pixels are divided by 255, then resized by separable box-area
+averaging with fractional boundary overlap, and clipped to [0,1].</p>
+<p>Learner seeds are fixed at <strong>11, 22, 33</strong> on every dataset. Weights, velocities and
+all learned state are reset for each member and draw. The learner receives only
+training images, training labels and query images. All eleven prediction archives
+were saved and globally hashed before query-label arrays were extracted. The
+evaluator rechecks the frozen sources, inputs, member logits and ordered ensemble
+before scoring. SD is the sample SD of the eleven dataset accuracies (<code>ddof=1</code>),
+in percentage points. It is also the SD of error, not a standard error or a
+confidence interval.</p>
+<h2 id="algorithm-and-selection">Algorithm and selection</h2>
+<p>Each member has three padded 3×3 convolutions with 32 output channels, each
+followed by ReLU. There is no pooling or convolution bias. Flattened 32×9×9
+activations feed a biased 128-unit ReLU head and a biased 10-class output layer.
+Each member has <strong>351,914 parameters</strong>. Batch normalization
+and dropout are disabled. Pixel normalization is <code>4*x - 0.5</code>.</p>
+<p>Each member trains for <strong>8 epochs</strong>, with batch size 128 and a final batch of 16
+(79 updates per epoch). SGD uses learning rate 0.03, momentum 0.9, and coupled
+weight decay 0.0001. Weights use the published seed-only CPU PyTorch initialization
+recipe (constructor draws followed by He-uniform reinitialization), biases and
+initial velocities are zero. No learned weights are supplied to the learner.</p>
+<p>Training uses fixed-seed mild affine augmentation independently with probability
+0.5 per image: rotation
+within ±8°, scale 0.94–1.06, and translation within ±0.35 pixel. Four-neighbor
+bilinear interpolation has a fixed operation order and zero outside the image.
+Permutation and affine geometry are generated from separate PCG64 streams; all
+epoch hashes are retained. Compilation embeds only seed-dependent indices and
+coefficients; pixel reads and interpolation remain charged runtime operations.</p>
+<p>The output gradient uses a declared approximate softmax: subtract the largest
+logit, clamp to [−16,0], form <code>1 + x/1024</code>, square ten times, sum the ten classes
+in ascending order, divide, subtract the one-hot label, and multiply by the
+pre-rounded FP32 reciprocal of batch size.
+All these operations are present in the v4 program. Ensemble logits are added in
+seed order starting from positive zero; ascending strict argmax chooses the
+smallest class in a tie.</p>
+<p>Development compared ReLU ConvNets with different widths/depths and losses, then
+BN and dropout variants, on a prior 4,800/1,200 training/validation split. The final
+ordered implementation reached <strong>97.2% validation accuracy (1,166/1,200)</strong> at epoch
+8, the earliest common epoch with at least 97% validation accuracy. After the
+request changed to 4% error, that shorter schedule was frozen before the new
+formal draws. No formal query results selected the architecture, epoch or seeds.
+Development rows can overlap later random queries; this open-data limitation is
+disclosed separately. Fresh formal weights were trained on each full 10,000-row
+training subset. Native-library search scores are development evidence, not the
+accuracy claimed for this submission.</p>
+<h2 id="compact-language-and-exact-model-scoring">Compact language and exact model scoring</h2>
+<p>The representation is <strong><code>sutro-literal-affine-v4/0.2</code></strong>: finite counted loops,
+affine scratch addresses, and literal tables describing a static scalar v4
+program. Its leaves are only <code>set</code>, <code>recv</code>, <code>send</code>, <code>copy</code>, <code>add</code>, <code>sub</code>, <code>mul</code>,
+<code>div</code>, <code>cmp</code>, and <code>select</code>. Loops and tables compress the description; they are
+not new machine operations with invented costs. <code>ir_core.expand()</code> can stream
+every scalar instruction. The full program has <strong>2,791,385,568,603 instructions</strong>
+but only <strong>563 static leaf nodes</strong>. Materializing the full stream
+is unnecessary for scoring.</p>
+<p>The scorer forms exact per-address read/write multiplicities, using finite
+affine convolutions and seed-map histograms. It checks address bounds, definite
+initialization, literal/source identity and integer overflow limits. Duplicate
+operands count separately; <code>select</code> reads all three operands. It then sums the
+model's geometry costs with integer arithmetic: <strong>5,561,894,756,272 charged reads</strong>
+and <strong>2,791,383,928,603 charged writes</strong>. Three independent scoring calls agree
+exactly; their median wall time is reported. Timing includes validation, schedule
+generation, histograms, costs and canonical hashing, and excludes initial file
+loading, IR construction, numerical training and output serialization.</p>
+<p>The model is pinned to simplified-dally-model commit
+<code>26abcca402de647381d31286d42dfbb7a001763d</code>, single core with tape and v4 instructions.
+One 32-bit scratch word occupies one 1 µm² cell. The processor is at (0,0).
+Cells are filled by increasing Manhattan distance, with ascending x within each
+half-diamond shell. At distance <code>h</code>, each read/write costs <code>max(50,2h)</code> fJ;
+read time is <code>max(50,0.8h)</code> ps and write time <code>max(50,0.4h)</code> ps. Accesses block
+serially; arithmetic and instruction supply are uncharged. <code>recv</code> and <code>send</code>
+are free under this model, including their scratch effects. Time accumulates in
+integer 0.2 ps ticks; energy in integer fJ. Display conversion divides by 10⁹
+ps/ms, 10¹² fJ/mJ, and 10⁶ µm²/mm².</p>
+<p>The tape receives all training pixels, training labels, then query pixels once,
+and sends the final predicted labels. Raw queries are retained once. One maximum
+batch workspace and one parameter/gradient/velocity allocation are reused across
+epochs, query batches and sequential members. Every occupied cell is explicitly
+initialized and charged. Occupied scratch area is <strong>8,853,627 cells</strong>;
+it excludes processor, tape, program storage and interconnect area.</p>
+<h2 id="translation-to-a100-and-numerical-evidence">Translation to A100 and numerical evidence</h2>
+<p>The algorithm lowers to Triton kernels and retained PTX. All numerical primitives
+use ordered FP32 round-to-nearest-even arithmetic. Multiplication and addition
+remain separate; fusion is disabled. Division uses explicit <code>div.rn.f32</code>.
+Convolution, dense and gradient reductions preserve their declared scalar order.
+Parallelism is across independent outputs. The GPU may keep temporaries in
+registers and use a different physical memory layout from the modeled machine.</p>
+<p>Verification includes explicit small-program instruction execution against an
+independent CPU reference, exact per-address histograms and geometry prices,
+convolution finite-difference/autograd geometry checks, partial minibatches,
+multiple epochs, ensembles, and GPU comparisons of every parameter, velocity,
+score and prediction. The final no-BN A100 test checks <strong>50 arrays bit for bit</strong>
+across two complete tiny-network cases, including state reset after deliberate
+mutation. These tests use the frozen learner source. The production A100 benchmark
+reproduces all three formal draw-1 learned-state and logit hashes, and every timed
+invocation reproduces the complete state fingerprint. Full MNIST execution is on
+A100; the trillions of scalar v4 instructions are scored statically, not executed
+individually for all 110,000 queries.</p>
+<p>The original benchmark retained Trainer kernels before the final whole-query
+ensemble argmax was compiled. That last shape variant is therefore separately
+regenerated from the same source and pinned compiler, with PTX and tie-case
+verification retained as supplementary evidence. Original-run PTX checks apply
+to every captured kernel; the supplementary file is explicitly a later
+regeneration. No FMA, FTZ or tensor-core instructions are used in the declared
+numerical lowering.</p>
+<h2 id="a100-measurements">A100 measurements</h2>
+<p>Hardware: <strong>NVIDIA A100-SXM4-40GB</strong>, 108 SMs,
+compute capability 8.0, 400 W power limit,
+MIG disabled. CUDA and NVML identify the same UUID; the raw record retains it.
+Software: Python 3.11.15, PyTorch 2.5.1+cu124,
+Triton 3.1.0, CUDA 12.4, driver
+580.95.05, <code>nvidia-ml-py</code> 12.560.30.
+The container image is pinned by digest in <code>modal_run.py</code>.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Trial</th>
+<th style="text-align: right;">Complete tasks</th>
+<th style="text-align: right;">CUDA time/task (ms)</th>
+<th style="text-align: right;">Wall time/task (ms)</th>
+<th style="text-align: right;">Gross energy/task (mJ)</th>
+<th style="text-align: right;">Idle-adjusted energy/task (mJ)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">13,000</td>
+<td style="text-align: right;">13,000</td>
+<td style="text-align: right;">1,700,000</td>
+<td style="text-align: right;">790,000</td>
+</tr>
+<tr>
+<td style="text-align: right;">2</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">13,000</td>
+<td style="text-align: right;">13,000</td>
+<td style="text-align: right;">1,700,000</td>
+<td style="text-align: right;">780,000</td>
+</tr>
+<tr>
+<td style="text-align: right;">3</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">13,000</td>
+<td style="text-align: right;">13,000</td>
+<td style="text-align: right;">1,700,000</td>
+<td style="text-align: right;">770,000</td>
+</tr>
+</tbody>
+</table>
+<p>The measured boundary starts with GPU-resident raw inputs and compiled graphs.
+Every invocation resets all learned state, performs all 24 member-epochs,
+normalizes/predicts every query, adds logits and emits final predictions.
+Host-to-device input transfers, allocation, seed-only program compilation, JIT,
+graph capture, fingerprint checking and cold startup are outside the timed region.
+This is complete learning plus prediction under a GPU-resident boundary.</p>
+<p>Each trial has a 3,000 ms settle and 3,000 ms idle-counter interval before and
+after activity. NVML cumulative energy counters are sampled with timestamps;
+the average of the two idle powers is subtracted over the same active-counter
+duration. Counter values are already mJ. CUDA events and synchronized host wall
+times agree. Using only the before or after baseline instead would give
+770,000–800,000 mJ per task across these trials.
+Gross energy is retained so this baseline sensitivity is visible. NVML measures
+the whole GPU board and excludes the host CPU; caches and baseline drift remain
+measurement limitations.</p>
+<h2 id="reproduction">Reproduction</h2>
+<p>Use Python 3.11 with NumPy, <code>uv</code>, and a configured Modal account with A100 access.
+From a checkout containing this submission, install the local dependency and
+download the two canonical training IDX files without building query labels:</p>
+<pre><code class="language-bash">git clone --branch codex/mnist-medium-four-percent-scored \
+  https://github.com/cybertronai/sutro-problems.git sutro-medium-reproduction
+cd sutro-medium-reproduction
+python3 -m venv /tmp/mnist-reproduce-env
+/tmp/mnist-reproduce-env/bin/pip install numpy==2.4.6
+/tmp/mnist-reproduce-env/bin/python - &lt;&lt;'PY'
+from pathlib import Path
+from mnist.code.data import SOURCES, download_source
+for key in ('train_images', 'train_labels'):
+    download_source(Path('/tmp/mnist-raw'), *SOURCES[key])
+PY
+/tmp/mnist-reproduce-env/bin/python \
+  mnist/submissions/medium-convnet-v4-20260911/reproduce.py \
+  --raw /tmp/mnist-raw --output /tmp/mnist-medium-reproduction --run
+</code></pre>
+<p>The reproduction helper makes a fresh source-only tree, prepares eleven input
+archives, runs the frozen learner, freezes every prediction, evaluates accuracy,
+regenerates seed-only constants on the pinned CPU image, runs three exact scores,
+and measures the first draw on A100. It refuses to overwrite existing evidence.
+Omit <code>--run</code> to prepare the isolated inputs and print the remaining commands.
+Dataset archives are regenerated rather than published; source indices and raw
+file checksums are retained in every draw manifest. Exact GPU predictions should
+reproduce under the pinned numerical environment; runtime and energy will vary.</p>
+<p>To recompute only the theoretical costs from the published constants:</p>
+<pre><code class="language-bash">cd mnist/submissions/medium-convnet-v4-20260911
+python ir_score.py --config config.json --constants constants/constants.json \
+  --output /tmp/mnist-medium-score --repeats 3
+python audit.py --skip-input-files --output /tmp/mnist-medium-audit.json
+python ir_test_core.py
+python ir_test_conv.py
+python ir_test_bn.py
+python ir_test_model.py
+uvx modal==1.5.5 run ordered_backend/check_submission.py \
+  --output /tmp/mnist-medium-gpu-validation
+</code></pre>
+<p>The retained scoring host used an Intel Core i9-9880H at 2.30 GHz, 64 GiB RAM,
+macOS 26.6.2, Python 3.11.13, and NumPy 2.4.6.
+The audit checks evidence and arithmetic without opening raw query labels.
+The command above checks published evidence without local input archives;
+omit <code>--skip-input-files</code> after regenerating them to check every input byte too.
+Full testing takes longer than the reported scoring interval.</p>
+<h2 id="evidence-and-references">Evidence and references</h2>
+<ul>
+<li><a href="accuracy.json">Accuracy and all eleven counts</a>, <a href="protocol.json">frozen protocol</a>, <a href="prediction_manifest.json">global prediction manifest</a>.</li>
+<li><a href="model-score.json">Exact model score</a>, <a href="program.il.json">compact program</a>, <a href="ir_core.py">scorer</a>, <a href="ir_model.py">compiler</a>, <a href="constants/constants.json">seed-only constants</a>.</li>
+<li><a href="benchmark/results.json">Raw A100 trials and counters</a>, <a href="benchmark/results/draw-00.json">executed learner provenance</a>, <a href="config.json">configuration</a>, <a href="selection.json">selection record</a>.</li>
+<li><a href="audit.json">Independent evidence audit</a>, <a href="ir-model-validation.json">complete numerical compiler checks</a>, <a href="ordered_backend/submission-validation/results.json">current-source A100 checks</a>, <a href="supplemental-argmax/results.json">supplementary argmax checks</a>.</li>
+<li><a href="reproduce.py">Reproduction helper</a>, <a href="modal_run.py">A100 runner</a>, <a href="measure_gpu.py">measurement code</a>, <a href="ordered_backend/README.md">ordered backend</a>.</li>
+<li><a href="ambiguities.html">Separate ambiguities and problems</a>, <a href="session.html">human-readable session</a>, <a href="session.json">machine-readable visible session</a>.</li>
+<li><a href="https://github.com/cybertronai/simplified-dally-model/tree/26abcca402de647381d31286d42dfbb7a001763d/models/single-core-with-tape">Pinned single-core model</a>, <a href="https://github.com/cybertronai/simplified-dally-model/tree/26abcca402de647381d31286d42dfbb7a001763d/instruction-sets/v4">pinned v4 instructions</a>.</li>
+</ul></main><footer>Standalone record. The report states the evaluated threshold and dataset protocol. <a href="https://github.com/cybertronai/sutro-problems">Repository</a> · <a href="../">All submission reports</a></footer></body></html>

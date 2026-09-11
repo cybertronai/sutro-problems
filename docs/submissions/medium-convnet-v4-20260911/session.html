@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Reproducible MNIST-medium convolutional-network submission: eleven draws, exact model scoring and complete-task A100 measurements.">
+<title>MNIST-medium submission session · Sutro problems</title><style>
+:root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
+*{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
+header{background:#103c47;color:white;padding:36px max(24px,calc((100vw - 1060px)/2)) 26px}
+header p{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#bfd9da}
+header .brand{font-size:27px;font-weight:680;margin:6px 0 18px}nav{display:flex;gap:9px;flex-wrap:wrap}
+nav a{color:#edf8f8;border:1px solid #5c8088;padding:6px 13px;border-radius:5px;text-decoration:none;font-size:14px}
+nav a.active{background:#fff;color:#103c47}main{max-width:1120px;margin:0 auto;padding:32px 30px 70px;background:white;min-height:60vh}
+h1{font:700 36px/1.2 Georgia,serif;letter-spacing:-.015em;margin:10px 0 24px}h2{font-size:24px;line-height:1.35;margin:38px 0 16px;border-top:1px solid var(--line);padding-top:24px}
+h3{font-size:19px;margin:28px 0 8px}p{margin:12px 0}a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
+code{font-size:.84em;background:#edf2f3;padding:2px 5px;border-radius:3px;overflow-wrap:anywhere}pre{padding:18px;overflow:auto;background:#edf2f3;border:1px solid var(--line);border-radius:6px;font-size:14px;line-height:1.5}
+pre code{padding:0;background:none;overflow-wrap:normal}table{border-collapse:collapse;display:block;max-width:100%;overflow:auto;margin:22px 0;font-size:15px}th,td{padding:10px 14px;border:1px solid var(--line);vertical-align:top}th{background:#eaf2f3;text-align:left}tr:nth-child(even) td{background:#f8fafb}
+blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;background:#fffaed}blockquote p{margin:6px 0}li{margin:9px 0}footer{max-width:1120px;margin:auto;padding:22px 30px 40px;font-size:13px;color:var(--muted)}.toc{padding:18px 24px;background:#f4f8f8;border:1px solid var(--line);border-radius:6px}.toc ul{margin:0;padding-left:20px}.toc li{margin:3px 0}.toc a{text-decoration:none}
+@media(max-width:600px){main{padding:24px 18px 44px}h1{font-size:29px}header{padding:24px 18px}table{font-size:13px}th,td{padding:8px}}
+</style></head>
+<body><header><p>Sutro problems · Submission attempt · September 2026</p><div class="brand">MNIST-medium / Ordered ConvNet</div><nav><a class="" href="index.html">Results & reproduction</a><a class="active" href="session.html">Session export</a><a class="" href="ambiguities.html">Ambiguities & problems</a></nav></header>
+<main><h1 id="mnist-medium-submission-session">MNIST-medium submission session</h1>
+<p>Visible conversation through <strong>2026-09-11T22:33:18.658841+00:00</strong>.</p>
+<p>Visible user and assistant messages from the medium-submission request through the stated cutoff, including user answers to asynchronous clarification questions. Internal reasoning, system/developer instructions, AGENTS/environment metadata, raw tools and the source session file are excluded. The sequence preserves target changes; the accompanying report states the final evaluated task.</p>
+<p>This snapshot contains visible conversation, not private reasoning. Measurements and reproduction instructions are preserved in the accompanying report.</p>
+<h2 id="1-user-2026-09-11t054926500z">1. User · 2026-09-11T05:49:26.500Z</h2>
+<p>Make a Submission for the medium which clears the 90% threshold. This may require creating an efficient scorer and figuring out the way to compile it to A100.</p>
+<h2 id="2-assistant-2026-09-11t054932192z">2. Assistant · 2026-09-11T05:49:32.192Z</h2>
+<p>I’ll build a separate MNIST-medium submission targeting 90%, using an algorithm that can be scored exactly and reproduced on an A100. I’ll check the existing MLP and scorer first, then evaluate the selected learner across 11 fresh dataset draws.</p>
+<h2 id="3-user-clarification-2026-09-11t055017796z">3. User clarification · 2026-09-11T05:50:17.796Z</h2>
+<p><strong>Question:</strong> Should 90% replace MNIST-medium’s published 98% requirement, or only be the goal for this new submission?</p>
+<p><strong>Answer:</strong> Keep 98%; use 90% for this attempt</p>
+<h2 id="4-assistant-2026-09-11t055029644z">4. Assistant · 2026-09-11T05:50:29.644Z</h2>
+<p>I’ll keep the published requirement at 98% and use 90% for this attempt. The earlier validation results suggest a 128-unit ReLU MLP trained for 25 epochs is a good fit: it exceeded 94% there, and its arithmetic can be expressed using v4 instructions.</p>
+<h2 id="5-user-2026-09-11t055101871z">5. User · 2026-09-11T05:51:01.871Z</h2>
+<p>no actually try to get 98% attempt for mnist medium, and have a formal submission, fully scored</p>
+<h2 id="6-assistant-2026-09-11t055155869z">6. Assistant · 2026-09-11T05:51:55.869Z</h2>
+<p>Understood: <strong>98% for MNIST-medium, with a formal submission and every score filled in</strong>. I’m stopping the 90% plan and switching the work toward a learner whose full training algorithm can be translated, scored, and validated on an A100.</p>
+<h2 id="7-assistant-2026-09-11t055532353z">7. Assistant · 2026-09-11T05:55:32.353Z</h2>
+<p>The earlier ConvNet reached 98%, but it still lacked a complete v4 translation and score. I’m testing a simpler ConvNet whose full training procedure can be scored, while building and checking its scorer and A100 kernels in parallel.</p>
+<h2 id="8-assistant-2026-09-11t055728884z">8. Assistant · 2026-09-11T05:57:28.884Z</h2>
+<p>The ConvNet search now uses only training and validation data. The final algorithm will get a separate evaluation across 11 dataset draws. I’ll report mean accuracy and sample standard deviation, with model and A100 costs both in ms and mJ, area in mm², and scoring time in seconds.</p>
+<h2 id="9-assistant-2026-09-11t055943718z">9. Assistant · 2026-09-11T05:59:43.718Z</h2>
+<p>The first A100 checks passed: convolution, backpropagation, and optimizer primitives match the independent CPU calculations bit for bit, using separate FP32 multiply and add operations. Their measured speed looks workable. The kernel-method alternative peaked at 96.8% on validation, so I’m focusing on the ConvNet.</p>
+<h2 id="10-assistant-2026-09-11t060140765z">10. Assistant · 2026-09-11T06:01:40.765Z</h2>
+<p>The squared-error ConvNet reached 97.0% on validation. I’m now testing an approximate softmax training rule made from explicit v4 arithmetic operations. This may improve accuracy while keeping the complete training computation scorable.</p>
+<h2 id="11-assistant-2026-09-11t060457112z">11. Assistant · 2026-09-11T06:04:57.112Z</h2>
+<p>The approximate-softmax ConvNet has reached 97.6% on validation. I’m testing seed ensembles next. The complete small-network A100 implementation also matches the CPU reference through training, prediction, and state reset; I’m checking its remaining compiler details before the full accuracy run.</p>
+<h2 id="12-assistant-2026-09-11t060603559z">12. Assistant · 2026-09-11T06:06:03.559Z</h2>
+<p>The scorer now handles seed-generated augmentation tables and has passed independent numerical and cost checks for its convolution components. I’m also preparing checks that reject changed source, changed predictions, or a different ensemble calculation before the accuracy result can be accepted.</p>
+<h2 id="13-assistant-2026-09-11t061100653z">13. Assistant · 2026-09-11T06:11:00.653Z</h2>
+<p>The best three-seed ensemble reached 97.8% on validation. I’m adding batch normalization and testing it next. Its square root will use a fixed sequence of v4 arithmetic operations, so normalization and training will both remain fully scored.</p>
+<h2 id="14-assistant-2026-09-11t061402406z">14. Assistant · 2026-09-11T06:14:02.406Z</h2>
+<p>Batch normalization now passes bit-for-bit A100 checks, including constant inputs and very small values. The scorer’s expanded instruction program independently matches those calculations. I’m testing whether normalization and dropout provide enough accuracy margin, then I’ll freeze the final learner for the 11-dataset evaluation.</p>
+<h2 id="15-assistant-2026-09-11t061906481z">15. Assistant · 2026-09-11T06:19:06.481Z</h2>
+<p>Dropout brought one model to 97.9% on validation, but averaging raw logits still falls short. I’m testing probability averaging and five small image shifts at prediction time. Both have explicit v4 implementations and add relatively little work compared with retraining.</p>
+<h2 id="16-user-2026-09-11t221534758z">16. User · 2026-09-11T22:15:34.758Z</h2>
+<p>do this with a 97% accuracy target</p>
+<h2 id="17-assistant-2026-09-11t221553963z">17. Assistant · 2026-09-11T22:15:53.963Z</h2>
+<p>I’ll use <strong>97% as the target for this submission attempt</strong> and keep the published 98% requirement unchanged. I’ll stop the extra accuracy search and finish the full scoring and A100 measurements for the simpler ConvNet that looked promising in validation.</p>
+<h2 id="18-assistant-2026-09-11t221732232z">18. Assistant · 2026-09-11T22:17:32.232Z</h2>
+<p>The 97% attempt will use a 32-channel ConvNet with a three-seed ensemble. I’m validating its exact A100 arithmetic on training-only validation data before freezing the stopping point and running all 11 datasets.</p>
+<h2 id="19-user-2026-09-11t221823384z">19. User · 2026-09-11T22:18:23.384Z</h2>
+<p>actually, I will want to have five targets, 10%, 8%, 6%, 4%, 2% error rates, just do the 4% error rate now. Evaluated on random draws of 10,000 examples.</p>
+<h2 id="20-assistant-2026-09-11t221836820z">20. Assistant · 2026-09-11T22:18:36.820Z</h2>
+<p>I’ll target <strong>4% error (96% accuracy)</strong> now and record the five requested targets: 10%, 8%, 6%, 4%, and 2% error. I’ll keep the 11-draw mean and sample-standard-deviation reporting; I need to pin down how the 10,000 examples fit into each draw.</p>
+<h2 id="21-user-clarification-2026-09-11t221851115z">21. User clarification · 2026-09-11T22:18:51.115Z</h2>
+<p><strong>Question:</strong> For each random draw, should the 10,000 examples be the held-out test set, keeping MNIST-medium’s 6,000 training examples, or should training also use 10,000 examples?</p>
+<p><strong>Answer:</strong> 10,000 train + 10,000 test</p>
+<h2 id="22-assistant-2026-09-11t221904574z">22. Assistant · 2026-09-11T22:19:04.574Z</h2>
+<p>Confirmed: each of the 11 draws will use <strong>10,000 training examples and 10,000 held-out test examples</strong>. I’ll complete the <strong>4% error target</strong> submission now; the other four targets will remain for later attempts.</p>
+<h2 id="23-assistant-2026-09-11t222002101z">23. Assistant · 2026-09-11T22:20:02.101Z</h2>
+<p>The exact A100 implementation reached 97.2% validation accuracy after eight epochs. I’ll freeze that shorter training schedule for the 4% error attempt and evaluate it on 11 fresh draws of 10,000 training and 10,000 test examples.</p>
+<h2 id="24-assistant-2026-09-11t222345860z">24. Assistant · 2026-09-11T22:23:45.860Z</h2>
+<p>The new 10,000-train/10,000-test runs are progressing, and all 30 dataset and evaluator tests passed. I’m updating the benchmark rules and preparing the exact model score while the remaining draws finish.</p>
+<h2 id="25-assistant-2026-09-11t222447537z">25. Assistant · 2026-09-11T22:24:47.537Z</h2>
+<p>The submission clears the 4% error target: <strong>2.2% ± 0.1 percentage points error</strong>, or <strong>97.8% ± 0.1 percentage points accuracy</strong>, across all 11 draws. All 110,000 predictions were frozen before scoring. I’m now measuring the complete training-and-prediction task on A100 and calculating its exact theoretical costs.</p>
+<h2 id="26-assistant-2026-09-11t222547330z">26. Assistant · 2026-09-11T22:25:47.330Z</h2>
+<p>The A100 benchmark has reproduced the frozen accuracy run’s trained weights and predictions. The compact scorer counts the full scalar instruction stream through exact memory-access totals; its smaller-program checks match explicit execution. I’m also documenting the remaining limits, including development-data overlap and the GPU measurement boundary.</p>
+<h2 id="27-assistant-2026-09-11t222707231z">27. Assistant · 2026-09-11T22:27:07.231Z</h2>
+<p>The scorer handled <strong>2.8 trillion scalar instructions in 11 seconds</strong>. Its totals are <strong>4,900,000 ms</strong>, <strong>12,000 mJ</strong>, and <strong>8.9 mm²</strong>. The first A100 trial took about <strong>13,000 ms</strong>; I’m finishing the repeated energy measurements and checking the publication package.</p>
+<h2 id="28-assistant-2026-09-11t222939993z">28. Assistant · 2026-09-11T22:29:39.993Z</h2>
+<p>All three A100 trials are complete: median runtime is <strong>13,000 ms</strong> and idle-adjusted energy is <strong>780,000 mJ</strong> for the full task. The accuracy, theoretical scores, and hardware measurements are now complete. I’m checking the reports and reproduction files before publishing the Pages report and formal submission PR.</p>
+<h2 id="29-assistant-2026-09-11t223156966z">29. Assistant · 2026-09-11T22:31:56.966Z</h2>
+<p>The independent audit passed, including the accuracy statistics, model costs, raw NVML calculations, and A100 output equivalence. A fresh preparation run also reproduced every input-array hash for all 11 draws. I’m now publishing the report, separate ambiguities report, and human-readable session export, then opening the submission PR.</p></main><footer>Standalone record. The report states the evaluated threshold and dataset protocol. <a href="https://github.com/cybertronai/sutro-problems">Repository</a> · <a href="../">All submission reports</a></footer></body></html>
