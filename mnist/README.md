@@ -20,8 +20,7 @@ Use tape operations to read and write the dataset.
 1. Find an algorithm in Dally model that meets the accuracy target. Report its theoretical model **time**,
    **energy**, and **area** (from peak memory use), plus **time to score**: the
    runtime of the scoring computation on your machine.
-2. Compile to to run on A100 using [pyptx](https://github.com/patrick-toulme/pyptx)
-   or [Triton](https://github.com/triton-lang/triton). Report GPU runtime and
+2. Compile to to run on A100 using an ISA of your choice (ie [pyptx](https://github.com/patrick-toulme/pyptx)) Report GPU runtime and
    **idle-adjusted energy in joules**, measured with NVML.
 3. Submit reproduction instructions and a link to a standalone report explaining
    the algorithm and measurements. See [**Instructions for agents**](instructions.md).
