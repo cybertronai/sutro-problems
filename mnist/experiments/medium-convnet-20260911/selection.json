@@ -1,0 +1,88 @@
+{
+  "schema_version": 1,
+  "frozen_at_utc": "2026-09-11T05:11:04.185977+00:00",
+  "config": {
+    "id": "cnn-09",
+    "architecture": "cnn",
+    "width": 64,
+    "depth": 3,
+    "activation": "gelu",
+    "pooling": "none",
+    "dropout": 0.2,
+    "learning_rate": 0.001,
+    "weight_decay": 0.001,
+    "augmentation": "mild_affine",
+    "batch_size": 128,
+    "epochs": 100,
+    "head_width": 256,
+    "image_size": 9
+  },
+  "epochs": 71,
+  "schedule_epochs": 100,
+  "seeds": [
+    101,
+    102,
+    103
+  ],
+  "primary_single_seed": 101,
+  "selected_inference": "single",
+  "selected_name": "seed101",
+  "ensemble_rule": "For the preferred validation-ranked architecture, compare the float64 arithmetic mean of raw float32 validation logits from best checkpoints at seeds11/22/33 against the fixed primary seed11 checkpoint. Select the ensemble only for strictly higher validation correct count; ties favor the single model. Final ensemble uses the same frozen architecture/epoch at seeds101/102/103, averaged identically; primary single uses seed101. No learned weights or test-time augmentation.",
+  "validation_evidence": {
+    "config": {
+      "id": "cnn-09",
+      "architecture": "cnn",
+      "width": 64,
+      "depth": 3,
+      "activation": "gelu",
+      "pooling": "none",
+      "dropout": 0.2,
+      "learning_rate": 0.001,
+      "weight_decay": 0.001,
+      "augmentation": "mild_affine",
+      "batch_size": 128,
+      "epochs": 100,
+      "head_width": 256,
+      "image_size": 9
+    },
+    "parameter_count": 1404618,
+    "seeds": [
+      11,
+      22,
+      33
+    ],
+    "mean_best_validation_correct": 1174.6666666666667,
+    "mean_best_validation_loss": 0.10332182433870103,
+    "best_epochs_by_seed": {
+      "11": 71,
+      "22": 88,
+      "33": 70
+    },
+    "refit_epochs": 71,
+    "individual_correct_by_seed": {
+      "11": 1178,
+      "22": 1173,
+      "33": 1173
+    },
+    "validation_logits_average_ensemble_correct": 1174,
+    "ensemble_accumulation": "float64 arithmetic mean of three float32 raw-logit arrays",
+    "validation_total": 1200,
+    "selected_inference": "single",
+    "ensemble_selection_rule": "Strictly higher validation correct count than fixed primary seed11 checkpoint; ties favor single"
+  },
+  "source_sha256": {
+    "runner.py": "a6d44bfce1fb19de6a876626770b2d0251e775c7bf96d89a47e2e69d2ee43999",
+    "modal_train.py": "88a592e836d444703c392fdbc56477fd0dbfa5751b561b02d6c815a50f7709d8",
+    "refit.py": "8880271b2ac5a60e0c0cdae465e2f6a65ae066ad289121ac06dd4ebb7327b46d"
+  },
+  "input_sha256": {
+    "train_images": "3c2c9d7cc3103e05c6e72e8b39ad7ae8f93fcbea8b23ac5f43ffacd9a9c4653b",
+    "train_labels": "91633f2c00fe471cb130fb6831c3d7dca5899bd926a1c899d873826dfd62e617",
+    "test_images": "f121936f4b6b0c2eebef773444fc45e72832d1c84948a50969a909467d6b1003"
+  },
+  "protocol_sha256": "67836b89de36ff69738dcbe45280792d78c7217e61ba8fc4efd37ba7530e571b",
+  "validation_selection_sha256": "486450ee103902c99660fee2ee861815944836087ff7488f7327c1671393ad21",
+  "validation_audit_sha256": "99396b2fa9ce723410fdade459ab640922a1c356cfa513baad7ce786eb1e9996",
+  "test_arrays_accessed": false,
+  "phase": "Frozen before refitting and before any ConvNet test-label evaluation"
+}
