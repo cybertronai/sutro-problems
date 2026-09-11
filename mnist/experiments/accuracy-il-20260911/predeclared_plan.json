@@ -1,0 +1,41 @@
+{
+  "widths": [
+    16,
+    32,
+    64
+  ],
+  "checkpoint_epochs": [
+    100,
+    300,
+    1000
+  ],
+  "learning_rates": [
+    0.01,
+    0.05,
+    0.2
+  ],
+  "validation_search_seed": 11,
+  "final_seeds": [
+    101,
+    102,
+    103
+  ],
+  "targets_percent": [
+    55,
+    60,
+    65,
+    70,
+    75
+  ],
+  "batch_size": 30,
+  "split_seed": 20260912,
+  "split": "one fixed PCG64 permutation; first 480 training, last 120 validation",
+  "selection": "best validation count at each epoch budget, plus minimum epochs*width candidate meeting each validation target; ties lower epochs*width, lower width, lower learning rate; deduplicate; freeze before any test evaluation",
+  "test_use": "generate every final prediction with frozen configs and seeds before opening labels",
+  "learner_npz_allowlist": [
+    "train_images",
+    "train_labels",
+    "test_images"
+  ],
+  "algorithm": "9-H-10 ReLU, fixed x*4-0.5, squared-error SGD, cyclic ordered minibatches; separate FP32 multiply/add and ascending reduction order; first-index argmax"
+}

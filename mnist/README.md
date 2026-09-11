@@ -36,6 +36,11 @@ All table times use **picoseconds (ps)** and energies use **femtojoules (fJ)**, 
 *Occupied scratch-cell area under the submission's declared FP32/tape conventions.
 †A100 GPU-resident, steady-state complete-task throughput and idle-adjusted NVML energy; training memorization included. See the report for boundaries and baseline sensitivity.
 
+[Higher-accuracy and compact-scoring study](https://cybertronai.github.io/sutro-problems/docs/submissions/accuracy-il-20260911/):
+all three seeds at 300 epochs and above exceeded 60%; one of 15 runs exceeded 65%.
+The prototype scores billions of v4 instructions through affine-loop aggregation.
+These exploratory MLP results have no A100 measurements yet and do not change the official target.
+
 ## MNIST-medium
 
 | Time (ps) | Energy (fJ) | Area (µm²) | Time to score (ps) | Time on A100 (ps) | Energy on A100 (fJ) | Submission |

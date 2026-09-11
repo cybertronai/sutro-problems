@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="MNIST-small higher-accuracy experiments and compact affine-loop scoring, with uniform ps and fJ units.">
+<title>Higher-accuracy MNIST-small feasibility study · Sutro problems</title><style>
+:root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
+*{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
+header{background:#103c47;color:white;padding:36px max(24px,calc((100vw - 1060px)/2)) 26px}
+header p{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#bfd9da}
+header .brand{font-size:27px;font-weight:680;margin:6px 0 18px}nav{display:flex;gap:9px;flex-wrap:wrap}
+nav a{color:#edf8f8;border:1px solid #5c8088;padding:6px 13px;border-radius:5px;text-decoration:none;font-size:14px}
+nav a.active{background:#fff;color:#103c47}main{max-width:1120px;margin:0 auto;padding:32px 30px 70px;background:white;min-height:60vh}
+h1{font:700 36px/1.2 Georgia,serif;letter-spacing:-.015em;margin:10px 0 24px}h2{font-size:24px;line-height:1.35;margin:38px 0 16px;border-top:1px solid var(--line);padding-top:24px}
+h3{font-size:19px;margin:28px 0 8px}p{margin:12px 0}a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
+code{font-size:.84em;background:#edf2f3;padding:2px 5px;border-radius:3px;overflow-wrap:anywhere}pre{padding:18px;overflow:auto;background:#edf2f3;border:1px solid var(--line);border-radius:6px;font-size:14px;line-height:1.5}
+pre code{padding:0;background:none;overflow-wrap:normal}table{border-collapse:collapse;display:block;max-width:100%;overflow:auto;margin:22px 0;font-size:15px}th,td{padding:10px 14px;border:1px solid var(--line);vertical-align:top}th{background:#eaf2f3;text-align:left}tr:nth-child(even) td{background:#f8fafb}
+blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;background:#fffaed}blockquote p{margin:6px 0}li{margin:9px 0}footer{max-width:1120px;margin:auto;padding:22px 30px 40px;font-size:13px;color:var(--muted)}.toc{padding:18px 24px;background:#f4f8f8;border:1px solid var(--line);border-radius:6px}.toc ul{margin:0;padding-left:20px}.toc li{margin:3px 0}.toc a{text-decoration:none}
+@media(max-width:600px){main{padding:24px 18px 44px}h1{font-size:29px}header{padding:24px 18px}table{font-size:13px}th,td{padding:8px}}
+
+@media(max-width:600px){header .brand{font-size:22px}th,td{padding:7px}table{font-size:12px}}</style></head>
+<body><header><p>Sutro problems · Feasibility study · September 2026</p>
+<div class="brand">MNIST-small / Higher accuracy &amp; compact scoring</div><nav><a class="" href="index.html">Results</a><a class="" href="il.html">Intermediate language</a><a class="active" href="protocol.html">Study protocol</a><a class="" href="ambiguities.html">Ambiguities</a><a class="" href="session.html">Session export</a></nav></header>
+<main><h1 id="higher-accuracy-mnist-small-feasibility-study">Higher-accuracy MNIST-small feasibility study</h1>
+<p>This is an exploratory follow-up to the 308/600 fixed 1NN submission. It uses
+the canonical <code>competition-v2</code>, seed 20260910, 600-training/600-test dataset.
+Only the supplied nine FP32 pixels and the 600 supplied training labels are
+used for learning. There are no pretrained weights, extra labeled examples,
+cross-tier data, augmentation, or W&amp;B runs.</p>
+<h2 id="results">Results</h2>
+<p>All final models use learning rate 0.2. The counts below list the fixed seeds
+101, 102, and 103 in that order; each count is out of 600 test examples.
+Percentages are rounded to two significant figures; target checks use exact counts.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Hidden width</th>
+<th style="text-align: right;">Epochs</th>
+<th style="text-align: right;">Validation correct / 120</th>
+<th style="text-align: left;">Test correct by seed</th>
+<th style="text-align: right;">Mean accuracy ± seed SD</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">100</td>
+<td style="text-align: right;">62</td>
+<td style="text-align: left;">356, 365, 362</td>
+<td style="text-align: right;">60% ± 0.76 pp</td>
+</tr>
+<tr>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">300</td>
+<td style="text-align: right;">69</td>
+<td style="text-align: left;">374, 371, 377</td>
+<td style="text-align: right;">62% ± 0.50 pp</td>
+</tr>
+<tr>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">1,000</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: left;">383, 405, 376</td>
+<td style="text-align: right;">65% ± 2.5 pp</td>
+</tr>
+<tr>
+<td style="text-align: right;">128</td>
+<td style="text-align: right;">3,000</td>
+<td style="text-align: right;">71</td>
+<td style="text-align: left;">384, 388, 385</td>
+<td style="text-align: right;">64% ± 0.35 pp</td>
+</tr>
+<tr>
+<td style="text-align: right;">32</td>
+<td style="text-align: right;">10,000</td>
+<td style="text-align: right;">73</td>
+<td style="text-align: left;">381, 389, 387</td>
+<td style="text-align: right;">64% ± 0.69 pp</td>
+</tr>
+</tbody>
+</table>
+<p>The highest-validation configuration was width 32 with 10,000 epochs. The
+highest observed test mean instead came from 1,000 epochs; that distinction
+does not retroactively change which configuration validation selected.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: right;">Accuracy target</th>
+<th style="text-align: left;">Observed feasibility in the frozen study</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: right;">55%</td>
+<td style="text-align: left;">All 15 refits pass.</td>
+</tr>
+<tr>
+<td style="text-align: right;">60%</td>
+<td style="text-align: left;">14 of 15 pass; width 32 with 300 epochs passes in all three seeds.</td>
+</tr>
+<tr>
+<td style="text-align: right;">65%</td>
+<td style="text-align: left;">One of 15 passes: the predeclared width-32, 1,000-epoch seed 102 gives 405/600 (about 68%). Its two companion seeds fail the 65% target.</td>
+</tr>
+<tr>
+<td style="text-align: right;">70%</td>
+<td style="text-align: left;">No tested refit passes.</td>
+</tr>
+<tr>
+<td style="text-align: right;">75%</td>
+<td style="text-align: left;">No tested refit passes.</td>
+</tr>
+</tbody>
+</table>
+<p>The 60% target is supported across several configurations and seeds. The 65%
+target is attainable in one observed run but has not been established as
+reliable under the fixed refit protocol. This bounded search does not settle
+whether 70% or 75% can be reached with a different algorithm. The small
+120-example validation set and 39 inspected checkpoints also leave room for
+validation selection noise.</p>
+<h2 id="selection-protocol">Selection protocol</h2>
+<ol>
+<li><code>predeclared_plan.json</code> records widths 16/32/64, learning rates
+   0.01/0.05/0.2, epoch checkpoints 100/300/1000, validation seed 11, and final
+   seeds 101/102/103. A single fixed PCG64 permutation with seed 20260912
+   reserves 120 of the 600 training rows for validation and uses the other
+   480 for candidate training. The exact indices are saved.</li>
+<li>The first 27 checkpoint configurations reached at most 71/120 validation
+   correct. Before any test-label access or final refits, a declared extension
+   added widths 32/64/128, learning rates 0.2/0.5, and epoch checkpoints
+   3000/10000. The original validation results and shortlist are preserved as
+   <code>stage1_*</code>; the rationale and second grid are in <code>extension_plan.json</code>.
+   This is an adaptive, validation-led extension, not a claim that the complete
+   two-stage grid was preregistered before observing validation results.</li>
+<li>Across the combined 39 checkpoints, select the highest validation count
+   at each epoch budget. Also include the cheapest candidate, by the declared
+   <code>epochs × width</code> work proxy, meeting each validation target of
+   55/60/65/70/75%. Ties prefer lower work, lower width, then lower learning
+   rate. Deduplication produces five configurations in <code>shortlist.json</code>.</li>
+<li>Refit every frozen configuration on all 600 supplied training examples
+   using all three fixed final seeds. Save every prediction before the
+   evaluator opens test labels. Neither the highest test seed nor a
+   test-selected configuration is presented as an independently selected
+   winning submission.</li>
+<li>The separate evaluation phase opens test labels once the full prediction
+   manifest has been frozen. Report each seed, mean and sample standard
+   deviation, and the number of seeds meeting each target. Seed variation is
+   not a confidence interval for generalization; all runs share the same test
+   set of 600 examples. An unmet target is not proved impossible by this grid.</li>
+</ol>
+<h2 id="exact-learning-algorithm">Exact learning algorithm</h2>
+<p>The network is <code>9 → H → 10</code>, with one ReLU hidden layer. Pixels are transformed
+once as two separately rounded FP32 operations, <code>x * 4 - 0.5</code>. Training labels
+become ten-element one-hot targets. The loss is one half of the sum of the ten
+squared output errors, averaged over a minibatch. Inference chooses the first
+class with the highest output value; no softmax is needed.</p>
+<p>All training uses fixed, contiguous minibatches of 30 in original row order,
+repeated cyclically for the declared number of epochs. There is no shuffle,
+momentum, learning-rate schedule, weight decay, or early stopping within a
+refit. For each batch:</p>
+<pre><code>z  = X W1 + b1
+h  = select(z &gt; 0, z, 0)
+o  = h W2 + b2
+d2 = o - onehot(labels)
+d1 = select(z &gt; 0, d2 W2ᵀ, 0)
+gW1 = Xᵀ d1; gb1 = sum_rows(d1)
+gW2 = hᵀ d2; gb2 = sum_rows(d2)
+W1 -= step*gW1; b1 -= step*gb1
+W2 -= step*gW2; b2 -= step*gb2
+</code></pre>
+<p><code>step</code> is the precomputed FP32 literal <code>float32(learning_rate / 30)</code>. All four
+gradients use pre-update parameters. Matrix products and row sums start with
+FP32 zero and reduce in ascending index order, using a separately rounded
+FP32 multiply followed by an FP32 add. The derivative at zero is zero.</p>
+<p>Row-major parameter arrays are <code>W1[9,H]</code>, <code>b1[H]</code>, <code>W2[H,10]</code>, and <code>b2[10]</code>.
+Initialization uses PCG64(seed): draw <code>W1</code> uniformly on <code>[-1/3, 1/3]</code>, then
+<code>W2</code> uniformly on <code>[-1/sqrt(H), 1/sqrt(H)]</code>, and cast to FP32; biases are zero.
+These are architecture/seed-dependent literals, independent of all datasets.
+Their raw bits can be emitted as <code>set</code> operations in the scored program. The
+square root only produces the compile-time initialization bound; it is not an
+unaccounted training instruction.</p>
+<h2 id="arithmetic-verification-and-scoring-boundary">Arithmetic verification and scoring boundary</h2>
+<p>The fast CPU reference uses unoptimized NumPy einsum with a contiguous
+right-hand matrix. It does not call BLAS. A transposed right-hand matrix
+originally selected a different reduction path; this was detected and fixed
+before candidate search. The published checks compare the final implementation
+with explicit NumPy multiply/add FP32 reductions on representative matrix
+shapes and one complete 600-example training epoch. All final test-output
+vectors also use a separate explicit-reduction check. In addition,
+<code>verify_ordered_training.py</code> repeats the validation-best configuration's full
+training for seed 101 with explicit reductions, comparing parameter bits at
+checkpoints and all final parameter and prediction bits. It never accesses
+test labels.</p>
+<p>The reference training runtime is <strong>not</strong> Dally-model time or A100 time.
+Model scoring must include loading and normalizing the dataset, one-hot
+construction, parameter initialization, every training update, and inference.
+The compact IL work in this directory represents the complete fixed-loop
+program and statically aggregates its explicit v4 operations. It does not
+change the learning algorithm or skip the energy/time cost of training.
+These MLPs have no new measured A100 runtime or energy and are not yet complete
+new benchmark submissions.</p>
+<h2 id="reproduction">Reproduction</h2>
+<p>From the repository root, using Python 3.11 and the recorded NumPy version, use
+a fresh output directory:</p>
+<pre><code class="language-bash">S=mnist/experiments/accuracy-il-20260911
+python -m pip install -r &quot;$S/study-requirements.txt&quot;
+python &quot;$S/accuracy_study.py&quot; --phase search --output /tmp/mnist-accuracy-study
+python &quot;$S/accuracy_study.py&quot; --phase extend --output /tmp/mnist-accuracy-study
+python &quot;$S/accuracy_study.py&quot; --phase final --output /tmp/mnist-accuracy-study
+python &quot;$S/verify_ordered_training.py&quot; --output /tmp/mnist-accuracy-study
+python &quot;$S/accuracy_study.py&quot; --phase evaluate --output /tmp/mnist-accuracy-study
+</code></pre>
+<p>Both learner input reads and test-label evaluation verify canonical array
+checksums from <code>mnist/doc/dataset_manifest.json</code>. The recorded results include
+source checksums, exact predictions, initial and final parameter checksums,
+the frozen shortlist checksum, software versions, and measured CPU reference
+times. The <code>.npy</code> prediction files are optional convenience outputs; identical
+integer predictions are preserved in the JSON manifest.</p></main><footer>Exploratory results; MLP A100 measurements remain outstanding.
+<a href="https://github.com/cybertronai/sutro-problems/tree/main/mnist/experiments/accuracy-il-20260911">Source and evidence</a>
+ · <a href="../1nn-v4-20260911/">Original submission</a></footer></body></html>

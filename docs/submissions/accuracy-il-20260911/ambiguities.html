@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="MNIST-small higher-accuracy experiments and compact affine-loop scoring, with uniform ps and fJ units.">
+<title>Ambiguities and remaining work · Sutro problems</title><style>
+:root{color-scheme:light;--ink:#18242e;--muted:#5b6a73;--line:#d6e0e4;--accent:#066d77}
+*{box-sizing:border-box}body{margin:0;background:#f5f7f7;color:var(--ink);font:17px/1.65 system-ui,-apple-system,sans-serif}
+header{background:#103c47;color:white;padding:36px max(24px,calc((100vw - 1060px)/2)) 26px}
+header p{margin:0;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#bfd9da}
+header .brand{font-size:27px;font-weight:680;margin:6px 0 18px}nav{display:flex;gap:9px;flex-wrap:wrap}
+nav a{color:#edf8f8;border:1px solid #5c8088;padding:6px 13px;border-radius:5px;text-decoration:none;font-size:14px}
+nav a.active{background:#fff;color:#103c47}main{max-width:1120px;margin:0 auto;padding:32px 30px 70px;background:white;min-height:60vh}
+h1{font:700 36px/1.2 Georgia,serif;letter-spacing:-.015em;margin:10px 0 24px}h2{font-size:24px;line-height:1.35;margin:38px 0 16px;border-top:1px solid var(--line);padding-top:24px}
+h3{font-size:19px;margin:28px 0 8px}p{margin:12px 0}a{color:var(--accent);text-underline-offset:3px;overflow-wrap:anywhere}
+code{font-size:.84em;background:#edf2f3;padding:2px 5px;border-radius:3px;overflow-wrap:anywhere}pre{padding:18px;overflow:auto;background:#edf2f3;border:1px solid var(--line);border-radius:6px;font-size:14px;line-height:1.5}
+pre code{padding:0;background:none;overflow-wrap:normal}table{border-collapse:collapse;display:block;max-width:100%;overflow:auto;margin:22px 0;font-size:15px}th,td{padding:10px 14px;border:1px solid var(--line);vertical-align:top}th{background:#eaf2f3;text-align:left}tr:nth-child(even) td{background:#f8fafb}
+blockquote{border-left:4px solid #dfa83d;margin:20px 0;padding:10px 20px;background:#fffaed}blockquote p{margin:6px 0}li{margin:9px 0}footer{max-width:1120px;margin:auto;padding:22px 30px 40px;font-size:13px;color:var(--muted)}.toc{padding:18px 24px;background:#f4f8f8;border:1px solid var(--line);border-radius:6px}.toc ul{margin:0;padding-left:20px}.toc li{margin:3px 0}.toc a{text-decoration:none}
+@media(max-width:600px){main{padding:24px 18px 44px}h1{font-size:29px}header{padding:24px 18px}table{font-size:13px}th,td{padding:8px}}
+
+@media(max-width:600px){header .brand{font-size:22px}th,td{padding:7px}table{font-size:12px}}</style></head>
+<body><header><p>Sutro problems · Feasibility study · September 2026</p>
+<div class="brand">MNIST-small / Higher accuracy &amp; compact scoring</div><nav><a class="" href="index.html">Results</a><a class="" href="il.html">Intermediate language</a><a class="" href="protocol.html">Study protocol</a><a class="active" href="ambiguities.html">Ambiguities</a><a class="" href="session.html">Session export</a></nav></header>
+<main><h1 id="ambiguities-and-remaining-work">Ambiguities and remaining work</h1>
+<p>This report separates resolved display/scoring issues from decisions needed before treating the MLP experiments as new benchmark submissions.</p>
+<table>
+<thead>
+<tr>
+<th>Issue</th>
+<th>Finding and implication</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Mixed units and excess digits</td>
+<td>Fixed in the MNIST README and current results report: time uses ps, energy uses fJ, and performance displays use two significant figures. Historical session messages and raw machine-readable evidence retain their original wording and precision.</td>
+</tr>
+<tr>
+<td>Rounded percentages near a target</td>
+<td>A displayed mean of 65% can be slightly below 65% before rounding. Eligibility must use exact counts: 390/600 is required for 65%. Each seed's count is published.</td>
+</tr>
+<tr>
+<td>Raising the accuracy requirement</td>
+<td>A 60% target was met by every seed at 300 epochs and above in this experiment. A 65% target was met by one of 15 runs; 70% and 75% were not reached. These observations justify further evaluation, not a universal ceiling or an automatic rules change. The official 50% requirement is unchanged.</td>
+</tr>
+<tr>
+<td>Public test-set reuse</td>
+<td>The canonical test set is public and was used by the previous 1NN attempt. Within this study, selection used a training-only split, all configurations/seeds were frozen, and all predictions were saved before its test evaluation. This does not create a new unseen test set. Further tuning after these results should use new independent validation before claiming a stronger submission.</td>
+</tr>
+<tr>
+<td>Validation search adaptivity</td>
+<td>The second search grid was declared after observing the first grid's training-validation results, before test evaluation. Both grids and their chronology are preserved. Calling the entire search preregistered would overstate the protocol.</td>
+</tr>
+<tr>
+<td>Intermediate-language acceptance</td>
+<td>The affine-loop representation is a submission-owned prototype, not an officially accepted format. Its ordinary v4 leaves, fixed placement, exact address histograms, and expansion semantics are inspectable. The benchmark still needs to decide which compact representations and validators it will accept.</td>
+</tr>
+<tr>
+<td>Cost scoring versus semantic verification</td>
+<td>A fast static score establishes instruction/access costs for the represented program. It does not establish learning correctness or the absence of hardcoded answers. Small expanded end-to-end tests, full ordered numerical training, prediction hashes, and source review provide separate evidence. The largest MLP trace was not individually interpreted.</td>
+</tr>
+<tr>
+<td>Scoring-time scope</td>
+<td>The new timing includes structural validation, initialization proof, placement, histograms, integer sums, and hashing. It excludes program loading, file output, numerical execution, and accuracy checks. The old 1NN interpreter performed numerical execution too; dividing these times is not an equal-work end-to-end speedup.</td>
+</tr>
+<tr>
+<td>Restricted control and addressing</td>
+<td>Fixed bounds and affine addresses make aggregation possible. Data-dependent iteration, indirect addressing, mutable placement, and deallocation are unsupported. Valid programs can be rejected if initialization proof exceeds its budget. The current scorer is not a general-purpose verifier for arbitrary algorithms.</td>
+</tr>
+<tr>
+<td>Arithmetic and comparison contract</td>
+<td>The experiment declares FP32 round-to-nearest after separate multiply/add instructions, ascending reductions, raw-word copies/selections, and explicit comparison predicates. Labels are raw uint32 words and equality compares their FP32 interpretations; this assumes preserved subnormals. GPU compilation would need to preserve or explicitly account for these conventions, including avoiding unintended FMA or flush-to-zero changes.</td>
+</tr>
+<tr>
+<td>Initialization and compilation boundary</td>
+<td>Initial weights depend only on declared architecture and seed, so their literal bits are compiled into the IL; all writes are charged. Input transformation, one-hot targets, complete training, and inference are also represented. Whether seed generation itself must be runtime work should be specified consistently for submissions; no learned values are compiled into this program.</td>
+</tr>
+<tr>
+<td>Area convention</td>
+<td>The reported area is one µm² per occupied word at the fixed half-diamond placement. It includes all explicitly initialized buffers, labels, targets, and test images. A containing footprint or technology-specific chip area would be a different measure.</td>
+</tr>
+<tr>
+<td>Actual hardware measurements</td>
+<td>Only the original 1NN has A100 runtime and idle-adjusted NVML energy. New MLP CPU training times are contextual measurements and have slightly different setup boundaries from model scores. No MLP A100 time or energy is inferred from them. A GPU implementation, numerical checks, and repeated NVML trials are required for complete new submissions.</td>
+</tr>
+<tr>
+<td>Energy and time relationship</td>
+<td>Uniform ps and fJ remove unit-conversion friction. Energy still depends on power: E(fJ) = 1000 × P(W) × t(ps). Model costs and measured idle-adjusted energy are distinct quantities even when displayed on the same unit scale.</td>
+</tr>
+</tbody>
+</table>
+<p>The practical next candidate is H32 / 300 epochs, which exceeded 60% with all three fixed seeds and is much cheaper in the model than the longer training runs. A complete submission would fix its seed without selecting on these test results, validate the chosen compact-format policy, and measure an equivalent A100 implementation. A stronger accuracy target needs additional evidence.</p>
+<p><a href="index.html">Feasibility results</a> · <a href="il.html">IL specification</a> · <a href="protocol.html">Selection protocol</a> · <a href="../1nn-v4-20260911/ambiguities.html">Original submission ambiguities</a></p></main><footer>Exploratory results; MLP A100 measurements remain outstanding.
+<a href="https://github.com/cybertronai/sutro-problems/tree/main/mnist/experiments/accuracy-il-20260911">Source and evidence</a>
+ · <a href="../1nn-v4-20260911/">Original submission</a></footer></body></html>

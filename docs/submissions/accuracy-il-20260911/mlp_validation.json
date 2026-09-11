@@ -1,0 +1,50 @@
+{
+  "checks": "Complete expanded IL training/inference versus explicit ordered FP32 reference",
+  "cases": [
+    {
+      "width": 4,
+      "train_count": 6,
+      "batch": 3,
+      "test_count": 7,
+      "epochs": 3,
+      "all_parameter_bits_match": true,
+      "all_predictions_match": true,
+      "static_and_expanded_costs_counts_match": true,
+      "parameter_sha256": {
+        "w1": "36df86d56ecc092c3efa8d19e283a749b321de54a8f17e626cc00a8baf960875",
+        "b1": "5371ebb9157443da3f8422343b05deb18d59e9ff79f36e5a13f0a95dd262d541",
+        "w2": "d105babda68d82fab559f9304d4eca524616ddf20ea3f656ee7b5f6c572c9779",
+        "b2": "15de1399817f23b0a7eda012c50e2afd6da2c4617840c5ee076c2c486572a985"
+      },
+      "expanded_instructions": 12269,
+      "reference_execution_seconds": 0.08927285391837358,
+      "static_score_seconds": 0.009469690965488553
+    },
+    {
+      "width": 16,
+      "train_count": 30,
+      "batch": 30,
+      "test_count": 17,
+      "epochs": 1,
+      "all_parameter_bits_match": true,
+      "all_predictions_match": true,
+      "static_and_expanded_costs_counts_match": true,
+      "parameter_sha256": {
+        "w1": "e7404bd2509d7383636541023cd3b5efa7f6aa5b11964a58db18812c6edad0b2",
+        "b1": "ff6353e2d4c2a5b5bfd7505e2e115a3a48cb561c1fb4c47429219ff4ddc17724",
+        "w2": "2381c441458545aa7414a43d640a6d71b93ec83e5deba968e91d49d667be6477",
+        "b2": "95e9faec60e8a3290469d832735862b8e54a285970a0229b85801a42f2cbdf1b"
+      },
+      "expanded_instructions": 68965,
+      "reference_execution_seconds": 0.5073480231221765,
+      "static_score_seconds": 0.018537485972046852
+    }
+  ],
+  "all_passed": true,
+  "source_sha256": {
+    "il.py": "24bd0b890c433029199a6b63d08e1a6730f7789856006351b8097885c17fd7bc",
+    "mlp_il.py": "df55755126f06df297cdee092cbf3aa94fe4bd0d18b864ffd2e99515aedf54a1",
+    "accuracy_study.py": "a587ab7e322e4c1d7d154ff0a0aaf8ec3fe6fb61e86a9956f0feae43145d0a2a",
+    "validate_mlp_il.py": "82259a2602bebcc0d31541affc3e840ed91174bd196702d01474dc1ce1094cd4"
+  }
+}
