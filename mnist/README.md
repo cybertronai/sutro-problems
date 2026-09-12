@@ -27,7 +27,72 @@ About memory wall: the energy of an 8-bit add is comparable to the energy needed
 
 MNIST-medium comes with 5 accuracy target bands, 2% error, 3% error, 5% error, 8% error, 12% error
 
-# Details (information for agents)
+# Submissions
+
+Each table lists submissions for the current dataset and target. Medium error
+bounds apply to the unrounded mean over 11 independently sampled datasets;
+original uses the official test split. Report small/medium accuracy as mean ±
+sample standard deviation in percentage points. Use an em dash for unmeasured
+costs, and link to the full report for timing, memory use, and model energy details.
+
+## MNIST-small
+
+1,000 training / 1,000 test images, 3 × 3 pixels. Report achieved accuracy; no
+fixed accuracy target is specified.
+
+| Date | Accuracy | A100 energy (mJ) | Grid movement (word-node hops) | Submission | Contributors | Description |
+| --- | ---: | ---: | ---: | --- | --- | --- |
+
+## MNIST-medium — 2% error target
+
+10,000 training / 10,000 test images, 9 × 9 pixels. **At most 2% mean error
+(at least 98% mean accuracy).**
+
+| Date | Accuracy | A100 energy (mJ) | Grid movement (word-node hops) | Submission | Contributors | Description |
+| --- | ---: | ---: | ---: | --- | --- | --- |
+
+## MNIST-medium — 3% error target
+
+10,000 training / 10,000 test images, 9 × 9 pixels. **At most 3% mean error
+(at least 97% mean accuracy).**
+
+| Date | Accuracy | A100 energy (mJ) | Grid movement (word-node hops) | Submission | Contributors | Description |
+| --- | ---: | ---: | ---: | --- | --- | --- |
+
+## MNIST-medium — 5% error target
+
+10,000 training / 10,000 test images, 9 × 9 pixels. **At most 5% mean error
+(at least 95% mean accuracy).**
+
+| Date | Accuracy | A100 energy (mJ) | Grid movement (word-node hops) | Submission | Contributors | Description |
+| --- | ---: | ---: | ---: | --- | --- | --- |
+
+## MNIST-medium — 8% error target
+
+10,000 training / 10,000 test images, 9 × 9 pixels. **At most 8% mean error
+(at least 92% mean accuracy).**
+
+| Date | Accuracy | A100 energy (mJ) | Grid movement (word-node hops) | Submission | Contributors | Description |
+| --- | ---: | ---: | ---: | --- | --- | --- |
+
+## MNIST-medium — 12% error target
+
+10,000 training / 10,000 test images, 9 × 9 pixels. **At most 12% mean error
+(at least 88% mean accuracy).**
+
+| Date | Accuracy | A100 energy (mJ) | Grid movement (word-node hops) | Submission | Contributors | Description |
+| --- | ---: | ---: | ---: | --- | --- | --- |
+
+## MNIST-original — 1% test error target
+
+60,000 training / 10,000 test images, 28 × 28 pixels. **At most 1% test error
+(at least 99% accuracy; 9,900/10,000 correct).** Also called MNIST-large.
+
+| Date | Accuracy | A100 energy (mJ) | Grid movement (word-node hops) | Submission | Contributors | Description |
+| --- | ---: | ---: | ---: | --- | --- | --- |
+
+<details>
+<summary>Information for agents</summary>
 
 ## Task and datasets
 
@@ -39,7 +104,7 @@ and prediction. Test labels are for evaluation only.
 | --- | ---: | ---: | --- | --- |
 | MNIST-small | 1,000 | 1,000 | 3 × 3 | Not specified in the human section; report achieved accuracy |
 | MNIST-medium | 10,000 | 10,000 | 9 × 9 | Five error bands, listed below |
-| MNIST-original (MNIST-large) | 60,000 | 10,000 | 28 × 28 | Not specified in the human section; report achieved accuracy |
+| MNIST-original (MNIST-large) | 60,000 | 10,000 | 28 × 28 | At most 1% test error (at least 99% accuracy) |
 
 For small and medium, use disjoint random training and test subsets of the
 original 60,000 MNIST training examples. Report **mean accuracy ± sample standard
@@ -67,8 +132,15 @@ Label each medium result with the error band it targets and whether it meets
 that band. Apply thresholds to the **unrounded 11-dataset mean**, calculated as
 `sum(correct) / 110000`; a rounded display percentage does not establish a pass.
 Report all 11 draws, including their mean and sample standard deviation, rather
-than selecting favorable draws. For small and original, report accuracy without
-claiming qualification against an unstated target.
+than selecting favorable draws. For small, report accuracy without claiming
+qualification against an unstated target.
+
+### MNIST-original error target
+
+The target is **at most 1% test error**, equivalent to **at least 99% accuracy**
+on the official 10,000-image test split. A submission must predict at least
+**9,900 labels correctly**, with at most **100 errors**. Apply this inclusive
+threshold to the exact `correct / 10000` fraction, not a rounded percentage.
 
 ## Efficiency measurements
 
@@ -103,15 +175,19 @@ definition and derivation; do not reuse the old single-core area conversion.
 ## Submission
 
 Open a pull request adding the source or generator, reproduction commands, and
-a standalone report under `mnist/submissions/<name>/`. Include the tier, target
-error band for medium, accuracy evidence, dataset and learner seeds, model
-revision, memory layout, scoring calculations, hardware/software versions, A100
+a standalone report under `mnist/submissions/<name>/`. Include the tier, error
+target for medium or original, accuracy evidence, dataset and learner seeds,
+model revision, memory layout, scoring calculations, hardware/software versions, A100
 measurements, and any W&B runs. Identify which efficiency metrics have been
 measured and which remain unavailable.
 
-Add new results above the historical tables below, clearly labeled with the
-current dataset sizes and, for medium, the error band. Keep individual entries
-concise and link to the full report.
+Add a row to the matching submission table above. For medium, use a table whose
+error bound the submission meets; a result may appear in multiple qualifying
+bands, as on the sparse-parity page. Include the submission date, measured
+accuracy, A100 energy, grid movement, report/source links, contributors, and a
+short description. Put the full timing, memory, model energy, and reproducibility
+evidence in the linked report. Keep historical results under their original
+specification.
 
 ## Existing tooling
 
@@ -123,7 +199,10 @@ datasets, error bands, and spatial model above before claiming current results.
 The generator's `reference-20260910` profile has the new counts but uses a
 different train/test split protocol; matching counts alone is insufficient.
 
-## Historical submissions
+</details>
+
+<details>
+<summary>Historical submissions (previous specification)</summary>
 
 The entries below retain their original measurements. Small used 600 training
 and 600 test images; medium used 6,000 of each. Reported Dally scores and areas
@@ -154,3 +233,5 @@ entry used one dataset or 11 draws.
 Historical single-core-with-tape sketch:
 
 ![MNIST competition sketch: scoring metrics, dataset tiers, and a Bill Dally single-core model with tape](doc/competition-overview.png)
+
+</details>
