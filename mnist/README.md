@@ -20,12 +20,12 @@ About memory wall: the energy of an 8-bit add is comparable to the energy needed
 
 ## Datasets
 
-- mnist small: 1k train, 1k test, 3x3 images
-- mnist medium: 10k train, 10k test, 9x9 images
-- minst original: 60k train, 10k test, 28x28 images
+- MNIST-small: 1k train, 1k test, 3x3 images
+- MNIST-medium: 10k train, 10k test, 9x9 images
+- MNIST-large: original 60k train, 10k test, 28x28 images
 
 
-mnist-medium comes with 5 accuracy target bands, 2% error, 3% error, 5% error, 8% error, 12% error
+MNIST-medium comes with 5 accuracy target bands, 2% error, 3% error, 5% error, 8% error, 12% error
 
 # Details (information for agents)
 
