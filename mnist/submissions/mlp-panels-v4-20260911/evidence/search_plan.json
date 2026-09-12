@@ -1,0 +1,113 @@
+{
+  "algorithm": "Two coordinate passes, global layout/cache/inference grouping then all7products; strict energy/time/area lexicographic acceptance",
+  "geometries": [
+    [
+      1,
+      4
+    ],
+    [
+      1,
+      10
+    ],
+    [
+      1,
+      16
+    ],
+    [
+      1,
+      32
+    ],
+    [
+      2,
+      8
+    ],
+    [
+      3,
+      10
+    ],
+    [
+      3,
+      16
+    ],
+    [
+      3,
+      32
+    ],
+    [
+      4,
+      4
+    ],
+    [
+      4,
+      8
+    ],
+    [
+      4,
+      16
+    ],
+    [
+      5,
+      6
+    ],
+    [
+      5,
+      10
+    ],
+    [
+      6,
+      10
+    ],
+    [
+      8,
+      8
+    ],
+    [
+      1,
+      "6+10"
+    ],
+    [
+      3,
+      "6+10"
+    ],
+    [
+      5,
+      "6+10"
+    ]
+  ],
+  "captures": [
+    "none",
+    "left",
+    "right",
+    "both",
+    "left_panel",
+    "right_panel"
+  ],
+  "layouts": [
+    "original",
+    "d2_first",
+    "w2_first",
+    "h_first",
+    "d1_first"
+  ],
+  "inference_batches": [
+    1,
+    4,
+    5,
+    6,
+    8,
+    10,
+    15,
+    30
+  ],
+  "cache_x": "270-word minibatch copy shared by X@W1 and X.T@D1, reused for query groups",
+  "budget": "128 accumulator words and320 panel words per product; actual shared max allocation charged globally",
+  "training": {
+    "width": 32,
+    "epochs": 300,
+    "batch": 30,
+    "lr": 0.2,
+    "seed": 101
+  },
+  "test_results_access": "None; score is static and independent of actual data values",
+  "source_sha256": "c4d93049a89dab42e68e55182eb706a50577db00b1635a4cee16c31b3605f846"
+}

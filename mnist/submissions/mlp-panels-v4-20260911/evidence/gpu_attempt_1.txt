@@ -1,0 +1,153 @@
+✓ Initialized. View run at 
+https://modal.com/apps/vargapowercouple/main/ap-zEsd3dN1HVo548BcM7DTWt
+✓ Created objects.
+├── 🔨 Created mount 
+│   /Users/aleksandrmalysev/Yandex.Disk.localized/Developer/vargML/mnist/sutro-p
+│   roblems/mnist/experiments/mlp-panels-v4-20260911/gpu_benchmark.py
+└── 🔨 Created function benchmark.
+Compile, execute, validate baseline
+Graph accepted baseline {'total': 24004, 'kernels': 24004}
+Compile, execute, validate energy
+Traceback (most recent call last):
+  File "/pkg/modal/_runtime/container_io_manager.py", line 987, in handle_input_exception
+    yield
+  File "/pkg/modal/_container_entrypoint.py", line 189, in run_input_sync
+    values = io_context.call_function_sync()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/container_io_manager.py", line 266, in call_function_sync
+    expected_value_or_values = self.finalized_function.callable(*args, **kwargs)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/gpu_benchmark.py", line 142, in benchmark
+    invoke(mode); torch.cuda.synchronize()
+    ^^^^^^^^^^^^
+  File "/root/gpu_benchmark.py", line 81, in invoke
+    compiled['energy_update'] = k.update_panels[(12,)](xc,hidden,d1,d2,params,step,**kw)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/runtime/jit.py", line 345, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, **kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/runtime/jit.py", line 662, in run
+    kernel = self.compile(
+             ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/compiler/compiler.py", line 276, in compile
+    module = src.make_ir(options, codegen_fns, context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/compiler/compiler.py", line 113, in make_ir
+    return ast_to_ttir(self.fn, self, context=context, options=options, codegen_fns=codegen_fns)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+triton.compiler.errors.CompilationError: at 3:4:
+def update_panels(XC, H, D1, D2, P, STEP: tl.constexpr):
+    panel = tl.program_id(0)
+    if panel < 8:
+    ^
+AssertionError('mismatched type for hidden between then block (<[4], int32>) and else block (<[8], int32>)')
+Stopping app - uncaught exception raised locally: ExecutionError('Could not deserialize remote exception due to local error:\nDeserialization failed because the \'triton\' module is not available in the local environment.\nThis can happen if your local environment does not have the remote exception definitions.\nHere is the remote traceback:\nTraceback (most recent call last):\n  File "/pkg/modal/_runtime/container_io_manager.py", line 987, in handle_input_exception\n    yield\n  File "/pkg/modal/_container_entrypoint.py", line 189, in run_input_sync\n    values = io_context.call_function_sync()\n             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/pkg/modal/_runtime/container_io_manager.py", line 266, in call_function_sync\n    expected_value_or_values = self.finalized_function.callable(*args, **kwargs)\n                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File "/root/gpu_benchmark.py", line 142, in benchmark\n    invoke(mode); torch.cuda.synchronize()\n    ^^^^^^^^^^^^\n  File "/root/gpu_benchmark.py.
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /Users/aleksandrmalysev/.cache/uv/archive-v0/hqAyXemj--8BX7Lt/lib/python3.12 │
+│ /site-packages/modal/_serialization.py:117 in deserialize                    │
+│                                                                              │
+│   116 │   try:                                                               │
+│ ❱ 117 │   │   return Unpickler(client, io.BytesIO(s)).load()                 │
+│   118 │   except AttributeError as exc:                                      │
+╰──────────────────────────────────────────────────────────────────────────────╯
+ModuleNotFoundError: No module named 'triton'
+
+The above exception was the direct cause of the following exception:
+
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /Users/aleksandrmalysev/Yandex.Disk.localized/Developer/vargML/mnist/sutro-p │
+│ roblems/mnist/experiments/mlp-panels-v4-20260911/gpu_benchmark.py:325 in     │
+│ main                                                                         │
+│                                                                              │
+│   324 │   (destination/'kernels.py').write_text(source)                      │
+│ ❱ 325 │   result,ptx,arrays = benchmark.remote(source,packed.getvalue(),expe │
+│   326 │   (destination/'results.json').write_text(json.dumps(result,indent=2 │
+│                                                                              │
+│ /Users/aleksandrmalysev/.cache/uv/archive-v0/hqAyXemj--8BX7Lt/lib/python3.12 │
+│ /site-packages/modal/_object.py:46 in wrapped                                │
+│                                                                              │
+│    45 │   │   await self.hydrate()                                           │
+│ ❱  46 │   │   return await method(self, *args, **kwargs)                     │
+│    47                                                                        │
+│                                                                              │
+│ /Users/aleksandrmalysev/.cache/uv/archive-v0/hqAyXemj--8BX7Lt/lib/python3.12 │
+│ /site-packages/modal/_functions.py:1893 in remote                            │
+│                                                                              │
+│   1892 │   │                                                                 │
+│ ❱ 1893 │   │   return await self._call_function(args, kwargs)                │
+│   1894                                                                       │
+│                                                                              │
+│ /Users/aleksandrmalysev/.cache/uv/archive-v0/hqAyXemj--8BX7Lt/lib/python3.12 │
+│ /site-packages/modal/_functions.py:1830 in _call_function                    │
+│                                                                              │
+│   1829 │   │                                                                 │
+│ ❱ 1830 │   │   return await invocation.run_function()                        │
+│   1831                                                                       │
+│                                                                              │
+│ /Users/aleksandrmalysev/.cache/uv/archive-v0/hqAyXemj--8BX7Lt/lib/python3.12 │
+│ /site-packages/modal/_functions.py:503 in run_function                       │
+│                                                                              │
+│    502 │   │   │   # No more retries left.                                   │
+│ ❱  503 │   │   │   return await _process_result(                             │
+│    504 │   │   │   │   await_response.output.result, await_response.output.d │
+│                                                                              │
+│ /Users/aleksandrmalysev/.cache/uv/archive-v0/hqAyXemj--8BX7Lt/lib/python3.12 │
+│ /site-packages/modal/_utils/function_utils.py:547 in _process_result         │
+│                                                                              │
+│   546 │   │   │   except DeserializationError as deser_exc:                  │
+│ ❱ 547 │   │   │   │   raise ExecutionError(                                  │
+│   548 │   │   │   │   │   "Could not deserialize remote exception due to loc │
+╰──────────────────────────────────────────────────────────────────────────────╯
+ExecutionError: Could not deserialize remote exception due to local error:
+Deserialization failed because the 'triton' module is not available in the local
+environment.
+This can happen if your local environment does not have the remote exception 
+definitions.
+Here is the remote traceback:
+Traceback (most recent call last):
+  File "/pkg/modal/_runtime/container_io_manager.py", line 987, in 
+handle_input_exception
+    yield
+  File "/pkg/modal/_container_entrypoint.py", line 189, in run_input_sync
+    values = io_context.call_function_sync()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/container_io_manager.py", line 266, in 
+call_function_sync
+    expected_value_or_values = self.finalized_function.callable(*args, **kwargs)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/gpu_benchmark.py", line 142, in benchmark
+    invoke(mode); torch.cuda.synchronize()
+    ^^^^^^^^^^^^
+  File "/root/gpu_benchmark.py", line 81, in invoke
+    compiled['energy_update'] = 
+k.update_panels[(12,)](xc,hidden,d1,d2,params,step,**kw)
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/runtime/jit.py", line 
+345, in <lambda>
+    return lambda *args, **kwargs: self.run(grid=grid, warmup=False, *args, 
+**kwargs)
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/runtime/jit.py", line 
+662, in run
+    kernel = self.compile(
+             ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/compiler/compiler.py", 
+line 276, in compile
+    module = src.make_ir(options, codegen_fns, context)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.11/site-packages/triton/compiler/compiler.py", 
+line 113, in make_ir
+    return ast_to_ttir(self.fn, self, context=context, options=options, 
+codegen_fns=codegen_fns)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^
+triton.compiler.errors.CompilationError: at 3:4:
+def update_panels(XC, H, D1, D2, P, STEP: tl.constexpr):
+    panel = tl.program_id(0)
+    if panel < 8:
+    ^
+AssertionError('mismatched type for hidden between then block (<[4], int32>) and
+else block (<[8], int32>)')
+
