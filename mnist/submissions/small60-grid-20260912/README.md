@@ -142,6 +142,62 @@ Regenerate this exact grid program and score with:
 uv run --with numpy==2.2.6 python mnist/submissions/grid-mlp-scoring-20260912/score.py --features 9 --width 32 --epochs 300 --batch 25 --n-train 1000 --n-test 1000 --learning-rate 0.2 --seed 101 --output /tmp/small60-grid-score
 ```
 
+## Read-distance histogram and CDF
+
+The complete training-and-prediction schedule performs **2,029,693,000 scratch
+reads**. The median distance is **33 grid hops**, the 90th percentile is **57**,
+and the 99th percentile is **99**. Only **18,772 reads (0.000925%)** travel beyond
+256 hops; these are input-staging reads, reaching a maximum of **16,032 hops**.
+Every draw has this same fixed access distribution.
+
+Distance means the **one-way routed length**, in grid-node hops:
+`r = 128 × L + d`, where `L` is the Manhattan number of processor links from
+the issuing core to the owning core, and `d` is the owning-core-to-cell
+Manhattan distance. One grid hop represents 1 µm. This follows the actual route
+through the owning core, rather than measuring direct geometric displacement
+between the issuing core and the cell.
+
+The histogram uses **8-hop bins over [32, 256)**, then doubling-width bins
+with edges **256, 512, 1024, 2048, 4096, 8192, 16384**. All bins include their
+lower edge and exclude their upper edge. Logarithmic distance and count axes
+keep the sparse staging tail visible; bar height is reads per bin, not density.
+The inset uses single-hop bins for nearby reads. The CDF uses the exact
+per-distance counts without binning and reports the fraction of reads at
+distance ≤ x, with every read weighted equally.
+
+![Scratch-read distance histogram and CDF, with a nearby-distance inset](access_distance/read_distance.png)
+
+Counts include every normal source operand read (including repeated operands
+and both `select` candidates), 19,000 input staging-copy source reads, 1,000
+output-copy source reads, and 1,000 final `send` scratch reads. Writes and
+tape-link transport are excluded. A final `send` reads its local staging cell
+at distance 32; its outgoing 64-hop tape link is a separate transfer.
+
+The distribution is computed from exact affine loop multiplicities and the
+frozen physical placement, without sampling or expanding billions of events.
+All scratch distances exceed the model's energy floor, so `2 × sum(r)` gives
+**174,613,318,112 fJ (0.174613318112 mJ)** of scratch-read energy. This matches the
+corresponding components of the saved grid score; writes and tape transfers
+account for the remaining total energy. The CDF is a read-count distribution,
+not an energy-share distribution.
+
+Three tests check the compressed counts against independently expanded tiny
+traces, including remote memory and tape-port wraparound, and reconcile the
+full submission's counts and energy with its frozen score. Reproduce the
+figure, data, and checks from the repository root:
+
+```bash
+uvx --with numpy==2.2.6 --with matplotlib==3.10.6 python mnist/submissions/small60-grid-20260912/access_distance/plot_access_distance.py
+uvx --with numpy==2.2.6 python mnist/submissions/small60-grid-20260912/access_distance/test_plot_access_distance.py
+```
+
+[Exact distance counts and CDF (CSV)](access_distance/read_distance.csv) ·
+[Histogram bins (CSV)](access_distance/read_distance_bins.csv) ·
+[Statistics and provenance](access_distance/summary.json) ·
+[Vector figure (SVG)](access_distance/read_distance.svg) ·
+[Plot source](access_distance/plot_access_distance.py) ·
+[Tests](access_distance/test_plot_access_distance.py)
+
 ## Reproduce and audit
 
 Run from the repository root. The committed protocol and results refuse to be
