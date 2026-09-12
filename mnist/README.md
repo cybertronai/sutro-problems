@@ -14,7 +14,7 @@ IE
 ## Motivation
 Today's learning is based on backprop which was popularized in the 80s when we were bottlenecked by arithmetic. Today, we are bottlenecked by memory movement. This favors algorithms with small memory footprint. Backprop has a large memory footprint.
 
-Footprint issue is partly mitigated by batching and [gradient-checkpointing](https://github.com/cybertronai/gradient-checkpointing) hacks, yet these come with costs. Is there an alternative solution?
+Footprint issue is mitigated by batching and [gradient-checkpointing](https://github.com/cybertronai/gradient-checkpointing) hacks, yet these come with costs. Is there an alternative solution?
 
 To understand the memory wall, consider that the energy of an 8-bit add is comparable to the energy needed to move its operands 10 micrometers. Fetching a byte from the opposite side of a 16 mm chip is worth 1,600 adds. Bill Dally's AHA retreat [slides]( https://aha.stanford.edu/sites/g/files/sbiybj20066/files/media/file/aha-retreat-2023_dally_keynote_en_eff_ai_hw_0.pdf)
 
