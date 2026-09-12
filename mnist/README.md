@@ -1,32 +1,33 @@
-# MNIST
+# MNIST (information for humans)
 
-**Task:** given training images, training labels, and test images, produce the
-predicted test labels (digits 0–9) meeting the accuracy requirement for the tier.
+The system takes **train**/*test* images + **train** labels, and produces *test* labels.
 
-Provide a way to solve this problem on modern silicon subject to **the memory
-wall**. The efficiency goals are:
+<img width="1200" height="419" alt="Screenshot 2026-09-11 at 6 39 12 PM" src="https://github.com/user-attachments/assets/e4610f22-00e6-4d70-adee-1948f219cf51" />
 
-- An A100 kernel that uses few joules, measured with NVML.
-- An algorithm with a small memory footprint in
-  [Bill Dally's 2D grid](https://github.com/cybertronai/simplified-dally-model/tree/main/models/spatial-computer),
-  with data movement measured by counting hops.
+Provide a way to solve this problem at prescribed accuracy that addresses the issue of **the memory
+wall**. 
 
-The 2D grid is a broader algorithm-design goal; the current submission metrics
-use the single-core-with-tape scoring model specified below.
+IE
+- kernel that runs on A100 using few Joules (measured using NVML ).
+- an algorithm that runs with small memory footprint in Bill Dally's 2D grid (measured by counting hops in [Bill Dally's 2D grid](https://github.com/cybertronai/simplified-dally-model/tree/main/models/spatial-computer)
 
 ## Motivation
+Today's learning is based on backprop which was popularized in the 80s when we were bottlenecked by arithmetic. Today, we are bottlenecked by memory movement. This favors algorithms with small memory footprint, yet backprop has a large memory footprint.
 
-Backpropagation became popular in the 1980s, when arithmetic was a major
-bottleneck. On modern hardware, memory movement is often the bottleneck,
-favoring algorithms with small memory footprints. Backpropagation has a large
-memory footprint. Batching partly mitigates the cost of memory movement, but
-introduces other costs. Can an alternative learning algorithm solve this task
-more efficiently?
+Backprop footprint issue is partly mitigated by batching, yet batching comes with costs. Is there an alternative solution?
 
-To get a sense of the memory wall, the energy of an 8-bit add is comparable to
-the energy needed to move its operands about **10 micrometers**, while a chip
-can be **16 mm wide**. See Bill Dally's
-[Energy Efficiency and AI Hardware keynote](https://aha.stanford.edu/sites/g/files/sbiybj20066/files/media/file/aha-retreat-2023_dally_keynote_en_eff_ai_hw_0.pdf).
+About memory wall: the energy of an 8-bit add is comparable to the energy needed to move its operands 10 micrometers. A chip is 16 mm wide. Bill Dally's AHA retreat [slides]( https://aha.stanford.edu/sites/g/files/sbiybj20066/files/media/file/aha-retreat-2023_dally_keynote_en_eff_ai_hw_0.pdf)
+
+## Datasets
+
+- mnist small: 1k train, 1k test, 3x3 images
+- mnist medium: 10k train, 10k test, 9x9 images
+- minst original: 60k train, 10k test, 28x28 images
+
+
+mnist-medium comes with 5 accuracy target bands, 2% error, 3% error, 5% error, 8% error, 12% error
+
+# Details (information for agents)
 
 ## Datasets and scoring model
 
