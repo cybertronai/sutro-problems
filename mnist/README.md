@@ -18,6 +18,9 @@ Footprint issue is partly mitigated by batching, yet batching comes with costs. 
 
 To understand the memory wall, consider that the energy of an 8-bit add is comparable to the energy needed to move its operands 10 micrometers. A chip is 16 millimeters wide. Bill Dally's AHA retreat [slides]( https://aha.stanford.edu/sites/g/files/sbiybj20066/files/media/file/aha-retreat-2023_dally_keynote_en_eff_ai_hw_0.pdf)
 
+
+<img width="724" height="384" alt="Screenshot 2026-09-11 at 7 37 26 PM" src="https://github.com/user-attachments/assets/0d71bd80-7da8-4e0c-942d-7bd6b741a193" />
+
 ## Datasets
 
 - MNIST-small: 1k train, 1k test, 3x3 images
