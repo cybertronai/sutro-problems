@@ -1,0 +1,70 @@
+{
+  "completed_at_utc": "2026-09-12T02:04:24.460874+00:00",
+  "plan_sha256": "db92615b5efcd70ce1be09851697c0e81ca815ab279ee5e43d021aec46326e52",
+  "raw_sources": {
+    "train_images": {
+      "sha256": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+      "md5": "f68b3c2dcbeaaa9fbdd348bbdeb94873",
+      "url": "https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz"
+    },
+    "train_labels": {
+      "sha256": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+      "md5": "d53e105ee54ea40749a09fcbcd1e9432",
+      "url": "https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz"
+    }
+  },
+  "train_indices_sha256": "07ad1f37948deb23a5a00fb36f276564e817c7fa91b8a0cf0c2222dc47690a47",
+  "validation_indices_sha256": "43ef521caa8184771fa21a2cd711799d2402edd5f915b3dcc647f77178c3383b",
+  "records": [
+    {
+      "epochs": 200,
+      "correct": 1927,
+      "total": 2000,
+      "result": {
+        "config": {
+          "width": 512,
+          "epochs": 200,
+          "learning_rate": 0.1,
+          "batch_size": 25,
+          "features": 81,
+          "n_train": 8000,
+          "n_test": 2000,
+          "seed": 991
+        },
+        "input_sha256": {
+          "train_images": "0089c8510e52d4b9388a9b4000ca0298679f900e9c89b124dcba016dfcb6d530",
+          "train_labels": "f3ca4cec1a747d7f312dbdd447f00f283e1a840e6daa10193225362300aed2cd",
+          "test_images": "6827379c62842e847612eba2ca4917c5e3089334e94fba5345c4d3cc55e895f3"
+        },
+        "validation": {
+          "bounded_training": {
+            "prediction_matches": 17,
+            "total_predictions": 17,
+            "parameter_bitwise_matches": 47114,
+            "total_parameters": 47114,
+            "score_bitwise_matches": 170,
+            "total_scores": 170,
+            "parameter_sha256_float32_le": "e1255a3c8ffe2f5927b1e1fd0d72eee2ae80ad11fd4d7e60118576370e04f45f",
+            "scores_sha256_float32_le": "b5d1b1d36e7acb380399685cc474f996414075666da4ac174da7121e1ec017e3",
+            "scope": "Two complete minibatches (50 training examples), one epoch, 17 queries, same width/seed/rate; changed labels modulo10",
+            "predictions_changed_from_original_labels": 7,
+            "parameter_words_changed_from_original_labels": 46787,
+            "score_words_changed_from_original_labels": 170
+          },
+          "full_inference": {
+            "prediction_matches": 2000,
+            "total_predictions": 2000,
+            "parameter_bitwise_matches": 47114,
+            "total_parameters": 47114,
+            "score_bitwise_matches": 20000,
+            "total_scores": 20000,
+            "parameter_sha256_float32_le": "40bfcfc19d5078a7667c83b28ef6a3f94f4773342d70d3fd120f7be92b865bfc",
+            "scores_sha256_float32_le": "bde959a0b0c7093453e42c7c26907cff8a9889ce081485ddcd78bfc0cab9abdb"
+          }
+        },
+        "parameter_sha256": "40bfcfc19d5078a7667c83b28ef6a3f94f4773342d70d3fd120f7be92b865bfc"
+      }
+    }
+  ],
+  "selected_epochs": 200
+}

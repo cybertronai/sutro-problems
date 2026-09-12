@@ -35,63 +35,68 @@ Each table lists submissions for the current dataset and target. Medium error
 bounds apply to the unrounded mean over 11 independently sampled datasets;
 original uses the official test split. Report small/medium accuracy as mean ±
 sample standard deviation in percentage points. Use an em dash for unmeasured
-costs, and link to the full report for timing, memory use, and model energy details.
+costs. All energy columns use **mJ** and all time columns use **ms**, per complete
+training-and-prediction run. Grid columns use the spatial-computer model. Reports
+identify the measured datasets and trials, memory use, hop counts, contributors,
+and reproduction details. The two MLP grid entries use a globally serialized
+schedule; their reports describe this baseline and its limits.
 
-## MNIST-small
+## MNIST-small — 60% accuracy target
 
-1,000 training / 1,000 test images, 3 × 3 pixels. Report achieved accuracy; no
-fixed accuracy target is specified.
+1,000 training / 1,000 test images, 3 × 3 pixels. **At least 60% mean accuracy.**
 
-| Date | Accuracy | A100 energy (mJ) | Grid movement (word-node hops) | Submission | Contributors | Description |
-| --- | ---: | ---: | ---: | --- | --- | --- |
+| Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| 2026-09-11 | 67.08% ± 1.54 pp | 3,300 | 130 | 0.24 | 3,100 | [H32 MLP (60% target)](submissions/small60-grid-20260912/README.md) |
 
 ## MNIST-medium — 2% error target
 
 10,000 training / 10,000 test images, 9 × 9 pixels. **At most 2% mean error
 (at least 98% mean accuracy).**
 
-| Date | Accuracy | A100 energy (mJ) | Grid movement (word-node hops) | Submission | Contributors | Description |
-| --- | ---: | ---: | ---: | --- | --- | --- |
+| Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
 
 ## MNIST-medium — 3% error target
 
 10,000 training / 10,000 test images, 9 × 9 pixels. **At most 3% mean error
 (at least 97% mean accuracy).**
 
-| Date | Accuracy | A100 energy (mJ) | Grid movement (word-node hops) | Submission | Contributors | Description |
-| --- | ---: | ---: | ---: | --- | --- | --- |
+| Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
 
 ## MNIST-medium — 5% error target
 
 10,000 training / 10,000 test images, 9 × 9 pixels. **At most 5% mean error
 (at least 95% mean accuracy).**
 
-| Date | Accuracy | A100 energy (mJ) | Grid movement (word-node hops) | Submission | Contributors | Description |
-| --- | ---: | ---: | ---: | --- | --- | --- |
+| Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| 2026-09-11 | 96.41% ± 0.13 pp | 290,000 | 9,300 | 440 | 3.7 × 10⁶ | [512-unit MLP (96% target)](submissions/medium96-grid-20260912/README.md) |
 
 ## MNIST-medium — 8% error target
 
 10,000 training / 10,000 test images, 9 × 9 pixels. **At most 8% mean error
 (at least 92% mean accuracy).**
 
-| Date | Accuracy | A100 energy (mJ) | Grid movement (word-node hops) | Submission | Contributors | Description |
-| --- | ---: | ---: | ---: | --- | --- | --- |
+| Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
 
 ## MNIST-medium — 12% error target
 
 10,000 training / 10,000 test images, 9 × 9 pixels. **At most 12% mean error
 (at least 88% mean accuracy).**
 
-| Date | Accuracy | A100 energy (mJ) | Grid movement (word-node hops) | Submission | Contributors | Description |
-| --- | ---: | ---: | ---: | --- | --- | --- |
+| Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
 
 ## MNIST-original — 1% test error target
 
 60,000 training / 10,000 test images, 28 × 28 pixels. **At most 1% test error
 (at least 99% accuracy; 9,900/10,000 correct).** Also called MNIST-large.
 
-| Date | Accuracy | A100 energy (mJ) | Grid movement (word-node hops) | Submission | Contributors | Description |
-| --- | ---: | ---: | ---: | --- | --- | --- |
+| Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
 
 <details>
 <summary>Information for agents</summary>
@@ -102,11 +107,12 @@ Learn from the supplied training images and labels, then produce one digit label
 (0–9) for each test image. The computation being compared includes both training
 and prediction. Test labels are for evaluation only.
 
-| Tier | Training examples | Test examples | Image size | Accuracy target |
-| --- | ---: | ---: | --- | --- |
-| MNIST-small | 1,000 | 1,000 | 3 × 3 | Not specified in the human section; report achieved accuracy |
-| MNIST-medium | 10,000 | 10,000 | 9 × 9 | Five error bands, listed below |
-| MNIST-original (MNIST-large) | 60,000 | 10,000 | 28 × 28 | At most 1% test error (at least 99% accuracy) |
+- **MNIST-small:** 1,000 training / 1,000 test images, 3 × 3 pixels; at least
+  **60% mean accuracy**.
+- **MNIST-medium:** 10,000 training / 10,000 test images, 9 × 9 pixels; the five
+  error bands below.
+- **MNIST-original (MNIST-large):** 60,000 training / 10,000 test images,
+  28 × 28 pixels; at most **1% test error** (at least **99% accuracy**).
 
 For small and medium, use disjoint random training and test subsets of the
 original 60,000 MNIST training examples. Report **mean accuracy ± sample standard
@@ -122,20 +128,25 @@ official training and test splits.
 Error is the fraction of incorrect test predictions. Each band is an inclusive
 maximum error, equivalent to the following minimum accuracy:
 
-| Maximum mean error | Minimum mean accuracy | Minimum total correct across 11 datasets (110,000 test predictions) |
-| ---: | ---: | ---: |
-| 2% | 98% | 107,800 |
-| 3% | 97% | 106,700 |
-| 5% | 95% | 104,500 |
-| 8% | 92% | 101,200 |
-| 12% | 88% | 96,800 |
+Across 11 datasets (110,000 test predictions), the thresholds are:
+
+- **2% mean error:** at least 98% mean accuracy; 107,800 correct.
+- **3% mean error:** at least 97% mean accuracy; 106,700 correct.
+- **5% mean error:** at least 95% mean accuracy; 104,500 correct.
+- **8% mean error:** at least 92% mean accuracy; 101,200 correct.
+- **12% mean error:** at least 88% mean accuracy; 96,800 correct.
 
 Label each medium result with the error band it targets and whether it meets
 that band. Apply thresholds to the **unrounded 11-dataset mean**, calculated as
 `sum(correct) / 110000`; a rounded display percentage does not establish a pass.
 Report all 11 draws, including their mean and sample standard deviation, rather
-than selecting favorable draws. For small, report accuracy without claiming
-qualification against an unstated target.
+than selecting favorable draws.
+
+### MNIST-small accuracy target
+
+The target is **at least 60% mean accuracy** over 11 independent datasets.
+Use the exact `sum(correct) / 11000` fraction: at least **6,600 correct** across
+11,000 predictions. A rounded display percentage does not establish a pass.
 
 ### MNIST-original error target
 
@@ -186,17 +197,18 @@ measured and which remain unavailable.
 Add a row to the matching submission table above. For medium, use a table whose
 error bound the submission meets; a result may appear in multiple qualifying
 bands, as on the sparse-parity page. Include the submission date, measured
-accuracy, A100 energy, grid movement, report/source links, contributors, and a
-short description. Put the full timing, memory, model energy, and reproducibility
-evidence in the linked report. Keep historical results under their original
+accuracy, A100 energy and runtime, spatial-grid energy and runtime, and a link
+to the submission report. Put contributors, memory use, hop counts, the full
+measurement scope, and reproduction evidence in that report. Keep historical results under their original
 specification.
 
 ## Existing tooling
 
 The [older agent instructions](instructions.md), default dataset generator, and
-accuracy evaluator still describe the previous specification. Their 600/600 and
-6,000/6,000 sizes, fixed 60%/98%/98% thresholds, and single-core scoring rules do
-not define this problem. Update or configure reproduction code to match the
+accuracy evaluator still describe the previous specification: 600/600 and
+6,000/6,000 sizes and single-core scoring. The evaluator also lacks the medium
+error bands and the original tier's 99% target. Update or configure reproduction
+code to match the
 datasets, error bands, and spatial model above before claiming current results.
 The generator's `reference-20260910` profile has the new counts but uses a
 different train/test split protocol; matching counts alone is insufficient.
@@ -210,27 +222,29 @@ The entries below retain their original measurements. Small used 600 training
 and 600 test images; medium used 6,000 of each. Reported Dally scores and areas
 use the former **single-core-with-tape** model. These results do not establish
 accuracy or spatial-computer costs for the revised datasets and error bands.
-Their reports document the original evaluation scope, including whether an
-entry used one dataset or 11 draws.
+Their reports preserve the single-core scores, areas, scoring times, and
+original evaluation scope, including whether an entry used one dataset or 11
+draws. Grid columns are unmeasured: single-core scores are not spatial-grid
+scores.
 
 ### MNIST-small (historical)
 
-| Accuracy | Time (ms) | Energy (mJ) | Area (mm²) | Time to score (s) | Time on A100 (ms) | Energy on A100 (mJ) | Submission |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| 62% | 93 | 0.11 | 0.020 | 0.081 | 71 | 2,000 | [32-unit MLP](https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/) |
-| 51% | 1.7 | 0.0019 | 0.0060 | 35 | 0.0069 | 0.52 | [1NN](https://cybertronai.github.io/sutro-problems/docs/submissions/1nn-v4-20260911/) |
+| Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| 2026-09-10 | 62% | 2,000 | 71 | — | — | [32-unit MLP](https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/) |
+| 2026-09-10 | 51% | 0.52 | 0.0069 | — | — | [1NN](https://cybertronai.github.io/sutro-problems/docs/submissions/1nn-v4-20260911/) |
 
 ### MNIST-medium (historical)
 
-| Accuracy | Time (ms) | Energy (mJ) | Area (mm²) | Time to score (s) | Time on A100 (ms) | Energy on A100 (mJ) | Submission |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
-| 98.1% ± 0.1 pp | — | — | — | — | 5.9 × 10⁴ | 1.7 × 10⁶ | [Three ConvNets](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-convnet-11draw-20260911/) |
-| 96% | 93,000 | 200 | 0.63 | 2.7 | 4,700 | 150,000 | [512-unit MLP](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-affine-20260911/) |
+| Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
+| 2026-09-10 | 98.1% ± 0.1 pp | 1.7 × 10⁶ | 5.9 × 10⁴ | — | — | [Three ConvNets](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-convnet-11draw-20260911/) |
+| 2026-09-10 | 96% | 150,000 | 4,700 | — | — | [512-unit MLP](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-affine-20260911/) |
 
 ### MNIST-large (historical)
 
-| Accuracy | Time (ms) | Energy (mJ) | Area (mm²) | Time to score (s) | Time on A100 (ms) | Energy on A100 (mJ) | Submission |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+| Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
+| --- | ---: | ---: | ---: | ---: | ---: | --- |
 
 Historical single-core-with-tape sketch:
 

@@ -1,0 +1,270 @@
+{
+  "schema_version": 2,
+  "algorithm": "exact ordered-FP32 D81 H512 E200 squared-error minibatch SGD, seed108",
+  "source_sha256": "94a0c8e38923991248eb8b6e9e6c44262af36857844e41046e19f35ba2a64107",
+  "config_sha256": "f70c84e91ec1f213c49e889c72762dc9128280c1b02325df2df978f705e054be",
+  "model_config": {
+    "width": 512,
+    "epochs": 200,
+    "learning_rate": 0.1,
+    "batch_size": 25,
+    "features": 81,
+    "n_train": 10000,
+    "n_test": 10000,
+    "seed": 108
+  },
+  "input_sha256": {
+    "train_images": "d23e933b961a417ecad3fbbc94a8e6718516f7a14c80e5e08e8559f1b628f06f",
+    "train_labels": "0e95380d44dbe67ae055995f1362832478eb14745ed9def9ba2d9c2131c5c3d4",
+    "test_images": "1bf2af7438d73e280ec48cb16223e7dff91b6d87c456303faae6efcb4b2a0d3b"
+  },
+  "hardware": {
+    "gpu_name": "NVIDIA A100-SXM4-40GB",
+    "gpu_uuid": "GPU-89ecb441-e695-a2fc-325f-07e60b83530e",
+    "gpu_pci_bus_id": "00000000:00:06.0",
+    "gpu_total_memory_bytes": 42405855232,
+    "multiprocessors": 108,
+    "compute_capability": "8.0",
+    "power_limit_w": 400.0,
+    "mig_mode": [
+      0,
+      0
+    ],
+    "compute_processes": [
+      {
+        "pid": 1,
+        "used_gpu_memory_bytes": 595591168
+      }
+    ],
+    "visible_devices": null,
+    "cpu_model": "unknown"
+  },
+  "versions": {
+    "python": "3.11.15",
+    "platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.41",
+    "torch": "2.5.1+cu124",
+    "triton": "3.1.0",
+    "numpy": "2.2.6",
+    "cuda_runtime": "12.4",
+    "nvidia_driver": "580.95.05",
+    "nvml": "13.580.95.05",
+    "nvidia_ml_py": "12.560.30",
+    "modal": "1.5.5",
+    "container_image": "ghcr.io/ab-10/wikitext-bench@sha256:95de89319ba89c53a91d5440a5db4ff46f68b05031062c0a760ec3caa48dc42f"
+  },
+  "protocol": {
+    "dataset": "MNIST-medium current protocol, 10000 train / 10000 test, 81 FP32 pixels",
+    "training": "Every task normalizes train/test pixels, constructs targets, resets 47114 seed-only parameter words, and runs all 200 epochs (80000 minibatches)",
+    "prediction": "10000 queries through the freshly trained H512 network; ordered FP32 reductions, fusion disabled, first-class ties",
+    "timing": "CUDA-event and wall throughput of complete task schedules: initialization graph once, single-epoch graph E times, inference graph once",
+    "cuda_graphs_stored": 3,
+    "cuda_graph_replays_per_task": 202,
+    "kernel_launches_per_task": 320004,
+    "captured_kernel_nodes": 1604,
+    "energy": "NVML cumulative counter delta minus average paired 3-second idle power times active interval; each idle sample follows 3-second settling gap",
+    "trials": 1,
+    "target_active_seconds_per_trial": 10,
+    "idle_seconds_before_and_after_each_trial": 3,
+    "settling_seconds_before_each_idle_sample": 3,
+    "included": [
+      "all train/test normalization",
+      "all one-hot target construction",
+      "full initial parameter reset",
+      "all SGD minibatches",
+      "all 10000 predictions",
+      "all 100000 output scores",
+      "all task graph replay overhead"
+    ],
+    "excluded": [
+      "host/device transfers",
+      "allocations",
+      "JIT",
+      "graph capture",
+      "verification",
+      "cold start"
+    ],
+    "energy_scope": "NVML whole GPU board; host CPU energy excluded",
+    "limitations": [
+      "GPU-resident repetition can reuse caches",
+      "Paired idle baseline may drift",
+      "NVML is integrated board telemetry, not per-kernel metering",
+      "Direct scalar-ordered kernels are not claimed optimal for A100"
+    ]
+  },
+  "validation": {
+    "captured_task": {
+      "prediction_matches": 10000,
+      "total_predictions": 10000,
+      "parameter_bitwise_matches": 47114,
+      "total_parameters": 47114,
+      "score_bitwise_matches": 100000,
+      "total_scores": 100000,
+      "parameter_sha256_float32_le": "1812c714cebbf1bc6895003d02aa6462bd8b86dce8dfde12593aee386cf666da",
+      "scores_sha256_float32_le": "256ef8874824f0b700d448a0d5dbd9bec238f94dccc0f5e5619e190dd377bf1e"
+    },
+    "after_all_timed_graph_replays": {
+      "prediction_matches": 10000,
+      "total_predictions": 10000,
+      "parameter_bitwise_matches": 47114,
+      "total_parameters": 47114,
+      "score_bitwise_matches": 100000,
+      "total_scores": 100000,
+      "parameter_sha256_float32_le": "1812c714cebbf1bc6895003d02aa6462bd8b86dce8dfde12593aee386cf666da",
+      "scores_sha256_float32_le": "256ef8874824f0b700d448a0d5dbd9bec238f94dccc0f5e5619e190dd377bf1e"
+    },
+    "new_input_random_queries": {
+      "prediction_matches": 10000,
+      "total_predictions": 10000,
+      "parameter_bitwise_matches": 47114,
+      "total_parameters": 47114,
+      "score_bitwise_matches": 100000,
+      "total_scores": 100000,
+      "parameter_sha256_float32_le": "1812c714cebbf1bc6895003d02aa6462bd8b86dce8dfde12593aee386cf666da",
+      "scores_sha256_float32_le": "138f49a874ab9fbe5c4db526738d59a4901b7c0c944416a1e255fb7935bbe964",
+      "predictions_changed_from_canonical": 8989
+    },
+    "changed_training_labels_bounded": {
+      "prediction_matches": 17,
+      "total_predictions": 17,
+      "parameter_bitwise_matches": 47114,
+      "total_parameters": 47114,
+      "score_bitwise_matches": 170,
+      "total_scores": 170,
+      "parameter_sha256_float32_le": "c7b31c9c91cd899aff267353267b93fbb983deefba867c0f640508d27bebe778",
+      "scores_sha256_float32_le": "bcf4e7ba0917ec2a469ac2dfb7556267a13c4a00a09bb616505f4df5402abc87",
+      "scope": "Two complete minibatches (50 training examples), one epoch, 17 queries, same width/seed/rate; changed labels modulo10",
+      "predictions_changed_from_original_labels": 16,
+      "parameter_words_changed_from_original_labels": 45963,
+      "score_words_changed_from_original_labels": 170
+    },
+    "oracle_scope": "Independent ordered CPU verifies two full training minibatches plus all final inference scores/predictions. Complete training is not independently replayed on CPU; repeated GPU tasks match all parameter and score bits.",
+    "ptx_has_fp32_fma": false,
+    "ptx_has_ftz": false,
+    "ptx_sha256": {
+      "normalize": "9e1cf0cce4685b2de97011f213dfa84012d7c81c07dea1181be5e552c91a10c9",
+      "initialize": "9c46eafa83e158cb59557792caeabd2658ba5e5511a2124cc743bb6c456995f6",
+      "hidden": "beaa21683c0ae9f0c8fb5b34e36083fca147b525a515ffcae7d346e924c64a35",
+      "delta2": "b821897793f5e4e1f034b38bc51eb1ff2c23dc7357b8ef929832c8d04f76c916",
+      "delta1": "173e0e94f6130d7c8c93f90705d5fe97602884afc8ef4d4cc8088fbb5aa29ee4",
+      "update": "bc627b3b1d3518a053d88e6f4a37ef40f2f61d7b787c4acd3c770279d590778c",
+      "inference_hidden": "6473d91a0ce5ef186820df33013c5c0e5a86bd8ad637b818307774813066eb61",
+      "inference_output": "b007c802676f4e222a2e6d37592c5bcc0f4d7f8a6df80a50c6514c7922e3a07e"
+    }
+  },
+  "calibration": {
+    "complete_task_ms": 9192.1103515625,
+    "tasks_per_trial": 2
+  },
+  "initial_parameter_sha256": "ea04a8f3bcccb00245a2c8d247b35880702326fb6ca821d56b68b36ffe254e14",
+  "final_parameter_sha256": "1812c714cebbf1bc6895003d02aa6462bd8b86dce8dfde12593aee386cf666da",
+  "trials": [
+    {
+      "trial": 1,
+      "invocations": 2,
+      "cuda_graph_replays": 404,
+      "cuda_graph_replays_per_invocation": 202,
+      "idle_before": {
+        "start": {
+          "energy_mj": 74339740,
+          "time_s": 194.4477590885,
+          "query_latency_s": 0.0032954469999992853
+        },
+        "end": {
+          "energy_mj": 74520339,
+          "time_s": 197.451913515,
+          "query_latency_s": 0.0030982740000240483
+        },
+        "duration_s": 3.0041544265000084,
+        "energy_j": 180.599,
+        "average_power_w": 60.116416921485275,
+        "settle_seconds_before_measurement": 3.0
+      },
+      "idle_after": {
+        "start": {
+          "energy_mj": 76374144,
+          "time_s": 218.903689951,
+          "query_latency_s": 0.004105570000007219
+        },
+        "end": {
+          "energy_mj": 76554890,
+          "time_s": 221.9081701705,
+          "query_latency_s": 0.0033394609999959357
+        },
+        "duration_s": 3.00448021950001,
+        "energy_j": 180.746,
+        "average_power_w": 60.158825086250296,
+        "settle_seconds_before_measurement": 3.0
+      },
+      "active": {
+        "start": {
+          "energy_mj": 74520339,
+          "time_s": 197.4552311055,
+          "query_latency_s": 0.0028169229999832623
+        },
+        "end": {
+          "energy_mj": 76162405,
+          "time_s": 215.898567316,
+          "query_latency_s": 0.003202056000020548
+        },
+        "duration_s": 18.443336210500007,
+        "energy_j": 1642.066,
+        "average_power_w": 89.0330242456434
+      },
+      "telemetry_before": {
+        "temperature_c": 35,
+        "power_w": 59.788,
+        "graphics_clock_mhz": 1095,
+        "memory_clock_mhz": 1215,
+        "throttle_reasons_mask": 0
+      },
+      "telemetry_after": {
+        "temperature_c": 37,
+        "power_w": 89.293,
+        "graphics_clock_mhz": 1410,
+        "memory_clock_mhz": 1215,
+        "throttle_reasons_mask": 0
+      },
+      "paired_idle_power_w": 60.137621003867785,
+      "idle_adjusted_energy_j": 532.9276369260394,
+      "idle_adjusted_j_per_invocation": 266.4638184630197,
+      "unadjusted_j_per_invocation": 821.033,
+      "before_only_adjusted_j_per_invocation": 266.6593554732276,
+      "after_only_adjusted_j_per_invocation": 266.26828145281183,
+      "cuda_event_duration_s": 18.4402265625,
+      "cuda_event_us_per_invocation": 9220113.28125,
+      "wall_duration_s": 18.44031762900002,
+      "wall_us_per_invocation": 9220158.81450001
+    }
+  ],
+  "summary": {
+    "cuda_event_us_per_invocation": {
+      "mean": 9220113.28125,
+      "median": 9220113.28125,
+      "min": 9220113.28125,
+      "max": 9220113.28125,
+      "sample_stddev": null
+    },
+    "wall_us_per_invocation": {
+      "mean": 9220158.81450001,
+      "median": 9220158.81450001,
+      "min": 9220158.81450001,
+      "max": 9220158.81450001,
+      "sample_stddev": null
+    },
+    "idle_adjusted_j_per_invocation": {
+      "mean": 266.4638184630197,
+      "median": 266.4638184630197,
+      "min": 266.4638184630197,
+      "max": 266.4638184630197,
+      "sample_stddev": null
+    },
+    "unadjusted_j_per_invocation": {
+      "mean": 821.033,
+      "median": 821.033,
+      "min": 821.033,
+      "max": 821.033,
+      "sample_stddev": null
+    }
+  },
+  "prediction_sha256_int64_le": "a5aabf4a3bd98c0d975954a7a083717df9b92cc8cdcfa1cd8677fcf45b04f361"
+}

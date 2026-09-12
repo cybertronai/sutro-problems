@@ -1,0 +1,69 @@
+{
+  "frozen_at_utc": "2026-09-12T02:04:24.462079+00:00",
+  "configuration": {
+    "width": 512,
+    "epochs": 200,
+    "learning_rate": 0.1,
+    "batch_size": 25,
+    "features": 81,
+    "n_train": 10000,
+    "n_test": 10000
+  },
+  "dataset_seeds": [
+    2026091200,
+    2026091201,
+    2026091202,
+    2026091203,
+    2026091204,
+    2026091205,
+    2026091206,
+    2026091207,
+    2026091208,
+    2026091209,
+    2026091210
+  ],
+  "learner_seeds": [
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108,
+    109,
+    110,
+    111
+  ],
+  "dataset": "10000 train and10000 test sampled without replacement from original60000 training rows; independent PCG64(seed) permutation for each draw; first10000 train,next10000 test",
+  "preprocessing": "uint8/255 float32; exact box-area28\u21929 using mnist/code/data.py; clipped[0,1]; input transform4*x-0.5 in learner",
+  "training": "Fixed cyclic contiguous minibatches25; squared-error SGD; 81\u2192512\u219210 ReLU; ascending separate FP32 multiplies/adds; seed-only PCG64 initialization; fresh complete training every draw",
+  "selection": "Historical200epochs retained, no width/rate/checkpoint changes. Diagnostic1927/2000 did not change initial configuration. Original unused400epoch fallback superseded before final draws; diagnostic sample may overlap final test rows, so it is not an input to the fixed learner nor qualification evidence.",
+  "target_accuracy_percent": 96,
+  "required_correct_of_110000": 105600,
+  "accuracy_statistic": "arithmetic mean across11draws; sample SD in pp; exact sum(correct)/110000",
+  "learner_inputs": [
+    "train_images",
+    "train_labels",
+    "test_images"
+  ],
+  "raw_sources": {
+    "train_images": {
+      "sha256": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+      "md5": "f68b3c2dcbeaaa9fbdd348bbdeb94873",
+      "url": "https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz"
+    },
+    "train_labels": {
+      "sha256": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+      "md5": "d53e105ee54ea40749a09fcbcd1e9432",
+      "url": "https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz"
+    }
+  },
+  "source_sha256": {
+    "learner.py": "94a0c8e38923991248eb8b6e9e6c44262af36857844e41046e19f35ba2a64107",
+    "run.py": "7aa6509af1e981f6a47b1b3ef2807fc45d57c9f3d57b86de0c6cfa2358a2ae75"
+  },
+  "generator_sha256": "72e203322357befa1aeeae89b7d20f760ae7bf841008625fdb8ce3f2231563b3",
+  "protocol_amended_at_utc": "2026-09-12T02:04:50.389342+00:00",
+  "validation_plan_amendment": "Original candidate plan retained in validation_plan.json. Only initial200epoch candidate ever executed; fallback is disabled in reproduction source and final protocol."
+}
