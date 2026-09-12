@@ -31,44 +31,25 @@ MNIST-large uses LeNet5 original 1% error rate
 
 # Submissions
 
-Each table lists submissions for the current dataset and target. Medium error
-bounds apply to the unrounded mean over 11 independently sampled datasets;
-original uses the official test split. Report small/medium accuracy as mean ±
-sample standard deviation in percentage points. Use an em dash for unmeasured
-costs. All energy columns use **mJ** and all time columns use **ms**, per complete
-training-and-prediction run. Grid columns use the spatial-computer model. Reports
-identify the measured datasets and trials, memory use, hop counts, contributors,
-and reproduction details. The two MLP grid entries use a globally serialized
-schedule; their reports describe this baseline and its limits.
+Energy is in **mJ**; time is in **ms**.
 
-## MNIST-small — 60% accuracy target
-
-1,000 training / 1,000 test images, 3 × 3 pixels. **At least 60% mean accuracy.**
+## MNIST-small — 67% accuracy target
 
 | Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| 2026-09-11 | 67.08% ± 1.54 pp | 3,300 | 130 | 0.24 | 3,100 | [H32 MLP (60% target)](submissions/small60-grid-20260912/README.md) |
+| 2026-09-11 | 67.08% ± 1.54 pp | 3,300 | 130 | 0.24 | 3,100 | [H32 MLP](submissions/small60-grid-20260912/README.md) |
 
 ## MNIST-medium — 2% error target
-
-10,000 training / 10,000 test images, 9 × 9 pixels. **At most 2% mean error
-(at least 98% mean accuracy).**
 
 | Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 
 ## MNIST-medium — 3% error target
 
-10,000 training / 10,000 test images, 9 × 9 pixels. **At most 3% mean error
-(at least 97% mean accuracy).**
-
 | Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 
 ## MNIST-medium — 5% error target
-
-10,000 training / 10,000 test images, 9 × 9 pixels. **At most 5% mean error
-(at least 95% mean accuracy).**
 
 | Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
@@ -76,24 +57,15 @@ schedule; their reports describe this baseline and its limits.
 
 ## MNIST-medium — 8% error target
 
-10,000 training / 10,000 test images, 9 × 9 pixels. **At most 8% mean error
-(at least 92% mean accuracy).**
-
 | Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 
 ## MNIST-medium — 12% error target
 
-10,000 training / 10,000 test images, 9 × 9 pixels. **At most 12% mean error
-(at least 88% mean accuracy).**
-
 | Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 
 ## MNIST-original — 1% test error target
-
-60,000 training / 10,000 test images, 28 × 28 pixels. **At most 1% test error
-(at least 99% accuracy; 9,900/10,000 correct).** Also called MNIST-large.
 
 | Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
@@ -108,7 +80,7 @@ Learn from the supplied training images and labels, then produce one digit label
 and prediction. Test labels are for evaluation only.
 
 - **MNIST-small:** 1,000 training / 1,000 test images, 3 × 3 pixels; at least
-  **60% mean accuracy**.
+  **67% mean accuracy**.
 - **MNIST-medium:** 10,000 training / 10,000 test images, 9 × 9 pixels; the five
   error bands below.
 - **MNIST-original (MNIST-large):** 60,000 training / 10,000 test images,
@@ -144,9 +116,11 @@ than selecting favorable draws.
 
 ### MNIST-small accuracy target
 
-The target is **at least 60% mean accuracy** over 11 independent datasets.
-Use the exact `sum(correct) / 11000` fraction: at least **6,600 correct** across
+The target is **at least 67% mean accuracy** over 11 independent datasets.
+Use the exact `sum(correct) / 11000` fraction: at least **7,370 correct** across
 11,000 predictions. A rounded display percentage does not establish a pass.
+The existing H32 MLP result, 7,379 / 11,000, meets this target; its frozen report
+retains the original 60% study target.
 
 ### MNIST-original error target
 
@@ -156,6 +130,10 @@ on the official 10,000-image test split. A submission must predict at least
 threshold to the exact `correct / 10000` fraction, not a rounded percentage.
 
 ## Efficiency measurements
+
+Costs are per complete training-and-prediction run. The two MLP grid entries
+use a globally serialized schedule; their reports describe this baseline and
+its limits.
 
 Address the memory wall by reducing memory footprint and data movement. The two
 implementation goals are:
@@ -206,10 +184,10 @@ specification.
 
 The [older agent instructions](instructions.md), default dataset generator, and
 accuracy evaluator still describe the previous specification: 600/600 and
-6,000/6,000 sizes and single-core scoring. The evaluator also lacks the medium
-error bands and the original tier's 99% target. Update or configure reproduction
-code to match the
-datasets, error bands, and spatial model above before claiming current results.
+6,000/6,000 sizes and single-core scoring. The evaluator also lacks the current
+small target, medium error bands, and the original tier's 99% target. Update or
+configure reproduction code to match the datasets, error bands, and spatial
+model above before claiming current results.
 The generator's `reference-20260910` profile has the new counts but uses a
 different train/test split protocol; matching counts alone is insufficient.
 
