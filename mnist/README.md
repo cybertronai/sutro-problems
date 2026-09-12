@@ -29,53 +29,128 @@ mnist-medium comes with 5 accuracy target bands, 2% error, 3% error, 5% error, 8
 
 # Details (information for agents)
 
-## Datasets and scoring model
+## Task and datasets
 
-- **MNIST-small:** 600 train / 600 test, 3 × 3 images; **at least 60% mean accuracy**.
-- **MNIST-medium:** 6,000 train / 6,000 test, 9 × 9 images; **at least 98% mean accuracy**.
-- **MNIST-large:** classic MNIST, 60,000 train / 10,000 test, 28 × 28 images; **at least 98% accuracy** (9,800/10,000 correct).
+Learn from the supplied training images and labels, then produce one digit label
+(0–9) for each test image. The computation being compared includes both training
+and prediction. Test labels are for evaluation only.
 
-Small and medium use disjoint random subsets of the original 60,000 MNIST
-training examples. For each of these tiers, report **mean accuracy ± sample
-standard deviation over 11 independently sampled datasets**, with fresh training
-on every dataset. Standard deviation is in **percentage points (pp)**. Large
-uses the official training and test splits.
+| Tier | Training examples | Test examples | Image size | Accuracy target |
+| --- | ---: | ---: | --- | --- |
+| MNIST-small | 1,000 | 1,000 | 3 × 3 | Not specified in the human section; report achieved accuracy |
+| MNIST-medium | 10,000 | 10,000 | 9 × 9 | Five error bands, listed below |
+| MNIST-original (MNIST-large) | 60,000 | 10,000 | 28 × 28 | Not specified in the human section; report achieved accuracy |
 
-Targets and their evaluation basis are documented in [Instructions for agents](instructions.md#accuracy-targets). Small/medium eligibility uses the unrounded 11-dataset mean. A lone percentage in an existing entry is a historical result without the required 11-dataset summary; its report gives the measured scope.
+For small and medium, use disjoint random training and test subsets of the
+original 60,000 MNIST training examples. Report **mean accuracy ± sample standard
+deviation over 11 independently sampled datasets**, with fresh training on each
+dataset. Record all dataset seeds, preprocessing, checksums, learner seeds, and
+individual `correct / total` counts. Choose the learning procedure before
+inspecting test results; do not transfer learned state between datasets.
+Standard deviation is in **percentage points (pp)**. Original uses the complete
+official training and test splits.
 
-**Model:** [Bill Dally single core with tape](https://github.com/cybertronai/simplified-dally-model/tree/main/models/single-core-with-tape)
-([v4 instruction set](https://github.com/cybertronai/simplified-dally-model/tree/main/instruction-sets/v4)).
-Use tape operations to read and write the dataset.
+### MNIST-medium error bands
+
+Error is the fraction of incorrect test predictions. Each band is an inclusive
+maximum error, equivalent to the following minimum accuracy:
+
+| Maximum mean error | Minimum mean accuracy | Minimum total correct across 11 datasets (110,000 test predictions) |
+| ---: | ---: | ---: |
+| 2% | 98% | 107,800 |
+| 3% | 97% | 106,700 |
+| 5% | 95% | 104,500 |
+| 8% | 92% | 101,200 |
+| 12% | 88% | 96,800 |
+
+Label each medium result with the error band it targets and whether it meets
+that band. Apply thresholds to the **unrounded 11-dataset mean**, calculated as
+`sum(correct) / 110000`; a rounded display percentage does not establish a pass.
+Report all 11 draws, including their mean and sample standard deviation, rather
+than selecting favorable draws. For small and original, report accuracy without
+claiming qualification against an unstated target.
+
+## Efficiency measurements
+
+Address the memory wall by reducing memory footprint and data movement. The two
+implementation goals are:
+
+- **A100:** provide a kernel or implementation that uses little energy. Use an
+  ISA or toolchain of your choice, such as
+  [pyptx](https://github.com/patrick-toulme/pyptx) or Triton. Report runtime and
+  **idle-adjusted energy measured with NVML**, including the measurement commands
+  and idle-baseline method.
+- **Bill Dally's 2D grid:** use the
+  [spatial-computer model](https://github.com/cybertronai/simplified-dally-model/tree/main/models/spatial-computer)
+  and its specified instruction set. Declare processor and memory placement,
+  data representation, tape layout, and execution schedule. Count data movement
+  in **word-node hops**, including local accesses, interprocessor traffic, and
+  tape I/O according to that model. Report **peak scratch-memory use**, active
+  processors, hop counts, and the resulting model energy and elapsed time.
+
+Identify the model revision and scoring method used. Report **time to score**:
+the host runtime of computing the theoretical metrics. Account for the full
+training-and-prediction computation, identifying any setup or preprocessing
+excluded from a measurement. Keep theoretical scores distinct from measured
+A100 costs; report an em dash for unmeasured values.
+
+Display execution times in **ms**, energies in **mJ** (1 J = 1,000 mJ), and time
+to score in **s**, using two significant figures for cost measurements. Report
+memory in bytes or KiB and retain exact counts, accuracies, and measurements in
+the accompanying data files. If reporting area, state its spatial-model
+definition and derivation; do not reuse the old single-core area conversion.
 
 ## Submission
 
-1. Find an algorithm in Dally model that meets the accuracy target. Report its theoretical model **time**,
-   **energy**, and **area** (from peak memory use), plus **time to score**: the
-   runtime of the scoring computation on your machine.
-2. Compile it to run on A100 using an ISA of your choice (e.g. [pyptx](https://github.com/patrick-toulme/pyptx)). Report GPU runtime and
-   **idle-adjusted energy**, measured with NVML and reported in millijoules (mJ).
-3. Submit reproduction instructions and a link to a standalone report explaining
-   the algorithm and measurements. See [**Instructions for agents**](instructions.md).
+Open a pull request adding the source or generator, reproduction commands, and
+a standalone report under `mnist/submissions/<name>/`. Include the tier, target
+error band for medium, accuracy evidence, dataset and learner seeds, model
+revision, memory layout, scoring calculations, hardware/software versions, A100
+measurements, and any W&B runs. Identify which efficiency metrics have been
+measured and which remain unavailable.
 
-Execution times use **milliseconds (ms)**, energies use **millijoules (mJ)**, areas use **square millimeters (mm²)**, and **time to score uses seconds (s)**, with **two significant figures**. Time to score is the host computation of the theoretical scores. Exact measurements remain in each submission’s data files.
+Add new results above the historical tables below, clearly labeled with the
+current dataset sizes and, for medium, the error band. Keep individual entries
+concise and link to the full report.
 
-## MNIST-small
+## Existing tooling
+
+The [older agent instructions](instructions.md), default dataset generator, and
+accuracy evaluator still describe the previous specification. Their 600/600 and
+6,000/6,000 sizes, fixed 60%/98%/98% thresholds, and single-core scoring rules do
+not define this problem. Update or configure reproduction code to match the
+datasets, error bands, and spatial model above before claiming current results.
+The generator's `reference-20260910` profile has the new counts but uses a
+different train/test split protocol; matching counts alone is insufficient.
+
+## Historical submissions
+
+The entries below retain their original measurements. Small used 600 training
+and 600 test images; medium used 6,000 of each. Reported Dally scores and areas
+use the former **single-core-with-tape** model. These results do not establish
+accuracy or spatial-computer costs for the revised datasets and error bands.
+Their reports document the original evaluation scope, including whether an
+entry used one dataset or 11 draws.
+
+### MNIST-small (historical)
 
 | Accuracy | Time (ms) | Energy (mJ) | Area (mm²) | Time to score (s) | Time on A100 (ms) | Energy on A100 (mJ) | Submission |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 | 62% | 93 | 0.11 | 0.020 | 0.081 | 71 | 2,000 | [32-unit MLP](https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/) |
 | 51% | 1.7 | 0.0019 | 0.0060 | 35 | 0.0069 | 0.52 | [1NN](https://cybertronai.github.io/sutro-problems/docs/submissions/1nn-v4-20260911/) |
 
-## MNIST-medium
+### MNIST-medium (historical)
 
 | Accuracy | Time (ms) | Energy (mJ) | Area (mm²) | Time to score (s) | Time on A100 (ms) | Energy on A100 (mJ) | Submission |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
 | 98.1% ± 0.1 pp | — | — | — | — | 5.9 × 10⁴ | 1.7 × 10⁶ | [Three ConvNets](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-convnet-11draw-20260911/) |
 | 96% | 93,000 | 200 | 0.63 | 2.7 | 4,700 | 150,000 | [512-unit MLP](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-affine-20260911/) |
 
-## MNIST-large
+### MNIST-large (historical)
 
 | Accuracy | Time (ms) | Energy (mJ) | Area (mm²) | Time to score (s) | Time on A100 (ms) | Energy on A100 (mJ) | Submission |
 | ---: | ---: | ---: | ---: | ---: | ---: | ---: | --- |
+
+Historical single-core-with-tape sketch:
 
 ![MNIST competition sketch: scoring metrics, dataset tiers, and a Bill Dally single-core model with tape](doc/competition-overview.png)
