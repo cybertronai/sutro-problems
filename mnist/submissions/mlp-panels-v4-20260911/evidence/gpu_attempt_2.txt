@@ -1,0 +1,103 @@
+✓ Initialized. View run at 
+https://modal.com/apps/vargapowercouple/main/ap-zoa62weKNN8OR98Ybd2WYA
+✓ Created objects.
+├── 🔨 Created mount 
+│   /Users/aleksandrmalysev/Yandex.Disk.localized/Developer/vargML/mnist/sutro-p
+│   roblems/mnist/experiments/mlp-panels-v4-20260911/gpu_benchmark.py
+└── 🔨 Created function benchmark.
+Compile, execute, validate baseline
+Graph accepted baseline {'total': 24004, 'kernels': 24004}
+Compile, execute, validate energy
+Traceback (most recent call last):
+  File "/pkg/modal/_runtime/container_io_manager.py", line 987, in handle_input_exception
+    yield
+  File "/pkg/modal/_container_entrypoint.py", line 189, in run_input_sync
+    values = io_context.call_function_sync()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/container_io_manager.py", line 266, in call_function_sync
+    expected_value_or_values = self.finalized_function.callable(*args, **kwargs)
+                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/gpu_benchmark.py", line 145, in benchmark
+    raise RuntimeError(f'{mode}: {type(error).__name__}: {error}') from None
+RuntimeError: energy: CompilationError: at 20:24:
+    q4 = tl.load(Q + rows * 9 + 4, valid, other=0.)
+    q5 = tl.load(Q + rows * 9 + 5, valid, other=0.)
+    q6 = tl.load(Q + rows * 9 + 6, valid, other=0.)
+    q7 = tl.load(Q + rows * 9 + 7, valid, other=0.)
+    q8 = tl.load(Q + rows * 9 + 8, valid, other=0.)
+    values = (q0, q1, q2, q3, q4, q5, q6, q7, q8)
+    for panel in tl.static_range(8):
+        cols = panel * 4 + tl.arange(0, 4)
+        acc = tl.full((32, 4), 0., tl.float32)
+        for f in tl.static_range(9):
+            b = tl.load(P + f * 32 + cols)
+            acc = acc + values[f][:, None] * b[None, :]
+                        ^
+ValueError('unsupported tensor index: constexpr[0]')
+Stopping app - uncaught exception raised locally: RuntimeError("energy: CompilationError: at 20:24:\n    q4 = tl.load(Q + rows * 9 + 4, valid, other=0.)\n    q5 = tl.load(Q + rows * 9 + 5, valid, other=0.)\n    q6 = tl.load(Q + rows * 9 + 6, valid, other=0.)\n    q7 = tl.load(Q + rows * 9 + 7, valid, other=0.)\n    q8 = tl.load(Q + rows * 9 + 8, valid, other=0.)\n    values = (q0, q1, q2, q3, q4, q5, q6, q7, q8)\n    for panel in tl.static_range(8):\n        cols = panel * 4 + tl.arange(0, 4)\n        acc = tl.full((32, 4), 0., tl.float32)\n        for f in tl.static_range(9):\n            b = tl.load(P + f * 32 + cols)\n            acc = acc + values[f][:, None] * b[None, :]\n                        ^\nValueError('unsupported tensor index: constexpr[0]')").
+╭───────────────────── Traceback (most recent call last) ──────────────────────╮
+│ /Users/aleksandrmalysev/Yandex.Disk.localized/Developer/vargML/mnist/sutro-p │
+│ roblems/mnist/experiments/mlp-panels-v4-20260911/gpu_benchmark.py:334 in     │
+│ main                                                                         │
+│                                                                              │
+│   333 │   (destination/'runner.py').write_bytes(Path(__file__).read_bytes()) │
+│ ❱ 334 │   result,ptx,arrays = benchmark.remote(source,packed.getvalue(),expe │
+│   335 │   (destination/'results.json').write_text(json.dumps(result,indent=2 │
+│                                                                              │
+│ /Users/aleksandrmalysev/.cache/uv/archive-v0/hqAyXemj--8BX7Lt/lib/python3.12 │
+│ /site-packages/modal/_object.py:46 in wrapped                                │
+│                                                                              │
+│    45 │   │   await self.hydrate()                                           │
+│ ❱  46 │   │   return await method(self, *args, **kwargs)                     │
+│    47                                                                        │
+│                                                                              │
+│ /Users/aleksandrmalysev/.cache/uv/archive-v0/hqAyXemj--8BX7Lt/lib/python3.12 │
+│ /site-packages/modal/_functions.py:1893 in remote                            │
+│                                                                              │
+│   1892 │   │                                                                 │
+│ ❱ 1893 │   │   return await self._call_function(args, kwargs)                │
+│   1894                                                                       │
+│                                                                              │
+│ /Users/aleksandrmalysev/.cache/uv/archive-v0/hqAyXemj--8BX7Lt/lib/python3.12 │
+│ /site-packages/modal/_functions.py:1830 in _call_function                    │
+│                                                                              │
+│   1829 │   │                                                                 │
+│ ❱ 1830 │   │   return await invocation.run_function()                        │
+│   1831                                                                       │
+│                                                                              │
+│ /Users/aleksandrmalysev/.cache/uv/archive-v0/hqAyXemj--8BX7Lt/lib/python3.12 │
+│ /site-packages/modal/_functions.py:503 in run_function                       │
+│                                                                              │
+│    502 │   │   │   # No more retries left.                                   │
+│ ❱  503 │   │   │   return await _process_result(                             │
+│    504 │   │   │   │   await_response.output.result, await_response.output.d │
+│                                                                              │
+│ /Users/aleksandrmalysev/.cache/uv/archive-v0/hqAyXemj--8BX7Lt/lib/python3.12 │
+│ /site-packages/modal/_utils/function_utils.py:572 in _process_result         │
+│                                                                              │
+│   571 │   │   │                                                              │
+│ ❱ 572 │   │   │   raise exc_with_hints(exc)                                  │
+│   573                                                                        │
+│                                                                              │
+│     ...Remote call to Modal Function (ta-01M2A1BZY0D57QHSK79PB2D4CR)...      │
+│                                                                              │
+│ /root/gpu_benchmark.py:145 in benchmark                                      │
+│                                                                              │
+│ ❱ 145 raise RuntimeError(f'{mode}: {type(error).__name__}: {error}') from No │
+│                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────╯
+RuntimeError: energy: CompilationError: at 20:24:
+    q4 = tl.load(Q + rows * 9 + 4, valid, other=0.)
+    q5 = tl.load(Q + rows * 9 + 5, valid, other=0.)
+    q6 = tl.load(Q + rows * 9 + 6, valid, other=0.)
+    q7 = tl.load(Q + rows * 9 + 7, valid, other=0.)
+    q8 = tl.load(Q + rows * 9 + 8, valid, other=0.)
+    values = (q0, q1, q2, q3, q4, q5, q6, q7, q8)
+    for panel in tl.static_range(8):
+        cols = panel * 4 + tl.arange(0, 4)
+        acc = tl.full((32, 4), 0., tl.float32)
+        for f in tl.static_range(9):
+            b = tl.load(P + f * 32 + cols)
+            acc = acc + values[f][:, None] * b[None, :]
+                        ^
+ValueError('unsupported tensor index: constexpr[0]')

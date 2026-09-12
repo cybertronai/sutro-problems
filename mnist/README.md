@@ -211,6 +211,7 @@ scores.
 
 | Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| 2026-09-12 | 65.0% ± 2.1 pp | 1,800 | 57 | — | — | [Panel-cached MLP (600/600)](submissions/mlp-panels-v4-20260911/report.md) |
 | 2026-09-10 | 62% | 2,000 | 71 | — | — | [32-unit MLP](https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/) |
 | 2026-09-10 | 51% | 0.52 | 0.0069 | — | — | [1NN](https://cybertronai.github.io/sutro-problems/docs/submissions/1nn-v4-20260911/) |
 
