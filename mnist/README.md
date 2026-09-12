@@ -31,43 +31,41 @@ MNIST-large uses LeNet5 original 1% error rate
 
 # Submissions
 
-Energy is in **mJ**; time is in **ms**.
-
 ## MNIST-small — 67% accuracy target
 
-| Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
+| Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 2026-09-11 | 67.08% ± 1.54 pp | 3,300 | 130 | 0.24 | 3,100 | [H32 MLP](submissions/small60-grid-20260912/README.md) |
 
 ## MNIST-medium — 2% error target
 
-| Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
+| Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 
 ## MNIST-medium — 3% error target
 
-| Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
+| Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 
 ## MNIST-medium — 5% error target
 
-| Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
+| Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 2026-09-11 | 96.41% ± 0.13 pp | 290,000 | 9,300 | 440 | 3.7 × 10⁶ | [512-unit MLP (96% target)](submissions/medium96-grid-20260912/README.md) |
 
 ## MNIST-medium — 8% error target
 
-| Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
+| Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 
 ## MNIST-medium — 12% error target
 
-| Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
+| Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 
 ## MNIST-original — 1% test error target
 
-| Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
+| Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 
 <details>
@@ -207,21 +205,21 @@ scores.
 
 ### MNIST-small (historical)
 
-| Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
+| Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 2026-09-10 | 62% | 2,000 | 71 | — | — | [32-unit MLP](https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/) |
 | 2026-09-10 | 51% | 0.52 | 0.0069 | — | — | [1NN](https://cybertronai.github.io/sutro-problems/docs/submissions/1nn-v4-20260911/) |
 
 ### MNIST-medium (historical)
 
-| Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
+| Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 2026-09-10 | 98.1% ± 0.1 pp | 1.7 × 10⁶ | 5.9 × 10⁴ | — | — | [Three ConvNets](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-convnet-11draw-20260911/) |
 | 2026-09-10 | 96% | 150,000 | 4,700 | — | — | [512-unit MLP](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-affine-20260911/) |
 
 ### MNIST-large (historical)
 
-| Date | Accuracy | Energy on A100 | Time on A100 | Energy in grid model | Time in grid model | submission |
+| Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 
 Historical single-core-with-tape sketch:
