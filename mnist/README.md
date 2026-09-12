@@ -4,11 +4,11 @@ The system takes **train**/*test* images + **train** labels, and produces *test*
 
 <img width="1200" height="419" alt="Screenshot 2026-09-11 at 6 39 12 PM" src="https://github.com/user-attachments/assets/e4610f22-00e6-4d70-adee-1948f219cf51" />
 
-Provide a way to solve this problem at prescribed accuracy that addresses the issue of **the memory
+Provide a way to solve this problem at prescribed accuracy without hitting **the memory
 wall**. 
 
 IE
-- kernel that runs on A100 using few Joules (measured using NVML ).
+- kernel that runs on A100 using few Joules (measured using NVML)
 - an algorithm that runs with small memory footprint in Bill Dally's 2D grid (measured by counting hops in [Bill Dally's 2D grid](https://github.com/cybertronai/simplified-dally-model/tree/main/models/spatial-computer)
 
 ## Motivation
