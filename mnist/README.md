@@ -28,7 +28,7 @@ To understand the memory wall, consider that the energy of an 8-bit add is compa
 - MNIST-large: original 60k train, 10k test, 28x28 images
 
 
-
+MNIST-small requires 67% test accuracy
 MNIST-medium comes with 5 test-set error targets, 2% error, 3% error, 5% error, 8% error, 12% error
 MNIST-large uses LeNet5 original 1% error rate
 
