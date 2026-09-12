@@ -1,9 +1,10 @@
 # Building the report
 
-The four supplied report files are preserved byte for byte. The original Markdown
-is stored here and published as `../backprop_memory_wall.md.txt`, with a download
-filename of `backprop_memory_wall.md`, to avoid Jekyll interpreting its front matter.
-The PDF, Python script, and PNG remain in the parent directory.
+The supplied ZIP is preserved byte for byte as `../source-files.zip`, including
+the original Markdown, PDF, Python script, and PNG. The Markdown is also stored
+here for the build. The PDF, Python script, and PNG remain in the parent directory.
+The Markdown is downloaded inside the archive because Jekyll consumes YAML front
+matter even in files with a `.txt` extension.
 The companion Python file is a download; this web build does not execute it.
 
 With Node.js 22.12 or newer, run `npm ci --ignore-scripts` and `npm run build`

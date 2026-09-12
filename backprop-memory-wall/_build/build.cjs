@@ -6,8 +6,6 @@ const katex = require('katex');
 const texmath = require('markdown-it-texmath');
 const root = path.resolve(__dirname, '..');
 const original = fs.readFileSync(path.join(__dirname, 'backprop_memory_wall.md'), 'utf8');
-// A .txt suffix prevents Jekyll consuming the Markdown's YAML front matter.
-fs.writeFileSync(path.join(root, 'backprop_memory_wall.md.txt'), original);
 const source = original.replace(/^---\n[\s\S]*?\n---\n/, '').trim();
 const md = new MarkdownIt({ html: false, typographer: false }).use(texmath, {
   engine: katex, delimiters: 'dollars', katexOptions: { throwOnError: true, trust: false, output: 'htmlAndMathml' }
