@@ -12,9 +12,9 @@ IE
 - an algorithm that runs with small memory footprint in Bill Dally's 2D grid (measured by counting hops in [Bill Dally's 2D grid](https://github.com/cybertronai/simplified-dally-model/tree/main/models/spatial-computer)
 
 ## Motivation
-Today's learning is based on backprop which was popularized in the 80s when we were bottlenecked by arithmetic. Today, we are bottlenecked by memory movement. This favors algorithms with small memory footprint, yet backprop has a large memory footprint.
+Today's learning is based on backprop which was popularized in the 80s when we were bottlenecked by arithmetic. Today, we are bottlenecked by memory movement. This favors algorithms with small memory footprint. Backprop has a large memory footprint.
 
-Backprop footprint issue is partly mitigated by batching, yet batching comes with costs. Is there an alternative solution?
+Footprint issue is partly mitigated by batching, yet batching comes with costs. Is there an alternative solution?
 
 About memory wall: the energy of an 8-bit add is comparable to the energy needed to move its operands 10 micrometers. A chip is 16 mm wide. Bill Dally's AHA retreat [slides]( https://aha.stanford.edu/sites/g/files/sbiybj20066/files/media/file/aha-retreat-2023_dally_keynote_en_eff_ai_hw_0.pdf)
 
