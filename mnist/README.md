@@ -3,6 +3,33 @@
 **Task:** given training images, training labels, and test images, produce the
 predicted test labels (digits 0–9) meeting the accuracy requirement for the tier.
 
+Provide a way to solve this problem on modern silicon subject to **the memory
+wall**. The efficiency goals are:
+
+- An A100 kernel that uses few joules, measured with NVML.
+- An algorithm with a small memory footprint in
+  [Bill Dally's 2D grid](https://github.com/cybertronai/simplified-dally-model/tree/main/models/spatial-computer),
+  with data movement measured by counting hops.
+
+The 2D grid is a broader algorithm-design goal; the current submission metrics
+use the single-core-with-tape scoring model specified below.
+
+## Motivation
+
+Backpropagation became popular in the 1980s, when arithmetic was a major
+bottleneck. On modern hardware, memory movement is often the bottleneck,
+favoring algorithms with small memory footprints. Backpropagation has a large
+memory footprint. Batching partly mitigates the cost of memory movement, but
+introduces other costs. Can an alternative learning algorithm solve this task
+more efficiently?
+
+To get a sense of the memory wall, the energy of an 8-bit add is comparable to
+the energy needed to move its operands about **10 micrometers**, while a chip
+can be **16 mm wide**. See Bill Dally's
+[Energy Efficiency and AI Hardware keynote](https://aha.stanford.edu/sites/g/files/sbiybj20066/files/media/file/aha-retreat-2023_dally_keynote_en_eff_ai_hw_0.pdf).
+
+## Datasets and scoring model
+
 - **MNIST-small:** 600 train / 600 test, 3 × 3 images; **at least 60% mean accuracy**.
 - **MNIST-medium:** 6,000 train / 6,000 test, 9 × 9 images; **at least 98% mean accuracy**.
 - **MNIST-large:** classic MNIST, 60,000 train / 10,000 test, 28 × 28 images; **at least 98% accuracy** (9,800/10,000 correct).
