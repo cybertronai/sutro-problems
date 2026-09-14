@@ -1,0 +1,2561 @@
+{
+  "records": [
+    {
+      "config": {
+        "alpha": 0.5,
+        "batch_size": 128,
+        "momentum": 0.9,
+        "weight_decay": 0.0,
+        "seed": 11,
+        "depth": 1,
+        "epochs": 1,
+        "learning_rate": 0.1
+      },
+      "correct": 1762,
+      "total": 2000,
+      "accuracy_percent": 88.1,
+      "result": {
+        "metadata": {
+          "config": {
+            "depth": 1,
+            "alpha": 0.5,
+            "seed": 11,
+            "epochs": 1,
+            "learning_rate": 0.1,
+            "batch_size": 128,
+            "momentum": 0.9,
+            "weight_decay": 0.0
+          },
+          "parameter_count": 4192,
+          "train_count": 8000,
+          "test_count": 2000,
+          "fresh_initialization_per_run": true,
+          "checkpoint_loaded": false,
+          "normalization": "4*x-0.5 then append one zero coordinate",
+          "initialization": "branch normal(0,0.05/sqrt(41)); standard torch Linear head; seed-only",
+          "optimizer": "SGD momentum; zero initial velocity; gradient mean cross entropy",
+          "shuffle": "independent PCG64 permutation each epoch, seed-only",
+          "augmentation": "none",
+          "input_hashes": {
+            "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+            "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+            "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+          },
+          "epoch_permutation_sha256": [
+            "59503b4e3ca6d91fd29351afa3fe83c923c45080d3d05f737fda5f543b34b736"
+          ],
+          "initial_parameter_sha256": {
+            "weights.0": "194490b683f6426b65457a6725f0646768f8d46a361d9b125cfc768ab614f8fb",
+            "weights.1": "bcbcbf732d68415f6c7c393c31343810467d8a86951e70237f6c36712785dd02",
+            "head.weight": "cf377ee51b392e583b6f4a793bfe463be5923a301aa6bdbf2c50c7618b10416f",
+            "head.bias": "3cb77813041da40618ec2c920f202aebfdde2e6422e84b01e7d42f652f3faaaf"
+          },
+          "final_parameter_sha256": {
+            "weights.0": "c8f791950374767e9ce960b981e885b7b9aa58cf3656d6c135eff657de2bf5a2",
+            "weights.1": "0bbbc2f31b3cec41285458bc60a4ddcf23e5615444e3e4d4fcff40f706f55b75",
+            "head.weight": "24221d24c07661836c1427bac483d7d9a814698baa28685ebf1e4f41143e003d",
+            "head.bias": "1f6e06e95eefce558a75cc7c10642a6f9a0a2abfdfd2c32fcb3a3f9df429f9e9"
+          },
+          "final_velocity_sha256": {
+            "weights.0": "0bb26eab3939747d618eda839cf0be4435862b8ee0b078629732472753bfe107",
+            "weights.1": "7a4f5c21d13f83139e5bc7629894222d8f840d4b3f76d8fd0638aaa9a6c6a4d9",
+            "head.weight": "9e311aab57ceda6bac76e3e8aaaa95c1dedbda5f3ea93f4acd35e05881fdac29",
+            "head.bias": "e96f229c49a17b99cb479ad74beffe00711afd276002b5af5b4b037271f057da"
+          },
+          "state_vector_sha256": "2f83ea410bd74dd6b9fa9c9a1c4f3457c8e9eae020257ab28fa95b6ae9efeefc",
+          "predictions_sha256": "4aaf79e578c6f41b7ce8d2664ab43f19060a308622e81c1ef57db46054e49ce4",
+          "scores_sha256": "c7a27ebbb4469dcce5e858f0794698b9e2e1248d521841b40bec833e41702242",
+          "preparation_seconds": 1.9864907160000005,
+          "run_count": 1,
+          "validation": {
+            "passed": true,
+            "device": "cpu",
+            "checks": [
+              {
+                "dtype": "torch.float64",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 2.220446049250313e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float64",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 4.440892098500626e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 4
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 0.0,
+                "inverse_max_abs_error": 2.9802322387695312e-08,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.4901161193847656e-08,
+                "inverse_max_abs_error": 2.384185791015625e-07,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 4
+              }
+            ],
+            "scope": "Identical weights; ordinary autograd versus custom reconstruction for inputs and every parameter. First-order differentiation only."
+          },
+          "reversible_core": true,
+          "retained_core_states": 1,
+          "core_saved_bytes_per_example": 328,
+          "head_reversible": false,
+          "input_lift_injective": true,
+          "timing_scope": "run resets weights/gradients/momentum, normalizes raw train and query pixels, copies resident epoch permutations, trains and predicts. Excludes setup, CPU permutation generation, allocation, transfer, capture and diagnostics."
+        },
+        "config": {
+          "alpha": 0.5,
+          "batch_size": 128,
+          "momentum": 0.9,
+          "weight_decay": 0.0,
+          "seed": 11,
+          "depth": 1,
+          "epochs": 1,
+          "learning_rate": 0.1
+        },
+        "input_sha256": {
+          "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+          "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+          "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+        },
+        "cuda_ms": 14.733311653137207,
+        "learner_sha256": "c395a8b7bc2951e3fdab5c5f5edf5ad2d5357de4e9170e52b988f4312e7169c5",
+        "completed_at_utc": "2026-09-14T23:39:59.283433+00:00",
+        "memory": {
+          "allocated_before_prepare_bytes": 0,
+          "prepare_and_invoke_peak_allocated_bytes": 75418624,
+          "allocated_after_invoke_bytes": 73993216,
+          "reserved_after_invoke_bytes": 96468992,
+          "scope": "Tensorallocator including graphpools/libraryworkspace; before diagnostic CUDAvalidation/serialization. Excludesdriver/context."
+        }
+      },
+      "prediction_path": "validation-predictions/candidate-00.npy",
+      "prediction_sha256": "897ca279c73e38e180ed96072cd4f179642e3ee45aee52db8827873b815ac917"
+    },
+    {
+      "config": {
+        "alpha": 0.5,
+        "batch_size": 128,
+        "momentum": 0.9,
+        "weight_decay": 0.0,
+        "seed": 11,
+        "depth": 1,
+        "epochs": 1,
+        "learning_rate": 0.3
+      },
+      "correct": 1773,
+      "total": 2000,
+      "accuracy_percent": 88.65,
+      "result": {
+        "metadata": {
+          "config": {
+            "depth": 1,
+            "alpha": 0.5,
+            "seed": 11,
+            "epochs": 1,
+            "learning_rate": 0.3,
+            "batch_size": 128,
+            "momentum": 0.9,
+            "weight_decay": 0.0
+          },
+          "parameter_count": 4192,
+          "train_count": 8000,
+          "test_count": 2000,
+          "fresh_initialization_per_run": true,
+          "checkpoint_loaded": false,
+          "normalization": "4*x-0.5 then append one zero coordinate",
+          "initialization": "branch normal(0,0.05/sqrt(41)); standard torch Linear head; seed-only",
+          "optimizer": "SGD momentum; zero initial velocity; gradient mean cross entropy",
+          "shuffle": "independent PCG64 permutation each epoch, seed-only",
+          "augmentation": "none",
+          "input_hashes": {
+            "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+            "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+            "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+          },
+          "epoch_permutation_sha256": [
+            "59503b4e3ca6d91fd29351afa3fe83c923c45080d3d05f737fda5f543b34b736"
+          ],
+          "initial_parameter_sha256": {
+            "weights.0": "194490b683f6426b65457a6725f0646768f8d46a361d9b125cfc768ab614f8fb",
+            "weights.1": "bcbcbf732d68415f6c7c393c31343810467d8a86951e70237f6c36712785dd02",
+            "head.weight": "cf377ee51b392e583b6f4a793bfe463be5923a301aa6bdbf2c50c7618b10416f",
+            "head.bias": "3cb77813041da40618ec2c920f202aebfdde2e6422e84b01e7d42f652f3faaaf"
+          },
+          "final_parameter_sha256": {
+            "weights.0": "543b4e6cba5f7dc1c989c49a40a643d18987aac71ad2eccac931b9ce70190ba7",
+            "weights.1": "31c3dff670a1e29d4ae9297a8804abb2b4c1eb1ca3a0610d85828b068188007c",
+            "head.weight": "c808145735d3e6c32307619ab58a0b2c418a885eb45f09c722003dc09518c85b",
+            "head.bias": "cdd49a7dc7a14772dafb32af9860d4e0f1965cbaa29232e979fb7fdb19181904"
+          },
+          "final_velocity_sha256": {
+            "weights.0": "3057b59ab19293506427b04c6a9a34b5b86194be72aa86642983c85840f780ab",
+            "weights.1": "07f01c43b4c5430ca6051943466e370720762ce2232e33938a655018e40bacd3",
+            "head.weight": "8828f2757da9fc93eb32276c9cc9fc26803c8ef6cff2851887bae3faa119d1a7",
+            "head.bias": "4f3c0e9c088c4312405e63d725d014fa2224c055611892b896cefc8b712e8ff4"
+          },
+          "state_vector_sha256": "156a9e383a427c34ac182eabbe3f284c63558e0c49ee45739933a0948a61afe7",
+          "predictions_sha256": "8f28b646b837e227d6c5cf6baaa1593e4489cba32e886a9614c6b293a0fe7c1f",
+          "scores_sha256": "17050ad19465580e8d55d9b165aa25d0baf02ab0cfc11d4c02dea4e53649eb62",
+          "preparation_seconds": 1.9575481259999998,
+          "run_count": 1,
+          "validation": {
+            "passed": true,
+            "device": "cpu",
+            "checks": [
+              {
+                "dtype": "torch.float64",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 2.220446049250313e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float64",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 4.440892098500626e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 4
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 0.0,
+                "inverse_max_abs_error": 2.9802322387695312e-08,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.4901161193847656e-08,
+                "inverse_max_abs_error": 2.384185791015625e-07,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 4
+              }
+            ],
+            "scope": "Identical weights; ordinary autograd versus custom reconstruction for inputs and every parameter. First-order differentiation only."
+          },
+          "reversible_core": true,
+          "retained_core_states": 1,
+          "core_saved_bytes_per_example": 328,
+          "head_reversible": false,
+          "input_lift_injective": true,
+          "timing_scope": "run resets weights/gradients/momentum, normalizes raw train and query pixels, copies resident epoch permutations, trains and predicts. Excludes setup, CPU permutation generation, allocation, transfer, capture and diagnostics."
+        },
+        "config": {
+          "alpha": 0.5,
+          "batch_size": 128,
+          "momentum": 0.9,
+          "weight_decay": 0.0,
+          "seed": 11,
+          "depth": 1,
+          "epochs": 1,
+          "learning_rate": 0.3
+        },
+        "input_sha256": {
+          "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+          "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+          "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+        },
+        "cuda_ms": 14.655488014221191,
+        "learner_sha256": "c395a8b7bc2951e3fdab5c5f5edf5ad2d5357de4e9170e52b988f4312e7169c5",
+        "completed_at_utc": "2026-09-14T23:40:00.046575+00:00",
+        "memory": {
+          "allocated_before_prepare_bytes": 0,
+          "prepare_and_invoke_peak_allocated_bytes": 75418624,
+          "allocated_after_invoke_bytes": 73993216,
+          "reserved_after_invoke_bytes": 96468992,
+          "scope": "Tensorallocator including graphpools/libraryworkspace; before diagnostic CUDAvalidation/serialization. Excludesdriver/context."
+        }
+      },
+      "prediction_path": "validation-predictions/candidate-01.npy",
+      "prediction_sha256": "b3b38a9de94e64684f44104dea3d0736299448e357a2c382b8e433d58008215f"
+    },
+    {
+      "config": {
+        "alpha": 0.5,
+        "batch_size": 128,
+        "momentum": 0.9,
+        "weight_decay": 0.0,
+        "seed": 11,
+        "depth": 1,
+        "epochs": 2,
+        "learning_rate": 0.1
+      },
+      "correct": 1778,
+      "total": 2000,
+      "accuracy_percent": 88.9,
+      "result": {
+        "metadata": {
+          "config": {
+            "depth": 1,
+            "alpha": 0.5,
+            "seed": 11,
+            "epochs": 2,
+            "learning_rate": 0.1,
+            "batch_size": 128,
+            "momentum": 0.9,
+            "weight_decay": 0.0
+          },
+          "parameter_count": 4192,
+          "train_count": 8000,
+          "test_count": 2000,
+          "fresh_initialization_per_run": true,
+          "checkpoint_loaded": false,
+          "normalization": "4*x-0.5 then append one zero coordinate",
+          "initialization": "branch normal(0,0.05/sqrt(41)); standard torch Linear head; seed-only",
+          "optimizer": "SGD momentum; zero initial velocity; gradient mean cross entropy",
+          "shuffle": "independent PCG64 permutation each epoch, seed-only",
+          "augmentation": "none",
+          "input_hashes": {
+            "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+            "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+            "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+          },
+          "epoch_permutation_sha256": [
+            "59503b4e3ca6d91fd29351afa3fe83c923c45080d3d05f737fda5f543b34b736",
+            "3715ab56d35f78c8a6518f1fd037a98a50c36978901eec8899a659fc007a5f73"
+          ],
+          "initial_parameter_sha256": {
+            "weights.0": "194490b683f6426b65457a6725f0646768f8d46a361d9b125cfc768ab614f8fb",
+            "weights.1": "bcbcbf732d68415f6c7c393c31343810467d8a86951e70237f6c36712785dd02",
+            "head.weight": "cf377ee51b392e583b6f4a793bfe463be5923a301aa6bdbf2c50c7618b10416f",
+            "head.bias": "3cb77813041da40618ec2c920f202aebfdde2e6422e84b01e7d42f652f3faaaf"
+          },
+          "final_parameter_sha256": {
+            "weights.0": "87477572315d75c19778ad3b7f939a6156add5c83c5216ba0f8dd9fe7fd652b2",
+            "weights.1": "83cdebef861468bbbe1fa208413ef989582d4c9aae505bdd581c11c5757a7d7a",
+            "head.weight": "e5e8f4a74efd4a2c285a2bb78ff55ab15aad78d9d049d5e545f5667da65cefc7",
+            "head.bias": "14047f6e238f190f0f93fda2723f28d69cd1e2f851ce4ae1124bca08945ef397"
+          },
+          "final_velocity_sha256": {
+            "weights.0": "a5c223ab5e2e067b1b14ff6c11b90bea5149f370e1a8bbd278d29f2c9b042b09",
+            "weights.1": "ea24d8709980f0b8b460fbf4ebf609519747a287e59b9ea0e95e4f510e4ba17c",
+            "head.weight": "6590667534721ca8eba10233dc72f7bb0f31a2d49f3288221ed4b9b208ee1c2f",
+            "head.bias": "39d499be3137254a8951229b0a579ce7e6df077de934c1e7a3285a8193ff86dd"
+          },
+          "state_vector_sha256": "de5b796a4ec8e21d2b7d96bc0d8d276f4dbd9999380d85a6cb0393d963fe465c",
+          "predictions_sha256": "b095f417e00f09a1ed9432e634e5287e5aa6f9b9bb4532201b089456a8b8e8d6",
+          "scores_sha256": "5b21bee6a8c9b7fbd09ce8875e615257f227daec7c0d88b0c2c46a52bb2c5029",
+          "preparation_seconds": 2.0895119839999996,
+          "run_count": 1,
+          "validation": {
+            "passed": true,
+            "device": "cpu",
+            "checks": [
+              {
+                "dtype": "torch.float64",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 2.220446049250313e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float64",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 4.440892098500626e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 4
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 0.0,
+                "inverse_max_abs_error": 2.9802322387695312e-08,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.4901161193847656e-08,
+                "inverse_max_abs_error": 2.384185791015625e-07,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 4
+              }
+            ],
+            "scope": "Identical weights; ordinary autograd versus custom reconstruction for inputs and every parameter. First-order differentiation only."
+          },
+          "reversible_core": true,
+          "retained_core_states": 1,
+          "core_saved_bytes_per_example": 328,
+          "head_reversible": false,
+          "input_lift_injective": true,
+          "timing_scope": "run resets weights/gradients/momentum, normalizes raw train and query pixels, copies resident epoch permutations, trains and predicts. Excludes setup, CPU permutation generation, allocation, transfer, capture and diagnostics."
+        },
+        "config": {
+          "alpha": 0.5,
+          "batch_size": 128,
+          "momentum": 0.9,
+          "weight_decay": 0.0,
+          "seed": 11,
+          "depth": 1,
+          "epochs": 2,
+          "learning_rate": 0.1
+        },
+        "input_sha256": {
+          "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+          "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+          "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+        },
+        "cuda_ms": 27.245567321777344,
+        "learner_sha256": "c395a8b7bc2951e3fdab5c5f5edf5ad2d5357de4e9170e52b988f4312e7169c5",
+        "completed_at_utc": "2026-09-14T23:40:00.624312+00:00",
+        "memory": {
+          "allocated_before_prepare_bytes": 0,
+          "prepare_and_invoke_peak_allocated_bytes": 75482624,
+          "allocated_after_invoke_bytes": 74057216,
+          "reserved_after_invoke_bytes": 96468992,
+          "scope": "Tensorallocator including graphpools/libraryworkspace; before diagnostic CUDAvalidation/serialization. Excludesdriver/context."
+        }
+      },
+      "prediction_path": "validation-predictions/candidate-02.npy",
+      "prediction_sha256": "c1f6e1da3351e6af4385caf640c10ee4ea6f2fbf8eb25019b8b6c5340282f2fd"
+    },
+    {
+      "config": {
+        "alpha": 0.5,
+        "batch_size": 128,
+        "momentum": 0.9,
+        "weight_decay": 0.0,
+        "seed": 11,
+        "depth": 1,
+        "epochs": 2,
+        "learning_rate": 0.3
+      },
+      "correct": 1753,
+      "total": 2000,
+      "accuracy_percent": 87.65,
+      "result": {
+        "metadata": {
+          "config": {
+            "depth": 1,
+            "alpha": 0.5,
+            "seed": 11,
+            "epochs": 2,
+            "learning_rate": 0.3,
+            "batch_size": 128,
+            "momentum": 0.9,
+            "weight_decay": 0.0
+          },
+          "parameter_count": 4192,
+          "train_count": 8000,
+          "test_count": 2000,
+          "fresh_initialization_per_run": true,
+          "checkpoint_loaded": false,
+          "normalization": "4*x-0.5 then append one zero coordinate",
+          "initialization": "branch normal(0,0.05/sqrt(41)); standard torch Linear head; seed-only",
+          "optimizer": "SGD momentum; zero initial velocity; gradient mean cross entropy",
+          "shuffle": "independent PCG64 permutation each epoch, seed-only",
+          "augmentation": "none",
+          "input_hashes": {
+            "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+            "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+            "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+          },
+          "epoch_permutation_sha256": [
+            "59503b4e3ca6d91fd29351afa3fe83c923c45080d3d05f737fda5f543b34b736",
+            "3715ab56d35f78c8a6518f1fd037a98a50c36978901eec8899a659fc007a5f73"
+          ],
+          "initial_parameter_sha256": {
+            "weights.0": "194490b683f6426b65457a6725f0646768f8d46a361d9b125cfc768ab614f8fb",
+            "weights.1": "bcbcbf732d68415f6c7c393c31343810467d8a86951e70237f6c36712785dd02",
+            "head.weight": "cf377ee51b392e583b6f4a793bfe463be5923a301aa6bdbf2c50c7618b10416f",
+            "head.bias": "3cb77813041da40618ec2c920f202aebfdde2e6422e84b01e7d42f652f3faaaf"
+          },
+          "final_parameter_sha256": {
+            "weights.0": "f0adbe05bf3f32c59505944e190d38495668d0a913cdf47f71888fcd97a4d0fa",
+            "weights.1": "8deac85c5c3bb8c52265c5bcc5b26b533014ef5a1187cbcec9371be7cb17c7ff",
+            "head.weight": "d2a8e58ad0650513aaf7f64992ef84607056451b11725331d4a62bd5639e36fb",
+            "head.bias": "96b4d4bfcce8282a03e23240e4051af0d39270ffe52c6b5c18c121ddeb3727fc"
+          },
+          "final_velocity_sha256": {
+            "weights.0": "78c61e959ce9b3f2bae1254b3a80e42b7e48e4fe0b5a05dfa93c213c1fba54a6",
+            "weights.1": "0cf4e280aada197d42ccd524686c26598a6ac87a9e981a0d6909e5e9d4795a77",
+            "head.weight": "416ccaa76bb4b879dc94a98357e7ea2bcd33385d8b3e2c8c09218c408b03bbbc",
+            "head.bias": "d3de7f5700e60a49d25495c0de5150866b392d6468afb4c9da5698401cf883ee"
+          },
+          "state_vector_sha256": "9502e9aa4699d65503c69b6efc40a9d658863a22c7e4c136c059a20d47aeaa90",
+          "predictions_sha256": "83eba46101c24eab8072f0bac2cdbd2180b2c1b57a2777b719eae32d28f183ed",
+          "scores_sha256": "a9043179533d7e6e13315075432f5822c924e629cfda6f64a94b3a0696494b1a",
+          "preparation_seconds": 2.087311445,
+          "run_count": 1,
+          "validation": {
+            "passed": true,
+            "device": "cpu",
+            "checks": [
+              {
+                "dtype": "torch.float64",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 2.220446049250313e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float64",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 4.440892098500626e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 4
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 0.0,
+                "inverse_max_abs_error": 2.9802322387695312e-08,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.4901161193847656e-08,
+                "inverse_max_abs_error": 2.384185791015625e-07,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 4
+              }
+            ],
+            "scope": "Identical weights; ordinary autograd versus custom reconstruction for inputs and every parameter. First-order differentiation only."
+          },
+          "reversible_core": true,
+          "retained_core_states": 1,
+          "core_saved_bytes_per_example": 328,
+          "head_reversible": false,
+          "input_lift_injective": true,
+          "timing_scope": "run resets weights/gradients/momentum, normalizes raw train and query pixels, copies resident epoch permutations, trains and predicts. Excludes setup, CPU permutation generation, allocation, transfer, capture and diagnostics."
+        },
+        "config": {
+          "alpha": 0.5,
+          "batch_size": 128,
+          "momentum": 0.9,
+          "weight_decay": 0.0,
+          "seed": 11,
+          "depth": 1,
+          "epochs": 2,
+          "learning_rate": 0.3
+        },
+        "input_sha256": {
+          "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+          "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+          "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+        },
+        "cuda_ms": 27.331584930419922,
+        "learner_sha256": "c395a8b7bc2951e3fdab5c5f5edf5ad2d5357de4e9170e52b988f4312e7169c5",
+        "completed_at_utc": "2026-09-14T23:40:00.908671+00:00",
+        "memory": {
+          "allocated_before_prepare_bytes": 0,
+          "prepare_and_invoke_peak_allocated_bytes": 75482624,
+          "allocated_after_invoke_bytes": 74057216,
+          "reserved_after_invoke_bytes": 96468992,
+          "scope": "Tensorallocator including graphpools/libraryworkspace; before diagnostic CUDAvalidation/serialization. Excludesdriver/context."
+        }
+      },
+      "prediction_path": "validation-predictions/candidate-03.npy",
+      "prediction_sha256": "022dc43578db921614084bfe30ec2428f1b02723e05c9c3d086f4fb22a66cffd"
+    },
+    {
+      "config": {
+        "alpha": 0.5,
+        "batch_size": 128,
+        "momentum": 0.9,
+        "weight_decay": 0.0,
+        "seed": 11,
+        "depth": 1,
+        "epochs": 4,
+        "learning_rate": 0.1
+      },
+      "correct": 1800,
+      "total": 2000,
+      "accuracy_percent": 90.0,
+      "result": {
+        "metadata": {
+          "config": {
+            "depth": 1,
+            "alpha": 0.5,
+            "seed": 11,
+            "epochs": 4,
+            "learning_rate": 0.1,
+            "batch_size": 128,
+            "momentum": 0.9,
+            "weight_decay": 0.0
+          },
+          "parameter_count": 4192,
+          "train_count": 8000,
+          "test_count": 2000,
+          "fresh_initialization_per_run": true,
+          "checkpoint_loaded": false,
+          "normalization": "4*x-0.5 then append one zero coordinate",
+          "initialization": "branch normal(0,0.05/sqrt(41)); standard torch Linear head; seed-only",
+          "optimizer": "SGD momentum; zero initial velocity; gradient mean cross entropy",
+          "shuffle": "independent PCG64 permutation each epoch, seed-only",
+          "augmentation": "none",
+          "input_hashes": {
+            "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+            "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+            "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+          },
+          "epoch_permutation_sha256": [
+            "59503b4e3ca6d91fd29351afa3fe83c923c45080d3d05f737fda5f543b34b736",
+            "3715ab56d35f78c8a6518f1fd037a98a50c36978901eec8899a659fc007a5f73",
+            "2cce399e69378fb880bafd9a96f0192948ac0493833881ac5a6f7eca2ea3a6bb",
+            "41b2ff409f253c7724775e97e9b23284cfda8c07b0def5cb9967ea75973ce9f4"
+          ],
+          "initial_parameter_sha256": {
+            "weights.0": "194490b683f6426b65457a6725f0646768f8d46a361d9b125cfc768ab614f8fb",
+            "weights.1": "bcbcbf732d68415f6c7c393c31343810467d8a86951e70237f6c36712785dd02",
+            "head.weight": "cf377ee51b392e583b6f4a793bfe463be5923a301aa6bdbf2c50c7618b10416f",
+            "head.bias": "3cb77813041da40618ec2c920f202aebfdde2e6422e84b01e7d42f652f3faaaf"
+          },
+          "final_parameter_sha256": {
+            "weights.0": "2064121a45dd04f786b9d5302193c87ed518d20ccdaf3f2b9c3fec0bca0608d0",
+            "weights.1": "c32bbc1fc83936bb58b60e954dc28efc0619c0861f54f12e12cacba6c4b97617",
+            "head.weight": "855a4180ddc7a1d65464c0c951da6f6c8af0514c6e9aca083c649503bad0dbb0",
+            "head.bias": "353236283c845ea0b89c06bc2ab26542685f1016916df66906050b359b19843b"
+          },
+          "final_velocity_sha256": {
+            "weights.0": "8e826c3a318cea02c9a4a9b4946774d618e0cf561256a1ab180d1e4789f2d7ab",
+            "weights.1": "3af946041bbfde6160a1a46bca6d602ecfc33050dbb6b6ad59fe22a47fbf5573",
+            "head.weight": "30aac0f3631142aead782bb4411cac776b5b607342d94b2b9f8de8f785612cf6",
+            "head.bias": "089c57c99f859663fe3aa7cf76aaa6fddbded5a36bff9cd44a0f5ce20c0524b1"
+          },
+          "state_vector_sha256": "e882fad2cc66f5e84e75a716143ae59de2e4ee31d5f550dbad0f203ad3793e91",
+          "predictions_sha256": "ffa018819e1ddda74202c852e4ce65d508cef05727a0c38772361db479443249",
+          "scores_sha256": "7a593420bd397ed50d46e745c59bc629d1cd3e4da9f5e41fd298c8abd499d673",
+          "preparation_seconds": 0.44256097999999966,
+          "run_count": 1,
+          "validation": {
+            "passed": true,
+            "device": "cpu",
+            "checks": [
+              {
+                "dtype": "torch.float64",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 2.220446049250313e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float64",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 4.440892098500626e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 4
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 0.0,
+                "inverse_max_abs_error": 2.9802322387695312e-08,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.4901161193847656e-08,
+                "inverse_max_abs_error": 2.384185791015625e-07,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 4
+              }
+            ],
+            "scope": "Identical weights; ordinary autograd versus custom reconstruction for inputs and every parameter. First-order differentiation only."
+          },
+          "reversible_core": true,
+          "retained_core_states": 1,
+          "core_saved_bytes_per_example": 328,
+          "head_reversible": false,
+          "input_lift_injective": true,
+          "timing_scope": "run resets weights/gradients/momentum, normalizes raw train and query pixels, copies resident epoch permutations, trains and predicts. Excludes setup, CPU permutation generation, allocation, transfer, capture and diagnostics."
+        },
+        "config": {
+          "alpha": 0.5,
+          "batch_size": 128,
+          "momentum": 0.9,
+          "weight_decay": 0.0,
+          "seed": 11,
+          "depth": 1,
+          "epochs": 4,
+          "learning_rate": 0.1
+        },
+        "input_sha256": {
+          "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+          "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+          "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+        },
+        "cuda_ms": 50.04595184326172,
+        "learner_sha256": "c395a8b7bc2951e3fdab5c5f5edf5ad2d5357de4e9170e52b988f4312e7169c5",
+        "completed_at_utc": "2026-09-14T23:40:00.140270+00:00",
+        "memory": {
+          "allocated_before_prepare_bytes": 67108864,
+          "prepare_and_invoke_peak_allocated_bytes": 142719488,
+          "allocated_after_invoke_bytes": 141294080,
+          "reserved_after_invoke_bytes": 163577856,
+          "scope": "Tensorallocator including graphpools/libraryworkspace; before diagnostic CUDAvalidation/serialization. Excludesdriver/context."
+        }
+      },
+      "prediction_path": "validation-predictions/candidate-04.npy",
+      "prediction_sha256": "64e91629824fb72dda7b2a7cd253c779689fe85717b8a96395e9536f12cd7517"
+    },
+    {
+      "config": {
+        "alpha": 0.5,
+        "batch_size": 128,
+        "momentum": 0.9,
+        "weight_decay": 0.0,
+        "seed": 11,
+        "depth": 1,
+        "epochs": 4,
+        "learning_rate": 0.3
+      },
+      "correct": 1832,
+      "total": 2000,
+      "accuracy_percent": 91.6,
+      "result": {
+        "metadata": {
+          "config": {
+            "depth": 1,
+            "alpha": 0.5,
+            "seed": 11,
+            "epochs": 4,
+            "learning_rate": 0.3,
+            "batch_size": 128,
+            "momentum": 0.9,
+            "weight_decay": 0.0
+          },
+          "parameter_count": 4192,
+          "train_count": 8000,
+          "test_count": 2000,
+          "fresh_initialization_per_run": true,
+          "checkpoint_loaded": false,
+          "normalization": "4*x-0.5 then append one zero coordinate",
+          "initialization": "branch normal(0,0.05/sqrt(41)); standard torch Linear head; seed-only",
+          "optimizer": "SGD momentum; zero initial velocity; gradient mean cross entropy",
+          "shuffle": "independent PCG64 permutation each epoch, seed-only",
+          "augmentation": "none",
+          "input_hashes": {
+            "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+            "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+            "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+          },
+          "epoch_permutation_sha256": [
+            "59503b4e3ca6d91fd29351afa3fe83c923c45080d3d05f737fda5f543b34b736",
+            "3715ab56d35f78c8a6518f1fd037a98a50c36978901eec8899a659fc007a5f73",
+            "2cce399e69378fb880bafd9a96f0192948ac0493833881ac5a6f7eca2ea3a6bb",
+            "41b2ff409f253c7724775e97e9b23284cfda8c07b0def5cb9967ea75973ce9f4"
+          ],
+          "initial_parameter_sha256": {
+            "weights.0": "194490b683f6426b65457a6725f0646768f8d46a361d9b125cfc768ab614f8fb",
+            "weights.1": "bcbcbf732d68415f6c7c393c31343810467d8a86951e70237f6c36712785dd02",
+            "head.weight": "cf377ee51b392e583b6f4a793bfe463be5923a301aa6bdbf2c50c7618b10416f",
+            "head.bias": "3cb77813041da40618ec2c920f202aebfdde2e6422e84b01e7d42f652f3faaaf"
+          },
+          "final_parameter_sha256": {
+            "weights.0": "bd0e7094f3d5bf94fd0f8fd732834571805fcd412380e53353ced6a2b39d8da8",
+            "weights.1": "5171f2f05221f38cdd48f8133233d00fc456d49c3e3a62779c59abeabeb2577b",
+            "head.weight": "03906aa91b0ff906cc64211486dc5da8b5431f472a2dc0a92e096f0cfe856c73",
+            "head.bias": "e018a704c112e2f1c18c0a72de49a1cc3ec865bfd9aeb7ce099af00908b743fc"
+          },
+          "final_velocity_sha256": {
+            "weights.0": "252940186a2af98241ac5f137ea84619b05dac3552b96f82be4fc4d14167821b",
+            "weights.1": "365f6152b731e4fd5928237ec5d3b34cc89b4bc00c940b2fc46869a28a92179a",
+            "head.weight": "57542bab5b66fba386bd86cdea359bb9ecea277caefe1ee64bc21dedb51557b2",
+            "head.bias": "2d53234ffbb6d6d9a36de999afe63df52e05760d30878a4d07c05ee447c0bc6b"
+          },
+          "state_vector_sha256": "25ca39f1dfc324d3990ab1c54a92adde6610e4e1818e2959400dff4d926a32a2",
+          "predictions_sha256": "602fb74c009708e90b21f64c8e649127d081a8d72f1442866ed4011a0b71f85c",
+          "scores_sha256": "fca22f71e62241f9aae4d0eda9431f2ce9632e6cfe83fdfe26979acf8007660f",
+          "preparation_seconds": 0.5137233920000011,
+          "run_count": 1,
+          "validation": {
+            "passed": true,
+            "device": "cpu",
+            "checks": [
+              {
+                "dtype": "torch.float64",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 2.220446049250313e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float64",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 4.440892098500626e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 4
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 0.0,
+                "inverse_max_abs_error": 2.9802322387695312e-08,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.4901161193847656e-08,
+                "inverse_max_abs_error": 2.384185791015625e-07,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 4
+              }
+            ],
+            "scope": "Identical weights; ordinary autograd versus custom reconstruction for inputs and every parameter. First-order differentiation only."
+          },
+          "reversible_core": true,
+          "retained_core_states": 1,
+          "core_saved_bytes_per_example": 328,
+          "head_reversible": false,
+          "input_lift_injective": true,
+          "timing_scope": "run resets weights/gradients/momentum, normalizes raw train and query pixels, copies resident epoch permutations, trains and predicts. Excludes setup, CPU permutation generation, allocation, transfer, capture and diagnostics."
+        },
+        "config": {
+          "alpha": 0.5,
+          "batch_size": 128,
+          "momentum": 0.9,
+          "weight_decay": 0.0,
+          "seed": 11,
+          "depth": 1,
+          "epochs": 4,
+          "learning_rate": 0.3
+        },
+        "input_sha256": {
+          "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+          "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+          "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+        },
+        "cuda_ms": 50.01318359375,
+        "learner_sha256": "c395a8b7bc2951e3fdab5c5f5edf5ad2d5357de4e9170e52b988f4312e7169c5",
+        "completed_at_utc": "2026-09-14T23:40:01.227004+00:00",
+        "memory": {
+          "allocated_before_prepare_bytes": 67108864,
+          "prepare_and_invoke_peak_allocated_bytes": 142719488,
+          "allocated_after_invoke_bytes": 141294080,
+          "reserved_after_invoke_bytes": 163577856,
+          "scope": "Tensorallocator including graphpools/libraryworkspace; before diagnostic CUDAvalidation/serialization. Excludesdriver/context."
+        }
+      },
+      "prediction_path": "validation-predictions/candidate-05.npy",
+      "prediction_sha256": "202bda36f6129b57ba7f60fc83c0ed7e5e75eaa461b8f8287b53bd1e778db548"
+    },
+    {
+      "config": {
+        "alpha": 0.5,
+        "batch_size": 128,
+        "momentum": 0.9,
+        "weight_decay": 0.0,
+        "seed": 11,
+        "depth": 1,
+        "epochs": 8,
+        "learning_rate": 0.1
+      },
+      "correct": 1808,
+      "total": 2000,
+      "accuracy_percent": 90.4,
+      "result": {
+        "metadata": {
+          "config": {
+            "depth": 1,
+            "alpha": 0.5,
+            "seed": 11,
+            "epochs": 8,
+            "learning_rate": 0.1,
+            "batch_size": 128,
+            "momentum": 0.9,
+            "weight_decay": 0.0
+          },
+          "parameter_count": 4192,
+          "train_count": 8000,
+          "test_count": 2000,
+          "fresh_initialization_per_run": true,
+          "checkpoint_loaded": false,
+          "normalization": "4*x-0.5 then append one zero coordinate",
+          "initialization": "branch normal(0,0.05/sqrt(41)); standard torch Linear head; seed-only",
+          "optimizer": "SGD momentum; zero initial velocity; gradient mean cross entropy",
+          "shuffle": "independent PCG64 permutation each epoch, seed-only",
+          "augmentation": "none",
+          "input_hashes": {
+            "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+            "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+            "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+          },
+          "epoch_permutation_sha256": [
+            "59503b4e3ca6d91fd29351afa3fe83c923c45080d3d05f737fda5f543b34b736",
+            "3715ab56d35f78c8a6518f1fd037a98a50c36978901eec8899a659fc007a5f73",
+            "2cce399e69378fb880bafd9a96f0192948ac0493833881ac5a6f7eca2ea3a6bb",
+            "41b2ff409f253c7724775e97e9b23284cfda8c07b0def5cb9967ea75973ce9f4",
+            "13978d1a9b4de204b8cfd5d46bbdf9105d4b4d68ce7e9d39c589805ced4528bb",
+            "f24fae6436b69a7d15e06762aa4519753832298b4e0c57aabbb01bead75979a6",
+            "ec00e84c72335dd564ee6741d2ece26fda5b641cf0c6b56c0488025d995c656b",
+            "88685d0dcce9b1f96e96c70fcc00b43a133b7433cdb466eb3551273e01a02215"
+          ],
+          "initial_parameter_sha256": {
+            "weights.0": "194490b683f6426b65457a6725f0646768f8d46a361d9b125cfc768ab614f8fb",
+            "weights.1": "bcbcbf732d68415f6c7c393c31343810467d8a86951e70237f6c36712785dd02",
+            "head.weight": "cf377ee51b392e583b6f4a793bfe463be5923a301aa6bdbf2c50c7618b10416f",
+            "head.bias": "3cb77813041da40618ec2c920f202aebfdde2e6422e84b01e7d42f652f3faaaf"
+          },
+          "final_parameter_sha256": {
+            "weights.0": "a3c96f28dbf11fa9f2300c5cc00af5d44a1de1407d9e092a7016536902953585",
+            "weights.1": "24ffed3a0a18abf02b0bfa95ae4bdcea25a4eed9c27a99806e06737a486d233d",
+            "head.weight": "5681d7f7b8553315b0ed378ef08ea2d74864708606932fc8d2e2f5295978fbe4",
+            "head.bias": "0ffa72b2fff47b0dbddb80fc3ec35cf395f7b65639dcf3fb0247f869921c7f2b"
+          },
+          "final_velocity_sha256": {
+            "weights.0": "8078219a4841b1661e0cf291de4d638fb1b19b90d1fa5cb8d8d2f79d7b469f56",
+            "weights.1": "14150b7d2c7eae11f755fa55172411a3536bb46e2ee34f059eb82f5cc5d37ae7",
+            "head.weight": "7076bd5b4cd9ba240b07d31672608412b0e8569ffd2de8f185090ea345607484",
+            "head.bias": "5838fa55803aea18350b8093c192fd2afac320dec1f1c0c5a64ca4fcb2baa96f"
+          },
+          "state_vector_sha256": "657010644a8c803fa0a0b732f97aabba215c95c8da5d65741ed393fbc8c04a51",
+          "predictions_sha256": "8768a5f3384f84f64a20e4e6c042a74368c8bbadd1a38105f260281165addcb7",
+          "scores_sha256": "a34e8da90dc375445a6c8cad380e63d699b71ac79bf6084a1bc2b6dea9e056fd",
+          "preparation_seconds": 0.47659349000000084,
+          "run_count": 1,
+          "validation": {
+            "passed": true,
+            "device": "cpu",
+            "checks": [
+              {
+                "dtype": "torch.float64",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 2.220446049250313e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float64",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 4.440892098500626e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 4
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 0.0,
+                "inverse_max_abs_error": 2.9802322387695312e-08,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.4901161193847656e-08,
+                "inverse_max_abs_error": 2.384185791015625e-07,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 4
+              }
+            ],
+            "scope": "Identical weights; ordinary autograd versus custom reconstruction for inputs and every parameter. First-order differentiation only."
+          },
+          "reversible_core": true,
+          "retained_core_states": 1,
+          "core_saved_bytes_per_example": 328,
+          "head_reversible": false,
+          "input_lift_injective": true,
+          "timing_scope": "run resets weights/gradients/momentum, normalizes raw train and query pixels, copies resident epoch permutations, trains and predicts. Excludes setup, CPU permutation generation, allocation, transfer, capture and diagnostics."
+        },
+        "config": {
+          "alpha": 0.5,
+          "batch_size": 128,
+          "momentum": 0.9,
+          "weight_decay": 0.0,
+          "seed": 11,
+          "depth": 1,
+          "epochs": 8,
+          "learning_rate": 0.1
+        },
+        "input_sha256": {
+          "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+          "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+          "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+        },
+        "cuda_ms": 98.02035522460938,
+        "learner_sha256": "c395a8b7bc2951e3fdab5c5f5edf5ad2d5357de4e9170e52b988f4312e7169c5",
+        "completed_at_utc": "2026-09-14T23:40:01.105327+00:00",
+        "memory": {
+          "allocated_before_prepare_bytes": 134217728,
+          "prepare_and_invoke_peak_allocated_bytes": 210084352,
+          "allocated_after_invoke_bytes": 208658944,
+          "reserved_after_invoke_bytes": 232783872,
+          "scope": "Tensorallocator including graphpools/libraryworkspace; before diagnostic CUDAvalidation/serialization. Excludesdriver/context."
+        }
+      },
+      "prediction_path": "validation-predictions/candidate-06.npy",
+      "prediction_sha256": "f15d6821cb8962dfd381f4cc1774961b1bbb45397f40fedab20bfe31e7014fe3"
+    },
+    {
+      "config": {
+        "alpha": 0.5,
+        "batch_size": 128,
+        "momentum": 0.9,
+        "weight_decay": 0.0,
+        "seed": 11,
+        "depth": 1,
+        "epochs": 8,
+        "learning_rate": 0.3
+      },
+      "correct": 1812,
+      "total": 2000,
+      "accuracy_percent": 90.6,
+      "result": {
+        "metadata": {
+          "config": {
+            "depth": 1,
+            "alpha": 0.5,
+            "seed": 11,
+            "epochs": 8,
+            "learning_rate": 0.3,
+            "batch_size": 128,
+            "momentum": 0.9,
+            "weight_decay": 0.0
+          },
+          "parameter_count": 4192,
+          "train_count": 8000,
+          "test_count": 2000,
+          "fresh_initialization_per_run": true,
+          "checkpoint_loaded": false,
+          "normalization": "4*x-0.5 then append one zero coordinate",
+          "initialization": "branch normal(0,0.05/sqrt(41)); standard torch Linear head; seed-only",
+          "optimizer": "SGD momentum; zero initial velocity; gradient mean cross entropy",
+          "shuffle": "independent PCG64 permutation each epoch, seed-only",
+          "augmentation": "none",
+          "input_hashes": {
+            "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+            "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+            "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+          },
+          "epoch_permutation_sha256": [
+            "59503b4e3ca6d91fd29351afa3fe83c923c45080d3d05f737fda5f543b34b736",
+            "3715ab56d35f78c8a6518f1fd037a98a50c36978901eec8899a659fc007a5f73",
+            "2cce399e69378fb880bafd9a96f0192948ac0493833881ac5a6f7eca2ea3a6bb",
+            "41b2ff409f253c7724775e97e9b23284cfda8c07b0def5cb9967ea75973ce9f4",
+            "13978d1a9b4de204b8cfd5d46bbdf9105d4b4d68ce7e9d39c589805ced4528bb",
+            "f24fae6436b69a7d15e06762aa4519753832298b4e0c57aabbb01bead75979a6",
+            "ec00e84c72335dd564ee6741d2ece26fda5b641cf0c6b56c0488025d995c656b",
+            "88685d0dcce9b1f96e96c70fcc00b43a133b7433cdb466eb3551273e01a02215"
+          ],
+          "initial_parameter_sha256": {
+            "weights.0": "194490b683f6426b65457a6725f0646768f8d46a361d9b125cfc768ab614f8fb",
+            "weights.1": "bcbcbf732d68415f6c7c393c31343810467d8a86951e70237f6c36712785dd02",
+            "head.weight": "cf377ee51b392e583b6f4a793bfe463be5923a301aa6bdbf2c50c7618b10416f",
+            "head.bias": "3cb77813041da40618ec2c920f202aebfdde2e6422e84b01e7d42f652f3faaaf"
+          },
+          "final_parameter_sha256": {
+            "weights.0": "491e67a8352db42b88326286de1f29a16f56d250e00e5e6aa1ba72a1d162e1a1",
+            "weights.1": "ba31d0ebbfffaf65cc9379c9ac60b0615a286f189e3768cc14d0f40c058cb7f9",
+            "head.weight": "4ee993ed10374f6ed32899283730ba0d779aa4794724dcde16f0678b000a4c92",
+            "head.bias": "5a714775001724b81eb501daf1af6cb4858df6f1253759c4f0898255515dbb56"
+          },
+          "final_velocity_sha256": {
+            "weights.0": "798844649147629f03b908155b84d58e59914521e64672bbf81d1cbf65df2ede",
+            "weights.1": "23e2dc492d4731d6d0ed525ffb87bf900d0d6e360d2d5076f1ce45c2e6a6f57b",
+            "head.weight": "4cd0bc1b759b786f7892fbe14eba1851cc06436bdf11aea12e12fd3b376f9f74",
+            "head.bias": "72a2a34c5938061650e31c12c44e76e4c4e52c72ee94ce1f705c13ad7076e295"
+          },
+          "state_vector_sha256": "e41ae1f4cf192dc83c58f5a4640b0f3731020765ba004eeb83feca0130c03d16",
+          "predictions_sha256": "cc8965496790be6e331f7e2042764ba61ad3c3accb84082c4ff8ebd146b2c316",
+          "scores_sha256": "6d19ea6331c5a1a97c21c0d0bb7e8574e8916ed87733615ae135d50c2357b0b5",
+          "preparation_seconds": 0.5030291160000004,
+          "run_count": 1,
+          "validation": {
+            "passed": true,
+            "device": "cpu",
+            "checks": [
+              {
+                "dtype": "torch.float64",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 2.220446049250313e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float64",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 4.440892098500626e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 4
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 0.0,
+                "inverse_max_abs_error": 2.9802322387695312e-08,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.4901161193847656e-08,
+                "inverse_max_abs_error": 2.384185791015625e-07,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 4
+              }
+            ],
+            "scope": "Identical weights; ordinary autograd versus custom reconstruction for inputs and every parameter. First-order differentiation only."
+          },
+          "reversible_core": true,
+          "retained_core_states": 1,
+          "core_saved_bytes_per_example": 328,
+          "head_reversible": false,
+          "input_lift_injective": true,
+          "timing_scope": "run resets weights/gradients/momentum, normalizes raw train and query pixels, copies resident epoch permutations, trains and predicts. Excludes setup, CPU permutation generation, allocation, transfer, capture and diagnostics."
+        },
+        "config": {
+          "alpha": 0.5,
+          "batch_size": 128,
+          "momentum": 0.9,
+          "weight_decay": 0.0,
+          "seed": 11,
+          "depth": 1,
+          "epochs": 8,
+          "learning_rate": 0.3
+        },
+        "input_sha256": {
+          "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+          "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+          "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+        },
+        "cuda_ms": 97.8687973022461,
+        "learner_sha256": "c395a8b7bc2951e3fdab5c5f5edf5ad2d5357de4e9170e52b988f4312e7169c5",
+        "completed_at_utc": "2026-09-14T23:40:02.294724+00:00",
+        "memory": {
+          "allocated_before_prepare_bytes": 67108864,
+          "prepare_and_invoke_peak_allocated_bytes": 142975488,
+          "allocated_after_invoke_bytes": 141550080,
+          "reserved_after_invoke_bytes": 165675008,
+          "scope": "Tensorallocator including graphpools/libraryworkspace; before diagnostic CUDAvalidation/serialization. Excludesdriver/context."
+        }
+      },
+      "prediction_path": "validation-predictions/candidate-07.npy",
+      "prediction_sha256": "e72359bd7106072d5901d3b9fe8be3e31615b1a41f09c3f593dcdabfd6decd65"
+    },
+    {
+      "config": {
+        "alpha": 0.5,
+        "batch_size": 128,
+        "momentum": 0.9,
+        "weight_decay": 0.0,
+        "seed": 11,
+        "depth": 2,
+        "epochs": 1,
+        "learning_rate": 0.1
+      },
+      "correct": 1768,
+      "total": 2000,
+      "accuracy_percent": 88.4,
+      "result": {
+        "metadata": {
+          "config": {
+            "depth": 2,
+            "alpha": 0.5,
+            "seed": 11,
+            "epochs": 1,
+            "learning_rate": 0.1,
+            "batch_size": 128,
+            "momentum": 0.9,
+            "weight_decay": 0.0
+          },
+          "parameter_count": 7554,
+          "train_count": 8000,
+          "test_count": 2000,
+          "fresh_initialization_per_run": true,
+          "checkpoint_loaded": false,
+          "normalization": "4*x-0.5 then append one zero coordinate",
+          "initialization": "branch normal(0,0.05/sqrt(41)); standard torch Linear head; seed-only",
+          "optimizer": "SGD momentum; zero initial velocity; gradient mean cross entropy",
+          "shuffle": "independent PCG64 permutation each epoch, seed-only",
+          "augmentation": "none",
+          "input_hashes": {
+            "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+            "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+            "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+          },
+          "epoch_permutation_sha256": [
+            "59503b4e3ca6d91fd29351afa3fe83c923c45080d3d05f737fda5f543b34b736"
+          ],
+          "initial_parameter_sha256": {
+            "weights.0": "194490b683f6426b65457a6725f0646768f8d46a361d9b125cfc768ab614f8fb",
+            "weights.1": "bcbcbf732d68415f6c7c393c31343810467d8a86951e70237f6c36712785dd02",
+            "weights.2": "60acda6b3f2f888c9f70f9c2d0ebb53e66d3deb3e1ba760160b87d76f0a92b98",
+            "weights.3": "16f24aea0689177ce23b7d09de49339a0fa0a0ba75753a10a85ed850a7083cc8",
+            "head.weight": "39bc6f6f4720618f6da778924cc306b6f5a0865d4042c58771d4c93cb573b512",
+            "head.bias": "5ce9e9fee433d39fa1edf54bebdd7bf9e6686a86a38b65c7862577d8faf1379d"
+          },
+          "final_parameter_sha256": {
+            "weights.0": "66cffb3a13d0e1f3a36c9653cc97d2932b031204a5722cd8bef547127813caca",
+            "weights.1": "3fb98c8ab678ca15b9a4bc806218c8df92f50685d91fde056258e7c4e79a9896",
+            "weights.2": "ccfa187f51e19097b72e92ecdd0771933feac144bf3d1b38850b07ded3ed4ec0",
+            "weights.3": "43069cbc9d5f3f9ac1b5d6f025cb94131fd943799e1b101dfdece079f940d31c",
+            "head.weight": "ca146661635e0f0461cad882e7fc072f74dc0d897bdbaccbe9ea49578323fa18",
+            "head.bias": "5ca5bbbfc129c36ca05198285cb5728da8de5d0ecead6783fcb38cf0020e5ccb"
+          },
+          "final_velocity_sha256": {
+            "weights.0": "c1a0ce8db01854d3a15e5417c1023ed401cc26b61a1e9b51fc825b0ad6c70daa",
+            "weights.1": "5b71c58831ea5aa76cbe527d7f9b3d2effdb165ecbce9146c3452217fa878ae2",
+            "weights.2": "1209ff58b9c237a515fcd78a53c87ce44dba43417b11eb426aabeba41abbd19c",
+            "weights.3": "db2fcef33227083ef8ff586276946a956ad202b248f2b109266a35e118d69900",
+            "head.weight": "424969aea0516aaeb71632579638479ba26d2ba427f7ea7eb4515bcba6dafd9a",
+            "head.bias": "f753ad54321fd3a595d66b544d94f317bec2f9e5b58c862e3a109baf4e6a5d13"
+          },
+          "state_vector_sha256": "730e20efdfba0b2ffcb03ec592dc064344ec1a4740c1864a217d956fc2495ca1",
+          "predictions_sha256": "2f384db73513fff525262f93a6560526c73467b396fa6c9586ae49df7fd75698",
+          "scores_sha256": "6ac5a43760be8fc67c6bc75436a97558b640dcedd95b223e27b732f9eea347f6",
+          "preparation_seconds": 0.728171403000001,
+          "run_count": 1,
+          "validation": {
+            "passed": true,
+            "device": "cpu",
+            "checks": [
+              {
+                "dtype": "torch.float64",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 2.220446049250313e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float64",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 4.440892098500626e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 4
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 0.0,
+                "inverse_max_abs_error": 2.9802322387695312e-08,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.4901161193847656e-08,
+                "inverse_max_abs_error": 2.384185791015625e-07,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 4
+              }
+            ],
+            "scope": "Identical weights; ordinary autograd versus custom reconstruction for inputs and every parameter. First-order differentiation only."
+          },
+          "reversible_core": true,
+          "retained_core_states": 1,
+          "core_saved_bytes_per_example": 328,
+          "head_reversible": false,
+          "input_lift_injective": true,
+          "timing_scope": "run resets weights/gradients/momentum, normalizes raw train and query pixels, copies resident epoch permutations, trains and predicts. Excludes setup, CPU permutation generation, allocation, transfer, capture and diagnostics."
+        },
+        "config": {
+          "alpha": 0.5,
+          "batch_size": 128,
+          "momentum": 0.9,
+          "weight_decay": 0.0,
+          "seed": 11,
+          "depth": 2,
+          "epochs": 1,
+          "learning_rate": 0.1
+        },
+        "input_sha256": {
+          "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+          "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+          "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+        },
+        "cuda_ms": 21.211135864257812,
+        "learner_sha256": "c395a8b7bc2951e3fdab5c5f5edf5ad2d5357de4e9170e52b988f4312e7169c5",
+        "completed_at_utc": "2026-09-14T23:40:02.306947+00:00",
+        "memory": {
+          "allocated_before_prepare_bytes": 67108864,
+          "prepare_and_invoke_peak_allocated_bytes": 142584832,
+          "allocated_after_invoke_bytes": 141159424,
+          "reserved_after_invoke_bytes": 163577856,
+          "scope": "Tensorallocator including graphpools/libraryworkspace; before diagnostic CUDAvalidation/serialization. Excludesdriver/context."
+        }
+      },
+      "prediction_path": "validation-predictions/candidate-08.npy",
+      "prediction_sha256": "19ebf75c92fcec0500c410108a6261510053f419f168d8e53e7c0a3ca2fdbaf3"
+    },
+    {
+      "config": {
+        "alpha": 0.5,
+        "batch_size": 128,
+        "momentum": 0.9,
+        "weight_decay": 0.0,
+        "seed": 11,
+        "depth": 2,
+        "epochs": 1,
+        "learning_rate": 0.3
+      },
+      "correct": 1757,
+      "total": 2000,
+      "accuracy_percent": 87.85,
+      "result": {
+        "metadata": {
+          "config": {
+            "depth": 2,
+            "alpha": 0.5,
+            "seed": 11,
+            "epochs": 1,
+            "learning_rate": 0.3,
+            "batch_size": 128,
+            "momentum": 0.9,
+            "weight_decay": 0.0
+          },
+          "parameter_count": 7554,
+          "train_count": 8000,
+          "test_count": 2000,
+          "fresh_initialization_per_run": true,
+          "checkpoint_loaded": false,
+          "normalization": "4*x-0.5 then append one zero coordinate",
+          "initialization": "branch normal(0,0.05/sqrt(41)); standard torch Linear head; seed-only",
+          "optimizer": "SGD momentum; zero initial velocity; gradient mean cross entropy",
+          "shuffle": "independent PCG64 permutation each epoch, seed-only",
+          "augmentation": "none",
+          "input_hashes": {
+            "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+            "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+            "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+          },
+          "epoch_permutation_sha256": [
+            "59503b4e3ca6d91fd29351afa3fe83c923c45080d3d05f737fda5f543b34b736"
+          ],
+          "initial_parameter_sha256": {
+            "weights.0": "194490b683f6426b65457a6725f0646768f8d46a361d9b125cfc768ab614f8fb",
+            "weights.1": "bcbcbf732d68415f6c7c393c31343810467d8a86951e70237f6c36712785dd02",
+            "weights.2": "60acda6b3f2f888c9f70f9c2d0ebb53e66d3deb3e1ba760160b87d76f0a92b98",
+            "weights.3": "16f24aea0689177ce23b7d09de49339a0fa0a0ba75753a10a85ed850a7083cc8",
+            "head.weight": "39bc6f6f4720618f6da778924cc306b6f5a0865d4042c58771d4c93cb573b512",
+            "head.bias": "5ce9e9fee433d39fa1edf54bebdd7bf9e6686a86a38b65c7862577d8faf1379d"
+          },
+          "final_parameter_sha256": {
+            "weights.0": "5e2c5bc0e80de7efac5595ee5670954cf6d4bcc938917e6290e722c97ec220f3",
+            "weights.1": "73944d357bc8845419daba4ca9d84120632b858792624763fb88fe2ad3f40e86",
+            "weights.2": "76feab9ce32b7bd87e63f317d359d2ee92dedbca243e6a5b449ace506492be29",
+            "weights.3": "0fccf9513b2f248af85bb7b5f0d977665661bb07567539c8143dd164e0c8d291",
+            "head.weight": "b8878d471b7213d2063150303cab798185bdcda2ce61b47fc1bba4d4dfc6314d",
+            "head.bias": "5d3afa7c24a75f88209982f43757f75a264f752eba0324f1059275ac381f5699"
+          },
+          "final_velocity_sha256": {
+            "weights.0": "0568a5d85ef6eaae9f78ca32d33b0a31fa4b991e04a558a0e41059d82cedc363",
+            "weights.1": "099eea0523382bb66434e838e0a67a896460af258329e1de915935a84563cf11",
+            "weights.2": "56d740ef0ab47ac82230103998908ea0d68062066069dc7cd775ae76a8079e65",
+            "weights.3": "7629b80f49a1e3885183cca995e9ce3f345960eee02f9641213b3330b580ef05",
+            "head.weight": "fe7f58783f002ab270f9f2a2b07ce05940863cd5513508a70fa4db863a9a20da",
+            "head.bias": "bd86826cae0ca069124676aa21bdb631ea495cb60184985ccc97b95e8576658e"
+          },
+          "state_vector_sha256": "fdd4f504c8736c9c5724221b1f467d2b7aa70503d3ebc2c0ce001ef26d1e2098",
+          "predictions_sha256": "84d5180ecc940684b677ae06b95b7662937066d769e0d950f67be3ba98815a04",
+          "scores_sha256": "be0dfe9e9de4246ed27dde7a11ffdda4eaa0ac19b3a0afe9df96925cde679dd9",
+          "preparation_seconds": 0.6836322939999988,
+          "run_count": 1,
+          "validation": {
+            "passed": true,
+            "device": "cpu",
+            "checks": [
+              {
+                "dtype": "torch.float64",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 2.220446049250313e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float64",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 4.440892098500626e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 4
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 0.0,
+                "inverse_max_abs_error": 2.9802322387695312e-08,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.4901161193847656e-08,
+                "inverse_max_abs_error": 2.384185791015625e-07,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 4
+              }
+            ],
+            "scope": "Identical weights; ordinary autograd versus custom reconstruction for inputs and every parameter. First-order differentiation only."
+          },
+          "reversible_core": true,
+          "retained_core_states": 1,
+          "core_saved_bytes_per_example": 328,
+          "head_reversible": false,
+          "input_lift_injective": true,
+          "timing_scope": "run resets weights/gradients/momentum, normalizes raw train and query pixels, copies resident epoch permutations, trains and predicts. Excludes setup, CPU permutation generation, allocation, transfer, capture and diagnostics."
+        },
+        "config": {
+          "alpha": 0.5,
+          "batch_size": 128,
+          "momentum": 0.9,
+          "weight_decay": 0.0,
+          "seed": 11,
+          "depth": 2,
+          "epochs": 1,
+          "learning_rate": 0.3
+        },
+        "input_sha256": {
+          "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+          "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+          "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+        },
+        "cuda_ms": 17.83807945251465,
+        "learner_sha256": "c395a8b7bc2951e3fdab5c5f5edf5ad2d5357de4e9170e52b988f4312e7169c5",
+        "completed_at_utc": "2026-09-14T23:40:02.257604+00:00",
+        "memory": {
+          "allocated_before_prepare_bytes": 201326592,
+          "prepare_and_invoke_peak_allocated_bytes": 276802560,
+          "allocated_after_invoke_bytes": 275377152,
+          "reserved_after_invoke_bytes": 297795584,
+          "scope": "Tensorallocator including graphpools/libraryworkspace; before diagnostic CUDAvalidation/serialization. Excludesdriver/context."
+        }
+      },
+      "prediction_path": "validation-predictions/candidate-09.npy",
+      "prediction_sha256": "a71564e9c4a1c1bf091768b8bee1cf73f807d109a671a23560270d9914650dc5"
+    },
+    {
+      "config": {
+        "alpha": 0.5,
+        "batch_size": 128,
+        "momentum": 0.9,
+        "weight_decay": 0.0,
+        "seed": 11,
+        "depth": 2,
+        "epochs": 2,
+        "learning_rate": 0.1
+      },
+      "correct": 1780,
+      "total": 2000,
+      "accuracy_percent": 89.0,
+      "result": {
+        "metadata": {
+          "config": {
+            "depth": 2,
+            "alpha": 0.5,
+            "seed": 11,
+            "epochs": 2,
+            "learning_rate": 0.1,
+            "batch_size": 128,
+            "momentum": 0.9,
+            "weight_decay": 0.0
+          },
+          "parameter_count": 7554,
+          "train_count": 8000,
+          "test_count": 2000,
+          "fresh_initialization_per_run": true,
+          "checkpoint_loaded": false,
+          "normalization": "4*x-0.5 then append one zero coordinate",
+          "initialization": "branch normal(0,0.05/sqrt(41)); standard torch Linear head; seed-only",
+          "optimizer": "SGD momentum; zero initial velocity; gradient mean cross entropy",
+          "shuffle": "independent PCG64 permutation each epoch, seed-only",
+          "augmentation": "none",
+          "input_hashes": {
+            "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+            "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+            "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+          },
+          "epoch_permutation_sha256": [
+            "59503b4e3ca6d91fd29351afa3fe83c923c45080d3d05f737fda5f543b34b736",
+            "3715ab56d35f78c8a6518f1fd037a98a50c36978901eec8899a659fc007a5f73"
+          ],
+          "initial_parameter_sha256": {
+            "weights.0": "194490b683f6426b65457a6725f0646768f8d46a361d9b125cfc768ab614f8fb",
+            "weights.1": "bcbcbf732d68415f6c7c393c31343810467d8a86951e70237f6c36712785dd02",
+            "weights.2": "60acda6b3f2f888c9f70f9c2d0ebb53e66d3deb3e1ba760160b87d76f0a92b98",
+            "weights.3": "16f24aea0689177ce23b7d09de49339a0fa0a0ba75753a10a85ed850a7083cc8",
+            "head.weight": "39bc6f6f4720618f6da778924cc306b6f5a0865d4042c58771d4c93cb573b512",
+            "head.bias": "5ce9e9fee433d39fa1edf54bebdd7bf9e6686a86a38b65c7862577d8faf1379d"
+          },
+          "final_parameter_sha256": {
+            "weights.0": "f1c36f49d8dff9affe0acd0ea15d1b8a4624c3ca78a2bf4c58add76b08591bf4",
+            "weights.1": "53e8ea338fb59604e5e26fd2f1f967e22d6e5302921f4ef0830a0d2ac5f7b780",
+            "weights.2": "91b46b0375f8ed0af7104b86f23cc808197bdfac4e7ee5c5fc144b34732e9e14",
+            "weights.3": "1e99670eb65a34a7e7107db2d59947c874c0488b1049efa382db4d978f30a126",
+            "head.weight": "1681557f8f066663700d44fbacdd3cf0bfedd932427fdb81a6b37855d122168e",
+            "head.bias": "867a4d4ba756633a3bb9cd0b1202b61ac6f621633cbab03ad6817f018f63429e"
+          },
+          "final_velocity_sha256": {
+            "weights.0": "2771009c0fa25a8b971066fd26a84eb6629b94f75b081f24d7a25e1481aa8c9e",
+            "weights.1": "433265e4529adb2806c9bdfede4f94048be07afb47a63755d8a359478378098d",
+            "weights.2": "e78174fabb4155c382099bb0b608dba2120cb3a83cd11e212e1d1204a1640467",
+            "weights.3": "4b2afbb9d8aa5b8434c88fbb6b70d8151b442e3f77aeb73bc43d5e104423b7d5",
+            "head.weight": "7e3a9d2be37da55114a166d1ec1c0406b62fcff79a6a557bbe88ea589617549f",
+            "head.bias": "14ab8a756e3f3c3434cb88a7cd342df845d3a4f5df42db2136804205f4b2de17"
+          },
+          "state_vector_sha256": "3e9240ec895282affde6451fafd0311f115bcd4df1ed1886b3c4b6e88be887db",
+          "predictions_sha256": "6e8e6894cafd8f72c5c44f1d32358ac8408335cdfe365ffbb8144d0998f26a2a",
+          "scores_sha256": "fb9b24a5e4fa13820ebbc1d2c9279113a0d2fdfa5742c5af6e234102fedd2e52",
+          "preparation_seconds": 0.615210137,
+          "run_count": 1,
+          "validation": {
+            "passed": true,
+            "device": "cpu",
+            "checks": [
+              {
+                "dtype": "torch.float64",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 2.220446049250313e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float64",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 4.440892098500626e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 4
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 0.0,
+                "inverse_max_abs_error": 2.9802322387695312e-08,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.4901161193847656e-08,
+                "inverse_max_abs_error": 2.384185791015625e-07,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 4
+              }
+            ],
+            "scope": "Identical weights; ordinary autograd versus custom reconstruction for inputs and every parameter. First-order differentiation only."
+          },
+          "reversible_core": true,
+          "retained_core_states": 1,
+          "core_saved_bytes_per_example": 328,
+          "head_reversible": false,
+          "input_lift_injective": true,
+          "timing_scope": "run resets weights/gradients/momentum, normalizes raw train and query pixels, copies resident epoch permutations, trains and predicts. Excludes setup, CPU permutation generation, allocation, transfer, capture and diagnostics."
+        },
+        "config": {
+          "alpha": 0.5,
+          "batch_size": 128,
+          "momentum": 0.9,
+          "weight_decay": 0.0,
+          "seed": 11,
+          "depth": 2,
+          "epochs": 2,
+          "learning_rate": 0.1
+        },
+        "input_sha256": {
+          "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+          "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+          "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+        },
+        "cuda_ms": 39.956478118896484,
+        "learner_sha256": "c395a8b7bc2951e3fdab5c5f5edf5ad2d5357de4e9170e52b988f4312e7169c5",
+        "completed_at_utc": "2026-09-14T23:40:02.526810+00:00",
+        "memory": {
+          "allocated_before_prepare_bytes": 134217728,
+          "prepare_and_invoke_peak_allocated_bytes": 209757696,
+          "allocated_after_invoke_bytes": 208332288,
+          "reserved_after_invoke_bytes": 230686720,
+          "scope": "Tensorallocator including graphpools/libraryworkspace; before diagnostic CUDAvalidation/serialization. Excludesdriver/context."
+        }
+      },
+      "prediction_path": "validation-predictions/candidate-10.npy",
+      "prediction_sha256": "0dc812aded29ecd29a597ff16ded3cb7dc3f2cda1cf0fd9bc2f568859226efeb"
+    },
+    {
+      "config": {
+        "alpha": 0.5,
+        "batch_size": 128,
+        "momentum": 0.9,
+        "weight_decay": 0.0,
+        "seed": 11,
+        "depth": 2,
+        "epochs": 2,
+        "learning_rate": 0.3
+      },
+      "correct": 1782,
+      "total": 2000,
+      "accuracy_percent": 89.1,
+      "result": {
+        "metadata": {
+          "config": {
+            "depth": 2,
+            "alpha": 0.5,
+            "seed": 11,
+            "epochs": 2,
+            "learning_rate": 0.3,
+            "batch_size": 128,
+            "momentum": 0.9,
+            "weight_decay": 0.0
+          },
+          "parameter_count": 7554,
+          "train_count": 8000,
+          "test_count": 2000,
+          "fresh_initialization_per_run": true,
+          "checkpoint_loaded": false,
+          "normalization": "4*x-0.5 then append one zero coordinate",
+          "initialization": "branch normal(0,0.05/sqrt(41)); standard torch Linear head; seed-only",
+          "optimizer": "SGD momentum; zero initial velocity; gradient mean cross entropy",
+          "shuffle": "independent PCG64 permutation each epoch, seed-only",
+          "augmentation": "none",
+          "input_hashes": {
+            "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+            "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+            "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+          },
+          "epoch_permutation_sha256": [
+            "59503b4e3ca6d91fd29351afa3fe83c923c45080d3d05f737fda5f543b34b736",
+            "3715ab56d35f78c8a6518f1fd037a98a50c36978901eec8899a659fc007a5f73"
+          ],
+          "initial_parameter_sha256": {
+            "weights.0": "194490b683f6426b65457a6725f0646768f8d46a361d9b125cfc768ab614f8fb",
+            "weights.1": "bcbcbf732d68415f6c7c393c31343810467d8a86951e70237f6c36712785dd02",
+            "weights.2": "60acda6b3f2f888c9f70f9c2d0ebb53e66d3deb3e1ba760160b87d76f0a92b98",
+            "weights.3": "16f24aea0689177ce23b7d09de49339a0fa0a0ba75753a10a85ed850a7083cc8",
+            "head.weight": "39bc6f6f4720618f6da778924cc306b6f5a0865d4042c58771d4c93cb573b512",
+            "head.bias": "5ce9e9fee433d39fa1edf54bebdd7bf9e6686a86a38b65c7862577d8faf1379d"
+          },
+          "final_parameter_sha256": {
+            "weights.0": "ba3653319b9d95d269a735cba46a045e30c7cbd719dabdaa38cabce7d23a5c08",
+            "weights.1": "b7cfd84b368ef3e0d5eb18ad491aa9d1347fee0b36145ca424d30cdb60206881",
+            "weights.2": "d74279bec8ee40f143230063bd820a568317f88348340d708a8c9bb5f7b9e58e",
+            "weights.3": "7e87b776be44837fb1cc96fd1ecac3343643f6f61de67bcf8ccb0c43118812c1",
+            "head.weight": "82c1ee8adc3c008f1cffcdcffab23016bd9fdf6104a93bd669f371ccf11821c8",
+            "head.bias": "f44c2aba317385673c01f37b153cadc271a5dac6d0a32506f22b706963aaca9e"
+          },
+          "final_velocity_sha256": {
+            "weights.0": "f399bd62fdc226b3b740052c2beef4df3ec887f881c2d486957bde192e7e4e82",
+            "weights.1": "09178be324459fde8fe1a5d907869a3771b4d35633a5248931787a32a267fdb0",
+            "weights.2": "74f954d650b1ff15694b6267b98ca21c99185f2ed96f308b7d8e263d88646d27",
+            "weights.3": "fdff881fa3bc90534192dbd0212ef7b9e03b94b37ed45b4920faa69d9a3086f7",
+            "head.weight": "8a8a065908b44fa9515b714b15dd32dcf7a320bb75cc15c5f8de912322d80847",
+            "head.bias": "92632dd5a9107b931e9ebea47155768bd4df94e4b74faab62ba9090ec48538b7"
+          },
+          "state_vector_sha256": "963dfaf37275f37d9f3360fd0b92a1b61bf2e7ba230a8617f5180d9e56c3956e",
+          "predictions_sha256": "fe3af3aca07c9181662977ef194a2bf793f13f1a3cac8c4aa82bf76428c0d6ec",
+          "scores_sha256": "e7f360f5aae379d4065168642f4f6605ba8d42c45af00fdb9a5bf9945c9fb6ac",
+          "preparation_seconds": 0.6575934869999998,
+          "run_count": 1,
+          "validation": {
+            "passed": true,
+            "device": "cpu",
+            "checks": [
+              {
+                "dtype": "torch.float64",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 2.220446049250313e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float64",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 4.440892098500626e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 4
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 0.0,
+                "inverse_max_abs_error": 2.9802322387695312e-08,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.4901161193847656e-08,
+                "inverse_max_abs_error": 2.384185791015625e-07,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 4
+              }
+            ],
+            "scope": "Identical weights; ordinary autograd versus custom reconstruction for inputs and every parameter. First-order differentiation only."
+          },
+          "reversible_core": true,
+          "retained_core_states": 1,
+          "core_saved_bytes_per_example": 328,
+          "head_reversible": false,
+          "input_lift_injective": true,
+          "timing_scope": "run resets weights/gradients/momentum, normalizes raw train and query pixels, copies resident epoch permutations, trains and predicts. Excludes setup, CPU permutation generation, allocation, transfer, capture and diagnostics."
+        },
+        "config": {
+          "alpha": 0.5,
+          "batch_size": 128,
+          "momentum": 0.9,
+          "weight_decay": 0.0,
+          "seed": 11,
+          "depth": 2,
+          "epochs": 2,
+          "learning_rate": 0.3
+        },
+        "input_sha256": {
+          "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+          "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+          "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+        },
+        "cuda_ms": 39.64108657836914,
+        "learner_sha256": "c395a8b7bc2951e3fdab5c5f5edf5ad2d5357de4e9170e52b988f4312e7169c5",
+        "completed_at_utc": "2026-09-14T23:40:03.353758+00:00",
+        "memory": {
+          "allocated_before_prepare_bytes": 268435456,
+          "prepare_and_invoke_peak_allocated_bytes": 343975424,
+          "allocated_after_invoke_bytes": 342550016,
+          "reserved_after_invoke_bytes": 364904448,
+          "scope": "Tensorallocator including graphpools/libraryworkspace; before diagnostic CUDAvalidation/serialization. Excludesdriver/context."
+        }
+      },
+      "prediction_path": "validation-predictions/candidate-11.npy",
+      "prediction_sha256": "a1c4ceb7fa1fa67463ea806ec37a58232dbf39fe0afa6956c1082d368df3cd53"
+    },
+    {
+      "config": {
+        "alpha": 0.5,
+        "batch_size": 128,
+        "momentum": 0.9,
+        "weight_decay": 0.0,
+        "seed": 11,
+        "depth": 2,
+        "epochs": 4,
+        "learning_rate": 0.1
+      },
+      "correct": 1800,
+      "total": 2000,
+      "accuracy_percent": 90.0,
+      "result": {
+        "metadata": {
+          "config": {
+            "depth": 2,
+            "alpha": 0.5,
+            "seed": 11,
+            "epochs": 4,
+            "learning_rate": 0.1,
+            "batch_size": 128,
+            "momentum": 0.9,
+            "weight_decay": 0.0
+          },
+          "parameter_count": 7554,
+          "train_count": 8000,
+          "test_count": 2000,
+          "fresh_initialization_per_run": true,
+          "checkpoint_loaded": false,
+          "normalization": "4*x-0.5 then append one zero coordinate",
+          "initialization": "branch normal(0,0.05/sqrt(41)); standard torch Linear head; seed-only",
+          "optimizer": "SGD momentum; zero initial velocity; gradient mean cross entropy",
+          "shuffle": "independent PCG64 permutation each epoch, seed-only",
+          "augmentation": "none",
+          "input_hashes": {
+            "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+            "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+            "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+          },
+          "epoch_permutation_sha256": [
+            "59503b4e3ca6d91fd29351afa3fe83c923c45080d3d05f737fda5f543b34b736",
+            "3715ab56d35f78c8a6518f1fd037a98a50c36978901eec8899a659fc007a5f73",
+            "2cce399e69378fb880bafd9a96f0192948ac0493833881ac5a6f7eca2ea3a6bb",
+            "41b2ff409f253c7724775e97e9b23284cfda8c07b0def5cb9967ea75973ce9f4"
+          ],
+          "initial_parameter_sha256": {
+            "weights.0": "194490b683f6426b65457a6725f0646768f8d46a361d9b125cfc768ab614f8fb",
+            "weights.1": "bcbcbf732d68415f6c7c393c31343810467d8a86951e70237f6c36712785dd02",
+            "weights.2": "60acda6b3f2f888c9f70f9c2d0ebb53e66d3deb3e1ba760160b87d76f0a92b98",
+            "weights.3": "16f24aea0689177ce23b7d09de49339a0fa0a0ba75753a10a85ed850a7083cc8",
+            "head.weight": "39bc6f6f4720618f6da778924cc306b6f5a0865d4042c58771d4c93cb573b512",
+            "head.bias": "5ce9e9fee433d39fa1edf54bebdd7bf9e6686a86a38b65c7862577d8faf1379d"
+          },
+          "final_parameter_sha256": {
+            "weights.0": "3219e255f14489a0b2ff1191fd716d91704f456cf182ca06e16d9a7899ba98d0",
+            "weights.1": "c0056df2f8e645c6c6c887b4b02c50fddc45ab22f6261a61073dc11349fd5283",
+            "weights.2": "3b607199fa44ca8f240990b7cc1119be40aaff5b0080e3087cc23f37fd47a8c6",
+            "weights.3": "0eefbb0cb345799f13a571f351bbe449c79d1056fa87076d7a11f3f8ee52bb19",
+            "head.weight": "8461399f17c6fba8dbbcbe04dddec3e744dcd5b8fae835c9d57235ab4b2b1504",
+            "head.bias": "4c5ed5574551c034e40e0543c79cf44b15587e13469fa00d25ca9cde705d75a7"
+          },
+          "final_velocity_sha256": {
+            "weights.0": "29d7ffc49b343680ab9fcc638b80a666af8c8e6511c412d671d85d5b34f44863",
+            "weights.1": "b0efd538e91800354e78eb91fe77bd5de052519c463ff3c9c68da6d1dbce71f6",
+            "weights.2": "1413f3624bf7a5b986c6dd36f107d9ef4ca7551ff710862d599827ac3e100093",
+            "weights.3": "a44aff549a5e403e7120483196fe1115aa835e5a5981acd773b93cfbea88c917",
+            "head.weight": "f2df4bcec9197bef2de336fe192b38fc9679c217fb806b4bd5ab02ec4c497d7e",
+            "head.bias": "0f1f1e5a2ee62b66d982a1c6b2cd126c80e3bf23262d8746523a4d443e53f39b"
+          },
+          "state_vector_sha256": "879ca332c1738b13e3336b7107871169f2776fcbed6207c573032ef9da6d90f2",
+          "predictions_sha256": "71fd84cc4567c932a30a7f3e5643ba4a93f560377e6b66fe8f97f7162d6e7431",
+          "scores_sha256": "ce5cf03fb2c9e476b17c51edfe5f0ec9a03ce091393b79fd1067af606f8f5b6c",
+          "preparation_seconds": 0.6484374370000001,
+          "run_count": 1,
+          "validation": {
+            "passed": true,
+            "device": "cpu",
+            "checks": [
+              {
+                "dtype": "torch.float64",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 2.220446049250313e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float64",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 4.440892098500626e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 4
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 0.0,
+                "inverse_max_abs_error": 2.9802322387695312e-08,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.4901161193847656e-08,
+                "inverse_max_abs_error": 2.384185791015625e-07,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 4
+              }
+            ],
+            "scope": "Identical weights; ordinary autograd versus custom reconstruction for inputs and every parameter. First-order differentiation only."
+          },
+          "reversible_core": true,
+          "retained_core_states": 1,
+          "core_saved_bytes_per_example": 328,
+          "head_reversible": false,
+          "input_lift_injective": true,
+          "timing_scope": "run resets weights/gradients/momentum, normalizes raw train and query pixels, copies resident epoch permutations, trains and predicts. Excludes setup, CPU permutation generation, allocation, transfer, capture and diagnostics."
+        },
+        "config": {
+          "alpha": 0.5,
+          "batch_size": 128,
+          "momentum": 0.9,
+          "weight_decay": 0.0,
+          "seed": 11,
+          "depth": 2,
+          "epochs": 4,
+          "learning_rate": 0.1
+        },
+        "input_sha256": {
+          "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+          "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+          "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+        },
+        "cuda_ms": 77.58541107177734,
+        "learner_sha256": "c395a8b7bc2951e3fdab5c5f5edf5ad2d5357de4e9170e52b988f4312e7169c5",
+        "completed_at_utc": "2026-09-14T23:40:03.743267+00:00",
+        "memory": {
+          "allocated_before_prepare_bytes": 134217728,
+          "prepare_and_invoke_peak_allocated_bytes": 209885696,
+          "allocated_after_invoke_bytes": 208460288,
+          "reserved_after_invoke_bytes": 230686720,
+          "scope": "Tensorallocator including graphpools/libraryworkspace; before diagnostic CUDAvalidation/serialization. Excludesdriver/context."
+        }
+      },
+      "prediction_path": "validation-predictions/candidate-12.npy",
+      "prediction_sha256": "34460cd5971367cfe1ab51ff88d749aaf1a4cd290b27980c6af137cba5bf9a92"
+    },
+    {
+      "config": {
+        "alpha": 0.5,
+        "batch_size": 128,
+        "momentum": 0.9,
+        "weight_decay": 0.0,
+        "seed": 11,
+        "depth": 2,
+        "epochs": 4,
+        "learning_rate": 0.3
+      },
+      "correct": 1798,
+      "total": 2000,
+      "accuracy_percent": 89.9,
+      "result": {
+        "metadata": {
+          "config": {
+            "depth": 2,
+            "alpha": 0.5,
+            "seed": 11,
+            "epochs": 4,
+            "learning_rate": 0.3,
+            "batch_size": 128,
+            "momentum": 0.9,
+            "weight_decay": 0.0
+          },
+          "parameter_count": 7554,
+          "train_count": 8000,
+          "test_count": 2000,
+          "fresh_initialization_per_run": true,
+          "checkpoint_loaded": false,
+          "normalization": "4*x-0.5 then append one zero coordinate",
+          "initialization": "branch normal(0,0.05/sqrt(41)); standard torch Linear head; seed-only",
+          "optimizer": "SGD momentum; zero initial velocity; gradient mean cross entropy",
+          "shuffle": "independent PCG64 permutation each epoch, seed-only",
+          "augmentation": "none",
+          "input_hashes": {
+            "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+            "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+            "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+          },
+          "epoch_permutation_sha256": [
+            "59503b4e3ca6d91fd29351afa3fe83c923c45080d3d05f737fda5f543b34b736",
+            "3715ab56d35f78c8a6518f1fd037a98a50c36978901eec8899a659fc007a5f73",
+            "2cce399e69378fb880bafd9a96f0192948ac0493833881ac5a6f7eca2ea3a6bb",
+            "41b2ff409f253c7724775e97e9b23284cfda8c07b0def5cb9967ea75973ce9f4"
+          ],
+          "initial_parameter_sha256": {
+            "weights.0": "194490b683f6426b65457a6725f0646768f8d46a361d9b125cfc768ab614f8fb",
+            "weights.1": "bcbcbf732d68415f6c7c393c31343810467d8a86951e70237f6c36712785dd02",
+            "weights.2": "60acda6b3f2f888c9f70f9c2d0ebb53e66d3deb3e1ba760160b87d76f0a92b98",
+            "weights.3": "16f24aea0689177ce23b7d09de49339a0fa0a0ba75753a10a85ed850a7083cc8",
+            "head.weight": "39bc6f6f4720618f6da778924cc306b6f5a0865d4042c58771d4c93cb573b512",
+            "head.bias": "5ce9e9fee433d39fa1edf54bebdd7bf9e6686a86a38b65c7862577d8faf1379d"
+          },
+          "final_parameter_sha256": {
+            "weights.0": "be6066b9e4848edc9d86e50f691a70c00aa4c7aa88830247130715715e083ad2",
+            "weights.1": "34af4f54b4042c3896ff9ee3d7449d3cc36f7258d4365b65e62cbd86abb5ad7a",
+            "weights.2": "0d6c16923dfeaf44af4185dd139cbe8bc82156e466639fefac8f4bb80a256fb1",
+            "weights.3": "4b09445b6b9cabbe96edd0f2298f35b78ad853e6bf3c8d29fda0cbaf0d69be7e",
+            "head.weight": "e496f8a5100e145c7db2cbf15339b526e462de45b98fa42017ed5eeda3ee2970",
+            "head.bias": "e5690cd6ab6939ed307a6a34da23a4e68eb9d5e107b2ee94f2403e4f6f86f14e"
+          },
+          "final_velocity_sha256": {
+            "weights.0": "3f690c8187cf5234177e9a0b425c3e09c2618fc4d8c23c83a0f2543b2e46e734",
+            "weights.1": "40cf5a1c6e003878da2aabc0ea3f1b9f02992f0fa5df987bb07026b76436446f",
+            "weights.2": "279e9e5116fff1f07ee845e12070717fe424b95ac39342ca24106aa28b704833",
+            "weights.3": "8df63d8cb9a9def041564a65fa7d4a568e7e1967c8b68b484080952944dab696",
+            "head.weight": "c40df95167a1b6f0ef929089d3f5ec3f011afcd986acfb9be1766f3f845967da",
+            "head.bias": "b8a528f8c786f94f612b26502ec1a81ba468d013cf1344668872c32e240b3005"
+          },
+          "state_vector_sha256": "24db7a017f027e1a97debafbc035abf41759db8cefa0fe082494c54fa7d38af3",
+          "predictions_sha256": "23d719af26b62fed8c4c80c838d134fec4ceff256dc14c44c16e51cd915b8937",
+          "scores_sha256": "a62bd7a83ece923df3be490eddea76ca45ebbe96825ebe0da0f1b3841a980138",
+          "preparation_seconds": 0.6737443150000004,
+          "run_count": 1,
+          "validation": {
+            "passed": true,
+            "device": "cpu",
+            "checks": [
+              {
+                "dtype": "torch.float64",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 2.220446049250313e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float64",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 4.440892098500626e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 4
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 0.0,
+                "inverse_max_abs_error": 2.9802322387695312e-08,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.4901161193847656e-08,
+                "inverse_max_abs_error": 2.384185791015625e-07,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 4
+              }
+            ],
+            "scope": "Identical weights; ordinary autograd versus custom reconstruction for inputs and every parameter. First-order differentiation only."
+          },
+          "reversible_core": true,
+          "retained_core_states": 1,
+          "core_saved_bytes_per_example": 328,
+          "head_reversible": false,
+          "input_lift_injective": true,
+          "timing_scope": "run resets weights/gradients/momentum, normalizes raw train and query pixels, copies resident epoch permutations, trains and predicts. Excludes setup, CPU permutation generation, allocation, transfer, capture and diagnostics."
+        },
+        "config": {
+          "alpha": 0.5,
+          "batch_size": 128,
+          "momentum": 0.9,
+          "weight_decay": 0.0,
+          "seed": 11,
+          "depth": 2,
+          "epochs": 4,
+          "learning_rate": 0.3
+        },
+        "input_sha256": {
+          "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+          "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+          "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+        },
+        "cuda_ms": 76.40064239501953,
+        "learner_sha256": "c395a8b7bc2951e3fdab5c5f5edf5ad2d5357de4e9170e52b988f4312e7169c5",
+        "completed_at_utc": "2026-09-14T23:40:03.933574+00:00",
+        "memory": {
+          "allocated_before_prepare_bytes": 134217728,
+          "prepare_and_invoke_peak_allocated_bytes": 209885696,
+          "allocated_after_invoke_bytes": 208460288,
+          "reserved_after_invoke_bytes": 230686720,
+          "scope": "Tensorallocator including graphpools/libraryworkspace; before diagnostic CUDAvalidation/serialization. Excludesdriver/context."
+        }
+      },
+      "prediction_path": "validation-predictions/candidate-13.npy",
+      "prediction_sha256": "63c634d505874ba72b690b03200c0efaf317d94e130de59e0ffd22da6128bd5b"
+    },
+    {
+      "config": {
+        "alpha": 0.5,
+        "batch_size": 128,
+        "momentum": 0.9,
+        "weight_decay": 0.0,
+        "seed": 11,
+        "depth": 2,
+        "epochs": 8,
+        "learning_rate": 0.1
+      },
+      "correct": 1821,
+      "total": 2000,
+      "accuracy_percent": 91.05,
+      "result": {
+        "metadata": {
+          "config": {
+            "depth": 2,
+            "alpha": 0.5,
+            "seed": 11,
+            "epochs": 8,
+            "learning_rate": 0.1,
+            "batch_size": 128,
+            "momentum": 0.9,
+            "weight_decay": 0.0
+          },
+          "parameter_count": 7554,
+          "train_count": 8000,
+          "test_count": 2000,
+          "fresh_initialization_per_run": true,
+          "checkpoint_loaded": false,
+          "normalization": "4*x-0.5 then append one zero coordinate",
+          "initialization": "branch normal(0,0.05/sqrt(41)); standard torch Linear head; seed-only",
+          "optimizer": "SGD momentum; zero initial velocity; gradient mean cross entropy",
+          "shuffle": "independent PCG64 permutation each epoch, seed-only",
+          "augmentation": "none",
+          "input_hashes": {
+            "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+            "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+            "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+          },
+          "epoch_permutation_sha256": [
+            "59503b4e3ca6d91fd29351afa3fe83c923c45080d3d05f737fda5f543b34b736",
+            "3715ab56d35f78c8a6518f1fd037a98a50c36978901eec8899a659fc007a5f73",
+            "2cce399e69378fb880bafd9a96f0192948ac0493833881ac5a6f7eca2ea3a6bb",
+            "41b2ff409f253c7724775e97e9b23284cfda8c07b0def5cb9967ea75973ce9f4",
+            "13978d1a9b4de204b8cfd5d46bbdf9105d4b4d68ce7e9d39c589805ced4528bb",
+            "f24fae6436b69a7d15e06762aa4519753832298b4e0c57aabbb01bead75979a6",
+            "ec00e84c72335dd564ee6741d2ece26fda5b641cf0c6b56c0488025d995c656b",
+            "88685d0dcce9b1f96e96c70fcc00b43a133b7433cdb466eb3551273e01a02215"
+          ],
+          "initial_parameter_sha256": {
+            "weights.0": "194490b683f6426b65457a6725f0646768f8d46a361d9b125cfc768ab614f8fb",
+            "weights.1": "bcbcbf732d68415f6c7c393c31343810467d8a86951e70237f6c36712785dd02",
+            "weights.2": "60acda6b3f2f888c9f70f9c2d0ebb53e66d3deb3e1ba760160b87d76f0a92b98",
+            "weights.3": "16f24aea0689177ce23b7d09de49339a0fa0a0ba75753a10a85ed850a7083cc8",
+            "head.weight": "39bc6f6f4720618f6da778924cc306b6f5a0865d4042c58771d4c93cb573b512",
+            "head.bias": "5ce9e9fee433d39fa1edf54bebdd7bf9e6686a86a38b65c7862577d8faf1379d"
+          },
+          "final_parameter_sha256": {
+            "weights.0": "195bd07d9b3781dee30f86d2eae6ea967b87b4aae06a8ac871b067e10aacac65",
+            "weights.1": "eb81839e0c90cb9a7ee99540ba7ca345a99a0ac3279eaeb7537d2fe990f1739f",
+            "weights.2": "d121535c6968242bc824c46fd354b7d4d392961726509b7736231783dd4a00c9",
+            "weights.3": "e8830ae70c23442c93ec8cbae13d5ea138e1544b0c65e243738fb2438a8536ce",
+            "head.weight": "a10484f359e5370c4c4e92ae69492fef424f03bad571e4057dc0e1a93e7b66f7",
+            "head.bias": "60354305bdee7dd54f342c2605ef6a8cf67e7dfd1b3f616d745df3c0431e37e8"
+          },
+          "final_velocity_sha256": {
+            "weights.0": "b194407da3cd60aa007055d1e5cd27c48fd9cca23dbec3b1784cef685fc9bb02",
+            "weights.1": "879ff2a7c22bde6df5604ba696bfcec381eb63373d8e88c4dec510bf37b9e491",
+            "weights.2": "44381844f8b5bc5416b44c662cbdf67a657945404e9dd5ee32f21ea17704a168",
+            "weights.3": "489cc5b8b6ff1bb22616945e19e6ac3fa029ded668658c40056b11764092c518",
+            "head.weight": "818f846ef66759cb8eacdb9375462b0f1f8b8e47ece1cbc157f21d3399953026",
+            "head.bias": "3eb656f0f21824c7e2a76cd637a636b00df1c62a14396e2c14124034e0cffda6"
+          },
+          "state_vector_sha256": "f5ff451ff6fc28dee3f44d58692688ee146bbcbd9609fae11d43e8327091e66b",
+          "predictions_sha256": "33b007cd6f30c7a01af0ab33061a4f6e2c56e6a645275054b18198c354d12992",
+          "scores_sha256": "2a603d8c13719f1ea0b58245b6f3a7d1f74edde5d47f344e84ec5c33dc04563d",
+          "preparation_seconds": 0.5901401529999983,
+          "run_count": 1,
+          "validation": {
+            "passed": true,
+            "device": "cpu",
+            "checks": [
+              {
+                "dtype": "torch.float64",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 2.220446049250313e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float64",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 4.440892098500626e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 4
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 0.0,
+                "inverse_max_abs_error": 2.9802322387695312e-08,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.4901161193847656e-08,
+                "inverse_max_abs_error": 2.384185791015625e-07,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 4
+              }
+            ],
+            "scope": "Identical weights; ordinary autograd versus custom reconstruction for inputs and every parameter. First-order differentiation only."
+          },
+          "reversible_core": true,
+          "retained_core_states": 1,
+          "core_saved_bytes_per_example": 328,
+          "head_reversible": false,
+          "input_lift_injective": true,
+          "timing_scope": "run resets weights/gradients/momentum, normalizes raw train and query pixels, copies resident epoch permutations, trains and predicts. Excludes setup, CPU permutation generation, allocation, transfer, capture and diagnostics."
+        },
+        "config": {
+          "alpha": 0.5,
+          "batch_size": 128,
+          "momentum": 0.9,
+          "weight_decay": 0.0,
+          "seed": 11,
+          "depth": 2,
+          "epochs": 8,
+          "learning_rate": 0.1
+        },
+        "input_sha256": {
+          "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+          "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+          "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+        },
+        "cuda_ms": 152.66712951660156,
+        "learner_sha256": "c395a8b7bc2951e3fdab5c5f5edf5ad2d5357de4e9170e52b988f4312e7169c5",
+        "completed_at_utc": "2026-09-14T23:40:03.892032+00:00",
+        "memory": {
+          "allocated_before_prepare_bytes": 201326592,
+          "prepare_and_invoke_peak_allocated_bytes": 277250560,
+          "allocated_after_invoke_bytes": 275825152,
+          "reserved_after_invoke_bytes": 299892736,
+          "scope": "Tensorallocator including graphpools/libraryworkspace; before diagnostic CUDAvalidation/serialization. Excludesdriver/context."
+        }
+      },
+      "prediction_path": "validation-predictions/candidate-14.npy",
+      "prediction_sha256": "3a5f661c01fbec460e73236cada92edc243719e3e4e52df66bfee247b5742780"
+    },
+    {
+      "config": {
+        "alpha": 0.5,
+        "batch_size": 128,
+        "momentum": 0.9,
+        "weight_decay": 0.0,
+        "seed": 11,
+        "depth": 2,
+        "epochs": 8,
+        "learning_rate": 0.3
+      },
+      "correct": 1835,
+      "total": 2000,
+      "accuracy_percent": 91.75,
+      "result": {
+        "metadata": {
+          "config": {
+            "depth": 2,
+            "alpha": 0.5,
+            "seed": 11,
+            "epochs": 8,
+            "learning_rate": 0.3,
+            "batch_size": 128,
+            "momentum": 0.9,
+            "weight_decay": 0.0
+          },
+          "parameter_count": 7554,
+          "train_count": 8000,
+          "test_count": 2000,
+          "fresh_initialization_per_run": true,
+          "checkpoint_loaded": false,
+          "normalization": "4*x-0.5 then append one zero coordinate",
+          "initialization": "branch normal(0,0.05/sqrt(41)); standard torch Linear head; seed-only",
+          "optimizer": "SGD momentum; zero initial velocity; gradient mean cross entropy",
+          "shuffle": "independent PCG64 permutation each epoch, seed-only",
+          "augmentation": "none",
+          "input_hashes": {
+            "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+            "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+            "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+          },
+          "epoch_permutation_sha256": [
+            "59503b4e3ca6d91fd29351afa3fe83c923c45080d3d05f737fda5f543b34b736",
+            "3715ab56d35f78c8a6518f1fd037a98a50c36978901eec8899a659fc007a5f73",
+            "2cce399e69378fb880bafd9a96f0192948ac0493833881ac5a6f7eca2ea3a6bb",
+            "41b2ff409f253c7724775e97e9b23284cfda8c07b0def5cb9967ea75973ce9f4",
+            "13978d1a9b4de204b8cfd5d46bbdf9105d4b4d68ce7e9d39c589805ced4528bb",
+            "f24fae6436b69a7d15e06762aa4519753832298b4e0c57aabbb01bead75979a6",
+            "ec00e84c72335dd564ee6741d2ece26fda5b641cf0c6b56c0488025d995c656b",
+            "88685d0dcce9b1f96e96c70fcc00b43a133b7433cdb466eb3551273e01a02215"
+          ],
+          "initial_parameter_sha256": {
+            "weights.0": "194490b683f6426b65457a6725f0646768f8d46a361d9b125cfc768ab614f8fb",
+            "weights.1": "bcbcbf732d68415f6c7c393c31343810467d8a86951e70237f6c36712785dd02",
+            "weights.2": "60acda6b3f2f888c9f70f9c2d0ebb53e66d3deb3e1ba760160b87d76f0a92b98",
+            "weights.3": "16f24aea0689177ce23b7d09de49339a0fa0a0ba75753a10a85ed850a7083cc8",
+            "head.weight": "39bc6f6f4720618f6da778924cc306b6f5a0865d4042c58771d4c93cb573b512",
+            "head.bias": "5ce9e9fee433d39fa1edf54bebdd7bf9e6686a86a38b65c7862577d8faf1379d"
+          },
+          "final_parameter_sha256": {
+            "weights.0": "e2d98a972d62b5a8b29fad5b910fbee8456af9bea98779a49af8456a4e08e440",
+            "weights.1": "03209b76a08cf3a37647fb27fefd17f1eed864b5314310ca421b8a6f3765b6ed",
+            "weights.2": "a522bf26156b5c0668274289b556c08bd852624200fd9e0b99974e79de075437",
+            "weights.3": "ddfd7a93d9f84d09d12f9123e84dfa1758df2f2050325b86a2d0c2529083c62e",
+            "head.weight": "ed9ab957c2a6686979e9155885137888ced15061b80d7455ca136174d7ecd8b3",
+            "head.bias": "9e8ba18188db891316c9b898df9075c43002f881b3e73c18526048499083b66d"
+          },
+          "final_velocity_sha256": {
+            "weights.0": "17390b6012da66bcee471653c1e22ad88bf72e8de23f69c27e81a877714b5f2a",
+            "weights.1": "4cf814de686faa715adc114b813ae2006de11aacd5da05fbf0f74953493f862c",
+            "weights.2": "ad74ebf7bb77ff8eae96028eabad52f551521eeadf0d54d0a0496836fdb10796",
+            "weights.3": "5f2bb6a029bcd7aab4b638937d2c51503522c5a78df2eb2425a1fb26ab5c7826",
+            "head.weight": "4dc0b850941de98fae7d762acad7a7ea0402f5aacdf53e519c458fb571572dfc",
+            "head.bias": "062e7eb10d083d9234372e53f64ba53cbf3c290d1a39a23ce6ce5671137585f2"
+          },
+          "state_vector_sha256": "c1bfafa4ce9f91beae80f11ddb3c51e68c2c72d5b3c549e5c11b7de45a7fa896",
+          "predictions_sha256": "12a4403a43cf3cf223a020a67d90db91f815b75ba7d22f5b63e6543529b0d48a",
+          "scores_sha256": "40b890c1c56427b7a074a187b7ecf83fcee813c7e02010d888579b51acff9001",
+          "preparation_seconds": 0.6369794549999988,
+          "run_count": 1,
+          "validation": {
+            "passed": true,
+            "device": "cpu",
+            "checks": [
+              {
+                "dtype": "torch.float64",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 2.220446049250313e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float64",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.3877787807814457e-17,
+                "inverse_max_abs_error": 4.440892098500626e-16,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 1968,
+                "saved_parameter_references": 4
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 1,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 0.0,
+                "inverse_max_abs_error": 2.9802322387695312e-08,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 2
+              },
+              {
+                "dtype": "torch.float32",
+                "depth": 2,
+                "passed": true,
+                "forward_bitwise_equal": true,
+                "maximum_gradient_abs_error": 1.4901161193847656e-08,
+                "inverse_max_abs_error": 2.384185791015625e-07,
+                "saved_activation_storages": 1,
+                "saved_activation_bytes": 984,
+                "saved_parameter_references": 4
+              }
+            ],
+            "scope": "Identical weights; ordinary autograd versus custom reconstruction for inputs and every parameter. First-order differentiation only."
+          },
+          "reversible_core": true,
+          "retained_core_states": 1,
+          "core_saved_bytes_per_example": 328,
+          "head_reversible": false,
+          "input_lift_injective": true,
+          "timing_scope": "run resets weights/gradients/momentum, normalizes raw train and query pixels, copies resident epoch permutations, trains and predicts. Excludes setup, CPU permutation generation, allocation, transfer, capture and diagnostics."
+        },
+        "config": {
+          "alpha": 0.5,
+          "batch_size": 128,
+          "momentum": 0.9,
+          "weight_decay": 0.0,
+          "seed": 11,
+          "depth": 2,
+          "epochs": 8,
+          "learning_rate": 0.3
+        },
+        "input_sha256": {
+          "train_images": "3feb50149a10c4a7625d5b6a2d1ae3050cc53e40df3c3f3dc58a1a33d13049bc",
+          "train_labels": "5ac9009711e083f7097b3da0324955eccc83189e9cdf4b75c12d1babbbf447e5",
+          "test_images": "5a0c5cb66e01fc0274d63e854115f4f4c700843bc9e81c6eb052f7783809e6b6"
+        },
+        "cuda_ms": 151.83871459960938,
+        "learner_sha256": "c395a8b7bc2951e3fdab5c5f5edf5ad2d5357de4e9170e52b988f4312e7169c5",
+        "completed_at_utc": "2026-09-14T23:40:04.484631+00:00",
+        "memory": {
+          "allocated_before_prepare_bytes": 335544320,
+          "prepare_and_invoke_peak_allocated_bytes": 411468288,
+          "allocated_after_invoke_bytes": 410042880,
+          "reserved_after_invoke_bytes": 434110464,
+          "scope": "Tensorallocator including graphpools/libraryworkspace; before diagnostic CUDAvalidation/serialization. Excludesdriver/context."
+        }
+      },
+      "prediction_path": "validation-predictions/candidate-15.npy",
+      "prediction_sha256": "45d44c05e91775765f4f6a55f9cb7a1146d75a324446f0ba5d5e4a2d4adaf000"
+    }
+  ],
+  "complete": true
+}

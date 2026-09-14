@@ -1,0 +1,144 @@
+{
+  "metadata": {
+    "config": {
+      "depth": 2,
+      "alpha": 0.5,
+      "seed": 11,
+      "epochs": 2,
+      "learning_rate": 0.1,
+      "batch_size": 128,
+      "momentum": 0.9,
+      "weight_decay": 0.0
+    },
+    "parameter_count": 7554,
+    "train_count": 10000,
+    "test_count": 10000,
+    "fresh_initialization_per_run": true,
+    "checkpoint_loaded": false,
+    "normalization": "4*x-0.5 then append one zero coordinate",
+    "initialization": "branch normal(0,0.05/sqrt(41)); standard torch Linear head; seed-only",
+    "optimizer": "SGD momentum; zero initial velocity; gradient mean cross entropy",
+    "shuffle": "independent PCG64 permutation each epoch, seed-only",
+    "augmentation": "none",
+    "input_hashes": {
+      "train_images": "39322fefb00ece07103e9493e6190f611c47b9874aef4ccd02de779e9e13ee2c",
+      "train_labels": "d66ca98d98e054710128939d6f72c4005a77e0b57ed9926f6652f71b09bb78eb",
+      "test_images": "c5662c75972f10f6072a6a3308033a3ba46eaee3db5ecb4901be843572b71fb5"
+    },
+    "epoch_permutation_sha256": [
+      "06a0c75a115780a2112f0ba86be13d19162762e59c36bb0c27ae35dc688c01ef",
+      "fc7dcea80db84b1177efbc923b2d1ecf4eb4184bd2d4afd32c9af9c6160502b0"
+    ],
+    "initial_parameter_sha256": {
+      "weights.0": "194490b683f6426b65457a6725f0646768f8d46a361d9b125cfc768ab614f8fb",
+      "weights.1": "bcbcbf732d68415f6c7c393c31343810467d8a86951e70237f6c36712785dd02",
+      "weights.2": "60acda6b3f2f888c9f70f9c2d0ebb53e66d3deb3e1ba760160b87d76f0a92b98",
+      "weights.3": "16f24aea0689177ce23b7d09de49339a0fa0a0ba75753a10a85ed850a7083cc8",
+      "head.weight": "39bc6f6f4720618f6da778924cc306b6f5a0865d4042c58771d4c93cb573b512",
+      "head.bias": "5ce9e9fee433d39fa1edf54bebdd7bf9e6686a86a38b65c7862577d8faf1379d"
+    },
+    "final_parameter_sha256": {
+      "weights.0": "24cf314e18c57146d86eeaa910a7cbbf3e36f03b67c46d0c2fa196ed4b0783a5",
+      "weights.1": "4a13467ca94b3bbf57d67a035e772611073a34e416033eea72f35b1cc54396eb",
+      "weights.2": "5071320b81ebfad73d4cc92f77bc3f5ae79d17babc4012488c2d881cff19867f",
+      "weights.3": "63e5181541ab80adb0394286043f7ce84e1a0369a57af6d781601e1de3b474fb",
+      "head.weight": "7b8efbd0e0109fcafcefbbd83a692eeecf972485b37bc12df738df085de6d68d",
+      "head.bias": "ddfe23f6c5f8667b08ae2cc4cd6b6ece6de0ed21efb76df70db811eedd7c60e3"
+    },
+    "final_velocity_sha256": {
+      "weights.0": "fb92427b20b0ee2780a83a09bdb03623ffd5d6650ac5eb29c73b89541cf5e4d5",
+      "weights.1": "29144afe5c835cbfbbed363b2299c08b7e42063720a1d8baacfc0201a0c88fbf",
+      "weights.2": "e648cd42b2effbecb694f638ae80b92ff336489a0fb84e275228651fd9208e81",
+      "weights.3": "7cbf81d03a97538d17786f13728f6f831d8bde2926647c02c5574e956e9b060c",
+      "head.weight": "1e226bd46184caaf50eb54eab0accd48026a4e07faa75c6eb28df1b95640f3b8",
+      "head.bias": "f9a5f45120b2fcc9f32ad23b29e3aecde9fc0e4bfbf12fc64f9c276435a4226a"
+    },
+    "state_vector_sha256": "09304f72fa431e609b786b226eaba6234c0bce0c9f4719826e0c42b57359fda5",
+    "predictions_sha256": "a0eca5e2ec4bd43866c3fb3184fd7ddc5ffb741d2401e43487f9ee115f4dc3c1",
+    "scores_sha256": "29a45526ae553ac7c68f148d3ec3957d45f4f556ccd3b7d0317eb6d1ae090d7e",
+    "preparation_seconds": 0.7623634250000002,
+    "run_count": 1,
+    "validation": {
+      "passed": true,
+      "device": "cpu",
+      "checks": [
+        {
+          "dtype": "torch.float64",
+          "depth": 1,
+          "passed": true,
+          "forward_bitwise_equal": true,
+          "maximum_gradient_abs_error": 1.3877787807814457e-17,
+          "inverse_max_abs_error": 2.220446049250313e-16,
+          "saved_activation_storages": 1,
+          "saved_activation_bytes": 1968,
+          "saved_parameter_references": 2
+        },
+        {
+          "dtype": "torch.float64",
+          "depth": 2,
+          "passed": true,
+          "forward_bitwise_equal": true,
+          "maximum_gradient_abs_error": 1.3877787807814457e-17,
+          "inverse_max_abs_error": 4.440892098500626e-16,
+          "saved_activation_storages": 1,
+          "saved_activation_bytes": 1968,
+          "saved_parameter_references": 4
+        },
+        {
+          "dtype": "torch.float32",
+          "depth": 1,
+          "passed": true,
+          "forward_bitwise_equal": true,
+          "maximum_gradient_abs_error": 0.0,
+          "inverse_max_abs_error": 2.9802322387695312e-08,
+          "saved_activation_storages": 1,
+          "saved_activation_bytes": 984,
+          "saved_parameter_references": 2
+        },
+        {
+          "dtype": "torch.float32",
+          "depth": 2,
+          "passed": true,
+          "forward_bitwise_equal": true,
+          "maximum_gradient_abs_error": 1.4901161193847656e-08,
+          "inverse_max_abs_error": 2.384185791015625e-07,
+          "saved_activation_storages": 1,
+          "saved_activation_bytes": 984,
+          "saved_parameter_references": 4
+        }
+      ],
+      "scope": "Identical weights; ordinary autograd versus custom reconstruction for inputs and every parameter. First-order differentiation only."
+    },
+    "reversible_core": true,
+    "retained_core_states": 1,
+    "core_saved_bytes_per_example": 328,
+    "head_reversible": false,
+    "input_lift_injective": true,
+    "timing_scope": "run resets weights/gradients/momentum, normalizes raw train and query pixels, copies resident epoch permutations, trains and predicts. Excludes setup, CPU permutation generation, allocation, transfer, capture and diagnostics."
+  },
+  "config": {
+    "alpha": 0.5,
+    "batch_size": 128,
+    "momentum": 0.9,
+    "weight_decay": 0.0,
+    "seed": 11,
+    "depth": 2,
+    "epochs": 2,
+    "learning_rate": 0.1
+  },
+  "input_sha256": {
+    "train_images": "39322fefb00ece07103e9493e6190f611c47b9874aef4ccd02de779e9e13ee2c",
+    "train_labels": "d66ca98d98e054710128939d6f72c4005a77e0b57ed9926f6652f71b09bb78eb",
+    "test_images": "c5662c75972f10f6072a6a3308033a3ba46eaee3db5ecb4901be843572b71fb5"
+  },
+  "cuda_ms": 51.483646392822266,
+  "learner_sha256": "c395a8b7bc2951e3fdab5c5f5edf5ad2d5357de4e9170e52b988f4312e7169c5",
+  "completed_at_utc": "2026-09-14T23:41:20.873882+00:00",
+  "memory": {
+    "allocated_before_prepare_bytes": 134217728,
+    "prepare_and_invoke_peak_allocated_bytes": 216727552,
+    "allocated_after_invoke_bytes": 215302144,
+    "reserved_after_invoke_bytes": 230686720,
+    "scope": "Tensorallocator including graphpools/libraryworkspace; before diagnostic CUDAvalidation/serialization. Excludesdriver/context."
+  }
+}
