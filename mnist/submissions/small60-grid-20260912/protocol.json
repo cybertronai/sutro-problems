@@ -1,0 +1,37 @@
+{
+  "created_at_utc": "2026-09-12T02:03:13.034220+00:00",
+  "config": {
+    "hidden_width": 32,
+    "epochs": 300,
+    "learning_rate": 0.2,
+    "batch_size": 25,
+    "learner_seed": 101
+  },
+  "dataset_seeds": [
+    20261201,
+    20261202,
+    20261203,
+    20261204,
+    20261205,
+    20261206,
+    20261207,
+    20261208,
+    20261209,
+    20261210,
+    20261211
+  ],
+  "dataset": "1000 train and 1000 disjoint test examples from official 60000 training images",
+  "draw": "numpy.random.Generator(PCG64(seed)).permutation(60000): first1000 train, next1000 test",
+  "preprocessing": "float32 image/255 then generator.area_resize to3x3; learner transforms4*x-0.5",
+  "target_accuracy": 0.6,
+  "target_total_correct": 6600,
+  "planned_draws": 11,
+  "selection": "Architecture, hyperparameters and seed fixed from historical H32 learner; batch25 chosen to divide1000. No new-test tuning.",
+  "source_sha256": {
+    "run.py": "e9a2d80263c4a0278cf2c2a9acf15c5fc3c480eaf68da3fff2b4cbe0feb6e608",
+    "reference.py": "70bf8f8d944506aaec3e68f44ee9c1c1abff4450cd9678e08301a4e896975dde"
+  },
+  "generator_sha256": "72e203322357befa1aeeae89b7d20f760ae7bf841008625fdb8ce3f2231563b3",
+  "training": "Fresh seed101 initialization for each draw; ascending fixed sample order each epoch; all gradients from pre-update weights; no learned state transfer",
+  "evaluator": "Only evaluate after prediction_manifest.json freezes all11 predictions"
+}
