@@ -201,3 +201,18 @@ I/O, generating the program, and numerical accuracy execution.
 - [Medium exact score](medium96/grid-score.json) · [Medium generated program](medium96/program.spatial.json)
 - [Verification results](test-results.json) · [Verifier source](test_score.py)
 - [Scorer and schedule generator](score.py) · [MLP generator](model_ir.py) · [Affine validator](affine.py)
+
+## Adam optimizer path
+
+`score.py` accepts `--optimizer adam --nr-iterations K` (default sgd, K=12).
+The Adam path uses the same affine/distance pricing with `m`/`v` state, per-step
+bias correction and a Newton-Raphson square root built from existing ops
+(`div`, `add`, `mul`). The SGD path is unchanged and reproduces the original
+scores exactly. Example:
+
+```sh
+uv run --with numpy==2.2.6 python score.py --features 9 --width 32 \
+  --epochs 100 --batch 25 --n-train 1000 --n-test 1000 --learning-rate 0.2 \
+  --seed 101 --optimizer adam --nr-iterations 8 \
+  --output small-adam-nr-k8-20260912
+```
