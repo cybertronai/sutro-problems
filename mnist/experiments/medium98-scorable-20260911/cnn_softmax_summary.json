@@ -1,0 +1,143 @@
+{
+  "phase": "replicate",
+  "completed_at_utc": "2026-09-11T06:08:28.902191+00:00",
+  "provenance": {
+    "protocol_sha256": "13b97586ac849b7bfba0e8b0386af5b178f819b7dfbde51f7b9f1c122df87086",
+    "source_sha256": {
+      "cnn_softmax_runner.py": "3c1e3f8117a986526704d2cae095cdb6fe46c3b9192d5d6eca7d3681cd2c04b8",
+      "cnn_softmax_modal.py": "07c7b19f95d1e2e6f1718da34b30b28dac3983deab9941c608bc59a1678da273"
+    },
+    "input_sha256": {
+      "train_images": "3c2c9d7cc3103e05c6e72e8b39ad7ae8f93fcbea8b23ac5f43ffacd9a9c4653b",
+      "train_labels": "91633f2c00fe471cb130fb6831c3d7dca5899bd926a1c899d873826dfd62e617"
+    },
+    "split_sha256": "3d1c0a0ad72cc023c4afe0d36941abba75a2dd4dba54262fa48025386afc5d47"
+  },
+  "ranking": [
+    {
+      "id": "softmax-c64-d4-lr0.03-s22",
+      "correct": 1173,
+      "loss": 0.020622555216153464,
+      "epoch": 84
+    },
+    {
+      "id": "softmax-c64-d4-lr0.03-s11",
+      "correct": 1171,
+      "loss": 0.020014783143997194,
+      "epoch": 79
+    },
+    {
+      "id": "softmax-c32-d3-lr0.03-s33",
+      "correct": 1171,
+      "loss": 0.02088037331899007,
+      "epoch": 121
+    },
+    {
+      "id": "softmax-c32-d3-lr0.03-s11",
+      "correct": 1171,
+      "loss": 0.021592732270558676,
+      "epoch": 45
+    },
+    {
+      "id": "softmax-c64-d4-lr0.03-s33",
+      "correct": 1170,
+      "loss": 0.021304953893025717,
+      "epoch": 118
+    },
+    {
+      "id": "softmax-c64-d3-lr0.03-s11",
+      "correct": 1169,
+      "loss": 0.02172265390555064,
+      "epoch": 64
+    },
+    {
+      "id": "softmax-c32-d3-lr0.03-s22",
+      "correct": 1169,
+      "loss": 0.022306457360585532,
+      "epoch": 47
+    },
+    {
+      "id": "softmax-c64-d3-lr0.01-s11",
+      "correct": 1169,
+      "loss": 0.02253144939740499,
+      "epoch": 14
+    },
+    {
+      "id": "softmax-c32-d4-lr0.03-s11",
+      "correct": 1168,
+      "loss": 0.024045286377271016,
+      "epoch": 127
+    },
+    {
+      "id": "softmax-c32-d3-lr0.01-s11",
+      "correct": 1167,
+      "loss": 0.024232052167256674,
+      "epoch": 72
+    }
+  ],
+  "failed_ids": [
+    "softmax-c64-d3-lr0.1-s11",
+    "softmax-c32-d3-lr0.1-s11"
+  ],
+  "test_arrays_accessed": false,
+  "ensemble_validation": [
+    {
+      "config": {
+        "id": "softmax-c64-d4-lr0.03",
+        "width": 64,
+        "depth": 4,
+        "learning_rate": 0.03,
+        "head_width": 256,
+        "epochs": 150,
+        "batch_size": 128,
+        "momentum": 0.9,
+        "weight_decay": 0.0001,
+        "loss": "approx_softmax_gradient",
+        "normalization": "4*x-0.5",
+        "augmentation": "mild_affine",
+        "dropout": 0.0,
+        "batchnorm": false,
+        "pooling": "none",
+        "conv_bias": false,
+        "head_bias": true,
+        "initialization": "He uniform fan_in for all weights; zero biases"
+      },
+      "individual_correct": [
+        1171,
+        1173,
+        1170
+      ],
+      "ensemble_correct": 1172,
+      "total": 1200
+    },
+    {
+      "config": {
+        "id": "softmax-c32-d3-lr0.03",
+        "width": 32,
+        "depth": 3,
+        "learning_rate": 0.03,
+        "head_width": 128,
+        "epochs": 150,
+        "batch_size": 128,
+        "momentum": 0.9,
+        "weight_decay": 0.0001,
+        "loss": "approx_softmax_gradient",
+        "normalization": "4*x-0.5",
+        "augmentation": "mild_affine",
+        "dropout": 0.0,
+        "batchnorm": false,
+        "pooling": "none",
+        "conv_bias": false,
+        "head_bias": true,
+        "initialization": "He uniform fan_in for all weights; zero biases"
+      },
+      "individual_correct": [
+        1171,
+        1169,
+        1171
+      ],
+      "ensemble_correct": 1174,
+      "total": 1200
+    }
+  ]
+}

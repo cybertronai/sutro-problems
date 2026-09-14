@@ -187,9 +187,11 @@ specification.
 The [older agent instructions](instructions.md), default dataset generator, and
 accuracy evaluator still describe the previous specification: 600/600 and
 6,000/6,000 sizes and single-core scoring. The evaluator also lacks the current
-small target, medium error bands, and the original tier's 99% target. Update or
+small target and the original tier's 99% target. Update or
 configure reproduction code to match the datasets, error bands, and spatial
 model above before claiming current results.
+For medium, select generator profile `medium-error-targets-v1` for 10,000/10,000
+examples and evaluator `--error-target` for one of the five error bands.
 The generator's `reference-20260910` profile has the new counts but uses a
 different train/test split protocol; matching counts alone is insufficient.
 
@@ -199,9 +201,10 @@ different train/test split protocol; matching counts alone is insufficient.
 <summary>Historical submissions (previous specification)</summary>
 
 The entries below retain their original measurements. Small used 600 training
-and 600 test images; medium used 6,000 of each. Reported Dally scores and areas
-use the former **single-core-with-tape** model. These results do not establish
-accuracy or spatial-computer costs for the revised datasets and error bands.
+and 600 test images; medium used 6,000 of each, except Ordered ConvNets, which
+used 10,000 of each and meets the 3% mean-error target. Reported Dally scores
+and areas use the former **single-core-with-tape** model. These results do not
+establish spatial-computer costs; consult each report for its accuracy scope.
 Their reports preserve the single-core scores, areas, scoring times, and
 original evaluation scope, including whether an entry used one dataset or 11
 draws. Grid columns are unmeasured: single-core scores are not spatial-grid
@@ -219,6 +222,7 @@ scores.
 
 | Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| 2026-09-11 | 97.8% ± 0.1 pp | 780,000 | 13,000 | — | — | [Ordered ConvNets (3% error target)](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-convnet-v4-20260911/) |
 | 2026-09-10 | 98.1% ± 0.1 pp | 1.7 × 10⁶ | 5.9 × 10⁴ | — | — | [Three ConvNets](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-convnet-11draw-20260911/) |
 | 2026-09-10 | 96% | 150,000 | 4,700 | — | — | [512-unit MLP](https://cybertronai.github.io/sutro-problems/docs/submissions/medium-affine-20260911/) |
 

@@ -1,0 +1,64 @@
+{
+  "id": "relu-c64-d3-lr0.03-s11",
+  "config": {
+    "id": "relu-c64-d3-lr0.03",
+    "width": 64,
+    "depth": 3,
+    "learning_rate": 0.03,
+    "head_width": 256,
+    "epochs": 150,
+    "batch_size": 128,
+    "momentum": 0.9,
+    "weight_decay": 0.0001,
+    "loss": "half_sum_mse_batch_mean",
+    "normalization": "4*x-0.5",
+    "augmentation": "mild_affine",
+    "dropout": 0.0,
+    "batchnorm": false,
+    "pooling": "none",
+    "conv_bias": false,
+    "head_bias": true,
+    "initialization": "He uniform fan_in for all weights; zero biases"
+  },
+  "seed": 11,
+  "status": "nonfinite",
+  "parameter_count": 1404234,
+  "best": null,
+  "history": [
+    {
+      "epoch": 1,
+      "learning_rate": 0.029999999329447746,
+      "status": "nonfinite"
+    }
+  ],
+  "provenance": {
+    "protocol_sha256": "9075ea83cc4cc25f3241b0079f2c579f78ea1b4598ac580e11a2b96e79d0a694",
+    "source_sha256": {
+      "cnn_runner.py": "052a0be4dce37c19cf4db7fee8313af67272af0d039d03ee392a8d2d95930c17",
+      "cnn_modal.py": "c1f1f6d57620f9e3364418f3824d561aa7b2af57ff2201abf8ba5402047b5fbd"
+    },
+    "input_sha256": {
+      "train_images": "3c2c9d7cc3103e05c6e72e8b39ad7ae8f93fcbea8b23ac5f43ffacd9a9c4653b",
+      "train_labels": "91633f2c00fe471cb130fb6831c3d7dca5899bd926a1c899d873826dfd62e617"
+    },
+    "split_sha256": "3d1c0a0ad72cc023c4afe0d36941abba75a2dd4dba54262fa48025386afc5d47"
+  },
+  "arithmetic_scope": "Preliminary native PyTorch/cuDNN FP32 screening; ordered backend validation still required",
+  "completed_at_utc": "2026-09-11T05:58:42.064463+00:00",
+  "elapsed_seconds": 0.16094604399999923,
+  "software": {
+    "torch": "2.5.1+cu124",
+    "numpy": "2.2.6",
+    "cuda": "12.4",
+    "cudnn": 90100,
+    "python": "3.11.15"
+  },
+  "hardware": {
+    "gpu": "NVIDIA A100-SXM4-80GB"
+  },
+  "determinism": {
+    "algorithms": true,
+    "tf32_matmul": false,
+    "tf32_cudnn": false
+  }
+}

@@ -15,6 +15,7 @@ import numpy as np
 from mnist.code.data import (
     DEFAULT_PROFILE,
     REFERENCE_PROFILE,
+    MEDIUM_ERROR_PROFILE,
     SOURCES,
     area_resize,
     area_weights,
@@ -203,6 +204,18 @@ class PreparedDatasetTests(unittest.TestCase):
         self.assert_tier(DEFAULT_PROFILE, "large", 28, train, test, "test")
         np.testing.assert_array_equal(np.sort(train), np.arange(60000))
         np.testing.assert_array_equal(np.sort(test), np.arange(10000))
+
+    def test_medium_error_profile_uses_two_disjoint_ten_thousand_subsets(self):
+        destination = self.root / MEDIUM_ERROR_PROFILE
+        manifest = self.prepare_fixture(destination, MEDIUM_ERROR_PROFILE)
+        order, _ = source_permutations()
+        with np.load(destination / 'medium.npz', allow_pickle=False) as arrays:
+            np.testing.assert_array_equal(arrays['train_indices'], order[:10000])
+            np.testing.assert_array_equal(arrays['test_indices'], order[10000:20000])
+            self.assertEqual(len(np.unique(np.r_[arrays['train_indices'], arrays['test_indices']])), 20000)
+            self.assertEqual(arrays['train_images'].shape, (10000, 1, 9, 9))
+            self.assertEqual(arrays['test_images'].shape, (10000, 1, 9, 9))
+        self.assertEqual(manifest['tiers']['medium']['test_source'], 'train')
 
     def test_reference_profile_preserves_original_counts_and_official_sources(self):
         train, test = source_permutations()

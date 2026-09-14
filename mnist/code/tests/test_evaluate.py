@@ -150,6 +150,26 @@ class AccuracyTargetTests(unittest.TestCase):
 
 
 class PredictionFileTests(unittest.TestCase):
+    def test_medium_error_target_exact_boundary(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            np.savez(root / 'medium.npz', test_labels=np.zeros(10000, dtype=np.int64))
+            for error, correct in ((error, correct) for error in (2, 3, 5, 8, 12)
+                                   for correct in (10000-error*100-1, 10000-error*100)):
+                predictions = np.ones(10000, dtype=np.int64)
+                predictions[:correct] = 0
+                np.save(root / 'predictions.npy', predictions)
+                stdout = io.StringIO()
+                with redirect_stdout(stdout):
+                    main(['--tier', 'medium', '--error-target', str(error), '--data-dir', str(root),
+                          '--predictions', str(root / 'predictions.npy')])
+                result = json.loads(stdout.getvalue())
+                self.assertEqual(result['required_correct'], 10000-error*100)
+                self.assertEqual(result['accuracy_target_percent'], 100-error)
+                self.assertEqual(result['error_target_percent'], error)
+                self.assertEqual(result['meets_accuracy_target'], correct == 10000-error*100)
+                self.assertAlmostEqual(result['error_rate_percent'], (10000-correct)/100)
+
     def test_npy_npz_and_missing_key(self):
         with tempfile.TemporaryDirectory() as directory:
             directory = Path(directory)

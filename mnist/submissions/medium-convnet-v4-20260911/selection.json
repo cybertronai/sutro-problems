@@ -1,0 +1,60 @@
+{
+  "selected_before_formal_draws": true,
+  "selection": "After user changed target to4% error, select earliest common epoch with at least97% training-only validation accuracy (one percentage point margin).",
+  "validation_record": {
+    "epoch": 8,
+    "correct": 1166,
+    "total": 1200,
+    "half_brier": 0.027240523020402165
+  },
+  "config": {
+    "id": "softmax-c32-d3-lr0.03",
+    "width": 32,
+    "depth": 3,
+    "learning_rate": 0.03,
+    "head_width": 128,
+    "epochs": 8,
+    "batch_size": 128,
+    "momentum": 0.9,
+    "weight_decay": 0.0001,
+    "loss": "approx_softmax_gradient",
+    "normalization": "4*x-0.5",
+    "augmentation": "mild_affine",
+    "dropout": 0.0,
+    "batchnorm": false,
+    "pooling": "none",
+    "conv_bias": false,
+    "head_bias": true,
+    "initialization": "He uniform fan_in for all weights; zero biases",
+    "target_percent": 96,
+    "target_error_percent": 4,
+    "error_targets": [
+      10,
+      8,
+      6,
+      4,
+      2
+    ],
+    "member_seeds": [
+      11,
+      22,
+      33
+    ],
+    "seeds": [
+      11,
+      22,
+      33
+    ],
+    "n_train": 10000,
+    "n_test": 10000,
+    "image_size": 9,
+    "optimizer": "sgd",
+    "activation": "relu",
+    "ensemble_arithmetic": "ordered_fp32_sum"
+  },
+  "development_fit_examples": 4800,
+  "development_validation_examples": 1200,
+  "formal_train_examples": 10000,
+  "formal_test_examples": 10000,
+  "test_data_used_for_selection": false
+}

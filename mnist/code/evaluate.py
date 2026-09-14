@@ -125,6 +125,8 @@ def main(argv: list[str] | None = None) -> None:
     parser.add_argument("--predictions", type=Path, required=True)
     parser.add_argument("--tier", choices=("small", "medium", "large"), required=True)
     parser.add_argument("--data-dir", type=Path, default=Path("mnist/data"))
+    parser.add_argument("--error-target", choices=("2", "3", "5", "8", "12"),
+                        help="MNIST-medium error-rate target in percent; select explicitly for the new 10000/10000 profile")
     parser.add_argument("--output", type=Path, help="Also save the JSON score to this path")
     arguments = parser.parse_args(argv)
     try:
@@ -132,9 +134,14 @@ def main(argv: list[str] | None = None) -> None:
         with np.load(arguments.data_dir / f"{arguments.tier}.npz", allow_pickle=False) as archive:
             labels = archive["test_labels"]
         result = {"tier": arguments.tier, **score_predictions(predictions, labels)}
-        result.update(accuracy_target_status(
-            result["correct"], result["total"], load_accuracy_target(arguments.tier)
-        ))
+        if arguments.error_target is not None and arguments.tier != "medium":
+            raise ValueError("The five error-rate targets currently apply to MNIST-medium")
+        target = (Fraction(100)-Fraction(arguments.error_target) if arguments.error_target is not None
+                  else load_accuracy_target(arguments.tier))
+        result.update(accuracy_target_status(result["correct"], result["total"], target))
+        if arguments.error_target is not None:
+            result["error_target_percent"] = float(arguments.error_target)
+            result["error_rate_percent"] = 100 * (result["total"]-result["correct"]) / result["total"]
         serialized = json.dumps(result, indent=2, allow_nan=False) + "\n"
         if arguments.output is not None:
             arguments.output.parent.mkdir(parents=True, exist_ok=True)
