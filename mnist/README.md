@@ -40,6 +40,7 @@ Accuracy targets:
 | Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 2026-09-11 | 67.08% ± 1.54 pp | 3,300 | 130 | 0.24 | 3,100 | [H32 MLP](submissions/small60-grid-20260912/README.md) |
+| 2026-09-14 | 67.35% ± 1.76 pp | 2,600 | 110 | 0.19 | 1,800 | [NR-K8 Adam MLP](submissions/small-adam-nr-k8-20260912/README.md) |
 
 ## MNIST-medium — 2% error target
 
