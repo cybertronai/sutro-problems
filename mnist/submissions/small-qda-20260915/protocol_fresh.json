@@ -1,0 +1,41 @@
+{
+  "created_at_utc": "2026-09-15T17:56:53Z",
+  "purpose": "Independently frozen fresh evaluation requested in the review of PR 82: the submitted learner is fixed, eleven new dataset seeds are declared here, this file is committed before any draw is prepared, predictions are saved and hashed before any evaluation-label slice is opened, and all eleven counts are reported against the exact 7,370/11,000 threshold. The original evidence (protocol.json, evidence/accuracy) and its disclosed timestamp limitation are retained unchanged.",
+  "learner": "QDA: class-conditional Gaussians with full per-class covariance, biased ML estimates, no shrinkage, class-frequency priors, log-determinant term; ordered FP32 arithmetic as in reference.py",
+  "config": {
+    "classes": 10,
+    "features": 9,
+    "shrinkage": 0.0,
+    "covariance": "biased (divide by class count)",
+    "inverse": "Gauss-Jordan without pivoting",
+    "log": "40+40 halving/doubling steps, atanh series to z^15"
+  },
+  "learner_source_sha256": {
+    "reference.py": "c51008b9ce6671f9b359e2be5c9bf16eb7859f72a7ac5a3f866ccf8dae6c46f0",
+    "spatial_program.py": "c4b851c8c99cc86637b26195f1bf63293bfbd48db632ba9c65b45d70bf343ccb"
+  },
+  "dataset_seeds": [
+    20262101,
+    20262102,
+    20262103,
+    20262104,
+    20262105,
+    20262106,
+    20262107,
+    20262108,
+    20262109,
+    20262110,
+    20262111
+  ],
+  "dataset": "1000 train and 1000 disjoint test examples from the official 60000 training images",
+  "draw": "numpy.random.Generator(PCG64(seed)).permutation(60000): rows 0-999 train, 1000-1999 test",
+  "preprocessing": "float32 image/255, exact area resize to 3x3 by run.resize_recorded (repository box-area weights, increasing accumulation order, float64 product/sum before each FP32 accumulation), learner input 4*x-0.5",
+  "target_accuracy": 0.67,
+  "target_total_correct": 7370,
+  "planned_draws": 11,
+  "selection": "No selection on these draws: the learner is exactly the one submitted (reference.py hash above); seeds 20262101-20262111 have never been used by the authors for any pilot, selection or evaluation (pilots used 20261101-20261110, the original evaluation 20261201-20261211, other entries 20261301+, 20261401+, 20261501+, 20261601+)",
+  "chronology": "This protocol is committed to the submission branch before `run.py prepare`; the draw manifest, the prediction freeze and the evaluation each record their UTC time and are committed in that order",
+  "training": "Deterministic closed form; no learner seed; no learned state transfer between draws",
+  "evaluator": "Two-phase: freeze (hash predictions, no evaluation-label slices) then score (verify hashes first)",
+  "evidence_dir": "evidence/fresh/accuracy"
+}

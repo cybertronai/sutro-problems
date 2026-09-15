@@ -29,7 +29,7 @@ def sha256_json(document):
 
 def source_hashes():
     files = {name: HERE / name for name in
-             ('run.py', 'verify.py', 'reference.py', 'spatial_program.py', 'protocol.json', 'requirements.txt')}
+             ('run.py', 'verify.py', 'reference.py', 'spatial_program.py', 'protocol.json', 'protocol_fresh.json', 'requirements.txt')}
     files['mnist/code/data.py'] = Path(ds.__file__)
     shared = HERE.parent / 'grid-mlp-scoring-20260912'
     files.update({f'../grid-mlp-scoring-20260912/{name}': shared / name for name in ('affine.py', 'score.py')})
@@ -40,7 +40,7 @@ def verify(evidence):
     start = time.perf_counter()
     sources = source_hashes()
     raw_sources = run.verify_raw()
-    protocol = read_json(HERE / 'protocol.json')
+    protocol = read_json(run.PROTOCOL)
     require(protocol['dataset_seeds'] == run.SEEDS and protocol['planned_draws'] == 11,
             'Protocol draw count or seeds differ')
     require(protocol['target_total_correct'] == 7370 and protocol['target_accuracy'] == .67,
@@ -92,8 +92,8 @@ def verify(evidence):
                     f'Draw {index}: reference parameter hash differs: {name}')
         require(ds.array_hash(scores) == record['scores_sha256'], f'Draw {index}: reference score hash differs')
         require(np.array_equal(again, pred), f'Draw {index}: reference predictions differ')
-        xr = ds.area_resize(pixels[train].astype(np.float32) / np.float32(255), 3).reshape(1000, 9)
-        qr = ds.area_resize(pixels[test].astype(np.float32) / np.float32(255), 3).reshape(1000, 9)
+        xr = run.resize_recorded(pixels[train].astype(np.float32) / np.float32(255)).reshape(1000, 9)
+        qr = run.resize_recorded(pixels[test].astype(np.float32) / np.float32(255)).reshape(1000, 9)
         tape = sp.tape_words(xr, ytrain, qr)
         require(len(tape) == grid['input_tape_words'], f'Draw {index}: spatial input tape length differs')
         out = np.asarray(sp.execute(document, tape), dtype=np.int64)
@@ -138,11 +138,14 @@ def verify(evidence):
                  'grid_score_file_sha256': ds.file_hash(HERE / 'grid/grid-score.json'),
                  'all_deterministic_score_fields_match': True,
                  'fresh_scoring_seconds': fresh_grid['time_to_score_seconds']},
+        'protocol': run.PROTOCOL.name,
         'provenance_limits': {
             'protocol_timestamp_precedes_prediction_freeze': protocol_at <= frozen_at,
-            'historical_preselection_independently_proven': False,
-            'note': 'Hashes and reproducibility do not establish historical learner selection or label-access order. '
-                    'The imported protocol timestamp is later than the imported prediction freeze.',
+            'historical_preselection_independently_proven': run.PROTOCOL.name == 'protocol_fresh.json',
+            'note': ('The fresh protocol (protocol_fresh.json) was committed before its draws were prepared; the freeze '
+                     'and evaluation commits follow it in the repository history.' if run.PROTOCOL.name == 'protocol_fresh.json' else
+                     'Hashes and reproducibility do not establish historical learner selection or label-access order. '
+                     'The imported protocol timestamp is later than the imported prediction freeze.'),
         },
         'verification_seconds': time.perf_counter() - start,
     }
@@ -153,6 +156,8 @@ def main():
     parser.add_argument('--evidence-dir', type=Path, default=run.EVIDENCE)
     parser.add_argument('--output', type=Path, help='Write a fresh JSON verification report')
     args = parser.parse_args()
+    if args.evidence_dir.resolve().is_relative_to(run.FRESH.resolve()):
+        require(run.PROTOCOL.name == 'protocol_fresh.json', 'Verify evidence/fresh with SUTRO_PROTOCOL=protocol_fresh.json')
     if args.output is not None:
         require(not args.output.resolve().is_relative_to((HERE / 'evidence').resolve()),
                 'Write verification reports outside the imported evidence directory')

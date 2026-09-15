@@ -1,8 +1,11 @@
-"""Prepare, freeze, and score a fresh reproduction of the QDA submission.
+"""Prepare, freeze, and score the QDA submission's draws.
 
 Recorded evidence is read-only. Use --evidence-dir generated/reproduction for
 new prepare/freeze/score runs; verify.py checks the imported evidence by default.
 Predictions are written and hashed before any evaluation-label slice is taken.
+The seeds and config come from protocol.json, or from the protocol named by
+SUTRO_PROTOCOL (protocol_fresh.json for the independently frozen evaluation in
+evidence/fresh/accuracy, the one writable directory under evidence/).
 """
 import argparse
 from functools import lru_cache
@@ -19,8 +22,11 @@ EVIDENCE = HERE / 'evidence/accuracy'
 sys.path.insert(0, str(HERE))
 from reference import train_predict, f32
 
-SEEDS = list(range(20261201, 20261212))
-CONFIG = json.loads((HERE / 'protocol.json').read_text())['config']
+PROTOCOL = Path(os.environ.get('SUTRO_PROTOCOL', HERE / 'protocol.json'))
+_protocol = json.loads(PROTOCOL.read_text())
+SEEDS = list(_protocol['dataset_seeds'])
+CONFIG = _protocol['config']
+FRESH = HERE / 'evidence/fresh'       # the independently frozen 2026-09-15 evaluation (protocol_fresh.json)
 
 
 def _repo():
@@ -65,7 +71,8 @@ def write_new_json(path, value):
 
 
 def writable_evidence(evidence):
-    require(not evidence.resolve().is_relative_to((HERE / 'evidence').resolve()),
+    resolved = evidence.resolve()
+    require(not resolved.is_relative_to((HERE / 'evidence').resolve()) or resolved.is_relative_to(FRESH.resolve()),
             'Imported evidence is read-only; use --evidence-dir generated/reproduction')
 
 
@@ -88,12 +95,36 @@ def _arrays():
             ds.read_idx(RAW / 'train-labels-idx1-ubyte.gz', 60000, False))
 
 
+def resize_recorded(images, size=3):
+    """Reproduce the source BLAS's ordered FP32 multiply-adds for the 3x3 area resize.
+
+    Different BLAS builds round these small matrix products differently, so the
+    repository's `area_resize` (a float32 matmul) does not reproduce the archived
+    input hashes on every machine. This keeps the repository's box-area weights
+    and increasing reduction order, taking a float64 product and sum before each
+    FP32 accumulation; it reproduces all 22 archived input hashes of the original
+    draws and the fresh draws. Same construction as the merged medium PCA-QDA
+    entry's `resize_recorded`, at size 3.
+    """
+    weights = ds.area_weights(28, size).astype(np.float64)
+    images = np.asarray(images, dtype=f32)
+    horizontal = np.zeros((len(images), size, 28), dtype=f32)
+    for k in range(28):
+        horizontal = (horizontal.astype(np.float64)
+                      + weights[None, :, k, None] * images[:, None, k, :].astype(np.float64)).astype(f32)
+    result = np.zeros((len(images), size, size), dtype=f32)
+    for k in range(28):
+        result = (result.astype(np.float64)
+                  + horizontal[:, :, k, None].astype(np.float64) * weights[None, None, :, k]).astype(f32)
+    return result
+
+
 def _load(seed):
     order = np.random.Generator(np.random.PCG64(seed)).permutation(60000)
     train, test = order[:1000].astype(np.int64), order[1000:2000].astype(np.int64)
     pixels, labels = _arrays()
-    x = ds.area_resize(pixels[train].astype(f32) / f32(255), 3).reshape(1000, 9) * f32(4) - f32(.5)
-    q = ds.area_resize(pixels[test].astype(f32) / f32(255), 3).reshape(1000, 9) * f32(4) - f32(.5)
+    x = resize_recorded(pixels[train].astype(f32) / f32(255)).reshape(1000, 9) * f32(4) - f32(.5)
+    q = resize_recorded(pixels[test].astype(f32) / f32(255)).reshape(1000, 9) * f32(4) - f32(.5)
     return train, test, x, q, labels[train], pixels, labels
 
 
@@ -147,7 +178,8 @@ def prepare(evidence=EVIDENCE):
                       'train_input_sha256': ds.array_hash(x), 'test_input_sha256': ds.array_hash(q),
                       'train_indices': train.tolist(), 'test_indices': test.tolist()})
         print('prepared draw', index, flush=True)
-    write_new_json(evidence / 'draw_manifest.json', {'seeds': SEEDS, 'draws': draws})
+    write_new_json(evidence / 'draw_manifest.json', {'seeds': SEEDS, 'protocol': PROTOCOL.name, 'protocol_sha256': ds.file_hash(PROTOCOL),
+                                                      'prepared_at_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'draws': draws})
 
 
 def freeze(evidence=EVIDENCE):
@@ -170,7 +202,8 @@ def freeze(evidence=EVIDENCE):
                         'kappa_sha256': ds.array_hash(params['kappa']), 'scores_sha256': ds.array_hash(scores)})
         print('frozen draw', index, flush=True)
     write_new_json(evidence / 'prediction_manifest.json',
-                   {'frozen_at_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'config': CONFIG,
+                   {'frozen_at_utc': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'config': CONFIG, 'protocol': PROTOCOL.name,
+                    'protocol_sha256': ds.file_hash(PROTOCOL), 'learner_sha256': ds.file_hash(HERE / 'reference.py'),
                     'seeds': SEEDS, 'draws': records, 'test_labels_opened': False})
 
 
