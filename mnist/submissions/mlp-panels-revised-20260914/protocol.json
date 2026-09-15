@@ -1,0 +1,41 @@
+{
+  "created_at_utc": "2026-09-15T01:38:05.041708+00:00",
+  "config": {
+    "hidden_width": 32,
+    "epochs": 300,
+    "learning_rate": 0.2,
+    "batch_size": 25,
+    "learner_seed": 101
+  },
+  "dataset_seeds": [
+    20261201,
+    20261202,
+    20261203,
+    20261204,
+    20261205,
+    20261206,
+    20261207,
+    20261208,
+    20261209,
+    20261210,
+    20261211
+  ],
+  "dataset": "1000 train and 1000 disjoint test examples from official 60000 training images",
+  "draw": "numpy.random.Generator(PCG64(seed)).permutation(60000): first1000 train, next1000 test",
+  "preprocessing": "float32 image/255 then generator.area_resize to3x3; learner transforms4*x-0.5",
+  "target_accuracy": 0.67,
+  "target_total_correct": 7370,
+  "planned_draws": 11,
+  "selection": "Architecture, hyperparameters and seed fixed from historical H32 learner; batch25 chosen to divide1000. No new-test tuning.",
+  "source_sha256": {
+    "run.py": "7d120a91a76320c17dd56d1cd71a123688d1a557d5205803aa9a557735045e26",
+    "reference.py": "d9477516c671db2413e5d6a654d7b33ae4ef6ac15aef053bda351ed9f259dd22",
+    "baseline_reference.py": "70bf8f8d944506aaec3e68f44ee9c1c1abff4450cd9678e08301a4e896975dde",
+    "panels.py": "e72a28d9e61741cd8cfad566efa5497308bfdd09021afa985ab52d055255c9d9",
+    "selected.json": "bec89100d030441bbb4484c480ff2255499308da297718fd81b570d799c4ee00",
+    "adapt_sources.py": "efde483971d9995eab6c763a5834aa7397e8483b6db7ee2b854f574a8726cd01"
+  },
+  "generator_sha256": "72e203322357befa1aeeae89b7d20f760ae7bf841008625fdb8ce3f2231563b3",
+  "training": "Fresh seed101 initialization for each draw; ascending fixed sample order each epoch; all gradients from pre-update weights; no learned state transfer",
+  "evaluator": "Only evaluate after prediction_manifest.json freezes all11 predictions"
+}
