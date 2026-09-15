@@ -1,0 +1,15 @@
+{
+  "created_at_utc": "2026-09-15T08:40:00Z",
+  "learner": "QDA: class-conditional Gaussians with full per-class covariance, biased ML estimates, no shrinkage, class-frequency priors, log-determinant term; ordered FP32 arithmetic as in reference.py",
+  "config": {"classes": 10, "features": 9, "shrinkage": 0.0, "covariance": "biased (divide by class count)", "inverse": "Gauss-Jordan without pivoting", "log": "40+40 halving/doubling steps, atanh series to z^15"},
+  "dataset_seeds": [20261201, 20261202, 20261203, 20261204, 20261205, 20261206, 20261207, 20261208, 20261209, 20261210, 20261211],
+  "dataset": "1000 train and 1000 disjoint test examples from the official 60000 training images",
+  "draw": "numpy.random.Generator(PCG64(seed)).permutation(60000): rows 0-999 train, 1000-1999 test",
+  "preprocessing": "float32 image/255, exact area resize to 3x3, learner input 4*x-0.5",
+  "target_accuracy": 0.67,
+  "target_total_correct": 7370,
+  "planned_draws": 11,
+  "selection": "Learner family and hyperparameters (no shrinkage, priors on, log-determinant on) chosen on disjoint pilot seeds 20261101-20261110 (mnist/small67/evidence/*.json: 67.59% mean over ten pilot draws); frozen before any official draw was evaluated",
+  "training": "Deterministic closed form; no learner seed; no learned state transfer between draws",
+  "evaluator": "Two-phase: freeze (hash predictions, no evaluation-label slices) then score (verify hashes first)"
+}

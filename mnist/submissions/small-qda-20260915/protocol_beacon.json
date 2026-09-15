@@ -1,0 +1,36 @@
+{
+  "created_at_utc": "2026-09-15T18:08:21Z",
+  "purpose": "Beacon-seeded evaluation whose chronology does not rest on the author's clock: the eleven dataset seeds are derived from a public NIST randomness-beacon pulse at a time declared here, before the pulse exists. This file is pushed to the pull-request branch and its SHA-256 is posted as a pull-request comment before that time; GitHub's timestamps on both are the evidence that the seeds could not have been chosen or evaluated in advance.",
+  "learner": "QDA: class-conditional Gaussians with full per-class covariance, biased ML estimates, no shrinkage, class-frequency priors, log-determinant term; ordered FP32 arithmetic as in reference.py",
+  "config": {
+    "classes": 10,
+    "features": 9,
+    "shrinkage": 0.0,
+    "covariance": "biased (divide by class count)",
+    "inverse": "Gauss-Jordan without pivoting",
+    "log": "40+40 halving/doubling steps, atanh series to z^15"
+  },
+  "learner_source_sha256": {
+    "reference.py": "c51008b9ce6671f9b359e2be5c9bf16eb7859f72a7ac5a3f866ccf8dae6c46f0",
+    "spatial_program.py": "c4b851c8c99cc86637b26195f1bf63293bfbd48db632ba9c65b45d70bf343ccb"
+  },
+  "dataset": "1000 train and 1000 disjoint test examples from the official 60000 training images",
+  "draw": "numpy.random.Generator(PCG64(seed)).permutation(60000): rows 0-999 train, 1000-1999 test",
+  "preprocessing": "float32 image/255, exact area resize to 3x3 by run.resize_recorded (repository box-area weights, increasing accumulation order, float64 product/sum before each FP32 accumulation), learner input 4*x-0.5",
+  "target_accuracy": 0.67,
+  "target_total_correct": 7370,
+  "planned_draws": 11,
+  "training": "Deterministic closed form; no learner seed; no learned state transfer between draws",
+  "evaluator": "Two-phase: freeze (hash predictions, no evaluation-label slices) then score (verify hashes first)",
+  "seed_source": {
+    "kind": "NIST randomness beacon v2",
+    "beacon_url": "https://beacon.nist.gov/beacon/2.0",
+    "pulse_time_utc": "2026-09-16T12:00:00.000Z",
+    "pulse_file": "evidence/beacon/pulse.json",
+    "derivation": "seed_i = int(SHA-256(outputValue || ':' || str(i)).hexdigest()[:8], 16) for i in 0..10, outputValue as the 128-hex-character string of the pulse JSON; the stored pulse carries the beacon's signature and can be re-fetched from beacon_url/pulse/time/<ms since epoch>",
+    "verification": "python -c \"import json,hashlib; v=json.load(open('evidence/beacon/pulse.json'))['pulse']['outputValue']; print([int(hashlib.sha256(f'{v}:{i}'.encode()).hexdigest()[:8],16) for i in range(11)])\""
+  },
+  "chronology": "1. This protocol is pushed to the pull-request branch and its SHA-256 posted on the pull request before 2026-09-16T12:00:00Z. 2. After the pulse exists: run.py fetch-beacon stores it, then prepare, freeze and score, each committed. 3. verify.py re-derives the seeds from the stored pulse and checks every hash.",
+  "selection": "No selection: the learner is the submitted reference.py (hash above); the seeds do not exist until the pulse is published",
+  "evidence_dir": "evidence/beacon/accuracy"
+}

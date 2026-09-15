@@ -1,0 +1,136 @@
+{
+  "date": "2026-09-15",
+  "tier": "MNIST-small",
+  "target_accuracy": 0.67,
+  "target_met": true,
+  "accuracy": {
+    "correct": 7465,
+    "total": 11000,
+    "mean": 0.6786363636363636,
+    "sample_stddev_pp": 2.6796539803760946,
+    "source": "evidence/accuracy/accuracy.json"
+  },
+  "a100": {
+    "energy_mj": 0.5856802838359351,
+    "time_ms": 0.017046980794270833,
+    "gross_energy_mj": 1.232159751843051,
+    "energy_round_range_mj": [
+      0.5854125316112098,
+      0.5925328065872981
+    ],
+    "energy_round_sample_stddev_mj": 0.004035820343022051,
+    "counter_energy_mj": 0.5891027569988901,
+    "energy_interpretation": "Median of three signed, per-round idle-adjusted sampled-power integrals. Counter values are a cross-check using the same device telemetry, not independent meter calibration. Round spread is not a confidence interval or total measurement uncertainty.",
+    "implementation": "two FP32 handwritten-PTX kernels emitted by pyptx (gpu_benchmark_ptx.py)",
+    "measured_draw": 0,
+    "verified_draws": 11,
+    "gpu_agrees_with_frozen_cpu_predictions": 11000,
+    "fresh_verified_draws": 11,
+    "fresh_gpu_correct": 7474,
+    "fresh_gpu_agrees_with_frozen_cpu_predictions": 11000,
+    "poisoned_graph_replay_checks_per_host": 66,
+    "source": "results/energy-netherlands.json",
+    "source_sha256": "d5cb9dacd43304f968c5851a5fef5ce772c410aeb1792842c5aa9fe143c3ef2c",
+    "hardware": "NVIDIA A100-SXM4-40GB",
+    "primary_host": "Netherlands, Vast machine 133104",
+    "primary_host_selection": "Chosen before these runs; Canada is an independent cross-check. All rounds from both hosts are reported.",
+    "measurement_plan_created_utc": "2026-09-15T21:11:17.122501+00:00",
+    "rounds": 3,
+    "replays_per_round": 1200000,
+    "scope": "Complete training and 1000 predictions, warm CUDA graph, original draw zero. Device-resident inputs. Includes host dispatch gaps; excludes resizing, transfers, allocation, compilation and capture. Settling, idle and matrix control are separate from task energy.",
+    "idle_method": "Each before/after idle window starts after 3 seconds of settling and is measured for 10 seconds. Subtract the mean of the two idle powers times active wall duration. Poll NVML power with a 50 ms sleep between samples and integrate actual timestamps by trapezoids; also record cumulative energy. Retain signed values.",
+    "controls": "20-second idle-only sham; separate 10-second 4096x4096 FP32 matrix multiply with verified output and at least 20 W above idle on both NVML readouts. Both hosts pass.",
+    "crosscheck": {
+      "host": "Canada, Vast machine 36394",
+      "source": "results/energy-canada.json",
+      "source_sha256": "73df779ea8a68b2d1b10dd9edfc618d04b5ab94515e0473d709d4ecbb95e3bcf",
+      "energy_mj": 0.6025742299665156,
+      "time_ms": 0.0168468115234375,
+      "gross_energy_mj": 1.5773347211357702,
+      "counter_energy_mj": 0.6148699982133705,
+      "energy_round_range_mj": [
+        0.5998328671454703,
+        0.6171183764136703
+      ]
+    },
+    "historical_sources": [
+      "results/gpu_verification_benchmark.json",
+      "results/gpu_results_ptx.json",
+      "results/gpu_results_ptx_hires.json",
+      "results/gpu_results_triton.json",
+      "results/gpu_results.json"
+    ],
+    "historical_energy_status": "Superseded. The old 0.010378672372650355 mJ claim is withdrawn because the original host failed subsequent telemetry sanity checks. Original files are retained unchanged; they are not the submitted energy result."
+  },
+  "grid": {
+    "energy_mj": 0.000889633966,
+    "time_ms": 10.316314,
+    "energy_fj": 889633966,
+    "cycles": 10316314,
+    "peak_scratch_bytes": 47088,
+    "time_to_score_seconds": 0.08448917498753872,
+    "model_spec_commit": "01a0bd5e0d2564825b0f53dd766f763c82dbc7c0",
+    "source": "grid/grid-score.json",
+    "scope": "complete globally serialized training and prediction; all input/output, scratch, staging and interprocessor traffic counted; emitted labels checked against frozen predictions on all 11 draws",
+    "lowering": "v2.1: unnormalized resized inputs; polynomial scoring with shared query products; staged samples; density-ordered placement; skips zeroing only of k, xs, prod, labels, x",
+    "word_node_hops": 889633966,
+    "instruction_issuing_processors": 250,
+    "max_simultaneous_instructions": 1
+  },
+  "learner": "closed-form QDA (per-class Gaussian, full covariance, no shrinkage, class prior, log-determinant), ordered FP32",
+  "contributors": [
+    "jurajselep",
+    "Claude",
+    "Codex (packaging and reproduction)"
+  ],
+  "report": "README.md",
+  "provenance": {
+    "source": "evidence/import.json",
+    "historical_freeze_chronology_verified": false,
+    "limitation": "Original protocol timestamp is later than original evaluation freeze. Reproduction uses published evaluation draws and does not establish pre-evaluation protocol freezing.",
+    "fresh_evaluation_public_precommitment_verified": false,
+    "beacon_evaluation": {
+      "protocol": "protocol_beacon.json",
+      "protocol_sha256": "1a0812f8bb8c8ad4ed09c1c804f80ed1dcb83274ec4bf4e101a4087b39afbaa7",
+      "pulse_time_utc": "2026-09-16T12:00:00Z",
+      "status": "publicly_committed_pending_future_pulse",
+      "publication_url": "https://github.com/cybertronai/sutro-problems/pull/82#issuecomment-5686480922",
+      "published_at_utc": "2026-09-15T19:05:04Z"
+    }
+  },
+  "verification": {
+    "cpu": "results/cpu_verification.json",
+    "gpu": "results/gpu_verification.json",
+    "cpu_fresh": "results/cpu_verification_fresh.json",
+    "gpu_fresh": "results/gpu_verification_fresh.json",
+    "gpu_energy": [
+      "results/energy-netherlands.json",
+      "results/energy-canada.json"
+    ]
+  },
+  "wandb_runs": [],
+  "accuracy_fresh": {
+    "correct": 7474,
+    "total": 11000,
+    "mean": 0.6794545454545454,
+    "sample_stddev_pp": 1.6439973457178279,
+    "target_met": true,
+    "seeds": [
+      20262101,
+      20262102,
+      20262103,
+      20262104,
+      20262105,
+      20262106,
+      20262107,
+      20262108,
+      20262109,
+      20262110,
+      20262111
+    ],
+    "protocol": "protocol_fresh.json",
+    "source": "evidence/fresh/accuracy/accuracy.json",
+    "note": "Fresh eleven-draw evaluation after PR 82 review; protocol, manifest, freeze, and score occur in successive commits. Local timestamps do not independently establish absence of prior evaluation."
+  },
+  "qualifying_accuracy": "accuracy_fresh"
+}
