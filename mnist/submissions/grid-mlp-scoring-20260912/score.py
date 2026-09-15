@@ -17,7 +17,7 @@ import time
 import numpy as np
 
 from affine import Program, SPEC_COMMIT, expand
-from model_ir import build_mlp
+from model_ir import NR_ITERATIONS, build_mlp
 
 HERE = Path(__file__).resolve().parent
 COMPUTE = (125, 0)
@@ -283,11 +283,14 @@ def main():
     parser.add_argument('--n-test', type=int, required=True)
     parser.add_argument('--learning-rate', type=float, required=True)
     parser.add_argument('--seed', type=int, default=101)
+    parser.add_argument('--optimizer', choices=('sgd', 'adam'), default='sgd')
+    parser.add_argument('--nr-iterations', type=int, default=NR_ITERATIONS)
     parser.add_argument('--output', type=Path, required=True)
     args = parser.parse_args()
     document = build_mlp(width=args.width, features=args.features, epochs=args.epochs,
                          batch=args.batch, n_train=args.n_train, n_test=args.n_test,
-                         learning_rate=args.learning_rate, seed=args.seed)
+                         learning_rate=args.learning_rate, seed=args.seed,
+                         optimizer=args.optimizer, nr_iterations=args.nr_iterations)
     result = score(document)
     result['software'] = {'python': sys.version, 'numpy': np.__version__, 'platform': platform.platform()}
     result['source_sha256'] = {p.name: hashlib.sha256(p.read_bytes()).hexdigest()

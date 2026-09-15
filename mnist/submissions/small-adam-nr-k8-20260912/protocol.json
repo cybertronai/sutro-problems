@@ -1,0 +1,40 @@
+{
+  "created_at_utc": "2026-09-13T00:00:00Z",
+  "config": {
+    "hidden_width": 32,
+    "epochs": 100,
+    "optimizer": "NR-K8 Adam",
+    "nr_iterations": 8,
+    "learning_rate": 0.2,
+    "batch_size": 25,
+    "learner_seed": 101
+  },
+  "dataset_seeds": [
+    20261201,
+    20261202,
+    20261203,
+    20261204,
+    20261205,
+    20261206,
+    20261207,
+    20261208,
+    20261209,
+    20261210,
+    20261211
+  ],
+  "dataset": "1000 train and 1000 disjoint test examples from official 60000 training images",
+  "draw": "numpy.random.Generator(PCG64(seed)).permutation(60000): first1000 train, next1000 test",
+  "preprocessing": "float32 image/255, exact area resize to 3x3, learner transforms 4*x-0.5",
+  "target_accuracy": 0.67,
+  "target_total_correct": 7370,
+  "planned_draws": 11,
+  "selection": "Width/epochs/NR count predeclared on disjoint pilot seeds 20261006-15; frozen before official evaluation",
+  "training": "Fresh seed-101 initialization per draw; fixed supplied sample order; gradients from pre-update weights; no learned state transfer",
+  "evaluator": "Two-phase: freeze (hash predictions, no evaluation-label slices) then score (verify hashes first)",
+  "source_sha256": {
+    "run.py": "2e35aaf869f388d4755486163b5501268ecc3515e097ba23da8f1d9633a5354a",
+    "reference.py": "16d24a82e6d2a010dd045a7ddfabcca6a99b2c16d9ed8da928115ec5178d7809",
+    "gpu_benchmark.py": "d0b3e747b1179d43c65b26b12f501781bfdb842e5172d17b9ca377f79d94fab9",
+    "verify.py": "bfdcc118beaeb27c16550ad5778982436f962fc36cb4fb4372693c07966c319b"
+  }
+}
