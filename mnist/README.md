@@ -1,3 +1,10 @@
+** Under construction **
+This will be turned into a A100 GPUmode competition. Meanwhile, please submit solutions so we can figure out common parameters/pitfalls:
+
+- Can we measure A100 energy correctly? (Otherwise, might forced to stick with time) 
+- What should the accuracy targets be? Is 2/3/5/8/12% good? 2% might too hard for mnist-medium
+- Can we detect cheating easily (ie boring solutions like hardcoding weights)? 
+
 # MNIST (information for humans)
 
 The system takes **train**/*test* images + **train** labels, and produces *test* labels.
