@@ -1,0 +1,169 @@
+{
+  "hardware": {
+    "name": "NVIDIA A100-SXM4-40GB",
+    "uuid": "GPU-c5c9310b-6752-7dc9-6e87-d6c5c831e274",
+    "memory_bytes": 42405855232,
+    "sm_count": 108,
+    "power_limit_w": 400.0,
+    "driver": "580.95.05"
+  },
+  "software": {
+    "python": "3.11.15",
+    "torch": "2.5.1+cu124",
+    "cuda": "12.4",
+    "numpy": "2.1.2"
+  },
+  "all_110000_predictions_match": true,
+  "raw_measurement_arithmetic_verified": true,
+  "original_protocol": {
+    "cuda_ms_median": 3.3828063151041667,
+    "wall_ms_median": 3.3866482059999994,
+    "gross_mj_median": 391.029,
+    "adjusted_mj_median": 165.56390141042112,
+    "adjusted_mj_min": 154.85615065111494,
+    "adjusted_mj_max": 167.74359345338846,
+    "adjusted_mj_sample_sd": 5.155004152674542,
+    "negative_adjusted_rounds": 0,
+    "energy_interpretation": "Idle subtraction measures a small difference between much larger totals. Round spread and idle drift limit precision; this is not a statistical confidence interval."
+  },
+  "independent": {
+    "counter": {
+      "gross": {
+        "values_mj": [
+          390.7536666666667,
+          391.6015,
+          389.99316666666664
+        ],
+        "median_mj": 390.7536666666667,
+        "mean_mj": 390.78277777777777,
+        "sample_sd_mj": 0.804561756716277
+      },
+      "idle_adjusted": {
+        "values_mj": [
+          174.87814379967082,
+          175.01163826956204,
+          174.507525185335
+        ],
+        "median_mj": 174.87814379967082,
+        "mean_mj": 174.79910241818928,
+        "sample_sd_mj": 0.26118605516395355
+      }
+    },
+    "integrated_power": {
+      "gross": {
+        "values_mj": [
+          390.3233982872878,
+          391.9290109356392,
+          389.8142355672958
+        ],
+        "median_mj": 390.3233982872878,
+        "mean_mj": 390.68888159674094,
+        "sample_sd_mj": 1.10374464970601
+      },
+      "idle_adjusted": {
+        "values_mj": [
+          173.79337718746214,
+          175.95362271645894,
+          173.689452427571
+        ],
+        "median_mj": 173.79337718746214,
+        "mean_mj": 174.4788174438307,
+        "sample_sd_mj": 1.2782754136173673
+      }
+    },
+    "cuda_ms_values": [
+      3.3352373046875,
+      3.3292220052083334,
+      3.3351419270833333
+    ],
+    "wall_ms_values": [
+      3.3359590299166655,
+      3.3294636355000002,
+      3.3357128821666704
+    ]
+  },
+  "idle_only_shams": [
+    {
+      "kind": "sham",
+      "repeats": 0,
+      "nominal_tasks": 6000,
+      "wall_ms_per_task": 3.3338109632499977,
+      "cuda_ms_per_task": null,
+      "counter_gross_mj_per_task": 208.8805,
+      "counter_idle_adjusted_mj_per_task": -0.03689964578825311,
+      "counter_idle_before_w": 63.09547291266716,
+      "counter_idle_after_w": 62.237008112065645,
+      "integrated_power_gross_mj_per_task": 209.0365517510068,
+      "integrated_power_idle_adjusted_mj_per_task": -0.3398826374017669,
+      "integrated_power_idle_before_w": 62.95063000328185,
+      "integrated_power_idle_after_w": 62.657232407906555
+    },
+    {
+      "kind": "sham",
+      "repeats": 0,
+      "nominal_tasks": 6000,
+      "wall_ms_per_task": 3.333922302416662,
+      "cuda_ms_per_task": null,
+      "counter_gross_mj_per_task": 209.3295,
+      "counter_idle_adjusted_mj_per_task": -0.22129627354471873,
+      "counter_idle_before_w": 63.36683745499908,
+      "counter_idle_after_w": 62.34142882442051,
+      "integrated_power_gross_mj_per_task": 209.91494614819612,
+      "integrated_power_idle_adjusted_mj_per_task": 0.2506080820038126,
+      "integrated_power_idle_before_w": 63.14553574876865,
+      "integrated_power_idle_after_w": 62.63084357129697
+    }
+  ],
+  "peak_allocated_bytes": 235352576,
+  "power_sample_count": 4394,
+  "temperature_c_range": [
+    38,
+    44
+  ],
+  "sm_clock_mhz_values": [
+    1095,
+    1410
+  ],
+  "counter_vs_power_integration_relative_errors": [
+    0.009149961990620348,
+    -0.001101124355528893,
+    -0.0026916401471360762,
+    -0.0022956149260628944,
+    0.0007470862574860959,
+    0.0067520002742458285,
+    -0.0037983270342328845,
+    0.0008363372858357643,
+    -0.0019394548383881993,
+    -0.0034923899490421073,
+    0.0027967684831622375,
+    0.004642414399765649,
+    0.005757777239856932,
+    -0.00045880572959833277,
+    0.00035602106960674895
+  ],
+  "caveat": "Both meters share NVML/hardware telemetry; no independent external wattmeter. Same data are replayed; transfers and preprocessing excluded. One measured board, paired idle controls, no fleet-wide confidence claim.",
+  "trimmed_idle_sensitivity": {
+    "method": "Post-hoc sensitivity analysis: discard the first 3 seconds of each 10-second idle window to remove the observed power-state tail; integrate remaining sampled power. Same entire active windows retained.",
+    "rounds": [
+      {
+        "round": 0,
+        "baseline_w": 63.014231666706166,
+        "active_w": 117.00485371279824,
+        "idle_adjusted_mj_per_task": 180.11050314547862
+      },
+      {
+        "round": 2,
+        "baseline_w": 62.977562085150616,
+        "active_w": 117.71536014292028,
+        "idle_adjusted_mj_per_task": 182.24750812068663
+      },
+      {
+        "round": 4,
+        "baseline_w": 63.03734877645521,
+        "active_w": 116.86084784194522,
+        "idle_adjusted_mj_per_task": 179.53973919604078
+      }
+    ],
+    "median_mj": 180.11050314547862
+  }
+}

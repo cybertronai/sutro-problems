@@ -6,11 +6,11 @@ PCA-QDA achieves **105,130 / 110,000 correct (95.57% ± 0.17 pp)**,
 passing the 5% error target of at least 104,500 correct. Costs cover training
 and prediction on one 10,000-training / 10,000-test dataset.
 
-| Accuracy | A100 energy (mJ) | A100 time (ms) | Grid energy (mJ) | Grid time (ms) |
+| Accuracy | A100 energy above idle (mJ) | A100 time (ms) | Grid energy (mJ) | Grid time (ms) |
 | ---: | ---: | ---: | ---: | ---: |
-| 95.57% ± 0.17 pp | 3.8 | 3.3 | 0.19 | 2.0 × 10³ |
+| 95.57% ± 0.17 pp | 174 | 3.3 | 0.19 | 2.0 × 10³ |
 
-A100 costs are measured; grid costs are theoretical. Exact values and evidence
+A100 energy is **above idle**. The original 3.8 mJ result did not reproduce. A100 costs are measured; grid costs are theoretical. Exact values and evidence
 links are in [submission.json](submission.json).
 
 ## Data and learner
@@ -61,7 +61,7 @@ The exact mean is `105130 / 110000`; sample standard deviation is
 - [Grid verification](results/grid_verification.json): the reduced C executor
   matches every Python-executor memory region bitwise; all eleven full C runs
   reproduce the five learned parameter arrays and all 110,000 labels.
-- [A100 verification](results/gpu_results.json): all 110,000 labels match;
+- [A100 rerun verification](energy-audit/results-sxm40/original.json): all 110,000 labels match;
   graph replay, poisoned-intermediate, and training-label rotation checks pass.
 
 **Provenance limitation:** the original protocol creation timestamp (13:10 UTC)
@@ -107,12 +107,27 @@ execution. Costs describe the specified serialized schedule.
 
 ## A100 measurements
 
-The [fresh benchmark](results/gpu_results.json) used an NVIDIA A100-SXM4-40GB,
-Python 3.11.10, PyTorch 2.5.1+cu124, NumPy 2.1.2, nvidia-ml-py 13.610.43, and
-driver 580.105.08. Five rounds of 3,000 CUDA-graph replays measured medians of
-**3.8 mJ idle-adjusted energy**, **3.3 ms runtime**, and **140 mJ gross board
-energy**. Adjusted energy ranged from **2.0–6.1 mJ**, with **1.7 mJ sample SD**.
-The full session passed the concurrent-process guard (111 samples, no interference).
+The [W&B-tracked rerun](https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/rha1uwss)
+on NVIDIA A100-SXM4-40GB measured **173.793 mJ above idle** and **3.335 ms** per training-and-prediction task using independent
+sampled-power integration. Its three active rounds used 6,000 / 12,000 / 6,000
+replays and ten-second idle windows before and after each block. All 110,000
+predictions match the frozen results (105,130 correct).
+
+| Rerun method | Above idle (mJ) |
+| --- | ---: |
+| Original protocol: counter, five-second paired idle | 165.564 |
+| Independent harness: counter, ten-second paired idle | 174.878 |
+| Independent harness: sampled-power integral, ten-second paired idle | **173.793** |
+
+The [original archived measurement](results/gpu_results.json) reported 3.815 mJ
+above idle. Its arithmetic is internally consistent, but
+its approximately 41 W active power did not reproduce: the tracked rerun
+measured approximately 117 W. The reason remains unresolved. The new run used
+the same GPU model and PyTorch/CUDA versions on a different physical board,
+with driver 580.95.05 rather than 580.105.08.
+
+See the [audit](energy-audit/README.md) for raw records, baseline sensitivity,
+container PID instrumentation, and runnable W&B/Modal reproduction instructions.
 
 Each replay refits the basis and class models and predicts all 10,000 queries.
 Inputs are device-resident; transfers, allocation, graph capture, and area-resize
@@ -120,13 +135,17 @@ preprocessing are excluded. The feature transform is included. GPU reduction
 order, classical Gram-Schmidt, and `torch.log` differ from the ordered CPU
 reference; all labels agree, while intermediate values need not be bitwise equal.
 
-NVML cumulative energy counters bracket each block, with five-second idle windows
-before and after. Adjusted energy is `(board_delta_J - mean_idle_W * wall_seconds)
-* 1000 / replays`. Raw counters, timestamps, and all five rounds are retained.
-Signed estimates are preserved; idle drift limits precision, and round variation
-is not a confidence interval.
+NVML counter deltas and independently integrated sampled power agree closely.
+Both share the GPU's sensors; neither is an external wall-plug measurement.
+The corrected estimate subtracts mean paired idle power from the active-window
+integral. Signed estimates and idle-only controls are retained. Post-work power
+tails affect the idle baseline: trimming the first three seconds of idle gives
+180.111 mJ in an exploratory sensitivity check. This is not a confidence interval
+or the primary table value. Historical raw measurements remain unchanged.
 
 ## Reproduce
+
+For the corrected energy result, use the [W&B/Modal rerun instructions](energy-audit/README.md#rerun-on-a-matching-gpu). The commands below reproduce the original learner, grid execution, and standalone GPU protocol.
 
 Use Python 3.11. From the repository root:
 
