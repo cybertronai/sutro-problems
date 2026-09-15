@@ -1,0 +1,17 @@
+{
+  "created_at_utc": "2026-09-15T13:10:00Z",
+  "tier": "MNIST-medium",
+  "declared_error_target_percent": 5,
+  "learner": "PCA-QDA: Newton-Raphson sqrt of the 81 pixels (6 steps from x + 1e-6), 40-dimensional basis by 3 rounds of subspace iteration on the global covariance of the first 2,000 training samples (fixed literal start, division-only Gram-Schmidt, max-|entry| column scaling), projection, class-conditional Gaussians with full 40x40 covariance, biased ML estimates, trace shrinkage 0.05 (S <- 0.95 S + 0.05 (tr S / 40) I), class-frequency priors, log-determinant term; ordered FP32 arithmetic as in reference.py",
+  "config": {"classes": 10, "features": 81, "basis_dims": 40, "basis_samples": 2000, "rounds": 3, "sqrt_steps": 6, "shrinkage": 0.05, "covariance": "biased (divide by class count)", "inverse": "Gauss-Jordan without pivoting", "log": "40+40 halving/doubling steps, atanh series to z^15"},
+  "dataset_seeds": [20261501, 20261502, 20261503, 20261504, 20261505, 20261506, 20261507, 20261508, 20261509, 20261510, 20261511],
+  "dataset": "10000 train and 10000 disjoint test examples from the official 60000 training images",
+  "draw": "numpy.random.Generator(PCG64(seed)).permutation(60000): rows 0-9999 train, 10000-19999 test",
+  "preprocessing": "float32 image/255, exact area resize to 9x9; the sqrt and the projection are part of the learner",
+  "target_accuracy": 0.95,
+  "target_total_correct": 104500,
+  "planned_draws": 11,
+  "selection": "Feature map, basis size, basis sample count, rounds, sqrt steps and shrinkage chosen on disjoint pilot seeds 20261121-20261125 (mnist/small67/evidence/log.jsonl m043, m045, m047; pilot.py: 95.54% mean, min 95.35%); frozen before any official draw was evaluated; the 5% error target is declared, 3%, 8% and 12% are reported as diagnostics",
+  "training": "Deterministic closed form; no learner seed (the basis start is a fixed literal); no learned state transfer between draws",
+  "evaluator": "Two-phase: freeze (hash predictions, no evaluation-label slices) then score (verify hashes first)"
+}

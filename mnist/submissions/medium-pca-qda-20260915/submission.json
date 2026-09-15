@@ -1,0 +1,73 @@
+{
+  "date": "2026-09-15",
+  "tier": "MNIST-medium",
+  "declared_error_target_percent": 5,
+  "target_accuracy": 0.95,
+  "target_met": true,
+  "accuracy": {
+    "correct": 105130,
+    "total": 110000,
+    "mean": 0.9557272727272728,
+    "sample_stddev_pp": 0.16511153255244929,
+    "source": "evidence/accuracy/accuracy.json"
+  },
+  "a100": {
+    "energy_mj": 3.8145135466195836,
+    "time_ms": 3.3339469401041666,
+    "gross_energy_mj": 138.01266666666666,
+    "energy_round_range_mj": [
+      2.0233032514140166,
+      6.135545502314597
+    ],
+    "energy_round_sample_stddev_mj": 1.6582028838310294,
+    "implementation": "PyTorch tensor operations with batched Gauss-Jordan (gpu_benchmark.py)",
+    "measured_draw": 0,
+    "verified_draws": 11,
+    "measurement_status": "independently_repeated",
+    "source": "results/gpu_results.json",
+    "validation_source": "results/gpu_results.json",
+    "hardware": "NVIDIA A100-SXM4-40GB",
+    "rounds": 5,
+    "replays_per_round": 3000,
+    "scope": "CUDA-graph replays of complete feature transform, basis fitting, projection, QDA training and 10000 predictions on device-resident normalized float32 inputs; includes host-dispatch gaps between graph replays; excludes transfers, area-resize preprocessing, allocation, JIT and capture. Signed NVML total-energy deltas minus mean paired idle power times measured wall duration; negative estimates are retained.",
+    "measurement_valid": true
+  },
+  "grid": {
+    "energy_mj": 0.1868546739,
+    "time_ms": 2047.716289,
+    "energy_fj": 186854673900,
+    "cycles": 2047716289,
+    "word_node_hops": 186854673900,
+    "peak_scratch_bytes": 5125276,
+    "time_to_score_seconds": 2.7734867890103487,
+    "model_spec_commit": "01a0bd5e0d2564825b0f53dd766f763c82dbc7c0",
+    "program_sha256": "90e442f0d572a6a1692a26d7b7a18506b2e5157746c350d29b19fc70a4b5df20",
+    "instruction_issuing_processors": 250,
+    "max_simultaneous_instructions": 1,
+    "source": "grid/grid-score.json",
+    "validation_source": "results/grid_verification.json",
+    "verified_draws": 11,
+    "labels_agree_with_frozen": 110000,
+    "scope": "Complete serialized training-and-prediction schedule including tape and staging; all five parameter arrays and output labels verified on all eleven full-size programs."
+  },
+  "learner": "Six-step Newton-Raphson square-root features; 40-dimensional three-round subspace basis from 2000 samples, fixed PCG64(0) start; QDA with 0.05 trace shrinkage; ordered FP32.",
+  "contributors": [
+    "jurajselep",
+    "Claude",
+    "Codex (packaging and verification)"
+  ],
+  "wandb_runs": [],
+  "verification": {
+    "cpu": "results/cpu_verification.json",
+    "grid": "results/grid_verification.json",
+    "gpu": "results/gpu_results.json"
+  },
+  "provenance": {
+    "historical_freeze_chronology_verified": false,
+    "limitation": "Protocol creation timestamp follows evaluation. Fresh checks reproduce published draws and do not establish historical selection order.",
+    "package_sha256": "be4478311e69ae1d3f3713a37a95a727362beeba5eea5daeb8504969922ee484",
+    "protocol": "protocol.json",
+    "evaluation_freeze": "evidence/accuracy/evaluation_freeze.json"
+  },
+  "report": "README.md"
+}
