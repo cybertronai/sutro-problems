@@ -1,0 +1,72 @@
+{
+  "date": "2026-09-15",
+  "tier": "MNIST-small",
+  "target_accuracy": 0.67,
+  "target_met": true,
+  "accuracy": {
+    "correct": 7465,
+    "total": 11000,
+    "mean": 0.6786363636363636,
+    "sample_stddev_pp": 2.6796539803760946,
+    "source": "evidence/accuracy/accuracy.json"
+  },
+  "a100": {
+    "energy_mj": 0.010378672372650355,
+    "time_ms": 0.01638980078125,
+    "gross_energy_mj": 0.669114,
+    "energy_round_range_mj": [
+      0.001357443620762555,
+      0.019697504400051663
+    ],
+    "energy_round_sample_stddev_mj": 0.005985793726324726,
+    "energy_interpretation": "Idle subtraction measures a small difference between much larger totals. Round spread and idle drift limit precision; this is not a statistical confidence interval.",
+    "implementation": "two FP32 handwritten-PTX kernels emitted by pyptx (gpu_benchmark_ptx.py)",
+    "measured_draw": 0,
+    "verified_draws": 11,
+    "gpu_agrees_with_frozen_cpu_predictions": 11000,
+    "source": "results/gpu_verification_benchmark.json",
+    "validation_source": "results/gpu_verification.json",
+    "hardware": "NVIDIA A100-SXM4-40GB",
+    "rounds": 7,
+    "replays_per_round": 1000000,
+    "scope": "CUDA-graph replays of complete training and 1000 predictions on device-resident normalized float32 inputs; includes host-dispatch gaps between graph replays; excludes transfers, preprocessing, allocation, JIT, module load and capture. Signed NVML total-energy deltas minus mean paired idle power times measured wall duration; negative estimates are retained.",
+    "historical_sources": [
+      "results/gpu_results_ptx.json",
+      "results/gpu_results_ptx_hires.json",
+      "results/gpu_results_triton.json",
+      "results/gpu_results.json"
+    ]
+  },
+  "grid": {
+    "energy_mj": 0.000889633966,
+    "time_ms": 10.316314,
+    "energy_fj": 889633966,
+    "cycles": 10316314,
+    "peak_scratch_bytes": 47088,
+    "time_to_score_seconds": 0.08448917498753872,
+    "model_spec_commit": "01a0bd5e0d2564825b0f53dd766f763c82dbc7c0",
+    "source": "grid/grid-score.json",
+    "scope": "complete globally serialized training and prediction; all input/output, scratch, staging and interprocessor traffic counted; emitted labels checked against frozen predictions on all 11 draws",
+    "lowering": "v2.1: unnormalized resized inputs; polynomial scoring with shared query products; staged samples; density-ordered placement; skips zeroing only of k, xs, prod, labels, x",
+    "word_node_hops": 889633966,
+    "instruction_issuing_processors": 250,
+    "max_simultaneous_instructions": 1
+  },
+  "learner": "closed-form QDA (per-class Gaussian, full covariance, no shrinkage, class prior, log-determinant), ordered FP32",
+  "contributors": [
+    "jurajselep",
+    "Claude",
+    "Codex (packaging and reproduction)"
+  ],
+  "report": "README.md",
+  "provenance": {
+    "source": "evidence/import.json",
+    "historical_freeze_chronology_verified": false,
+    "limitation": "Original protocol timestamp is later than original evaluation freeze. Reproduction uses published evaluation draws and does not establish pre-evaluation protocol freezing."
+  },
+  "verification": {
+    "cpu": "results/cpu_verification.json",
+    "gpu": "results/gpu_verification.json"
+  },
+  "wandb_runs": []
+}
