@@ -22,11 +22,35 @@ EVIDENCE = HERE / 'evidence/accuracy'
 sys.path.insert(0, str(HERE))
 from reference import train_predict, f32
 
+def require(condition, message):
+    if not condition:
+        raise ValueError(message)
+
+
 PROTOCOL = Path(os.environ.get('SUTRO_PROTOCOL', HERE / 'protocol.json'))
 _protocol = json.loads(PROTOCOL.read_text())
-SEEDS = list(_protocol['dataset_seeds'])
 CONFIG = _protocol['config']
 FRESH = HERE / 'evidence/fresh'       # the independently frozen 2026-09-15 evaluation (protocol_fresh.json)
+BEACON = HERE / 'evidence/beacon'     # the beacon-seeded evaluation (protocol_beacon.json)
+
+
+def beacon_seeds(protocol, pulse):
+    """Seeds derived from a NIST randomness-beacon pulse: seed_i = first 8 hex digits of
+    SHA-256(outputValue || ':' || i), i = 0..planned_draws-1, as integers.  The pulse's
+    timeStamp must equal the one the protocol declared before the pulse existed."""
+    import hashlib
+    src = protocol['seed_source']
+    require(pulse['pulse']['timeStamp'] == src['pulse_time_utc'], 'Beacon pulse time differs from the protocol')
+    value = pulse['pulse']['outputValue']
+    require(isinstance(value, str) and len(value) == 128, 'Beacon outputValue must be 512 bits of hex')
+    return [int(hashlib.sha256(f'{value}:{i}'.encode()).hexdigest()[:8], 16) for i in range(protocol['planned_draws'])]
+
+
+if 'dataset_seeds' in _protocol:
+    SEEDS = list(_protocol['dataset_seeds'])
+else:
+    _pulse_path = HERE / _protocol['seed_source']['pulse_file']
+    SEEDS = beacon_seeds(_protocol, json.loads(_pulse_path.read_text())) if _pulse_path.exists() else []
 
 
 def _repo():
@@ -55,11 +79,6 @@ def _raw():
 RAW = _raw()
 
 
-def require(condition, message):
-    if not condition:
-        raise ValueError(message)
-
-
 def read_json(path):
     return json.loads(path.read_text())
 
@@ -72,8 +91,10 @@ def write_new_json(path, value):
 
 def writable_evidence(evidence):
     resolved = evidence.resolve()
-    require(not resolved.is_relative_to((HERE / 'evidence').resolve()) or resolved.is_relative_to(FRESH.resolve()),
+    require(not resolved.is_relative_to((HERE / 'evidence').resolve()) or resolved.is_relative_to(FRESH.resolve())
+            or resolved.is_relative_to(BEACON.resolve()),
             'Imported evidence is read-only; use --evidence-dir generated/reproduction')
+    require(len(SEEDS) == _protocol['planned_draws'], 'No seeds: fetch the beacon pulse first (run.py fetch-beacon)')
 
 
 def verify_raw():
@@ -271,12 +292,28 @@ def gpu_payloads(evidence=EVIDENCE, output_dir=None, single=False):
         (out / 'manifest.json').write_text(json.dumps(result, indent=2) + '\n')
 
 
+def fetch_beacon():
+    """Download the NIST beacon pulse the protocol declared and store it, signature included."""
+    import calendar, urllib.request
+    src = _protocol['seed_source']; path = HERE / src['pulse_file']
+    require(not path.exists(), f'{path} exists; the pulse is fetched once')
+    ms = calendar.timegm(time.strptime(src['pulse_time_utc'], '%Y-%m-%dT%H:%M:%S.000Z')) * 1000
+    with urllib.request.urlopen(f"{src['beacon_url']}/pulse/time/{ms}", timeout=60) as r:
+        pulse = json.loads(r.read().decode())
+    seeds = beacon_seeds(_protocol, pulse)
+    path.parent.mkdir(parents=True, exist_ok=True); path.write_text(json.dumps(pulse, indent=2) + '\n')
+    print('pulse', pulse['pulse']['timeStamp'], 'chain', pulse['pulse']['chainIndex'], 'index', pulse['pulse']['pulseIndex'])
+    print('seeds', seeds)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('prepare', 'freeze', 'score', 'gpu-payload', 'gpu-payloads'))
+    parser.add_argument('command', choices=('prepare', 'freeze', 'score', 'gpu-payload', 'gpu-payloads', 'fetch-beacon'))
     parser.add_argument('--evidence-dir', type=Path, default=EVIDENCE)
     parser.add_argument('--output-dir', type=Path, help='GPU payload output directory')
     args = parser.parse_args()
+    if args.command == 'fetch-beacon':
+        return fetch_beacon()
     if args.command.startswith('gpu-payload'):
         gpu_payloads(args.evidence_dir, args.output_dir, single=args.command == 'gpu-payload')
     else:

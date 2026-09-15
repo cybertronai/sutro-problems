@@ -29,7 +29,7 @@ def sha256_json(document):
 
 def source_hashes():
     files = {name: HERE / name for name in
-             ('run.py', 'verify.py', 'reference.py', 'spatial_program.py', 'protocol.json', 'protocol_fresh.json', 'requirements.txt')}
+             ('run.py', 'verify.py', 'reference.py', 'spatial_program.py', 'protocol.json', 'protocol_fresh.json', 'protocol_beacon.json', 'requirements.txt')}
     files['mnist/code/data.py'] = Path(ds.__file__)
     shared = HERE.parent / 'grid-mlp-scoring-20260912'
     files.update({f'../grid-mlp-scoring-20260912/{name}': shared / name for name in ('affine.py', 'score.py')})
@@ -41,8 +41,12 @@ def verify(evidence):
     sources = source_hashes()
     raw_sources = run.verify_raw()
     protocol = read_json(run.PROTOCOL)
-    require(protocol['dataset_seeds'] == run.SEEDS and protocol['planned_draws'] == 11,
-            'Protocol draw count or seeds differ')
+    if 'dataset_seeds' in protocol:
+        require(protocol['dataset_seeds'] == run.SEEDS and protocol['planned_draws'] == 11, 'Protocol draw count or seeds differ')
+    else:   # beacon-seeded: re-derive the seeds from the stored pulse and check its declared time
+        pulse = read_json(HERE / protocol['seed_source']['pulse_file'])
+        require(run.beacon_seeds(protocol, pulse) == run.SEEDS and protocol['planned_draws'] == 11, 'Beacon-derived seeds differ')
+        require(read_json(evidence / 'draw_manifest.json')['seeds'] == run.SEEDS, 'Draw manifest seeds differ from the beacon derivation')
     require(protocol['target_total_correct'] == 7370 and protocol['target_accuracy'] == .67,
             'Protocol accuracy target differs')
     draw_manifest = read_json(evidence / 'draw_manifest.json')
@@ -141,8 +145,11 @@ def verify(evidence):
         'protocol': run.PROTOCOL.name,
         'provenance_limits': {
             'protocol_timestamp_precedes_prediction_freeze': protocol_at <= frozen_at,
-            'historical_preselection_independently_proven': run.PROTOCOL.name == 'protocol_fresh.json',
-            'note': ('The fresh protocol (protocol_fresh.json) was committed before its draws were prepared; the freeze '
+            'historical_preselection_independently_proven': run.PROTOCOL.name in ('protocol_fresh.json', 'protocol_beacon.json'),
+            'note': ('The seeds are derived from a NIST randomness-beacon pulse whose time the protocol declared before the pulse '
+                     'existed (protocol_beacon.json, published and hashed on the pull request before that time); anyone can '
+                     're-derive them from the public pulse.' if run.PROTOCOL.name == 'protocol_beacon.json' else
+                     'The fresh protocol (protocol_fresh.json) was committed before its draws were prepared; the freeze '
                      'and evaluation commits follow it in the repository history.' if run.PROTOCOL.name == 'protocol_fresh.json' else
                      'Hashes and reproducibility do not establish historical learner selection or label-access order. '
                      'The imported protocol timestamp is later than the imported prediction freeze.'),
@@ -158,6 +165,8 @@ def main():
     args = parser.parse_args()
     if args.evidence_dir.resolve().is_relative_to(run.FRESH.resolve()):
         require(run.PROTOCOL.name == 'protocol_fresh.json', 'Verify evidence/fresh with SUTRO_PROTOCOL=protocol_fresh.json')
+    if args.evidence_dir.resolve().is_relative_to(run.BEACON.resolve()):
+        require(run.PROTOCOL.name == 'protocol_beacon.json', 'Verify evidence/beacon with SUTRO_PROTOCOL=protocol_beacon.json')
     if args.output is not None:
         require(not args.output.resolve().is_relative_to((HERE / 'evidence').resolve()),
                 'Write verification reports outside the imported evidence directory')

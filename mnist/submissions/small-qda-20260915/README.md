@@ -61,6 +61,19 @@ evaluation-label slice was opened before the freeze.
 [`results/cpu_verification_fresh.json`](results/cpu_verification_fresh.json)
 (`SUTRO_PROTOCOL=protocol_fresh.json python verify.py --evidence-dir evidence/fresh/accuracy`).
 
+### Beacon-seeded evaluation (in progress)
+
+The fresh evaluation's chronology rests on this repository's commit timestamps.
+[`protocol_beacon.json`](protocol_beacon.json) removes that dependence: its
+eleven seeds are derived from the NIST randomness-beacon pulse of
+2026-09-16T12:00:00Z (`seed_i = SHA-256(outputValue ‖ ':' ‖ i)[:8]` as an integer),
+a value that does not exist until that moment; the protocol is pushed and its
+SHA-256 posted on the pull request before then. After the pulse,
+`run.py fetch-beacon` stores it with the beacon's signature and
+`prepare`/`freeze`/`score` run under `SUTRO_PROTOCOL=protocol_beacon.json`
+into `evidence/beacon/accuracy`; `verify.py` re-derives the seeds from the
+stored pulse. Results will be added here when the run is complete.
+
 ### Original evaluation (retained, timestamp limitation disclosed)
 
 | Draw | Dataset seed | Correct / total | Accuracy |
