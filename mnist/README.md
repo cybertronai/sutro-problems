@@ -61,7 +61,9 @@ The accuracy difference is not evidence of superiority.
 | Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 2026-09-11 | 96.41% ± 0.13 pp | 290,000 | 9,300 | 440 | 3.7 × 10⁶ | [512-unit MLP (96% target)](submissions/medium96-grid-20260912/README.md) |
-| 2026-09-15 | 95.57% ± 0.17 pp | 3.8 | 3.3 | 0.19 | 2.0 × 10³ | [PCA-QDA](submissions/medium-pca-qda-20260915/README.md) |
+| 2026-09-15 | 95.57% ± 0.17 pp | 174 | 3.3 | 0.19 | 2.0 × 10³ | [PCA-QDA](submissions/medium-pca-qda-20260915/README.md) |
+
+PCA-QDA uses the corrected A100 measurement: **174 mJ above idle**; see its [energy audit and rerun instructions](submissions/medium-pca-qda-20260915/energy-audit/README.md).
 
 ## MNIST-medium — 8% error target
 
