@@ -21,9 +21,47 @@ Each draw uses `Generator(PCG64(seed)).permutation(60000)`, taking the first
 1,000 original MNIST training rows for training and the next 1,000 for testing.
 The subsets are disjoint within each draw; independently sampled draws can
 share examples. Images are divided by 255 in FP32 and resized from 28×28 to
-3×3 by exact fractional box-area averaging in the repository's
-[`data.py`](../../code/data.py). The CPU and GPU learner inputs are `4*x - 0.5`.
+3×3 with the repository's exact fractional box-area weights
+([`data.py`](../../code/data.py)) in a recorded accumulation order
+(`run.resize_recorded`: increasing order, float64 product and sum before each
+FP32 accumulation), which reproduces every archived input hash on any
+numerical backend; the repository's float32 matmul `area_resize` rounds
+differently on some BLAS builds. The CPU and GPU learner inputs are `4*x - 0.5`.
 Test labels are used only for evaluation and are never kernel inputs.
+
+### Independently frozen fresh evaluation (qualifying result)
+
+Because the original protocol's timestamp postdates its evaluation (below), the
+submitted learner was re-evaluated on eleven new draws under
+[`protocol_fresh.json`](protocol_fresh.json): the learner is the unchanged
+`reference.py` (its hash is recorded in the protocol), the seeds
+20262101–20262111 had never been used for any pilot, selection or evaluation,
+the protocol was committed before any draw was prepared, the draw manifest
+(prepared 2026-09-15T17:57:05Z), the prediction freeze (2026-09-15T17:57:06Z) and the
+evaluation (2026-09-15T17:57:06Z) were each committed in that order, and no
+evaluation-label slice was opened before the freeze.
+
+| Draw | Dataset seed | Correct / total | Accuracy |
+| ---: | ---: | ---: | ---: |
+| 0 | 20262101 | 690 / 1,000 | 69.0% |
+| 1 | 20262102 | 691 / 1,000 | 69.1% |
+| 2 | 20262103 | 690 / 1,000 | 69.0% |
+| 3 | 20262104 | 705 / 1,000 | 70.5% |
+| 4 | 20262105 | 670 / 1,000 | 67.0% |
+| 5 | 20262106 | 656 / 1,000 | 65.6% |
+| 6 | 20262107 | 688 / 1,000 | 68.8% |
+| 7 | 20262108 | 649 / 1,000 | 64.9% |
+| 8 | 20262109 | 673 / 1,000 | 67.3% |
+| 9 | 20262110 | 683 / 1,000 | 68.3% |
+| 10 | 20262111 | 679 / 1,000 | 67.9% |
+
+**7,474 / 11,000 = 67.95%**, sample standard deviation
+1.64 pp (`ddof=1`); the exact count exceeds the 7,370 threshold by
+104. Evidence: [`evidence/fresh/accuracy/`](evidence/fresh/accuracy/) and
+[`results/cpu_verification_fresh.json`](results/cpu_verification_fresh.json)
+(`SUTRO_PROTOCOL=protocol_fresh.json python verify.py --evidence-dir evidence/fresh/accuracy`).
+
+### Original evaluation (retained, timestamp limitation disclosed)
 
 | Draw | Dataset seed | Correct / total | Accuracy |
 | ---: | ---: | ---: | ---: |
@@ -217,8 +255,9 @@ they do not establish end-to-end latency from raw MNIST files.
 
 ## Reproduction
 
-Use Python 3.11 and the pinned CPU NumPy version: the frozen FP32 preprocessing
-hashes are sensitive to the numerical environment. From the repository root:
+The recorded-order resize makes the frozen FP32 input hashes independent of
+the numerical backend; `requirements.txt` still pins the versions used. From
+the repository root:
 
 ```sh
 python3.11 -m venv .venv
@@ -226,7 +265,9 @@ python3.11 -m venv .venv
 .venv/bin/python -m mnist.code.data --output mnist/data
 . .venv/bin/activate
 cd mnist/submissions/small-qda-20260915
-python verify.py --output results/cpu_verification.json
+python verify.py --output results/cpu_verification.json                                   # original draws
+SUTRO_PROTOCOL=protocol_fresh.json python verify.py --evidence-dir evidence/fresh/accuracy \
+    --output results/cpu_verification_fresh.json                                          # fresh draws
 ```
 
 The download command prepares the canonical raw source files. The submission
@@ -246,7 +287,10 @@ python run.py gpu-payloads
 ```
 
 Use a new output directory on another run; existing frozen evidence is protected
-against overwriting. `spatial_program.py` regenerates the grid program and score;
+against overwriting. The fresh evaluation was produced the same way with
+`SUTRO_PROTOCOL=protocol_fresh.json` and `--evidence-dir evidence/fresh/accuracy`,
+committing the protocol, the draw manifest, the freeze and the score as four
+successive commits. `spatial_program.py` regenerates the grid program and score;
 its host runtime and source/software provenance can vary across machines while
 exact counts remain unchanged.
 
@@ -273,7 +317,8 @@ predictions, regenerated learner parameters and scores, exact accuracy, and
 all eleven spatial-program executions. The shared scorer's five existing
 tests also pass.
 
-Key evidence: [accuracy](evidence/accuracy/accuracy.json),
+Key evidence: [fresh accuracy](evidence/fresh/accuracy/accuracy.json),
+[fresh protocol](protocol_fresh.json), [original accuracy](evidence/accuracy/accuracy.json),
 [draw manifest](evidence/accuracy/draw_manifest.json),
 [prediction manifest](evidence/accuracy/prediction_manifest.json),
 [evaluation freeze](evidence/accuracy/evaluation_freeze.json),
