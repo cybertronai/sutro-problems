@@ -66,7 +66,7 @@ Accuracy targets:
 
 | Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| 2026-09-14 | 89.28% ± 0.36 pp | 1,100 | 38 | — | — | [Reversible MLP (12% error target)](submissions/rev88-20260914/README.md) |
+| 2026-09-14 | 89.28% ± 0.36 pp | 1,000 | 39 | — | — | [Reversible MLP, smaller workspace (12% error target)](submissions/rev88-20260914/cache-audit/README.md) |
 
 ## MNIST-original — 1% test error target
 
