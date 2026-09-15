@@ -58,6 +58,8 @@ Both scopes synchronize before profiler stop and exclude output serialization, C
 
 ## Energy and runtime: no demonstrated energy win
 
+The unprofiled measurements use NVIDIA A100-SXM4-40GB boards, driver 580.95.05, PyTorch 2.5.1+cu124, CUDA 12.4, Python 3.11.15, NumPy 2.2.6 and nvidia-ml-py 12.560.30. The unchanged learner revision is SHA-256 `c395a8b7bc2951e3fdab5c5f5edf5ad2d5357de4e9170e52b988f4312e7169c5`; wrapper and profiler revisions are recorded separately.
+
 These are separate, unprofiled measurements of complete GPU-resident fresh tasks on draw zero. Each configuration has three paired-idle NVML trials on an A100-SXM4-40GB. Values are mean ± sample SD across the three trials.
 
 | cuBLAS workspace | Idle-adjusted GPU energy (mJ/task) | CUDA time (ms/task) | Fresh invocations per trial |
@@ -98,6 +100,8 @@ python "$CACHE_COPY/submission/cache-audit/cache_runtime.py" \
 ```
 
 It emits adjacent JSON metadata and `.predictions.npy` files. The one-worker runtime validation can be repeated in the same copied submission with `modal run "$CACHE_COPY/submission/cache-audit/validate_runtime.py"`. `build_submission.py` generates the current machine-readable entry from verified evidence. Large raw profiler JSON and binary Ncu reports are retained with lossless gzip compression; the analyzer reads compressed evidence directly.
+
+Contributors: Yaroslav Bulatov (requirements), Codex (implementation, measurements and report). No W&B run was created. Spatial-grid energy, runtime, scratch and hop counts remain unmeasured; no cache-counter value is substituted for a spatial-grid metric.
 
 ## Primary documentation and evidence
 
