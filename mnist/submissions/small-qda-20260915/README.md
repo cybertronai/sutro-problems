@@ -69,8 +69,9 @@ The fresh evaluation's chronology rests on this repository's commit timestamps.
 For a public precommitment, [`protocol_beacon.json`](protocol_beacon.json) fixes
 how eleven seeds are derived from the NIST randomness-beacon pulse of
 2026-09-16T12:00:00Z (`seed_i = SHA-256(outputValue ‖ ':' ‖ i)[:8]` as an integer),
-a value that is unavailable in advance. The protocol must be pushed and its
-SHA-256 posted on the pull request before then; publication is a separate step.
+a value that is unavailable in advance. The protocol and its SHA-256 were
+[published on the pull request](https://github.com/cybertronai/sutro-problems/pull/82#issuecomment-5686480922)
+at 2026-09-15T19:05:04Z, before the pulse. The evaluation remains pending.
 After the pulse, `run.py fetch-beacon` stores it with the beacon's signature and
 `prepare`/`freeze`/`score` run under `SUTRO_PROTOCOL=protocol_beacon.json`
 into `evidence/beacon/accuracy`; `verify.py` compares the stored pulse with an
@@ -217,65 +218,77 @@ changing the program's instructions, placement, or costs.
 
 ## A100 measurement
 
-Fresh verification and measurement are recorded separately from the imported
-PTX, Triton, and PyTorch measurements in `results/`. Only the default FP32
-two-kernel PTX implementation is submitted for the record.
+The submitted energy result is a fresh measurement on two separate
+NVIDIA A100-SXM4-40GB hosts. The Netherlands host was chosen for the headline
+before these runs; Canada is an independent cross-check. Both run the unchanged
+two-kernel FP32 PTX learner. All three rounds from each host are retained.
 
-| Idle-adjusted A100 energy (mJ) | A100 time (ms) | Gross A100 energy (mJ) |
-| ---: | ---: | ---: |
-| 0.010 | 0.016 | 0.67 |
+| Host | Idle-adjusted power integral (mJ) | Idle-adjusted counter (mJ) | Gross power integral (mJ) | CUDA time (ms) |
+| --- | ---: | ---: | ---: | ---: |
+| [Netherlands (headline)](results/energy-netherlands.json) | 0.585680 | 0.589103 | 1.232160 | 0.017047 |
+| [Canada (cross-check)](results/energy-canada.json) | 0.602574 | 0.614870 | 1.577335 | 0.016847 |
 
-The fresh [seven-round benchmark](results/gpu_verification_benchmark.json)
-uses 1,000,000 replays per round on an NVIDIA A100-SXM4-40GB. Exact medians
-are `0.010378672372650355 mJ` idle-adjusted, `0.01638980078125 ms`, and
-`0.669114 mJ` gross. Signed adjusted energy ranges from **0.0014 to 0.020 mJ**
-across rounds, with sample standard deviation **0.0060 mJ**. All seven rounds
-are retained; none is negative. This spread describes these rounds, not a
-confidence interval or a universal measurement uncertainty.
+Values are medians per complete training-and-prediction task. The leaderboard
+uses the idle-adjusted sampled-power result. Each round replays original draw 0
+1,200,000 times. Before and after each active window, the GPU settles for three
+seconds, followed by ten seconds of measured idle. NVML power is polled with a
+50 ms sleep between samples and integrated with trapezoids using the actual
+timestamps; cumulative NVML energy is recorded too:
 
-Software: Python 3.11.10, PyTorch 2.5.1+cu124, CUDA 12.4, NumPy 2.1.2,
-pyptx 0.1.1, nvidia-ml-py 13.610.43, and NVIDIA driver 580.105.08.
-CPU payload preparation uses the separate pinned NumPy 2.4.6 environment.
+`net_mJ/task = (active_J - mean(before_idle_W, after_idle_W) * active_seconds) * 1000 / replays`
 
-The [GPU verification](results/gpu_verification.json) matches **11,000/11,000**
-frozen CPU labels and **7,465/11,000** correct evaluation labels. One captured
-graph is reused across all eleven changed datasets; eager execution and three
-replays per draw agree after poisoning scratch and output buffers (33 replay
-checks). The [kernel comparison](results/gpu_verification_kernel_equivalence.json)
-confirms that removing unused experimental code leaves the imported default
-PTX byte-identical. Historical results refer to their original source/PTX
-versions; fresh reports identify the cleaned source and newly emitted PTX.
+The two NVML methods share device telemetry; their agreement is not calibration
+against an external power meter. An interleaved 20-second idle-only sham tests
+baseline subtraction. A separate ten-second 4096×4096 FP32 matrix multiply
+checks the output and requires both NVML methods to show at least 20 W above
+idle. Both hosts pass. These controls are excluded from the task energy.
+Signed estimates, raw samples, clocks, temperatures, and GPU process checks
+are saved in the linked results.
 
-The [fresh-evaluation GPU check](results/gpu_verification_fresh.json) also matches
-all 11,000 frozen labels, with **7,474 correct** and all 33 poisoned-scratch graph
-replays passing. The loader validates the seeds declared by the payload manifest;
-the kernel code is unchanged. The timing and energy above were measured on the
-original draw 0; this fresh run verifies correctness only.
+| Host | Net-energy range (mJ) | Sample SD (mJ) | Idle-only residual (mJ/task) | Matrix control / idle (W) |
+| --- | ---: | ---: | ---: | ---: |
+| Netherlands | 0.585413–0.592533 | 0.004036 | -0.000752 | 199.5 / 38.6 |
+| Canada | 0.599833–0.617118 | 0.009290 | -0.000410 | 216.0 / 57.7 |
 
-The prior small GPU entries include input normalization within their measured
-scope, while this benchmark starts with normalized inputs. Their published
-numbers therefore do not form an exactly matched GPU speedup comparison.
+These diagnostics use sampled-power integration. The idle-only residual is
+the signed energy of the 20-second sham divided by 1,200,000 nominal tasks.
+
+Round spread describes these runs, not a confidence interval or total
+measurement uncertainty. The two hosts have different power limits and
+drivers; their results are not pooled.
+
+Netherlands: driver 595.71.05, 320 W power limit,
+`GPU-03d6de3a-ca5b-03ca-727f-698cddfe0c46`.
+Canada: driver 570.133.20, 400 W power limit,
+`GPU-257d1077-bc61-c5a2-f856-e613780b1a6e`.
+Both use Python 3.11.10, PyTorch 2.5.1+cu124, CUDA 12.4, NumPy 2.1.2,
+pyptx 0.1.1, and nvidia-ml-py 13.610.43. Raw results bind the source, emitted
+PTX, input manifests, NVML library, and GPU UUID with hashes or identifiers.
+
+On each host, all 22,000 original and fresh predictions match the frozen CPU
+labels, with 7,465 and 7,474 correct respectively. All 66 poisoned-buffer graph
+replay checks pass. The generated PTX hash remains
+`38d36146e4303b7acd640ee6c04ba642c751182c4fb9501b9fbccd52333cba58`.
+
+The previous **0.010 mJ** claim is withdrawn: the original host failed
+subsequent power-telemetry sanity checks. Its
+[seven-round result](results/gpu_verification_benchmark.json) and earlier
+measurements remain unchanged as historical evidence and are superseded by
+the two results above. This correction changes the measurement, not the learner,
+accuracy, frozen predictions, or grid score.
 
 The first PTX kernel uses eight blocks of 512 threads, each accumulating class
 statistics over 125 samples. The second uses 32 blocks of 320 threads; each
-block combines those partials, redundantly inverts all ten covariances using
-warp shuffles, and predicts up to 32 queries (eight in the final block). All learned statistics and predictions
-are overwritten on each task execution. Approximate GPU reciprocal/logarithm
-instructions and reduction order differ from the CPU reference.
+block combines the partials, inverts all ten covariances using warp shuffles,
+and predicts up to 32 queries (eight in the final block). Every replay overwrites
+all learned statistics and predictions. GPU reciprocal/logarithm instructions
+and reduction order differ from the ordered CPU reference; labels are verified.
 
-The benchmark uses CUDA-graph replays of the complete training-and-prediction
-task on device-resident normalized inputs. NVML cumulative board energy is
-sampled around each block; five-second idle windows bracket the block. Energy
-per task is `(board_delta_J - mean_idle_W * wall_seconds) * 1000 / replays`.
-Signed adjusted values are retained, including negative readings if idle drift
-exceeds the measured excess. Gross energy and every round are reported. The
-small idle-adjusted signal is sensitive to baseline drift; it should not be
-interpreted as a precisely known kernel energy.
-
-Scope excludes host/device transfers, normalization, allocation, module load,
-graph capture, and cold start. The graph replay includes host launch gaps.
-GPU costs therefore describe the stated steady-state device-resident workload;
-they do not establish end-to-end latency from raw MNIST files.
+Scope is complete training and 1,000 predictions on device-resident normalized
+inputs, including host dispatch gaps between graph replays. It excludes
+transfers, normalization, allocation, compilation, graph capture, and cold
+start. Prior small GPU entries include normalization, so their published
+numbers are not an exactly matched GPU speedup comparison.
 
 ## Reproduction
 
@@ -318,33 +331,42 @@ successive commits. `spatial_program.py` regenerates the grid program and score;
 its host runtime and source/software provenance can vary across machines while
 exact counts remain unchanged.
 
-Copy the submission code and `generated/payloads/` to an A100 host. In a separate
-Python 3.11 GPU environment with GCC and CUDA 12.4 driver support:
-
-```sh
-python -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu124
-python -m pip install -r requirements-gpu.txt
-python gpu_benchmark_ptx.py generated/payloads results/gpu_verification_benchmark.json 1000000 7
-```
-
-This checks all eleven draws before measuring draw 0. To perform only GPU
-correctness verification, use:
-
-```sh
-python gpu_benchmark_ptx.py generated/payloads results/gpu_verification.json --verify-only
-```
-
-For the fresh evaluation, export its payloads on the CPU host:
+Export the fresh payloads in the same CPU environment:
 
 ```sh
 SUTRO_PROTOCOL=protocol_fresh.json python run.py gpu-payloads \
     --evidence-dir evidence/fresh/accuracy --output-dir generated/payloads-fresh
 ```
 
-Copy that directory to the A100 and run:
+Copy the submission directory, including its evidence manifests and both
+payload directories, to an otherwise idle A100 host. In a separate Python 3.11
+GPU environment with GCC and CUDA 12.4 driver support:
 
 ```sh
-python gpu_benchmark_ptx.py generated/payloads-fresh generated/gpu_verification_fresh.json --verify-only
+python -m pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cu124
+python -m pip install -r requirements-gpu.txt
+nvidia-smi --query-gpu=uuid --format=csv,noheader
+python energy_benchmark.py --original-payloads generated/payloads \
+    --fresh-payloads generated/payloads-fresh --expected-uuid GPU-REPLACE-WITH-YOUR-UUID \
+    --output generated/energy-rerun.json
+```
+
+Replace the UUID with the selected device's value. The harness checks both
+sets of eleven draws before measuring and rejects another compute process or
+a failed positive control. Use a new output filename for each run.
+To check correctness without measuring energy:
+
+```sh
+python gpu_benchmark_ptx.py generated/payloads generated/gpu-original.json --verify-only
+python gpu_benchmark_ptx.py generated/payloads-fresh generated/gpu-fresh.json --verify-only
+```
+
+Recompute both saved energy summaries locally in either pinned NumPy
+environment; no GPU is needed:
+
+```sh
+python energy_verify.py results/energy-netherlands.json
+python energy_verify.py results/energy-canada.json
 ```
 
 The original accuracy evidence and protocol are preserved. New verification

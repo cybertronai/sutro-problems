@@ -42,16 +42,16 @@ Accuracy targets:
 | 2026-09-11 | 67.08% ± 1.54 pp | 3,300 | 130 | 0.24 | 3,100 | [H32 MLP](submissions/small60-grid-20260912/README.md) |
 | 2026-09-14 | 67.35% ± 1.76 pp | 2,600 | 110 | 0.19 | 1,800 | [NR-K8 Adam MLP](submissions/small-adam-nr-k8-20260912/README.md) |
 | 2026-09-15 | 67.11% ± 1.63 pp | 3,200 | 120 | 0.22 | 3,200 | [Panel-cached H32 MLP (1,000/1,000)](submissions/mlp-panels-revised-20260914/README.md) |
-| 2026-09-15 | 67.95% ± 1.64 pp | 0.010 | 0.016 | 0.00089 | 10 | [QDA](submissions/small-qda-20260915/README.md) |
+| 2026-09-15 | 67.95% ± 1.64 pp | 0.59 | 0.017 | 0.00089 | 10 | [QDA](submissions/small-qda-20260915/README.md) |
 
 The revised panel result uses the same source examples and draw seeds as H32,
 but regenerated resized-image hashes differ; see its report's reproducibility caveat.
 The accuracy difference is not evidence of superiority.
 
-The QDA row is its independently frozen fresh evaluation (seeds 20262101–20262111,
-protocol committed before the draws); the original eleven draws (67.86% ± 2.68 pp,
-with a disclosed protocol-timestamp discrepancy) are retained in its report, which
-also documents the variation in its idle-adjusted A100 energy measurement.
+The QDA row reports the fresh eleven-draw evaluation and corrected A100
+energy, with a second-host cross-check. Its report retains the original
+evidence, discloses the preselection limitation, and documents the pending
+publicly committed beacon evaluation.
 
 ## MNIST-medium — 2% error target
 

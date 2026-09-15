@@ -11,34 +11,56 @@
     "source": "evidence/accuracy/accuracy.json"
   },
   "a100": {
-    "energy_mj": 0.010378672372650355,
-    "time_ms": 0.01638980078125,
-    "gross_energy_mj": 0.669114,
+    "energy_mj": 0.5856802838359351,
+    "time_ms": 0.017046980794270833,
+    "gross_energy_mj": 1.232159751843051,
     "energy_round_range_mj": [
-      0.001357443620762555,
-      0.019697504400051663
+      0.5854125316112098,
+      0.5925328065872981
     ],
-    "energy_round_sample_stddev_mj": 0.005985793726324726,
-    "energy_interpretation": "Idle subtraction measures a small difference between much larger totals. Round spread and idle drift limit precision; this is not a statistical confidence interval.",
+    "energy_round_sample_stddev_mj": 0.004035820343022051,
+    "counter_energy_mj": 0.5891027569988901,
+    "energy_interpretation": "Median of three signed, per-round idle-adjusted sampled-power integrals. Counter values are a cross-check using the same device telemetry, not independent meter calibration. Round spread is not a confidence interval or total measurement uncertainty.",
     "implementation": "two FP32 handwritten-PTX kernels emitted by pyptx (gpu_benchmark_ptx.py)",
     "measured_draw": 0,
     "verified_draws": 11,
     "gpu_agrees_with_frozen_cpu_predictions": 11000,
-    "source": "results/gpu_verification_benchmark.json",
-    "validation_source": "results/gpu_verification.json",
+    "fresh_verified_draws": 11,
+    "fresh_gpu_correct": 7474,
+    "fresh_gpu_agrees_with_frozen_cpu_predictions": 11000,
+    "poisoned_graph_replay_checks_per_host": 66,
+    "source": "results/energy-netherlands.json",
+    "source_sha256": "d5cb9dacd43304f968c5851a5fef5ce772c410aeb1792842c5aa9fe143c3ef2c",
     "hardware": "NVIDIA A100-SXM4-40GB",
-    "rounds": 7,
-    "replays_per_round": 1000000,
-    "scope": "CUDA-graph replays of complete training and 1000 predictions on device-resident normalized float32 inputs; includes host-dispatch gaps between graph replays; excludes transfers, preprocessing, allocation, JIT, module load and capture. Signed NVML total-energy deltas minus mean paired idle power times measured wall duration; negative estimates are retained.",
+    "primary_host": "Netherlands, Vast machine 133104",
+    "primary_host_selection": "Chosen before these runs; Canada is an independent cross-check. All rounds from both hosts are reported.",
+    "measurement_plan_created_utc": "2026-09-15T21:11:17.122501+00:00",
+    "rounds": 3,
+    "replays_per_round": 1200000,
+    "scope": "Complete training and 1000 predictions, warm CUDA graph, original draw zero. Device-resident inputs. Includes host dispatch gaps; excludes resizing, transfers, allocation, compilation and capture. Settling, idle and matrix control are separate from task energy.",
+    "idle_method": "Each before/after idle window starts after 3 seconds of settling and is measured for 10 seconds. Subtract the mean of the two idle powers times active wall duration. Poll NVML power with a 50 ms sleep between samples and integrate actual timestamps by trapezoids; also record cumulative energy. Retain signed values.",
+    "controls": "20-second idle-only sham; separate 10-second 4096x4096 FP32 matrix multiply with verified output and at least 20 W above idle on both NVML readouts. Both hosts pass.",
+    "crosscheck": {
+      "host": "Canada, Vast machine 36394",
+      "source": "results/energy-canada.json",
+      "source_sha256": "73df779ea8a68b2d1b10dd9edfc618d04b5ab94515e0473d709d4ecbb95e3bcf",
+      "energy_mj": 0.6025742299665156,
+      "time_ms": 0.0168468115234375,
+      "gross_energy_mj": 1.5773347211357702,
+      "counter_energy_mj": 0.6148699982133705,
+      "energy_round_range_mj": [
+        0.5998328671454703,
+        0.6171183764136703
+      ]
+    },
     "historical_sources": [
+      "results/gpu_verification_benchmark.json",
       "results/gpu_results_ptx.json",
       "results/gpu_results_ptx_hires.json",
       "results/gpu_results_triton.json",
       "results/gpu_results.json"
     ],
-    "fresh_validation_source": "results/gpu_verification_fresh.json",
-    "fresh_verified_draws": 11,
-    "fresh_gpu_correct": 7474
+    "historical_energy_status": "Superseded. The old 0.010378672372650355 mJ claim is withdrawn because the original host failed subsequent telemetry sanity checks. Original files are retained unchanged; they are not the submitted energy result."
   },
   "grid": {
     "energy_mj": 0.000889633966,
@@ -71,14 +93,20 @@
       "protocol": "protocol_beacon.json",
       "protocol_sha256": "1a0812f8bb8c8ad4ed09c1c804f80ed1dcb83274ec4bf4e101a4087b39afbaa7",
       "pulse_time_utc": "2026-09-16T12:00:00Z",
-      "status": "pending_publication_and_future_pulse"
+      "status": "publicly_committed_pending_future_pulse",
+      "publication_url": "https://github.com/cybertronai/sutro-problems/pull/82#issuecomment-5686480922",
+      "published_at_utc": "2026-09-15T19:05:04Z"
     }
   },
   "verification": {
     "cpu": "results/cpu_verification.json",
     "gpu": "results/gpu_verification.json",
     "cpu_fresh": "results/cpu_verification_fresh.json",
-    "gpu_fresh": "results/gpu_verification_fresh.json"
+    "gpu_fresh": "results/gpu_verification_fresh.json",
+    "gpu_energy": [
+      "results/energy-netherlands.json",
+      "results/energy-canada.json"
+    ]
   },
   "wandb_runs": [],
   "accuracy_fresh": {
