@@ -1,0 +1,35 @@
+{
+  "created_at_utc": "2026-09-15T00:00:00Z",
+  "config": {
+    "hidden_width": 64,
+    "epochs": 500,
+    "optimizer": "sgd",
+    "loss": "squared error (0.5*sum over classes), averaged over the complete minibatch",
+    "learning_rate": 0.1,
+    "batch_size": 25,
+    "learner_seed": 101
+  },
+  "dataset_seeds": [
+    20261201,
+    20261202,
+    20261203,
+    20261204,
+    20261205,
+    20261206,
+    20261207,
+    20261208,
+    20261209,
+    20261210,
+    20261211
+  ],
+  "dataset": "1000 train and 1000 disjoint test examples from official 60000 training images",
+  "draw": "numpy.random.Generator(PCG64(seed)).permutation(60000): first1000 train, next1000 test",
+  "preprocessing": "float32 image/255, exact area resize to 3x3, learner transforms 4*x-0.5",
+  "target_accuracy": 0.67,
+  "target_total_correct": 7370,
+  "planned_draws": 11,
+  "selection": "Width/epochs/lr selected on disjoint pilot seeds 20261120-20261130 (24-config sweep, evidence/pilot_results.json); frozen before official evaluation. The accepted H32 anchor config scored 68.17% on the same pilot draws versus its official 67.08%",
+  "training": "Fresh seed-101 initialization per draw; fixed supplied sample order; gradients from pre-update weights; no learned state transfer",
+  "evaluator": "Two-phase: freeze (hash predictions, no evaluation-label slices) then score (verify hashes first)",
+  "source_sha256_note": "Computed and recorded in submission.json at packaging time"
+}

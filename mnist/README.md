@@ -41,6 +41,7 @@ Accuracy targets:
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 2026-09-11 | 67.08% ± 1.54 pp | 3,300 | 130 | 0.24 | 3,100 | [H32 MLP](submissions/small60-grid-20260912/README.md) |
 | 2026-09-14 | 67.35% ± 1.76 pp | 2,600 | 110 | 0.19 | 1,800 | [NR-K8 Adam MLP](submissions/small-adam-nr-k8-20260912/README.md) |
+| 2026-09-15 | 68.39% ± 1.44 pp | — | — | 0.86 | 1.0 × 10⁴ | [9-64-10 SGD MLP](submissions/small64-sgd-20260915/report.md) |
 
 ## MNIST-medium — 2% error target
 
