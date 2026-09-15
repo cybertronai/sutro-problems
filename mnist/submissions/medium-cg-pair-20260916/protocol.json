@@ -1,0 +1,30 @@
+{
+  "format_version": 1,
+  "submission": "medium-cg-pair-20260916",
+  "tier": "MNIST-medium",
+  "declared_error_target": 0.02,
+  "planned_draws": 11,
+  "dataset_seeds": [2026091600, 2026091601, 2026091602, 2026091603, 2026091604, 2026091605, 2026091606, 2026091607, 2026091608, 2026091609, 2026091610],
+  "sampling": "For each integer seed, numpy.random.Generator(numpy.random.PCG64(seed)).permutation(60000) directly, without SeedSequence.spawn",
+  "source": "Official MNIST 60000-example training split",
+  "train_indices": "permutation[0:10000]",
+  "test_indices": "permutation[10000:20000]",
+  "train_count": 10000,
+  "test_count": 10000,
+  "train_test_disjoint_within_draw": true,
+  "independent_draws_may_overlap": true,
+  "image_size": 9,
+  "preprocessing": "Convert selected uint8 images to float32, divide by float32(255), apply mnist.code.data.area_resize to 9x9 and reshape to N x 81; learner clamps to [0,1] before asin(sqrt)",
+  "training": "Fresh fit from all 10000 training examples on every draw; test labels are used only by the scoring runner after predictions are returned",
+  "selection": "The requested server v80 measured CGPair with 512 NumPy PCG64 filters and 300 FP32 CG iterations is frozen in config.json before evaluation. No hyperparameter selection, early stopping, seed selection, or target substitution based on these draws.",
+  "historical_evidence": "The previously reported 98.03% five-seed accuracy used a different filter generator and precision path and is not evidence for this model. The 98.09% held-out result used exact solves and is not the submitted 300-iteration CG result.",
+  "threshold": {
+    "total_predictions": 110000,
+    "minimum_correct": 107800,
+    "criterion": "sum(correct) >= 107800 across all 11 draws; use exact integer counts before rounding"
+  },
+  "summary": "Mean accuracy is sum(correct)/110000; sample standard deviation uses the 11 draw-level accuracies and ddof=1, reported in percentage points",
+  "timing": "Local eager full fresh train+predict, including tensor/filter preparation, both feature maps, both system assemblies, both CG solves, score combination and prediction transfer to host. Dataset loading/resizing/hashing and accuracy/finiteness checks are outside the timed region. CUDA stages synchronize before recording elapsed time.",
+  "resume": "Completed draws may be reused only when all frozen source, config, protocol, data source and execution environment fingerprints match; per-draw arrays and prediction files are rehashed and scores recomputed before reuse.",
+  "artifacts": "A frozen run_manifest.json, per-draw predictions, integer counts, source and array SHA256 hashes, stage timings, environment, and an aggregate summary after all 11 draws"
+}
