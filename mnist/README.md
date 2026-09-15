@@ -7,9 +7,8 @@ The system takes **train**/*test* images + **train** labels, and produces *test*
 Provide a way to solve this problem at prescribed accuracy without hitting **the memory
 wall**. 
 
-IE
 - kernel that runs on A100 using few Joules (measured using NVML)
-- an algorithm that runs with small memory footprint in Bill Dally's 2D grid (measured by counting hops in [Bill Dally's 2D grid](https://github.com/cybertronai/simplified-dally-model/tree/main/models/spatial-computer))
+- (optional) an algorithm that runs with small memory footprint in Bill Dally's 2D grid (measured by counting hops in [Bill Dally's 2D grid](https://github.com/cybertronai/simplified-dally-model/tree/main/models/spatial-computer))
 
 ## Motivation
 Today's learning is based on backprop which was popularized in the 80s when we were bottlenecked by arithmetic. Today, we are bottlenecked by memory movement. This favors algorithms with small memory footprint. Backprop has a large memory footprint.
