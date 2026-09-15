@@ -5,8 +5,8 @@ Submission date: September 15, 2026 (UTC). Contributors:
 
 Closed-form quadratic discriminant analysis (QDA) fits one Gaussian per class
 and predicts all 1,000 test labels after a single pass over 1,000 training
-examples. The frozen CPU predictions achieve **7,465 / 11,000 = 67.86% ±
-2.68 pp**, exceeding the required 7,370 correct. There is no iterative training,
+examples. The fresh evaluation achieves **7,474 / 11,000 = 67.95% ±
+1.64 pp**, exceeding the required 7,370 correct. There is no iterative training,
 learner seed, stopping rule, or transfer of learned state between datasets.
 
 The complete serialized spatial-grid computation costs **0.00089 mJ** and
@@ -24,22 +24,24 @@ share examples. Images are divided by 255 in FP32 and resized from 28×28 to
 3×3 with the repository's exact fractional box-area weights
 ([`data.py`](../../code/data.py)) in a recorded accumulation order
 (`run.resize_recorded`: increasing order, float64 product and sum before each
-FP32 accumulation), which reproduces every archived input hash on any
-numerical backend; the repository's float32 matmul `area_resize` rounds
+FP32 accumulation), which reproduces all original and fresh input hashes on the
+source server and independent verification host; the repository's float32 matmul `area_resize` rounds
 differently on some BLAS builds. The CPU and GPU learner inputs are `4*x - 0.5`.
 Test labels are used only for evaluation and are never kernel inputs.
 
-### Independently frozen fresh evaluation (qualifying result)
+### Fresh evaluation (qualifying result)
 
 Because the original protocol's timestamp postdates its evaluation (below), the
 submitted learner was re-evaluated on eleven new draws under
 [`protocol_fresh.json`](protocol_fresh.json): the learner is the unchanged
 `reference.py` (its hash is recorded in the protocol), the seeds
-20262101–20262111 had never been used for any pilot, selection or evaluation,
-the protocol was committed before any draw was prepared, the draw manifest
+20262101–20262111 are declared by the authors as previously unused.
+The repository records the protocol commit first, followed by the draw manifest
 (prepared 2026-09-15T17:57:05Z), the prediction freeze (2026-09-15T17:57:06Z) and the
-evaluation (2026-09-15T17:57:06Z) were each committed in that order, and no
-evaluation-label slice was opened before the freeze.
+evaluation (2026-09-15T17:57:06Z), each committed in that order. The freeze/scoring
+code hashes all predictions before taking evaluation-label slices. Protocol and
+learner hashes are checked against the manifests. This reproduces the fresh
+workflow; local timestamps do not independently prove absence of prior evaluation.
 
 | Draw | Dataset seed | Correct / total | Accuracy |
 | ---: | ---: | ---: | ---: |
@@ -64,15 +66,18 @@ evaluation-label slice was opened before the freeze.
 ### Beacon-seeded evaluation (in progress)
 
 The fresh evaluation's chronology rests on this repository's commit timestamps.
-[`protocol_beacon.json`](protocol_beacon.json) removes that dependence: its
-eleven seeds are derived from the NIST randomness-beacon pulse of
+For a public precommitment, [`protocol_beacon.json`](protocol_beacon.json) fixes
+how eleven seeds are derived from the NIST randomness-beacon pulse of
 2026-09-16T12:00:00Z (`seed_i = SHA-256(outputValue ‖ ':' ‖ i)[:8]` as an integer),
-a value that does not exist until that moment; the protocol is pushed and its
-SHA-256 posted on the pull request before then. After the pulse,
-`run.py fetch-beacon` stores it with the beacon's signature and
+a value that is unavailable in advance. The protocol must be pushed and its
+SHA-256 posted on the pull request before then; publication is a separate step.
+After the pulse, `run.py fetch-beacon` stores it with the beacon's signature and
 `prepare`/`freeze`/`score` run under `SUTRO_PROTOCOL=protocol_beacon.json`
-into `evidence/beacon/accuracy`; `verify.py` re-derives the seeds from the
-stored pulse. Results will be added here when the run is complete.
+into `evidence/beacon/accuracy`; `verify.py` compares the stored pulse with an
+official NIST HTTPS response and re-derives the seeds. This checks the complete
+pulse object, rather than verifying the signature offline. Public timestamps
+must separately establish that this exact protocol was published before the
+pulse. No beacon result is reported until the run is complete.
 
 ### Original evaluation (retained, timestamp limitation disclosed)
 
@@ -241,6 +246,12 @@ confirms that removing unused experimental code leaves the imported default
 PTX byte-identical. Historical results refer to their original source/PTX
 versions; fresh reports identify the cleaned source and newly emitted PTX.
 
+The [fresh-evaluation GPU check](results/gpu_verification_fresh.json) also matches
+all 11,000 frozen labels, with **7,474 correct** and all 33 poisoned-scratch graph
+replays passing. The loader validates the seeds declared by the payload manifest;
+the kernel code is unchanged. The timing and energy above were measured on the
+original draw 0; this fresh run verifies correctness only.
+
 The prior small GPU entries include input normalization within their measured
 scope, while this benchmark starts with normalized inputs. Their published
 numbers therefore do not form an exactly matched GPU speedup comparison.
@@ -268,8 +279,8 @@ they do not establish end-to-end latency from raw MNIST files.
 
 ## Reproduction
 
-The recorded-order resize makes the frozen FP32 input hashes independent of
-the numerical backend; `requirements.txt` still pins the versions used. From
+The recorded-order resize avoids BLAS-dependent accumulation;
+`requirements.txt` pins the versions used. From
 the repository root:
 
 ```sh
@@ -321,6 +332,19 @@ correctness verification, use:
 
 ```sh
 python gpu_benchmark_ptx.py generated/payloads results/gpu_verification.json --verify-only
+```
+
+For the fresh evaluation, export its payloads on the CPU host:
+
+```sh
+SUTRO_PROTOCOL=protocol_fresh.json python run.py gpu-payloads \
+    --evidence-dir evidence/fresh/accuracy --output-dir generated/payloads-fresh
+```
+
+Copy that directory to the A100 and run:
+
+```sh
+python gpu_benchmark_ptx.py generated/payloads-fresh generated/gpu_verification_fresh.json --verify-only
 ```
 
 The original accuracy evidence and protocol are preserved. New verification

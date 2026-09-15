@@ -4,10 +4,11 @@ Recorded evidence is read-only. Use --evidence-dir generated/reproduction for
 new prepare/freeze/score runs; verify.py checks the imported evidence by default.
 Predictions are written and hashed before any evaluation-label slice is taken.
 The seeds and config come from protocol.json, or from the protocol named by
-SUTRO_PROTOCOL (protocol_fresh.json for the independently frozen evaluation in
-evidence/fresh/accuracy, the one writable directory under evidence/).
+SUTRO_PROTOCOL (protocol_fresh.json or protocol_beacon.json). New evaluation
+records may be created under the matching fresh/beacon evidence directory.
 """
 import argparse
+from datetime import datetime, timezone
 from functools import lru_cache
 import json
 import os
@@ -42,8 +43,30 @@ def beacon_seeds(protocol, pulse):
     src = protocol['seed_source']
     require(pulse['pulse']['timeStamp'] == src['pulse_time_utc'], 'Beacon pulse time differs from the protocol')
     value = pulse['pulse']['outputValue']
-    require(isinstance(value, str) and len(value) == 128, 'Beacon outputValue must be 512 bits of hex')
+    require(isinstance(value, str) and len(value) == 128
+            and all(c in '0123456789abcdefABCDEF' for c in value),
+            'Beacon outputValue must be 512 bits of hex')
     return [int(hashlib.sha256(f'{value}:{i}'.encode()).hexdigest()[:8], 16) for i in range(protocol['planned_draws'])]
+
+
+def download_beacon(protocol):
+    """Fetch the exact declared pulse from NIST over HTTPS; preserve its hex spelling."""
+    import urllib.request
+    from urllib.parse import urlparse
+    src = protocol['seed_source']
+    require(src['beacon_url'] == 'https://beacon.nist.gov/beacon/2.0', 'Unexpected beacon service')
+    declared = datetime.fromisoformat(src['pulse_time_utc'].replace('Z', '+00:00'))
+    require(datetime.now(timezone.utc) >= declared, 'The declared beacon pulse time has not arrived')
+    url = f"{src['beacon_url']}/pulse/time/{int(declared.timestamp() * 1000)}"
+    with urllib.request.urlopen(url, timeout=30) as response:
+        final_url = urlparse(response.geturl())
+        require(final_url.scheme == 'https' and final_url.hostname == 'beacon.nist.gov',
+                'Beacon response left the official HTTPS service')
+        pulse = json.loads(response.read().decode())
+    beacon_seeds(protocol, pulse)  # The API may return a later pulse: reject it.
+    require(pulse['pulse'].get('statusCode') == 0, 'Beacon pulse has a nonzero status')
+    require(bool(pulse['pulse'].get('signatureValue')), 'Beacon pulse is missing its signature')
+    return pulse, url
 
 
 if 'dataset_seeds' in _protocol:
@@ -89,12 +112,45 @@ def write_new_json(path, value):
         stream.write(json.dumps(value, indent=2) + '\n')
 
 
+def check_learner():
+    for name, expected in _protocol.get('learner_source_sha256', {}).items():
+        require(ds.file_hash(HERE / name) == expected, f'Protocol learner source hash differs: {name}')
+
+
+def check_protocol_binding(document, name):
+    check_learner()
+    if 'learner_source_sha256' in _protocol or 'protocol_sha256' in document:
+        require(document.get('protocol') == PROTOCOL.name, f'{name}: protocol name differs')
+        require(document.get('protocol_sha256') == ds.file_hash(PROTOCOL), f'{name}: protocol hash differs')
+    if name == 'prediction manifest' and ('learner_source_sha256' in _protocol or 'learner_sha256' in document):
+        require(document.get('learner_sha256') == ds.file_hash(HERE / 'reference.py'),
+                'Prediction manifest learner hash differs')
+
+
+def authenticate_beacon():
+    """Compare the stored pulse with NIST's immutable pulse over HTTPS, not offline RSA."""
+    path = HERE / _protocol['seed_source']['pulse_file']
+    stored = read_json(path)
+    official, url = download_beacon(_protocol)
+    require(stored['pulse'] == official['pulse'], 'Stored beacon pulse differs from the official NIST pulse')
+    return {'method': 'HTTPS refetch and complete pulse-object comparison; no offline signature verification',
+            'url': url, 'pulse_file_sha256': ds.file_hash(path),
+            'pulse_time_utc': stored['pulse']['timeStamp']}
+
+
 def writable_evidence(evidence):
     resolved = evidence.resolve()
     require(not resolved.is_relative_to((HERE / 'evidence').resolve()) or resolved.is_relative_to(FRESH.resolve())
             or resolved.is_relative_to(BEACON.resolve()),
             'Imported evidence is read-only; use --evidence-dir generated/reproduction')
     require(len(SEEDS) == _protocol['planned_draws'], 'No seeds: fetch the beacon pulse first (run.py fetch-beacon)')
+    if resolved.is_relative_to(FRESH.resolve()):
+        require(PROTOCOL.name == 'protocol_fresh.json', 'Use protocol_fresh.json for fresh evidence')
+    if resolved.is_relative_to(BEACON.resolve()):
+        require(PROTOCOL.name == 'protocol_beacon.json', 'Use protocol_beacon.json for beacon evidence')
+    check_learner()
+    if 'seed_source' in _protocol:
+        authenticate_beacon()
 
 
 def verify_raw():
@@ -150,6 +206,7 @@ def _load(seed):
 
 
 def validate_records(document, name):
+    check_protocol_binding(document, name)
     require(document['seeds'] == SEEDS, f'{name}: incorrect seeds')
     require(len(document['draws']) == len(SEEDS), f'{name}: expected 11 draws')
     for index, (seed, record) in enumerate(zip(SEEDS, document['draws'], strict=True)):
@@ -284,7 +341,9 @@ def gpu_payloads(evidence=EVIDENCE, output_dir=None, single=False):
                         'frozen_prediction_sha256': manifest['draws'][index]['prediction_sha256']})
         print('wrote', path, flush=True)
     if not single:
-        sources = {name: ds.file_hash(HERE / name) for name in ('run.py', 'reference.py', 'protocol.json')}
+        check_learner()
+        sources = {name: ds.file_hash(HERE / name) for name in ('run.py', 'reference.py')}
+        sources[PROTOCOL.name] = ds.file_hash(PROTOCOL)
         sources['mnist/code/data.py'] = ds.file_hash(Path(ds.__file__))
         result = {'seeds': SEEDS, 'draws': records, 'source_sha256': sources,
                   'prediction_manifest_sha256': ds.file_hash(evidence / 'prediction_manifest.json'),
@@ -293,15 +352,13 @@ def gpu_payloads(evidence=EVIDENCE, output_dir=None, single=False):
 
 
 def fetch_beacon():
-    """Download the NIST beacon pulse the protocol declared and store it, signature included."""
-    import calendar, urllib.request
+    """Download and exclusively create the declared NIST pulse file, signature included."""
     src = _protocol['seed_source']; path = HERE / src['pulse_file']
     require(not path.exists(), f'{path} exists; the pulse is fetched once')
-    ms = calendar.timegm(time.strptime(src['pulse_time_utc'], '%Y-%m-%dT%H:%M:%S.000Z')) * 1000
-    with urllib.request.urlopen(f"{src['beacon_url']}/pulse/time/{ms}", timeout=60) as r:
-        pulse = json.loads(r.read().decode())
+    check_learner()
+    pulse, _ = download_beacon(_protocol)
     seeds = beacon_seeds(_protocol, pulse)
-    path.parent.mkdir(parents=True, exist_ok=True); path.write_text(json.dumps(pulse, indent=2) + '\n')
+    write_new_json(path, pulse)
     print('pulse', pulse['pulse']['timeStamp'], 'chain', pulse['pulse']['chainIndex'], 'index', pulse['pulse']['pulseIndex'])
     print('seeds', seeds)
 

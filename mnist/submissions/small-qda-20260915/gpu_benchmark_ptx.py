@@ -329,8 +329,14 @@ def load_payloads(path):
         records, base = manifest['draws'], path
         if len(records) != 11 or [r['draw'] for r in records] != list(range(11)):
             raise ValueError('the frozen submission requires exactly draws 0 through 10')
-        if manifest['seeds'] != list(range(20261201, 20261212)):
-            raise ValueError('unexpected frozen dataset seeds')
+        seeds = manifest.get('seeds')
+        if (not isinstance(seeds, list) or len(seeds) != 11
+                or any(type(seed) is not int or seed < 0 for seed in seeds)
+                or len(set(seeds)) != 11):
+            raise ValueError('the manifest requires eleven distinct nonnegative integer seeds')
+        if any(type(record.get('dataset_seed')) is not int
+               or record['dataset_seed'] != seeds[record['draw']] for record in records):
+            raise ValueError('record seed differs from the manifest seed for its draw')
         provenance = {'payload_manifest_sha256': sha256(manifest_path),
                       'payload_manifest': manifest}
     payloads = []
@@ -357,8 +363,6 @@ def load_payloads(path):
                 raise ValueError(f'{payload_path.name}: invalid {name}')
         if 'dataset_seed' in record and int(payload['dataset_seed']) != record['dataset_seed']:
             raise ValueError('payload seed differs from manifest')
-        if 'draw' in record and int(payload['dataset_seed']) != 20261201 + record['draw']:
-            raise ValueError('payload seed is not the frozen seed for its draw')
         for name, expected in record.get('arrays', {}).items():
             value = payload[name]
             canonical = np.ascontiguousarray(value.astype(value.dtype.newbyteorder('<'), copy=False))

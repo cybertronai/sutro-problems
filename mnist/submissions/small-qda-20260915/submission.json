@@ -35,7 +35,10 @@
       "results/gpu_results_ptx_hires.json",
       "results/gpu_results_triton.json",
       "results/gpu_results.json"
-    ]
+    ],
+    "fresh_validation_source": "results/gpu_verification_fresh.json",
+    "fresh_verified_draws": 11,
+    "fresh_gpu_correct": 7474
   },
   "grid": {
     "energy_mj": 0.000889633966,
@@ -62,11 +65,20 @@
   "provenance": {
     "source": "evidence/import.json",
     "historical_freeze_chronology_verified": false,
-    "limitation": "Original protocol timestamp is later than original evaluation freeze. Reproduction uses published evaluation draws and does not establish pre-evaluation protocol freezing."
+    "limitation": "Original protocol timestamp is later than original evaluation freeze. Reproduction uses published evaluation draws and does not establish pre-evaluation protocol freezing.",
+    "fresh_evaluation_public_precommitment_verified": false,
+    "beacon_evaluation": {
+      "protocol": "protocol_beacon.json",
+      "protocol_sha256": "1a0812f8bb8c8ad4ed09c1c804f80ed1dcb83274ec4bf4e101a4087b39afbaa7",
+      "pulse_time_utc": "2026-09-16T12:00:00Z",
+      "status": "pending_publication_and_future_pulse"
+    }
   },
   "verification": {
     "cpu": "results/cpu_verification.json",
-    "gpu": "results/gpu_verification.json"
+    "gpu": "results/gpu_verification.json",
+    "cpu_fresh": "results/cpu_verification_fresh.json",
+    "gpu_fresh": "results/gpu_verification_fresh.json"
   },
   "wandb_runs": [],
   "accuracy_fresh": {
@@ -90,7 +102,7 @@
     ],
     "protocol": "protocol_fresh.json",
     "source": "evidence/fresh/accuracy/accuracy.json",
-    "note": "independently frozen after the review of PR 82; protocol committed before the draws were prepared"
+    "note": "Fresh eleven-draw evaluation after PR 82 review; protocol, manifest, freeze, and score occur in successive commits. Local timestamps do not independently establish absence of prior evaluation."
   },
   "qualifying_accuracy": "accuracy_fresh"
 }

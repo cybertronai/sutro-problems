@@ -30,6 +30,10 @@ def sha256_json(document):
 def source_hashes():
     files = {name: HERE / name for name in
              ('run.py', 'verify.py', 'reference.py', 'spatial_program.py', 'protocol.json', 'protocol_fresh.json', 'protocol_beacon.json', 'requirements.txt')}
+    files[run.PROTOCOL.name] = run.PROTOCOL
+    if 'seed_source' in run._protocol:
+        pulse_file = run._protocol['seed_source']['pulse_file']
+        files[pulse_file] = HERE / pulse_file
     files['mnist/code/data.py'] = Path(ds.__file__)
     shared = HERE.parent / 'grid-mlp-scoring-20260912'
     files.update({f'../grid-mlp-scoring-20260912/{name}': shared / name for name in ('affine.py', 'score.py')})
@@ -41,9 +45,12 @@ def verify(evidence):
     sources = source_hashes()
     raw_sources = run.verify_raw()
     protocol = read_json(run.PROTOCOL)
+    run.check_learner()
+    beacon_authentication = None
     if 'dataset_seeds' in protocol:
         require(protocol['dataset_seeds'] == run.SEEDS and protocol['planned_draws'] == 11, 'Protocol draw count or seeds differ')
     else:   # beacon-seeded: re-derive the seeds from the stored pulse and check its declared time
+        beacon_authentication = run.authenticate_beacon()
         pulse = read_json(HERE / protocol['seed_source']['pulse_file'])
         require(run.beacon_seeds(protocol, pulse) == run.SEEDS and protocol['planned_draws'] == 11, 'Beacon-derived seeds differ')
         require(read_json(evidence / 'draw_manifest.json')['seeds'] == run.SEEDS, 'Draw manifest seeds differ from the beacon derivation')
@@ -60,6 +67,11 @@ def verify(evidence):
     frozen_at = datetime.fromisoformat(manifest['frozen_at_utc'].replace('Z', '+00:00'))
     evaluated_at = datetime.fromisoformat(evaluation['evaluated_at_utc'].replace('Z', '+00:00'))
     require(frozen_at <= evaluated_at, 'Evaluation timestamp precedes prediction freeze')
+    protocol_at = datetime.fromisoformat(protocol['created_at_utc'].replace('Z', '+00:00'))
+    if 'learner_source_sha256' in protocol:
+        prepared_at = datetime.fromisoformat(draw_manifest['prepared_at_utc'].replace('Z', '+00:00'))
+        require(protocol_at <= prepared_at <= frozen_at <= evaluated_at,
+                'Recorded protocol/prepare/freeze/evaluation timestamps are out of order')
 
     document = sp.build_submitted(1000, 1000)
     grid = read_json(HERE / 'grid/grid-score.json')
@@ -125,7 +137,6 @@ def verify(evidence):
     require(source_hashes() == sources, 'Verification source files changed during this run')
     evidence_hashes = {name: ds.file_hash(evidence / name) for name in
                        ('draw_manifest.json', 'prediction_manifest.json', 'accuracy.json', 'evaluation_freeze.json')}
-    protocol_at = datetime.fromisoformat(protocol['created_at_utc'].replace('Z', '+00:00'))
     return {
         'verified_at_utc': datetime.now(timezone.utc).isoformat(), 'passed': True,
         'scope': 'All 11 recorded draws: canonical raw MNIST, exact indices and input hashes, frozen '
@@ -143,14 +154,19 @@ def verify(evidence):
                  'all_deterministic_score_fields_match': True,
                  'fresh_scoring_seconds': fresh_grid['time_to_score_seconds']},
         'protocol': run.PROTOCOL.name,
+        'protocol_sha256': ds.file_hash(run.PROTOCOL),
+        'beacon_authentication': beacon_authentication,
         'provenance_limits': {
             'protocol_timestamp_precedes_prediction_freeze': protocol_at <= frozen_at,
-            'historical_preselection_independently_proven': run.PROTOCOL.name in ('protocol_fresh.json', 'protocol_beacon.json'),
-            'note': ('The seeds are derived from a NIST randomness-beacon pulse whose time the protocol declared before the pulse '
-                     'existed (protocol_beacon.json, published and hashed on the pull request before that time); anyone can '
-                     're-derive them from the public pulse.' if run.PROTOCOL.name == 'protocol_beacon.json' else
-                     'The fresh protocol (protocol_fresh.json) was committed before its draws were prepared; the freeze '
-                     'and evaluation commits follow it in the repository history.' if run.PROTOCOL.name == 'protocol_fresh.json' else
+            'protocol_and_learner_bindings_checked': 'learner_source_sha256' in protocol,
+            'historical_preselection_independently_proven': False,
+            'public_precommitment_verified': False,
+            'note': ('The stored pulse matches the official NIST HTTPS response and determines the seeds. '
+                     'Publication of this exact protocol before the pulse must be checked separately against public timestamps; '
+                     'this verifier does not establish that chronology.' if beacon_authentication else
+                     'Protocol and learner hashes match the fresh manifests, and recorded timestamps are ordered. '
+                     'Local timestamps and commit history do not independently establish absence of prior evaluation.'
+                     if 'learner_source_sha256' in protocol else
                      'Hashes and reproducibility do not establish historical learner selection or label-access order. '
                      'The imported protocol timestamp is later than the imported prediction freeze.'),
         },
