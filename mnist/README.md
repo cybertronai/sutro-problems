@@ -40,6 +40,7 @@ Accuracy targets:
 | Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 2026-09-11 | 67.08% ± 1.54 pp | 3,300 | 130 | 0.24 | 3,100 | [H32 MLP](submissions/small60-grid-20260912/README.md) |
+| 2026-09-14 | 67.35% ± 1.76 pp | 2,600 | 110 | 0.19 | 1,800 | [NR-K8 Adam MLP](submissions/small-adam-nr-k8-20260912/README.md) |
 | 2026-09-15 | 67.11% ± 1.63 pp | 3,200 | 120 | 0.22 | 3,200 | [Panel-cached H32 MLP (1,000/1,000)](submissions/mlp-panels-revised-20260914/README.md) |
 
 The revised panel result uses the same source examples and draw seeds as H32,
@@ -71,7 +72,7 @@ The accuracy difference is not evidence of superiority.
 
 | Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| 2026-09-14 | 89.28% ± 0.36 pp | 1,100 | 38 | — | — | [Reversible MLP (12% error target)](submissions/rev88-20260914/README.md) |
+| 2026-09-14 | 89.28% ± 0.36 pp | 1,000 | 39 | — | — | [Reversible MLP, smaller workspace (12% error target)](submissions/rev88-20260914/cache-audit/README.md) |
 
 ## MNIST-original — 1% test error target
 

@@ -199,6 +199,13 @@ pull-request evidence, not a claim of benchmark acceptance or merge. No W&B run 
 
 ## Evidence
 
+The merge review also verified this program against main's shared scorer after
+the Adam extension in `39da2cc`. All panel grid metrics are unchanged, and all
+eight grid tests pass. `audit.py` accepts those three exact shared-source hashes
+as compatible versions and records when they are used; all other source hashes
+must still match the original evidence. The frozen experiment files retain
+their original hashes and measurements.
+
 - `protocol.json`, `source_adaptation.json`: predeclared configuration and source lineage.
 - `draw_manifest.json`, `private/draw-*.npz`: indices, hashes and allowlisted learner inputs.
 - `prediction_manifest.json`, `predictions/`, `accuracy.json`: frozen predictions and all counts.

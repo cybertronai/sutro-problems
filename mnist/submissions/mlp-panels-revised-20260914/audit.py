@@ -11,6 +11,16 @@ import run
 HERE = Path(__file__).resolve().parent
 OLD = HERE.parent / 'small60-grid-20260912'
 
+# Main's Adam extension (39da2cc) changed these shared files after this
+# experiment. Its unchanged SGD path independently reproduces every panel
+# metric and passes the panel tests. Accept only these exact reviewed versions;
+# keep the experiment's original source hashes in grid-score.json.
+COMPATIBLE_SHARED_SOURCES = {
+    'submissions/grid-mlp-scoring-20260912/affine.py': '8ac38bf9fccbef87ba05c4dd6a4e5d9901dceae4e71baad0ddd5794c22298d45',
+    'submissions/grid-mlp-scoring-20260912/model_ir.py': 'cc039abc33a731a471c4caf9e35d9c1799ea5246501ae9bea962406a91bcf910',
+    'submissions/grid-mlp-scoring-20260912/score.py': '41b47384ec525718a4546f98f5ad25a4d82dd8bdfb97a762e451476cae29eaf8',
+}
+
 
 def main():
     run.evaluate(HERE.parents[1] / 'data/raw', verify=True)
@@ -91,8 +101,12 @@ def main():
     for key in ('cuda_ms','wall_ms','adjusted_mj','gross_mj'):
         assert statistics.mean(t[key] for t in gpu['trials']) == gpu['summary']['energy'][key]['mean']
     grid = json.loads((HERE / 'grid-score.json').read_text())
+    compatible_sources_used = {}
     for name, digest in grid['source_sha256'].items():
-        assert run.sha(HERE.parents[1] / name) == digest
+        actual = run.sha(HERE.parents[1] / name)
+        if actual != digest:
+            assert actual == COMPATIBLE_SHARED_SOURCES.get(name), name
+            compatible_sources_used[name] = {'recorded_sha256': digest, 'current_sha256': actual}
     assert run.sha(HERE / 'program.spatial.json') == grid['program_file_sha256']
     recomputed = grid_score.spatial.score(json.loads((HERE / 'program.spatial.json').read_text()))
     for key in ('energy_fj','cycles','peak_allocated_scratch_bytes','word_node_hops','program_sha256'):
@@ -103,6 +117,7 @@ def main():
         'numerical_diagnostic_draw_0':numerical,'all_draw_numerical_checks':all_draws,
         'a100_full_parameter_score_prediction_bits_match_cpu':True,
         'a100_nvml_energy_and_summary_recomputed':True,'grid_costs_and_source_hashes_verified':True,
+        'compatible_shared_sources_used':compatible_sources_used,
         'grid_tests':tests['tests_run'],'all_11_accuracy_draws_verified':True,
         'software':{'numpy':np.__version__}, 'audit_sha256':run.sha(Path(__file__))}
     run.write(HERE / 'verification.json',result)

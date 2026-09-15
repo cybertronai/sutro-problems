@@ -1,0 +1,55 @@
+{
+  "workspace": ":4096:8",
+  "action": "profile",
+  "scope": "task",
+  "command": [
+    "/opt/nvidia/nsight-compute/2025.1.1/ncu",
+    "--replay-mode",
+    "app-range",
+    "--cache-control",
+    "none",
+    "--clock-control",
+    "none",
+    "--profile-from-start",
+    "off",
+    "--metrics",
+    "dram__bytes_read.sum,dram__bytes_write.sum,lts__t_sectors_op_read.sum,lts__t_sectors_op_write.sum,lts__t_sector_hit_rate.pct",
+    "--csv",
+    "--page",
+    "raw",
+    "--force-overwrite",
+    "--export",
+    "/tmp/cache-run/profile",
+    "/usr/local/bin/python",
+    "/workspace/cache/fixture.py",
+    "--input",
+    "/tmp/cache-run/input.npz",
+    "--config",
+    "/tmp/cache-run/config.json",
+    "--output",
+    "/tmp/cache-run/result.json",
+    "--mode",
+    "profile",
+    "--scope",
+    "task",
+    "--repeats",
+    "16"
+  ],
+  "returncode": 1,
+  "stdout": "==ERROR== Option profile-from-start is not supported during range replay.\n",
+  "stderr": "",
+  "capabilities": {
+    "ncu_version": "NVIDIA (R) Nsight Compute Command Line Profiler\nCopyright (c) 2018-2025 NVIDIA Corporation\nVersion 2025.1.1.0 (build 35528883) (public-release)\n",
+    "metric_query": {
+      "returncode": 0,
+      "stdout": "Device NVIDIA A100-SXM4-40GB (GA100)\n\n",
+      "stderr": ""
+    }
+  },
+  "finished_at_utc": "2026-09-14T23:53:04.958043+00:00",
+  "input_sha256": {
+    "train_images": "aa68fb7d65b7dcd9c91fd62e48b42ed6a60f7e1fad7c53b1b0ec2c73a5a7c5d1",
+    "train_labels": "72abc25a7a08e37d3ae171b30b3e5617ce288cafab5f4df112b352b93f2133fb",
+    "test_images": "78aa1bca675869c1e08ba944b99d45dce473bee70d893240be8d733acc6d0144"
+  }
+}

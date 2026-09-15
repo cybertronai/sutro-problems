@@ -1,0 +1,55 @@
+{
+  "results": [
+    {
+      "command": [
+        "bash",
+        "-c",
+        "command -v ncu || true; command -v nvcc || true"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "bash",
+        "-c",
+        "find /opt/nvidia /usr/local/cuda* -name ncu -type f 2>/dev/null | head -12"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "bash",
+        "-c",
+        "cat /proc/driver/nvidia/params 2>/dev/null | head -50"
+      ],
+      "returncode": 0,
+      "stdout": "ResmanDebugLevel: 4294967295\nRmLogonRC: 1\nModifyDeviceFiles: 0\nDeviceFileUID: 0\nDeviceFileGID: 0\nDeviceFileMode: 438\nInitializeSystemMemoryAllocations: 1\nUsePageAttributeTable: 4294967295\nEnableMSI: 1\nEnablePCIeGen3: 0\nMemoryPoolSize: 0\nKMallocHeapMaxSize: 0\nVMallocHeapMaxSize: 0\nIgnoreMMIOCheck: 0\nEnableStreamMemOPs: 0\nEnableUserNUMAManagement: 1\nNvLinkDisable: 0\nRmProfilingAdminOnly: 0\nPreserveVideoMemoryAllocations: 0\nEnableS0ixPowerManagement: 0\nS0ixPowerManagementVideoMemoryThreshold: 256\nDynamicPowerManagement: 3\nDynamicPowerManagementVideoMemoryThreshold: 200\nRegisterPCIDriver: 1\nEnablePCIERelaxedOrderingMode: 0\nEnableResizableBar: 0\nEnableGpuFirmware: 0\nEnableGpuFirmwareLogs: 2\nRmNvlinkBandwidthLinkCount: 0\nEnableDbgBreakpoint: 0\nOpenRmEnableUnsupportedGpus: 1\nDmaRemapPeerMmio: 1\nImexChannelCount: 2048\nCreateImexChannel0: 0\nGrdmaPciTopoCheckOverride: 0\nCoherentGPUMemoryMode: \"\"\nRegistryDwords: \"\"\nRegistryDwordsPerDevice: \"\"\nRmMsg: \"\"\nGpuBlacklist: \"\"\nTemporaryFilePath: \"\"\nExcludedGpus: \"\"\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "bash",
+        "-c",
+        "apt-cache search nsight-compute | head -12"
+      ],
+      "returncode": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "nvidia-smi",
+        "--query-gpu=name,uuid,memory.total",
+        "--format=csv,noheader"
+      ],
+      "returncode": 0,
+      "stdout": "NVIDIA A100-SXM4-40GB, GPU-751cadd1-bb40-3f49-0bba-328b6f347c2b, 40960 MiB\n",
+      "stderr": ""
+    }
+  ],
+  "uid": 0
+}
