@@ -1,4 +1,4 @@
-"""Verify the 63,639 record and its exact fixed-trace allocation bound."""
+"""Verify the 63,553 record and its exact fixed-trace allocation bound."""
 
 from __future__ import annotations
 
@@ -15,12 +15,12 @@ if str(ROOT) not in sys.path:
 from matmul import _parse, score_16x16
 from matmul.submissions.best_66178 import _prove
 
-EXPECTED_SCORE = 63_639
-EXPECTED_SHA256 = "4f1ce0c343cc0dd3d78b56be6907fd8a9bb59e93af0e9b3293028788fa5f61d0"
-CERTIFICATE_SHA256 = "93949653b0d86e1bb9be16aa366a8a1b1518677e088b784f9edc4cda29e07370"
+EXPECTED_SCORE = 63_553
+EXPECTED_SHA256 = "8eed253aa7b4d22b0a836813ef7df54a957cbf3c37801d6e6cdd0d8272bf0768"
+CERTIFICATE_SHA256 = "6bac1f47e9068de6fec367b769e6773c75fa01164123a2a5b432d40dfd4a54f2"
 ORIGINAL_SHA256 = "e8adc50783a64088e6864ecfccb7e18a74814e24cfd6e1f9e3045e61fb37f2df"
-EXPECTED_OPERATIONS = {"copy": 1947, "mul": 4096, "add": 3840}
-EXPECTED_READ_COSTS = {"copy": 20558, "mul": 18471, "add": 20271, "output": 4339}
+EXPECTED_OPERATIONS = {"copy": 1948, "mul": 4096, "add": 3840}
+EXPECTED_READ_COSTS = {"copy": 20550, "mul": 18476, "add": 20258, "output": 4269}
 IR_PATH = Path(__file__).with_suffix(".ir")
 CERTIFICATE_PATH = Path(__file__).with_suffix(".certificate.json")
 ORIGINAL_PATH = IR_PATH.with_name("best_63819.ir")
@@ -140,6 +140,6 @@ if __name__ == "__main__":
     result = verify()
     print(f"{IR_PATH.name}: score={result['score']:,}, sha256={EXPECTED_SHA256}")
     print("Exact symbolic proof: 256/256 outputs; arithmetic DAG and order preserved.")
-    print("Fixed-trace optimum: feasible score = exact rational dual = 63,639.")
+    print("Fixed-trace optimum: feasible score = exact rational dual = 63,553.")
     print(f"operations: {result['operations']}")
     print(f"read costs: {result['read_costs']}")

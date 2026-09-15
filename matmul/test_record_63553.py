@@ -7,14 +7,14 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from matmul.submissions import best_63639 as record
+from matmul.submissions import best_63553 as record
 
 
-class Record63639Tests(unittest.TestCase):
+class Record63553Tests(unittest.TestCase):
     def test_exact_outputs_score_and_allocation_bound(self):
         result = record.verify()
-        self.assertEqual(result["score"], 63639)
-        self.assertEqual(result["lower_bound"], "63639")
+        self.assertEqual(result["score"], 63553)
+        self.assertEqual(result["lower_bound"], "63553")
 
     def test_hash_gates_reject_changed_artifacts(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -60,9 +60,9 @@ class Record63639Tests(unittest.TestCase):
                 [sys.executable, "-S", str(record.IR_PATH.with_suffix(".py"))],
                 cwd=directory, capture_output=True, text=True, check=True,
             )
-        self.assertIn("score=63,639", result.stdout)
+        self.assertIn("score=63,553", result.stdout)
         self.assertIn(record.EXPECTED_SHA256, result.stdout)
-        self.assertIn("exact rational dual = 63,639", result.stdout)
+        self.assertIn("exact rational dual = 63,553", result.stdout)
 
 
 if __name__ == "__main__":

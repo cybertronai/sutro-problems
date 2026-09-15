@@ -71,6 +71,6 @@ rejected, which admits the usual bilinear matmul algorithms.
 | 2026-09-04 |  64,431 | [ir](submissions/best_64431.ir), [report](submissions/best_64431.md), [py](submissions/best_64431.py) | [@cosminscn](https://github.com/cosminscn) | asymmetric panel schedule + persistent B captures + dependency-safe order search |
 | 2026-09-07 |  64,074 | [ir](submissions/best_64074.ir), [report](submissions/best_64074.md), [py](submissions/best_64074.py) | [@SecurityQQ](https://github.com/SecurityQQ) | temporary input captures + cheapest surviving replica reads + redundant-copy deletion |
 | 2026-09-07 |  63,819 | [ir](submissions/best_63819.ir), [report](submissions/best_63819.md), [py](submissions/best_63819.py) | [@SecurityQQ](https://github.com/SecurityQQ) | 6+10 asymmetric panels + dependency-safe scheduling + input captures and address allocation (frozen-artifact verifier) |
-| 2026-09-15 |  63,639 | [ir](submissions/best_63639.ir), [report](submissions/best_63639.md), [py](submissions/best_63639.py) | [@jurajselep](https://github.com/jurajselep) | input copy-chain and neutral-plan optimization + whole-program allocation with an exact rational certificate ★ best |
+| 2026-09-15 |  63,553 | [ir](submissions/best_63553.ir), [report](submissions/best_63553.md), [py](submissions/best_63553.py) | [@jurajselep](https://github.com/jurajselep) | joint input-copy selection + whole-program allocation with an exact rational certificate ★ best |
 
 [access_distance](doc/access_distance/) — read-distance histograms for the plotted submission set.
