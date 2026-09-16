@@ -190,7 +190,12 @@ definition and derivation; do not reuse the old single-core area conversion.
 
 ## Submission
 
-Open a pull request adding the source or generator, reproduction commands, and
+Open a pull request against `main` only for a result that qualifies for a table
+above, with every reported metric measured or shown as an em dash. Keep
+experiments, prototypes, measurement-harness proposals, and non-record results
+on a separate branch rather than merging them into `main`.
+
+A record pull request adds the source or generator, reproduction commands, and
 a standalone report under `mnist/submissions/<name>/`. Include the tier, error
 target for medium or original, accuracy evidence, dataset and learner seeds,
 model revision, memory layout, scoring calculations, hardware/software versions, A100
