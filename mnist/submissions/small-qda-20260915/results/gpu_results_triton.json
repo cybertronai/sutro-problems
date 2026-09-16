@@ -1,0 +1,113 @@
+{
+  "hardware": {
+    "name": "NVIDIA A100-SXM4-40GB"
+  },
+  "versions": {
+    "torch": "2.5.1+cu124",
+    "triton": "3.1.0",
+    "numpy": "2.1.2",
+    "driver": "580.105.08",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35"
+  },
+  "provenance": {
+    "runner_sha256": "cc6e25aab9ec8371135651fa5d515b3eb0e85b1f2f5d754277b3b616cbf8b69e",
+    "payload_sha256": "b431c17d823d77a981c118b951e52e0e07ecf6557deb54f3b7e8820f5d764cdf",
+    "dataset_seed": 20261201
+  },
+  "validation": {
+    "gpu_agrees_with_frozen_cpu_predictions": 1000,
+    "total": 1000,
+    "gpu_correct": 654,
+    "cpu_correct": 654,
+    "bitwise_equal_to_reference": false
+  },
+  "kernels": {
+    "stats": "one program per class, 1024-row block, masked reductions, tl.dot second moments (tf32 off), Gauss-Jordan on a 16x16 tile",
+    "predict": "one program per 32 queries, hoisted query loads"
+  },
+  "scope": "CUDA-graph replays (two Triton launches) of the complete training-and-prediction task on device-resident normalized inputs; excludes transfers, allocation, JIT and capture; NVML total-energy stamps with paired idle-power subtraction",
+  "rounds": [
+    {
+      "round": 0,
+      "repeats": 400000,
+      "cuda_ms": 0.03791985107421875,
+      "wall_ms": 0.037926912505645304,
+      "gross_mj": 1.54523,
+      "adjusted_mj": 0.007396076274176835,
+      "idle_before_w": 40.42912885780506,
+      "idle_after_w": 40.665472422851316,
+      "average_power_w": 40.74230929738869
+    },
+    {
+      "round": 1,
+      "repeats": 400000,
+      "cuda_ms": 0.0379383349609375,
+      "wall_ms": 0.037945343343308194,
+      "gross_mj": 1.5565575,
+      "adjusted_mj": 0.03204870722810426,
+      "idle_before_w": 39.637260490826904,
+      "idle_after_w": 40.71561859523089,
+      "average_power_w": 41.02104139412155
+    },
+    {
+      "round": 2,
+      "repeats": 400000,
+      "cuda_ms": 0.03795218994140625,
+      "wall_ms": 0.037960150333819914,
+      "gross_mj": 1.5570925,
+      "adjusted_mj": 0.04802434023264055,
+      "idle_before_w": 39.605334147218876,
+      "idle_after_w": 39.90268394526389,
+      "average_power_w": 41.01913417905346
+    },
+    {
+      "round": 3,
+      "repeats": 400000,
+      "cuda_ms": 0.03795893798828125,
+      "wall_ms": 0.037966956929303707,
+      "gross_mj": 1.557355,
+      "adjusted_mj": 0.03296327990506882,
+      "idle_before_w": 40.43039481245744,
+      "idle_after_w": 39.8705744189414,
+      "average_power_w": 41.01869430567927
+    },
+    {
+      "round": 4,
+      "repeats": 400000,
+      "cuda_ms": 0.03792391357421875,
+      "wall_ms": 0.0379325809085276,
+      "gross_mj": 1.5481875,
+      "adjusted_mj": 0.008792282682298378,
+      "idle_before_w": 40.43095995980134,
+      "idle_after_w": 40.733842457934024,
+      "average_power_w": 40.81418830248782
+    },
+    {
+      "round": 5,
+      "repeats": 400000,
+      "cuda_ms": 0.03786209716796875,
+      "wall_ms": 0.03786943320999853,
+      "gross_mj": 1.549675,
+      "adjusted_mj": 0.04378632983759957,
+      "idle_before_w": 39.63379051163699,
+      "idle_after_w": 39.896772399708944,
+      "average_power_w": 40.92152611333102
+    },
+    {
+      "round": 6,
+      "repeats": 400000,
+      "cuda_ms": 0.03789392578125,
+      "wall_ms": 0.037900825549149884,
+      "gross_mj": 1.548455,
+      "adjusted_mj": 0.010372350342780976,
+      "idle_before_w": 40.437963723147256,
+      "idle_after_w": 40.72557967580216,
+      "average_power_w": 40.855442528341754
+    }
+  ],
+  "summary": {
+    "cuda_ms_median": 0.03792391357421875,
+    "adjusted_mj_median": 0.03204870722810426,
+    "gross_mj_median": 1.549675
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "date": "2026-09-15",
+  "tier": "MNIST-medium",
+  "declared_error_target_percent": 5,
+  "target_accuracy": 0.95,
+  "target_met": true,
+  "accuracy": {
+    "correct": 105130,
+    "total": 110000,
+    "mean": 0.9557272727272728,
+    "sample_stddev_pp": 0.16511153255244929,
+    "source": "evidence/accuracy/accuracy.json"
+  },
+  "a100": {
+    "energy_mj": 173.79337718746214,
+    "time_ms": 3.3351419270833333,
+    "energy_round_range_mj": [
+      173.689452427571,
+      175.95362271645894
+    ],
+    "energy_round_sample_stddev_mj": 1.2782754136173673,
+    "implementation": "PyTorch tensor operations with batched Gauss-Jordan (gpu_benchmark.py)",
+    "measured_draw": 0,
+    "verified_draws": 11,
+    "measurement_status": "corrected_by_independent_rerun",
+    "source": "energy-audit/results-sxm40/independent.json",
+    "validation_source": "energy-audit/results-sxm40/original.json",
+    "hardware": "NVIDIA A100-SXM4-40GB",
+    "rounds": 3,
+    "replays_per_round": [
+      6000,
+      12000,
+      6000
+    ],
+    "scope": "CUDA-graph replays of complete feature transform, basis fitting, projection, QDA training and 10000 predictions on device-resident normalized float32 inputs; includes host-dispatch gaps; excludes transfers, area-resize preprocessing, allocation, JIT and capture. Signed sampled-power integral minus mean paired idle power times measured wall duration; negative estimates retained. Both telemetry methods share GPU sensors; not a wall-plug measurement.",
+    "measurement_valid": true,
+    "measurement_method": "Trapezoidal integration of NVML power sampled every 50 ms, minus mean paired 10-second idle power; cumulative energy counter cross-check.",
+    "summary_source": "energy-audit/summary-sxm40.json",
+    "original_protocol_idle_adjusted_energy_mj": 165.56390141042112,
+    "counter_cross_check_idle_adjusted_energy_mj": 174.87814379967082,
+    "superseded_measurement_source": "results/gpu_results.json",
+    "energy_definition": "above_idle"
+  },
+  "grid": {
+    "energy_mj": 0.1868546739,
+    "time_ms": 2047.716289,
+    "energy_fj": 186854673900,
+    "cycles": 2047716289,
+    "word_node_hops": 186854673900,
+    "peak_scratch_bytes": 5125276,
+    "time_to_score_seconds": 2.7734867890103487,
+    "model_spec_commit": "01a0bd5e0d2564825b0f53dd766f763c82dbc7c0",
+    "program_sha256": "90e442f0d572a6a1692a26d7b7a18506b2e5157746c350d29b19fc70a4b5df20",
+    "instruction_issuing_processors": 250,
+    "max_simultaneous_instructions": 1,
+    "source": "grid/grid-score.json",
+    "validation_source": "results/grid_verification.json",
+    "verified_draws": 11,
+    "labels_agree_with_frozen": 110000,
+    "scope": "Complete serialized training-and-prediction schedule including tape and staging; all five parameter arrays and output labels verified on all eleven full-size programs."
+  },
+  "learner": "Six-step Newton-Raphson square-root features; 40-dimensional three-round subspace basis from 2000 samples, fixed PCG64(0) start; QDA with 0.05 trace shrinkage; ordered FP32.",
+  "contributors": [
+    "jurajselep",
+    "Claude",
+    "Codex (packaging and verification)"
+  ],
+  "wandb_runs": [
+    "https://wandb.ai/yaroslavvb/sutro-mnist-tiers/runs/rha1uwss"
+  ],
+  "verification": {
+    "cpu": "results/cpu_verification.json",
+    "grid": "results/grid_verification.json",
+    "gpu": "energy-audit/results-sxm40/original.json"
+  },
+  "provenance": {
+    "historical_freeze_chronology_verified": false,
+    "limitation": "Protocol creation timestamp follows evaluation. Fresh checks reproduce published draws and do not establish historical selection order.",
+    "package_sha256": "be4478311e69ae1d3f3713a37a95a727362beeba5eea5daeb8504969922ee484",
+    "protocol": "protocol.json",
+    "evaluation_freeze": "evidence/accuracy/evaluation_freeze.json"
+  },
+  "report": "README.md"
+}

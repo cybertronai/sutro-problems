@@ -1,0 +1,128 @@
+{
+  "schema_version": 1,
+  "built_at_utc": "2026-09-15T00:00:50.570795+00:00",
+  "name": "rev88-20260914-cache",
+  "tier": "MNIST-medium",
+  "target_error_percent": 12,
+  "qualifies": true,
+  "base_submission_path": "../submission.json",
+  "base_submission_sha256": "f035f4ab3bb91e14728c5d30abdbc07a28121a28cde21ae1df5ed3a58b28f985",
+  "configuration": {
+    "alpha": 0.5,
+    "batch_size": 128,
+    "momentum": 0.9,
+    "weight_decay": 0.0,
+    "seed": 11,
+    "depth": 2,
+    "epochs": 2,
+    "learning_rate": 0.1
+  },
+  "runtime_entrypoint": "cache_runtime.py",
+  "cublas_workspace_config": ":16:8",
+  "accuracy": {
+    "correct": 98208,
+    "total": 110000,
+    "accuracy_percent": 89.28,
+    "sample_sd_pp": 0.35908216329971143,
+    "error_percent": 10.719999999999999,
+    "meets_12_percent_error_target": true
+  },
+  "qualification": {
+    "draws": 11,
+    "predictions_bit_equal": 110000,
+    "full_state_bit_equal_to_original": false,
+    "same_workspace_replay_byte_repeatable": true,
+    "gradient_and_sgd_validation_passed": true
+  },
+  "memory": {
+    "peak_allocated_bytes": 15663104,
+    "live_allocated_bytes": 14237696,
+    "peak_reserved_bytes": 29360128,
+    "named_storage_bytes": 13960864,
+    "unnamed_live_allocated_bytes": 276832,
+    "peak_allocated_mib": 14.9375,
+    "nominal_l2_reference_bytes": 41943040,
+    "peak_allocated_below_nominal_l2_capacity": true,
+    "cache_residency_established": false,
+    "scope": "Fresh task preparation including CUDA graph capture plus one complete reset/train/predict invocation; tensor allocator only, excluding driver/context. Recorded before output diagnostics and profiling warmup."
+  },
+  "a100": {
+    "energy_mj": 1018.4190392485816,
+    "energy_sample_sd_mj": 47.31792745681788,
+    "runtime_ms": 38.8594066478588,
+    "runtime_sample_sd_ms": 0.15432854365317664,
+    "trials": 3,
+    "draw_measured": 0,
+    "scope": "Complete fresh GPU-resident reset/normalize/train/predict task; allocation, capture, transfers and host work excluded."
+  },
+  "grid": {
+    "energy_mj": null,
+    "runtime_ms": null,
+    "peak_scratch_bytes": null,
+    "active_processors": null,
+    "word_node_hops": null,
+    "time_to_score_seconds": null,
+    "model_revision": null,
+    "status": "not measured"
+  },
+  "warm_profile": {
+    "task": {
+      "dram_read_bytes_per_sequence": 3255536.0,
+      "dram_write_bytes_per_sequence": 1868800.0,
+      "dram_total_bytes_per_sequence": 5124336.0,
+      "l2_read_request_bytes_per_sequence": 859619420.0,
+      "l2_write_request_bytes_per_sequence": 452221656.0,
+      "l2_sector_hit_rate_percent": 95.45,
+      "counter_unit": "per complete fresh reset/train/predict task",
+      "pass_counts": [
+        2
+      ],
+      "profile_device_attributes": {
+        "device__attribute_display_name": "NVIDIA A100-SXM4-40GB",
+        "device__attribute_l2_cache_size": "41943040",
+        "device__attribute_total_memory": "42405855232",
+        "device__attribute_memory_clock_rate": "1215000",
+        "device__attribute_multiprocessor_count": "108",
+        "profiler__replayer_passes": "2",
+        "profiler__replayer_passes_type_warmup": "0",
+        "gpu__time_duration.sum": "2451604224"
+      }
+    },
+    "training": {
+      "dram_read_bytes_per_sequence": 2036480.0,
+      "dram_write_bytes_per_sequence": 1595648.0,
+      "dram_total_bytes_per_sequence": 3632128.0,
+      "l2_read_request_bytes_per_sequence": 754795904.0,
+      "l2_write_request_bytes_per_sequence": 375695744.0,
+      "l2_sector_hit_rate_percent": 97.58,
+      "counter_unit": "per original two-epoch training sequence, reset and prediction outside range",
+      "pass_counts": [
+        2
+      ],
+      "profile_device_attributes": {
+        "device__attribute_display_name": "NVIDIA A100-SXM4-40GB",
+        "device__attribute_l2_cache_size": "41943040",
+        "device__attribute_total_memory": "42405855232",
+        "device__attribute_memory_clock_rate": "1215000",
+        "device__attribute_multiprocessor_count": "108",
+        "profiler__replayer_passes": "2",
+        "profiler__replayer_passes_type_warmup": "0",
+        "gpu__time_duration.sum": "149245664"
+      }
+    }
+  },
+  "cache_claim": "Tracked tensor allocation fits nominal 40 MiB L2 capacity; warm traffic is measured. HBM traffic remains nonzero. No universal residency, cache pinning, L1 fit or energy improvement is established.",
+  "source_sha256": {
+    "cache_runtime.py": "98fedf67ef167aa76eba7cb5669e1c404e0734b58b855e80ba04bd932c30c40f",
+    "fixture.py": "18370a6bd4ec0e92d446af608b068a86d20d898b293a0edfae753ebb103f2b6a",
+    "run.py": "0f41efddd6000f56c36e162b517225cba0506123006a3023ec15f29dd57574bb",
+    "analyze.py": "fc34c05578da57c94105165cf8ee5af9abc335d18ad4f27221364c4771c1e6f9",
+    "validate_runtime.py": "4e288e723a0c9b8e2015d7bf337290de9a221fa0f59f98d5184d78a32465386f",
+    "build_submission.py": "4543f4940201c85aa16b46f83cb73fe15f4567de72469a4bae32b0a3bb978e34"
+  },
+  "evidence_sha256": {
+    "summary.json": "0e22e7dd9e62b7074bdbfdce351c775ba3763eb3fc599fda1dca2c876fb4eb76",
+    "cuda-validation.json": "feae38f9aeda37a65ffef8a667f79a49090f4f010d81594541f336fcb3406ad2",
+    "small-workspace.json": "f935630bb4b48f2563e54834f065a1b7f442113fd2e645bd86c9ea1b7ded1e0b"
+  }
+}

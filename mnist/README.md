@@ -1,3 +1,10 @@
+** Under construction **
+This will be turned into a A100 GPUmode competition. Meanwhile, please submit solutions so we can figure out common parameters/pitfalls:
+
+- Can we measure A100 energy correctly? (Otherwise, might forced to stick with time) 
+- What should the accuracy targets be? Is 2/3/5/8/12% good? 2% might too hard for mnist-medium
+- Can we detect cheating easily (ie boring solutions like hardcoding weights)? 
+
 # MNIST (information for humans)
 
 The system takes **train**/*test* images + **train** labels, and produces *test* labels.
@@ -7,9 +14,8 @@ The system takes **train**/*test* images + **train** labels, and produces *test*
 Provide a way to solve this problem at prescribed accuracy without hitting **the memory
 wall**. 
 
-IE
 - kernel that runs on A100 using few Joules (measured using NVML)
-- an algorithm that runs with small memory footprint in Bill Dally's 2D grid (measured by counting hops in [Bill Dally's 2D grid](https://github.com/cybertronai/simplified-dally-model/tree/main/models/spatial-computer))
+- (optional) an algorithm that runs with small memory footprint in Bill Dally's 2D grid (measured by counting hops in [Bill Dally's 2D grid](https://github.com/cybertronai/simplified-dally-model/tree/main/models/spatial-computer))
 
 ## Motivation
 Today's learning is based on backprop which was popularized in the 80s when we were bottlenecked by arithmetic. Today, we are bottlenecked by memory movement. This favors algorithms with small memory footprint. Backprop has a large memory footprint.
@@ -41,7 +47,18 @@ Accuracy targets:
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 2026-09-11 | 67.08% ± 1.54 pp | 3,300 | 130 | 0.24 | 3,100 | [H32 MLP](submissions/small60-grid-20260912/README.md) |
 | 2026-09-14 | 67.35% ± 1.76 pp | 2,600 | 110 | 0.19 | 1,800 | [NR-K8 Adam MLP](submissions/small-adam-nr-k8-20260912/README.md) |
+| 2026-09-15 | 67.11% ± 1.63 pp | 3,200 | 120 | 0.22 | 3,200 | [Panel-cached H32 MLP (1,000/1,000)](submissions/mlp-panels-revised-20260914/README.md) |
+| 2026-09-15 | 67.95% ± 1.64 pp | 0.59 | 0.017 | 0.00089 | 10 | [QDA](submissions/small-qda-20260915/README.md) |
 | 2026-09-15 | 68.39% ± 1.44 pp | — | — | 0.86 | 1.0 × 10⁴ | [9-64-10 SGD MLP](submissions/small64-sgd-20260915/report.md) |
+
+The revised panel result uses the same source examples and draw seeds as H32,
+but regenerated resized-image hashes differ; see its report's reproducibility caveat.
+The accuracy difference is not evidence of superiority.
+
+The QDA row reports the fresh eleven-draw evaluation and corrected A100
+energy, with a second-host cross-check. Its report retains the original
+evidence, discloses the preselection limitation, and documents the pending
+publicly committed beacon evaluation.
 
 ## MNIST-medium — 2% error target
 
@@ -58,6 +75,9 @@ Accuracy targets:
 | Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 2026-09-11 | 96.41% ± 0.13 pp | 290,000 | 9,300 | 440 | 3.7 × 10⁶ | [512-unit MLP (96% target)](submissions/medium96-grid-20260912/README.md) |
+| 2026-09-15 | 95.57% ± 0.17 pp | 174 | 3.3 | 0.19 | 2.0 × 10³ | [PCA-QDA](submissions/medium-pca-qda-20260915/README.md) |
+
+PCA-QDA uses the corrected A100 measurement: **174 mJ above idle**; see its [energy audit and rerun instructions](submissions/medium-pca-qda-20260915/energy-audit/README.md).
 
 ## MNIST-medium — 8% error target
 
@@ -68,7 +88,7 @@ Accuracy targets:
 
 | Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| 2026-09-14 | 89.28% ± 0.36 pp | 1,100 | 38 | — | — | [Reversible MLP (12% error target)](submissions/rev88-20260914/README.md) |
+| 2026-09-14 | 89.28% ± 0.36 pp | 1,000 | 39 | — | — | [Reversible MLP, smaller workspace (12% error target)](submissions/rev88-20260914/cache-audit/README.md) |
 
 ## MNIST-original — 1% test error target
 

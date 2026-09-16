@@ -1,5 +1,7 @@
 # MNIST-medium: reversible MLP, 12% error target
 
+**Preferred runtime update:** the [smaller-workspace runtime and cache audit](cache-audit/README.md) reduces peak tracked allocation from 78.69 to 14.94 MiB and preserves all 110,000 predictions. Warm training still performs measured HBM transfers. Its separate A100 measurement is 1,018 mJ and 38.86 ms per complete task; the original measurements and frozen qualification below remain historical evidence. The [current runtime record](cache-audit/submission.json) and [entry point](cache-audit/cache_runtime.py) are maintained separately from the original source/protocol.
+
 Submission date: September 14, 2026.
 
 **89.2800% ± 0.3591 pp** mean accuracy ± sample standard deviation over all eleven draws, with **98,208 / 110,000 correct**. The unrounded mean error is 10.72%. This **meets** the current inclusive 12% error band, which requires at least 88% mean accuracy or 96,800 correct. Qualification uses exact counts, not the rounded display.

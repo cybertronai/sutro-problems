@@ -1,0 +1,86 @@
+{
+  "hardware": {
+    "name": "NVIDIA A100-SXM4-40GB"
+  },
+  "versions": {
+    "torch": "2.5.1+cu124",
+    "numpy": "2.1.2",
+    "driver": "580.105.08",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35"
+  },
+  "provenance": {
+    "runner_sha256": "fb138d95f7929f3dc48589fcc3e6a31e753e1d7d00045b18fdc11ccc126f4aea",
+    "payload_sha256": "b431c17d823d77a981c118b951e52e0e07ecf6557deb54f3b7e8820f5d764cdf",
+    "dataset_seed": 20261201
+  },
+  "validation": {
+    "gpu_agrees_with_frozen_cpu_predictions": 1000,
+    "total": 1000,
+    "gpu_correct": 654,
+    "cpu_correct": 654,
+    "bitwise_equal_to_reference": false
+  },
+  "scope": "CUDA-graph replays of the complete training-and-prediction task on device-resident normalized inputs; excludes transfers, allocation, JIT and capture; NVML total-energy stamps with paired idle-power subtraction",
+  "rounds": [
+    {
+      "round": 0,
+      "repeats": 50000,
+      "cuda_ms": 0.32054251953125,
+      "wall_ms": 0.32060047617182136,
+      "gross_mj": 13.13254,
+      "adjusted_mj": 0.26150288964610807,
+      "idle_before_w": 39.62854096138745,
+      "idle_after_w": 40.66477153797289,
+      "average_power_w": 40.96232219244053
+    },
+    {
+      "round": 1,
+      "repeats": 50000,
+      "cuda_ms": 0.3203996484375,
+      "wall_ms": 0.32047292541712524,
+      "gross_mj": 13.1193,
+      "adjusted_mj": 0.2406365835765132,
+      "idle_before_w": 40.438843534770406,
+      "idle_after_w": 39.934020410979215,
+      "average_power_w": 40.937311577644245
+    },
+    {
+      "round": 2,
+      "repeats": 50000,
+      "cuda_ms": 0.320299765625,
+      "wall_ms": 0.3203556075505912,
+      "gross_mj": 13.12116,
+      "adjusted_mj": 0.23944336064001392,
+      "idle_before_w": 40.50164428022516,
+      "idle_after_w": 39.919714583147815,
+      "average_power_w": 40.95810933457089
+    },
+    {
+      "round": 3,
+      "repeats": 50000,
+      "cuda_ms": 0.3202229296875,
+      "wall_ms": 0.32028046105057,
+      "gross_mj": 13.12974,
+      "adjusted_mj": 0.25480333184814297,
+      "idle_before_w": 40.46199737024838,
+      "idle_after_w": 39.935892815871945,
+      "average_power_w": 40.994508241097186
+    },
+    {
+      "round": 4,
+      "repeats": 50000,
+      "cuda_ms": 0.32017806640625,
+      "wall_ms": 0.32024774445220827,
+      "gross_mj": 13.14824,
+      "adjusted_mj": 0.27666537836515315,
+      "idle_before_w": 40.44418880866101,
+      "idle_after_w": 39.94091831302689,
+      "average_power_w": 41.05646402753091
+    }
+  ],
+  "summary": {
+    "cuda_ms_median": 0.320299765625,
+    "adjusted_mj_median": 0.25480333184814297,
+    "gross_mj_median": 13.12974
+  }
+}

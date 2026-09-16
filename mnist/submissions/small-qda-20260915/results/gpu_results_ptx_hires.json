@@ -1,0 +1,217 @@
+{
+  "hardware": {
+    "name": "NVIDIA A100-SXM4-40GB"
+  },
+  "versions": {
+    "torch": "2.5.1+cu124",
+    "pyptx": "0.1.1",
+    "numpy": "2.1.2",
+    "driver": "580.105.08",
+    "platform": "Linux-5.4.0-216-generic-x86_64-with-glibc2.35"
+  },
+  "provenance": {
+    "runner_sha256": "ed6e7d53b661c3149239bc3924f309bd5dceac80216f006f7a2469ec923fb18c",
+    "ptx_sha256": "38c14efd4c9357eb4f1fd337c43aff9c7024d7ea877509e539b2b372deb48e2d",
+    "payload_sha256": "b431c17d823d77a981c118b951e52e0e07ecf6557deb54f3b7e8820f5d764cdf",
+    "dataset_seed": 20261201
+  },
+  "validation": {
+    "gpu_agrees_with_frozen_cpu_predictions": 1000,
+    "total": 1000,
+    "gpu_correct": 654,
+    "cpu_correct": 654,
+    "bitwise_equal_to_reference": false
+  },
+  "kernel": {
+    "launches": 2,
+    "mode": "redundant",
+    "stats": {
+      "grid": 8,
+      "block": 512,
+      "samples_per_block": 125
+    },
+    "score": {
+      "grid": 32,
+      "block": 320,
+      "queries_per_block": 32
+    },
+    "ptx_lines": 3730,
+    "ptx_files": [
+      "qda_stats.ptx",
+      "qda_score.ptx"
+    ]
+  },
+  "scope": "CUDA-graph replays (two PTX launches) of the complete training-and-prediction task on device-resident normalized inputs; excludes transfers, allocation, module load and capture; NVML total-energy stamps with paired idle-power subtraction",
+  "rounds": [
+    {
+      "round": 0,
+      "repeats": 2000000,
+      "cuda_ms": 0.0161910107421875,
+      "wall_ms": 0.016192469884408638,
+      "gross_mj": 0.661325,
+      "adjusted_mj": 0.0035598259943024004,
+      "idle_before_w": 40.467854920216894,
+      "idle_after_w": 40.77548580559108,
+      "average_power_w": 40.84151489679625
+    },
+    {
+      "round": 1,
+      "repeats": 2000000,
+      "cuda_ms": 0.0161843671875,
+      "wall_ms": 0.016186063105473294,
+      "gross_mj": 0.663189,
+      "adjusted_mj": 0.019010401416519242,
+      "idle_before_w": 39.647475133215146,
+      "idle_after_w": 39.949224124141956,
+      "average_power_w": 40.97284161555898
+    },
+    {
+      "round": 2,
+      "repeats": 2000000,
+      "cuda_ms": 0.0161831650390625,
+      "wall_ms": 0.016184911268763244,
+      "gross_mj": 0.663648,
+      "adjusted_mj": 0.012636816896727169,
+      "idle_before_w": 40.449714985322395,
+      "idle_after_w": 39.99696430660793,
+      "average_power_w": 41.00411729045655
+    },
+    {
+      "round": 3,
+      "repeats": 2000000,
+      "cuda_ms": 0.0161844130859375,
+      "wall_ms": 0.016185845522442833,
+      "gross_mj": 0.6636125,
+      "adjusted_mj": 0.005935071994433656,
+      "idle_before_w": 40.47011743256544,
+      "idle_after_w": 40.79563134696536,
+      "average_power_w": 40.999557241532656
+    },
+    {
+      "round": 4,
+      "repeats": 2000000,
+      "cuda_ms": 0.0161747001953125,
+      "wall_ms": 0.016176128678023816,
+      "gross_mj": 0.6635455,
+      "adjusted_mj": 0.012799542909291063,
+      "idle_before_w": 39.65690237525974,
+      "idle_after_w": 40.800661983112846,
+      "average_power_w": 41.02004337425085
+    },
+    {
+      "round": 5,
+      "repeats": 2000000,
+      "cuda_ms": 0.0161811875,
+      "wall_ms": 0.016182731038425116,
+      "gross_mj": 0.665404,
+      "adjusted_mj": 0.021123926849360486,
+      "idle_before_w": 39.662560995569685,
+      "idle_after_w": 39.96306852528529,
+      "average_power_w": 41.11815233288066
+    },
+    {
+      "round": 6,
+      "repeats": 2000000,
+      "cuda_ms": 0.016194181640625,
+      "wall_ms": 0.016195601555053146,
+      "gross_mj": 0.6633475,
+      "adjusted_mj": 0.005590996862654038,
+      "idle_before_w": 40.45596052149451,
+      "idle_after_w": 40.77059977655396,
+      "average_power_w": 40.9584971416533
+    },
+    {
+      "round": 7,
+      "repeats": 2000000,
+      "cuda_ms": 0.0161860302734375,
+      "wall_ms": 0.01618754538265057,
+      "gross_mj": 0.663217,
+      "adjusted_mj": 0.01192778776852606,
+      "idle_before_w": 39.66029172012729,
+      "idle_after_w": 40.807647900849524,
+      "average_power_w": 40.97081949872526
+    },
+    {
+      "round": 8,
+      "repeats": 2000000,
+      "cuda_ms": 0.016182763671875,
+      "wall_ms": 0.016184343879809604,
+      "gross_mj": 0.6631835,
+      "adjusted_mj": 0.01228520730982268,
+      "idle_before_w": 40.45696046180272,
+      "idle_after_w": 39.97858855074515,
+      "average_power_w": 40.97685423178254
+    },
+    {
+      "round": 9,
+      "repeats": 2000000,
+      "cuda_ms": 0.0161792822265625,
+      "wall_ms": 0.01618087302031927,
+      "gross_mj": 0.663094,
+      "adjusted_mj": 0.006200235899125232,
+      "idle_before_w": 40.431334258128224,
+      "idle_after_w": 40.762525093709584,
+      "average_power_w": 40.98011270265295
+    },
+    {
+      "round": 10,
+      "repeats": 2000000,
+      "cuda_ms": 0.0161936357421875,
+      "wall_ms": 0.016195162356831133,
+      "gross_mj": 0.6648095,
+      "adjusted_mj": 0.020236753281093003,
+      "idle_before_w": 39.65906606232485,
+      "idle_after_w": 39.941586591462915,
+      "average_power_w": 41.04988177037835
+    },
+    {
+      "round": 11,
+      "repeats": 2000000,
+      "cuda_ms": 0.0161864296875,
+      "wall_ms": 0.016187970192637294,
+      "gross_mj": 0.662801,
+      "adjusted_mj": 0.005787423005039159,
+      "idle_before_w": 40.421539390559765,
+      "idle_after_w": 40.751525444188644,
+      "average_power_w": 40.94404623387922
+    },
+    {
+      "round": 12,
+      "repeats": 2000000,
+      "cuda_ms": 0.0161800703125,
+      "wall_ms": 0.01618161325226538,
+      "gross_mj": 0.6627255,
+      "adjusted_mj": 0.018644340043557462,
+      "idle_before_w": 39.645542713852386,
+      "idle_after_w": 39.96100206205531,
+      "average_power_w": 40.95546529683747
+    },
+    {
+      "round": 13,
+      "repeats": 2000000,
+      "cuda_ms": 0.01617927734375,
+      "wall_ms": 0.01618094900203869,
+      "gross_mj": 0.66263,
+      "adjusted_mj": 0.011958747037185049,
+      "idle_before_w": 40.47235152826743,
+      "idle_after_w": 39.952010835254626,
+      "average_power_w": 40.95124457264609
+    },
+    {
+      "round": 14,
+      "repeats": 2000000,
+      "cuda_ms": 0.0161910908203125,
+      "wall_ms": 0.016192538843490183,
+      "gross_mj": 0.6626675,
+      "adjusted_mj": 0.004949452531091424,
+      "idle_before_w": 40.4554884817786,
+      "idle_after_w": 40.781685481627164,
+      "average_power_w": 40.92424952041473
+    }
+  ],
+  "summary": {
+    "cuda_ms_median": 0.0161843671875,
+    "adjusted_mj_median": 0.011958747037185049,
+    "gross_mj_median": 0.663189
+  }
+}
