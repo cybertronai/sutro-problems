@@ -1,0 +1,63 @@
+{
+  "created_utc": "2026-09-16T00:00:11.009888+00:00",
+  "fingerprint": "9266819df5eb85d6516460d33b3395ff5bcbcc17c519906d1e75d4320596214c",
+  "identity": {
+    "source_sha256": {
+      "spatial_program.py": "98bb16d740a9a724ceeba4f4d69967b1115035060a5d7ea416fd5a6d699a52f4",
+      "evaluate.py": "44c25259717387473903a17e3393fb772b2e99726e15d4e27ffc44bc2ff4823c",
+      "executor/executor.py": "52daab088df3724c60ff9661e70a226379477d42fde92ebd1e757559d088b3c5",
+      "executor/grid_pair.cpp": "019495391b730066573db328e7786c6fe6c833034fbcad0b2412a509bd6b7116",
+      "protocol.json": "f145edfbddf86d1aab2d46a190911d13cfb2e92c36718bec17135d834c3fafbf"
+    },
+    "protocol": {
+      "format_version": 1,
+      "frozen_utc": "2026-09-15T23:54:41.002972+00:00",
+      "spatial_program_sha256": "98bb16d740a9a724ceeba4f4d69967b1115035060a5d7ea416fd5a6d699a52f4",
+      "source_import_sha256": "ad19af47dea6815704296b31bff94482d74faf2b1cceb52b5cc57be91b2ca7e9",
+      "dataset_seeds": [
+        2026091600,
+        2026091601,
+        2026091602,
+        2026091603,
+        2026091604,
+        2026091605,
+        2026091606,
+        2026091607,
+        2026091608,
+        2026091609,
+        2026091610
+      ],
+      "n_train": 10000,
+      "n_test": 10000,
+      "filters": 512,
+      "filter_seed": 0,
+      "iterations": 300,
+      "gamma": 0.3,
+      "lambda_ridge": 0.001,
+      "lambda_kernel": 0.01,
+      "changes_from_import": [
+        "Clamp pixels to [0,1] before nonlinear transform",
+        "Add explicit kernel Jacobi inverse diagonal and updates"
+      ],
+      "arithmetic": "FP32 round-to-nearest ties-to-even; no FMA or reassociation; serial accumulation in IL order; original sqrt/asin/exp approximations retained",
+      "threshold": {
+        "minimum_correct": 107800,
+        "total_predictions": 110000
+      },
+      "selection": "Grid algorithm frozen before full-size grid results; no tuning or draw selection based on qualification accuracy.",
+      "same_dataset_protocol": "Submission protocol.json: direct PCG64(seed).permutation(60000), first10000 training,next10000 queries; canonical area resize9x9; freshtrainingeachdraw",
+      "validation": "Generic compiled IL versus Python interpreter; optimized numerical executor versus compiled IL raw words at reduced dimensions; all11 full-size frozen grid runs."
+    },
+    "program_file_sha256": "f26af2b4ae295cc88f11e976fb2918b19034b2e878a76bb35b40d4807c016f7b",
+    "program_canonical_sha256": "2ffa5c7991047740a025ee5efaf0c51c07399cba104a08585fe15d66a60f3762",
+    "input_manifest_sha256": "bda412eeb4037cb9527a8bda615e5d60f207548b202d2f21abe75ae90ac8a25f",
+    "parity_report_sha256": "b513cd46da6a83678a04810e7c9f7c48a6933b19ad47e40b40cda75898f2d18e",
+    "library_sha256": "a6e7fa8ec47cb9487b6ff208270e4edee0e987cd00dcd9a48100300368197792",
+    "python": "3.11.15",
+    "numpy": "2.1.2",
+    "machine": "x86_64",
+    "platform": "Linux-6.8.0-139-generic-x86_64-with-glibc2.39",
+    "threads": 16,
+    "arithmetic": "FP32RNE; FTZ/DAZ disabled; FMA/reassociation disabled; independent outer work parallel, each reduction retains IL order"
+  }
+}

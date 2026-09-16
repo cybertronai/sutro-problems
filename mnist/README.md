@@ -56,7 +56,7 @@ publicly committed beacon evaluation.
 
 | Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
-| 2026-09-16 | 98.12% ± 0.15 pp | 65,000 | 260 | — | — | [512-filter CG pair](submissions/medium-cg-pair-20260916/README.md) |
+| 2026-09-16 | 98.12% ± 0.15 pp (A100); 98.11% ± 0.14 pp (grid) | 65,000 | 260 | 1,500 | 1.2 × 10⁷ | [512-filter CG pair](submissions/medium-cg-pair-20260916/README.md) |
 
 ## MNIST-medium — 3% error target
 

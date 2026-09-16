@@ -28,7 +28,17 @@ on each host; peak reservation was **5,054,136,320 bytes**. These cover model
 preparation, three eager warmups, capture and first replay, excluding the sensor
 diagnostic and CUDA driver/context allocations.
 
-**Spatial-grid energy and runtime are unmeasured for this learner.**
+## Spatial-grid result
+
+The independently validated grid implementation also passes the **2% target**:
+**98.11% ± 0.14 pp**, or **107,917 / 110,000 correct**. Its numerical primitives
+and reduction order differ from the A100 implementation.
+
+The modeled result is **1,500 mJ**, **1.2 × 10⁷ ms**, and
+**1,264,557,504 bytes** peak scratch. Runtime is about 3.5 hours for a globally
+serialized schedule with one operation active at a time. The score includes
+initialization and tape I/O; it excludes dataset resizing. See the
+[grid report, reproduction commands and evidence](grid/README.md).
 
 ## Learner
 
@@ -75,11 +85,13 @@ sampled power differing by about 0.34%. The combined result averages host median
 
 ## Reproduce and verify
 
-Run from the repository root with Python 3.11. Verification needs only NumPy;
+Run from the repository root with Python 3.11. Pin OpenBLAS to Haswell on x86
+to reproduce the recorded resize hashes. Verification needs only NumPy;
 it reconstructs all datasets and checks the saved results without a GPU.
 
 ```bash
 SUB=mnist/submissions/medium-cg-pair-20260916
+export OPENBLAS_CORETYPE=Haswell
 python3.11 -m venv .venv-cg-verify
 .venv-cg-verify/bin/pip install numpy==2.1.2
 .venv-cg-verify/bin/python - <<'PYDATA'
