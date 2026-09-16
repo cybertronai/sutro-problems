@@ -1,12 +1,16 @@
 """Independently score frozen spatial-grid predictions against canonical labels."""
-import argparse, gzip, hashlib, io, json, statistics
+import argparse, gzip, hashlib, io, json, statistics, zipfile
 from pathlib import Path
 import numpy as np
 from mnist.code import data
 
 def artifact_bytes(path):
     path=Path(path)
-    return path.read_bytes() if path.exists() else gzip.decompress(Path(str(path)+'.gz').read_bytes())
+    if path.exists():return path.read_bytes()
+    compressed=Path(str(path)+'.gz')
+    if compressed.exists():return gzip.decompress(compressed.read_bytes())
+    with zipfile.ZipFile(path.parent/'outputs.npz') as archive:
+        return archive.read(path.name)
 
 def fh(path):return hashlib.sha256(artifact_bytes(path)).hexdigest()
 def ah(a):return hashlib.sha256(np.ascontiguousarray(a).tobytes()).hexdigest()

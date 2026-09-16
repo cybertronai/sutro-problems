@@ -5,11 +5,13 @@ from __future__ import annotations
 import argparse
 import gzip
 import hashlib
+import io
 import json
 import math
 from pathlib import Path
 import statistics
 import sys
+import zipfile
 
 import numpy as np
 
@@ -21,6 +23,15 @@ from mnist.code import data
 
 def file_hash(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def prediction_bytes(path):
+    """Read original prediction bytes from a fresh run or the evidence archive."""
+    path = Path(path)
+    if path.exists():
+        return path.read_bytes()
+    with zipfile.ZipFile(path.parent / "predictions.npz") as archive:
+        return archive.read(path.name)
 
 
 def close(actual, expected, context):
@@ -94,9 +105,10 @@ def check_a100(raw_dir, results_dir):
         if dataset["array_sha256"] != hashes:
             raise ValueError(f"A100 reconstructed input differs: {context}")
         predictions_path = results_dir / accuracy["prediction_file"]
-        if file_hash(predictions_path) != accuracy["prediction_file_sha256"]:
+        saved_predictions = prediction_bytes(predictions_path)
+        if hashlib.sha256(saved_predictions).hexdigest() != accuracy["prediction_file_sha256"]:
             raise ValueError(f"A100 prediction file hash differs: {context}")
-        predictions = np.load(predictions_path, allow_pickle=False)
+        predictions = np.load(io.BytesIO(saved_predictions), allow_pickle=False)
         if (predictions.shape != (10000,) or predictions.dtype != np.int64
                 or np.any((predictions < 0) | (predictions > 9))
                 or array_hash(predictions) != accuracy["prediction_sha256"]

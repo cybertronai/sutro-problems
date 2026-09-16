@@ -5,21 +5,10 @@ The frozen spatial implementation independently meets the **2% error target**:
 across 11 datasets. Its mean error is **1.8936364%**. All saved scores and
 checked intermediate arrays are finite.
 
-The GPU and spatial implementations have separate accuracy results:
-
-| Implementation | Accuracy, mean ± sample SD | Mean error | Qualification |
-|---|---:|---:|---:|
-| A100, independently reproduced on two hosts | 98.12% ± 0.15 pp | 1.88% | 107,932 / 110,000 |
-| Spatial grid, ordered FP32 implementation | 98.11% ± 0.14 pp | 1.8936364% | 107,917 / 110,000 |
-
-Both pass the exact requirement of at least **107,800 correct**. The leaderboard identifies each implementation’s accuracy separately.
+See the [submission summary](../README.md) for the A100 comparison and shared
+evaluation protocol. The exact qualification threshold is **107,800 correct**.
 
 ## Arithmetic and qualification
-
-The architecture and parameters remain fixed: 512 random 3×3 convolutional
-filters, ReLU and 3×3 average pooling, centered feature ridge plus RBF kernel
-ridge, 300 Jacobi-preconditioned CG iterations per member, and standardized
-scores summed before the first strict maximum.
 
 The grid uses explicit FP32 primitives. Each reduction follows ascending
 source indices with round-to-nearest, ties-to-even; FMA, reassociation and
@@ -67,8 +56,8 @@ computed separately from the declared grid schedule.
 | Peak scratch | **1,264,557,504 bytes** |
 
 The exact counts are 1,533,903,647,390,828 word-node hops and
-12,423,113,281,675 model cycles. The full score retains unrounded energy,
-runtime and each cost component.
+12,423,113,281,675 model cycles: **1,533.903647390828 mJ** and
+**12,423,113.281675 ms**. The full score retains each cost component.
 Computing the score took **510 s** on server-v80 (Ryzen 9 9950X3D2,
 Python 3.11.15, NumPy 2.1.2), with 25,408,872,448 bytes peak host RAM.
 Numerical executors were built with GCC 13.3.0; the specialization used 16 threads.
@@ -100,10 +89,10 @@ scorer; it preserves validation, placement, tape handling and all cost terms.
 
 ## Reproduce and verify
 
-Run from the repository root with Python 3.11 and NumPy 2.1.2. Only a fresh
-numerical execution needs a C++17 compiler with OpenMP (`g++`); verification of
-saved predictions needs no compiler or GPU. `OPENBLAS_CORETYPE=Haswell` pins
-area-resize arithmetic to the A100 input hashes on x86 hosts.
+Use the [submission setup](../README.md#reproduce-and-verify) to install
+Python 3.11 / NumPy 2.1.2, download canonical data and verify both saved results.
+The fresh numerical execution below also needs a C++17 compiler with OpenMP
+(`g++`). Run from the repository root after that setup:
 
 ```bash
 SUB=mnist/submissions/medium-cg-pair-20260916
@@ -111,18 +100,8 @@ GRID="$SUB/grid"
 SHARED="$PWD/mnist/submissions/grid-mlp-scoring-20260912"
 export PYTHONPATH="$PWD:$SHARED"
 export OPENBLAS_CORETYPE=Haswell
-python3.11 -m venv .venv-grid
-.venv-grid/bin/pip install -r "$GRID/requirements.txt"
-PY="$PWD/.venv-grid/bin/python"
+PY="$PWD/.venv-cg-verify/bin/python"
 RAW=/tmp/mnist-raw
-"$PY" - <<'PYDATA'
-from pathlib import Path
-from mnist.code import data
-for kind in ("train_images", "train_labels"):
-    data.download_source(Path("/tmp/mnist-raw"), *data.SOURCES[kind])
-PYDATA
-"$PY" "$GRID/verify.py" --raw-dir "$RAW"
-(cd "$SUB" && sha256sum -c SHA256SUMS)
 ```
 
 For fresh predictions, build the specialization, validate its reduced
@@ -165,8 +144,9 @@ all access counts, tape traffic, hop energy and blocking latency:
   --shared-scorer "$SHARED/score.py" --output "$RUN/grid-score.json"
 ```
 
-Scores are compressed losslessly as `.npy.gz`; original decoded file hashes
-remain in the frozen draw records. The verifier reads them directly.
+The saved predictions and scores are losslessly packed in `evidence/outputs.npz`.
+Original decoded file hashes remain in the frozen draw records; the verifier
+reads the archive directly. Fresh runs write individual `.npy` files.
 
 Evidence: [accuracy](evidence/accuracy.json), [prediction freeze](evidence/prediction_freeze.json),
 [run manifest](evidence/run_manifest.json), [numerical checks](evidence/conformance/),
