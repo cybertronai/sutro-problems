@@ -1,0 +1,39 @@
+{
+  "format_version": 1,
+  "frozen_utc": "2026-09-15T23:54:41.002972+00:00",
+  "spatial_program_sha256": "98bb16d740a9a724ceeba4f4d69967b1115035060a5d7ea416fd5a6d699a52f4",
+  "source_import_sha256": "ad19af47dea6815704296b31bff94482d74faf2b1cceb52b5cc57be91b2ca7e9",
+  "dataset_seeds": [
+    2026091600,
+    2026091601,
+    2026091602,
+    2026091603,
+    2026091604,
+    2026091605,
+    2026091606,
+    2026091607,
+    2026091608,
+    2026091609,
+    2026091610
+  ],
+  "n_train": 10000,
+  "n_test": 10000,
+  "filters": 512,
+  "filter_seed": 0,
+  "iterations": 300,
+  "gamma": 0.3,
+  "lambda_ridge": 0.001,
+  "lambda_kernel": 0.01,
+  "changes_from_import": [
+    "Clamp pixels to [0,1] before nonlinear transform",
+    "Add explicit kernel Jacobi inverse diagonal and updates"
+  ],
+  "arithmetic": "FP32 round-to-nearest ties-to-even; no FMA or reassociation; serial accumulation in IL order; original sqrt/asin/exp approximations retained",
+  "threshold": {
+    "minimum_correct": 107800,
+    "total_predictions": 110000
+  },
+  "selection": "Grid algorithm frozen before full-size grid results; no tuning or draw selection based on qualification accuracy.",
+  "same_dataset_protocol": "Submission protocol.json: direct PCG64(seed).permutation(60000), first10000 training,next10000 queries; canonical area resize9x9; freshtrainingeachdraw",
+  "validation": "Generic compiled IL versus Python interpreter; optimized numerical executor versus compiled IL raw words at reduced dimensions; all11 full-size frozen grid runs."
+}
