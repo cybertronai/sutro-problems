@@ -49,6 +49,7 @@ Accuracy targets:
 | 2026-09-14 | 67.35% ± 1.76 pp | 2,600 | 110 | 0.19 | 1,800 | [NR-K8 Adam MLP](submissions/small-adam-nr-k8-20260912/README.md) |
 | 2026-09-15 | 67.11% ± 1.63 pp | 3,200 | 120 | 0.22 | 3,200 | [Panel-cached H32 MLP (1,000/1,000)](submissions/mlp-panels-revised-20260914/README.md) |
 | 2026-09-15 | 67.95% ± 1.64 pp | 0.59 | 0.017 | 0.00089 | 10 | [QDA](submissions/small-qda-20260915/README.md) |
+| 2026-09-15 | 68.39% ± 1.44 pp | — | — | 0.86 | 1.0 × 10⁴ | [9-64-10 SGD MLP](submissions/small64-sgd-20260915/report.md) |
 
 The revised panel result uses the same source examples and draw seeds as H32,
 but regenerated resized-image hashes differ; see its report's reproducibility caveat.
