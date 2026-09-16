@@ -7,7 +7,9 @@ draws were frozen afterwards with the two-phase protocol in run.py.
 Learner semantics match the reviewed SGD scorer path: 9-H-10 ReLU MLP,
 squared error, batch 25, constant lr, step = lr/batch, gradients from
 pre-update weights, ascending-index FP32 reductions, fresh seed-101
-initialization per draw, 4*x-0.5 input transform. The sweep uses
+initialization per draw, 4*x-0.5 input transform. Downsampling uses
+run.resize_recorded (ordered accumulation, float64 product/sum intermediates,
+float32 cast after each step), matching run.py and verify.py. The sweep uses
 einsum-based matmuls with contiguous row-major operands, which preserve
 the ascending-K accumulation order (equivalence re-checked on the frozen
 configuration by verify.py against the ordered loops in reference.py).
@@ -23,7 +25,9 @@ import numpy as np
 
 REPO = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 from mnist.code import data as ds  # noqa: E402
+import run  # noqa: E402  (deterministic resize_recorded downsampling)
 
 RAW = Path(__file__).resolve().parents[3] / 'matmul' / 'mnist_cache'
 f32 = np.float32
@@ -63,8 +67,8 @@ def load(seed):
         train, test = order[:1000].astype(np.int64), order[1000:2000].astype(np.int64)
         pixels = ds.read_idx(RAW / 'train-images-idx3-ubyte.gz', 60000, True)
         labels = ds.read_idx(RAW / 'train-labels-idx1-ubyte.gz', 60000, False)
-        x = ds.area_resize(pixels[train].astype(f32) / f32(255), 3).reshape(1000, 9) * f32(4) - f32(.5)
-        q = ds.area_resize(pixels[test].astype(f32) / f32(255), 3).reshape(1000, 9) * f32(4) - f32(.5)
+        x = run.resize_recorded(pixels[train].astype(f32) / f32(255)).reshape(1000, 9) * f32(4) - f32(.5)
+        q = run.resize_recorded(pixels[test].astype(f32) / f32(255)).reshape(1000, 9) * f32(4) - f32(.5)
         target = (labels[train][:, None] == np.arange(10)).astype(f32)
         _CACHE[seed] = (x, q, target, labels[test])
     return _CACHE[seed]

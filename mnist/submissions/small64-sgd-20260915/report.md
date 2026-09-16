@@ -111,22 +111,36 @@ leaderboard row will then be updated with measured values.
 
 ## Verification and limitations
 
-`verify.py` re-checks draw seeds, train/test indices, input hashes,
-prediction hashes and the label-derived accuracy total; re-derives draw 0
-end-to-end from the ordered FP32 reference comparing parameter, score and
-prediction bits; confirms the pilot sweep's ascending-K einsum matmuls are
-bit-equivalent to the ordered loops; and, when `results/gpu_results.json`
-exists, re-verifies GPU predictions/parameters against the frozen CPU
-evidence and recomputes idle-adjusted energy from raw counters. Limitations:
-one GPU class planned (A100-SXM4-40GB); A100 measurement pending spend
-authorization; grid columns use the conservative globally serialized
-schedule, not a parallel-placement claim.
+`verify.py` re-checks draw seeds, train/test indices, raw-source SHA-256
+hashes, the per-draw train-image, train-label and test-image preprocessed
+input hashes against the draw manifest, prediction hashes and the
+label-derived accuracy total; re-derives draw 0 end-to-end from the ordered
+FP32 reference comparing parameter, score and prediction bits; confirms the
+pilot sweep's ascending-K einsum matmuls are bit-equivalent to the ordered
+loops; and, when `results/gpu_results.json` exists, re-verifies GPU
+predictions/parameters against the frozen CPU evidence and recomputes
+idle-adjusted energy from raw counters.
+
+Downsampling to 3x3 uses `run.resize_recorded`: the repository's box-area
+weights accumulated in increasing index order with float64 product/sum
+intermediates and a float32 cast after each step. The operation is BLAS-free,
+so the archived input hashes and the draw-0 re-derivation reproduce
+bit-identically across platforms (Linux x86 verified; the same construction
+is already merged in the medium PCA-QDA and MNIST-small QDA entries), where
+the previous float32-matmul `area_resize` dispatched to different BLAS
+kernels with different rounding. Limitations: one GPU class planned
+(A100-SXM4-40GB); A100 measurement pending spend authorization; grid columns
+use the conservative globally serialized schedule, not a parallel-placement
+claim.
 
 ## Reproduce and audit
 
 Run from this directory (Python 3.11+ with NumPy; the packaging host used
-Python 3.14.7 / NumPy 2.5.1 via nix develop; the score reproduction below is
-environment-insensitive because the scorer is integer/hop-exact):
+Python 3.14.7 / NumPy 2.5.1 via nix develop; after the deterministic-resize
+fix, all checks were re-run on Linux x86_64 with Python 3.12.14 / NumPy 2.5.2;
+downsampling and the draw-0 re-derivation are BLAS-free and
+platform-independent; the score reproduction below is environment-insensitive
+because the scorer is integer/hop-exact):
 
 ```sh
 python run.py prepare        # official draws, indices and input hashes

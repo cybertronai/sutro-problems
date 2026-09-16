@@ -55,21 +55,46 @@ def _raw():
 RAW = _raw()
 
 
+def resize_recorded(images, size=3):
+    """Reproduce the source BLAS's ordered FP32 multiply-adds for the 3x3 area resize.
+
+    Different BLAS builds round the repository `area_resize` matrix products
+    differently, so a float32 matmul does not reproduce the archived input
+    hashes on every machine (macOS ARM vs Linux x86). This keeps the
+    repository's box-area weights and increasing reduction order, taking a
+    float64 product and sum before each FP32 accumulation; it reproduces all
+    33 archived input hashes of the official draws bit-exactly and is free of
+    BLAS dispatch. Same construction as the merged medium PCA-QDA and
+    MNIST-small QDA entries' `resize_recorded`, at size 3.
+    """
+    weights = ds.area_weights(28, size).astype(np.float64)
+    images = np.asarray(images, dtype=f32)
+    horizontal = np.zeros((len(images), size, 28), dtype=f32)
+    for k in range(28):
+        horizontal = (horizontal.astype(np.float64)
+                      + weights[None, :, k, None] * images[:, None, k, :].astype(np.float64)).astype(f32)
+    result = np.zeros((len(images), size, size), dtype=f32)
+    for k in range(28):
+        result = (result.astype(np.float64)
+                  + horizontal[:, :, k, None].astype(np.float64) * weights[None, None, :, k]).astype(f32)
+    return result
+
+
 def _load(seed):
     order = np.random.Generator(np.random.PCG64(seed)).permutation(60000)
     train, test = order[:1000].astype(np.int64), order[1000:2000].astype(np.int64)
     pixels = ds.read_idx(RAW / 'train-images-idx3-ubyte.gz', 60000, True)
     labels = ds.read_idx(RAW / 'train-labels-idx1-ubyte.gz', 60000, False)
-    x = ds.area_resize(pixels[train].astype(f32) / f32(255), 3).reshape(1000, 9) * f32(4) - f32(.5)
-    q = ds.area_resize(pixels[test].astype(f32) / f32(255), 3).reshape(1000, 9) * f32(4) - f32(.5)
+    x = resize_recorded(pixels[train].astype(f32) / f32(255)).reshape(1000, 9) * f32(4) - f32(.5)
+    q = resize_recorded(pixels[test].astype(f32) / f32(255)).reshape(1000, 9) * f32(4) - f32(.5)
     target = (labels[train][:, None] == np.arange(10)).astype(f32)
     return train, test, x, q, target, pixels, labels
 
 
 def _arrays(pixels, labels, train, test):
-    return {'train_images': ds.area_resize(pixels[train].astype(f32) / f32(255), 3).reshape(1000, 1, 3, 3),
+    return {'train_images': resize_recorded(pixels[train].astype(f32) / f32(255)).reshape(1000, 1, 3, 3),
             'train_labels': labels[train].astype(np.int64),
-            'test_images': ds.area_resize(pixels[test].astype(f32) / f32(255), 3).reshape(1000, 1, 3, 3)}
+            'test_images': resize_recorded(pixels[test].astype(f32) / f32(255)).reshape(1000, 1, 3, 3)}
 
 
 def prepare():

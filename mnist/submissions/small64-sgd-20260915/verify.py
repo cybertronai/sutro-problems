@@ -26,6 +26,7 @@ sys.path.insert(0, str(repo()))
 sys.path.insert(0, str(HERE))
 from mnist.code import data as ds  # noqa: E402
 import reference  # noqa: E402
+import run  # noqa: E402
 
 
 def raw():
@@ -47,6 +48,8 @@ acc = json.loads((E / 'accuracy.json').read_text())
 assert [d['dataset_seed'] for d in draws['draws']] == [d['dataset_seed'] for d in preds['draws']]
 labels = ds.read_idx(raw() / 'train-labels-idx1-ubyte.gz', 60000, False)
 pixels = ds.read_idx(raw() / 'train-images-idx3-ubyte.gz', 60000, True)
+for name, expected in draws['raw_gz_sha256'].items():
+    assert ds.file_hash(raw() / name) == expected, f'raw MNIST {name} SHA-256 differs from the draw manifest'
 f32 = np.float32
 total = 0
 for d, record in zip(draws['draws'], preds['draws'], strict=True):
@@ -54,6 +57,10 @@ for d, record in zip(draws['draws'], preds['draws'], strict=True):
     train, test = order[:1000], order[1000:2000]
     assert ds.array_hash(train) == d['train_indices_sha256']
     assert ds.array_hash(test) == d['test_indices_sha256']
+    inputs = run._arrays(pixels, labels, train, test)
+    for name, value in inputs.items():
+        assert ds.array_hash(value) == d['input_sha256'][name], \
+            f'draw {d["draw"]}: {name} preprocessed-input hash differs from the draw manifest'
     path = E / record['path']
     assert hashlib.sha256(path.read_bytes()).hexdigest() == record['prediction_sha256']
     pred = np.load(path, allow_pickle=False)
@@ -62,20 +69,25 @@ for d, record in zip(draws['draws'], preds['draws'], strict=True):
     total += int((pred == labels[test]).sum())
 assert total == acc['correct'] == sum(r['correct'] for r in acc['draws'])
 assert acc['target_met'] is True
-print('PASS: draws, indices, input hashes, prediction hashes and label-derived accuracy consistent')
+print('PASS: draws, indices, prediction hashes and label-derived accuracy consistent')
+print('PASS: raw-source SHA-256 and all 11 draws\' train-image, train-label and test-image '
+      'input hashes match the draw manifest')
 
 # Re-derive draw 0 end-to-end from the ordered FP32 reference and compare bits.
+# Downsampling uses run.resize_recorded: ordered accumulation with float64
+# product/sum intermediates and a float32 cast after each step, so the inputs
+# are bit-identical on every platform instead of BLAS-dispatch-dependent.
 d0 = draws['draws'][0]
 order = np.random.Generator(np.random.PCG64(d0['dataset_seed'])).permutation(60000)
 train0, test0 = order[:1000].astype(np.int64), order[1000:2000].astype(np.int64)
-x0 = ds.area_resize(pixels[train0].astype(f32) / f32(255), 3).reshape(1000, 9) * f32(4) - f32(.5)
-q0 = ds.area_resize(pixels[test0].astype(f32) / f32(255), 3).reshape(1000, 9) * f32(4) - f32(.5)
+x0 = run.resize_recorded(pixels[train0].astype(f32) / f32(255)).reshape(1000, 9) * f32(4) - f32(.5)
+q0 = run.resize_recorded(pixels[test0].astype(f32) / f32(255)).reshape(1000, 9) * f32(4) - f32(.5)
 target0 = (labels[train0][:, None] == np.arange(10)).astype(f32)
 params0, scores0, pred0 = reference.train_predict(x0, q0, target0, dict(reference.CONFIG))
 assert ds.array_hash(pred0) == preds['draws'][0]['array_sha256'], 'draw 0 prediction bits changed'
 assert ds.array_hash(params0) == preds['draws'][0]['parameter_sha256'], 'draw 0 parameter bits changed'
 assert ds.array_hash(scores0) == preds['draws'][0]['scores_sha256'], 'draw 0 score bits changed'
-print('PASS: draw 0 reproduced bit-exactly from ordered FP32 reference')
+print('PASS: draw 0 reproduced bit-exactly from the ordered FP32 reference and deterministic area resize')
 
 # The pilot sweep used ascending-K einsum matmuls; confirm they agree bit-for-bit
 # with the ordered loops on the frozen configuration and draw 0.
