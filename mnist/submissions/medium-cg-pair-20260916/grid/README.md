@@ -58,9 +58,10 @@ computed separately from the declared grid schedule.
 The exact counts are 1,533,903,647,390,828 word-node hops and
 12,423,113,281,675 model cycles: **1,533.903647390828 mJ** and
 **12,423,113.281675 ms**. The full score retains each cost component.
-Computing the score took **510 s** on server-v80 (Ryzen 9 9950X3D2,
-Python 3.11.15, NumPy 2.1.2), with 25,408,872,448 bytes peak host RAM.
-Numerical executors were built with GCC 13.3.0; the specialization used 16 threads.
+Computing the score took **680 s** on a 128 GB Vast.ai host (Core i7-13700,
+Python 3.11.16, NumPy 2.1.2), with **89,219,280,896 bytes** peak process RAM.
+The numerical executors ran separately on server-v80, built with GCC 13.3.0;
+the specialization used 16 threads.
 Displayed energy and runtime use two significant figures.
 
 The score covers a complete fresh training-and-prediction run, including
@@ -83,9 +84,9 @@ area resizing supply the input tape and are outside this scope.
   storage or transport are outside its energy model.
 
 These are exact modeled costs for the declared globally serialized schedule.
-The scorer wrapper discards operand histograms after counting them to reduce
-host memory use. Its reduced checks match every invariant field of the shared
-scorer; it preserves validation, placement, tape handling and all cost terms.
+They are computed by a direct call to the repository's existing
+[`score.score(document)`](../../grid-mlp-scoring-20260912/score.py), with its
+default histogram cache. The scorer and its dependencies are unmodified.
 
 ## Reproduce and verify
 
@@ -134,14 +135,23 @@ To reproduce the independent full-size conformance check after fresh evaluation:
   --output-dir "$RUN/full-conformance"
 ```
 
-The full static scorer needs a host with **40 GB available RAM**. Its large
+Use a **128 GB RAM host** for the full static scorer. Its large
 host arrays are separate from the modeled scratch memory. It validates
 instruction legality and initialization, places every address, and recomputes
-all access counts, tape traffic, hop energy and blocking latency:
+all access counts, tape traffic, hop energy and blocking latency. The scorer's
+CLI generates MLPs; call its existing function directly for the frozen CG program:
 
 ```bash
-"$PY" "$GRID/scorer/score_program.py" "$RUN/program.json" \
-  --shared-scorer "$SHARED/score.py" --output "$RUN/grid-score.json"
+PYTHONPATH="$SHARED" "$PY" - "$RUN/program.json" "$RUN/grid-score.json" <<'PYSCORE'
+import json, sys
+from pathlib import Path
+from score import score
+
+program = json.loads(Path(sys.argv[1]).read_text())
+result = score(program)
+Path(sys.argv[2]).write_text(json.dumps(result, indent=2, sort_keys=True) + "\n")
+print(result["energy_mj"], result["time_ms"])
+PYSCORE
 ```
 
 The saved predictions and scores are losslessly packed in `evidence/outputs.npz`.
@@ -150,4 +160,5 @@ reads the archive directly. Fresh runs write individual `.npy` files.
 
 Evidence: [accuracy](evidence/accuracy.json), [prediction freeze](evidence/prediction_freeze.json),
 [run manifest](evidence/run_manifest.json), [numerical checks](evidence/conformance/),
-[complete modeled score](evidence/grid-score.json), and [verification](evidence/verification.json).
+[complete modeled score](evidence/grid-score.json), [scoring provenance](evidence/score-run.json),
+and [verification](evidence/verification.json).

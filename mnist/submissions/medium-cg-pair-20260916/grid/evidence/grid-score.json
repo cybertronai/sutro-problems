@@ -70,7 +70,7 @@
     "set": 570199438,
     "sub": 20075344000
   },
-  "histograms_computed": 8007,
+  "histograms_computed": 6543,
   "initialization_proof_visits": 316139160,
   "input_tape_words": 1630000,
   "instruction_issuing_processors": 250,
@@ -607,32 +607,6 @@
   "placement_sha256": "c0db7fb398471889cf36f05bd8ae0dd5791aa382cb235bdf40ef44031c63ebf4",
   "program_scratch_words": 316139126,
   "program_sha256": "2ffa5c7991047740a025ee5efaf0c51c07399cba104a08585fe15d66a60f3762",
-  "reproduction": {
-    "cached_comparison": null,
-    "completed_at_utc": "2026-09-16T00:05:06.619054+00:00",
-    "histograms_computed_semantics": "Operand histogram calls, including repeated identical operands",
-    "host": {
-      "hostname": "server-v80",
-      "logical_cpu_count": 32,
-      "machine": "x86_64",
-      "numpy": "2.1.2",
-      "platform": "Linux-6.8.0-139-generic-x86_64-with-glibc2.39",
-      "python": "3.11.15"
-    },
-    "peak_process_rss_bytes": 25408872448,
-    "peak_process_rss_scope": "Whole wrapper process including optional cached comparison",
-    "program_file_sha256": "f26af2b4ae295cc88f11e976fb2918b19034b2e878a76bb35b40d4807c016f7b",
-    "source_sha256": {
-      "affine.py": "8ac38bf9fccbef87ba05c4dd6a4e5d9901dceae4e71baad0ddd5794c22298d45",
-      "model_ir.py": "cc039abc33a731a471c4caf9e35d9c1799ea5246501ae9bea962406a91bcf910",
-      "score.py": "41b47384ec525718a4546f98f5ad25a4d82dd8bdfb97a762e451476cae29eaf8",
-      "score_program.py": "30e1a70c39be1e678dabaad6ff784803a587939f70169209db458f95784dfb0a"
-    },
-    "started_at_utc": "2026-09-15T23:56:36.604298+00:00",
-    "wrapper": "Unchanged shared scorer with histogram_counts cache disabled",
-    "wrapper_elapsed_scope": "JSON input, imports, exact scorer and optional cached comparison; excludes output serialization and file write",
-    "wrapper_elapsed_seconds": 510.0168519260187
-  },
   "schedule": "Expand original affine loops in lexicographic iteration order. Complete every access before starting the next. Each normal instruction runs on P(125,0), reading listed sources then writing destination. Lower kth recv to P(k mod250,0):recv stage; P(125,0):copy original_dst,stage. Lower qth send to P(125,0):copy stage,original_src; P(q mod250,0):send stage. Route remote requests horizontally then vertically; responses retrace. Global serialization defines access/transfer cycle starts by prefix sums of blocking latencies; no contention or waiting queues occur.",
   "score_kind": "exact static counts of a globally serialized legal schedule",
   "stage_local_coordinate": [
@@ -643,7 +617,7 @@
   "time_ms": 12423113.281675,
   "time_ns": 12423113281675,
   "time_to_score_scope": "Program/schema/address/initialization validation, physical placement, affine access histograms, exact integer costs, port counts and program/placement hashing; excludes program generation, JSON/file I/O and numerical accuracy execution",
-  "time_to_score_seconds": 509.87985441699857,
+  "time_to_score_seconds": 675.7327618803829,
   "total_executed_instructions": 1082331118048,
   "word_node_hops": 1533903647390828
 }

@@ -22,6 +22,7 @@ accuracy is qualified separately. Its **globally serialized schedule** takes
 about **3.5 hours**, with **1,264,557,504 bytes** peak scratch. The modeled costs
 include initialization and tape I/O and exclude dataset resizing. See the
 [grid report](grid/README.md) for exact costs, arithmetic and reproduction.
+The full grid program is scored with the repository's unmodified shared scorer.
 
 ## Learner
 

@@ -52,9 +52,14 @@ def main():
     score=json.loads((evidence/'grid-score.json').read_text())
     check(score['program_sha256']==canonical and score['configuration']==program['metadata'],'Score belongs to another program')
     shared=HERE.parent.parent/'grid-mlp-scoring-20260912'
-    for name,expected in score['reproduction']['source_sha256'].items():
-        path=HERE/'scorer'/name if name=='score_program.py' else shared/name
-        check(sha(path)==expected,f'Scoring source changed: {name}')
+    score_run=json.loads((evidence/'score-run.json').read_text())
+    check(score_run['method']=='Direct score.score(document); unmodified repository scorer with its default histogram cache','Unexpected scoring method')
+    check(score_run['score_file_sha256']==sha(evidence/'grid-score.json'),'Scoring run result differs')
+    check(score_run['program_file_sha256']==hashlib.sha256(program_bytes).hexdigest(),'Scoring run program differs')
+    check(score_run['scorer_repository_path']=='mnist/submissions/grid-mlp-scoring-20260912','Unexpected scorer path')
+    check(set(score_run['source_sha256'])=={'score.py','affine.py','model_ir.py'},'Unexpected scorer source set')
+    for name,expected in score_run['source_sha256'].items():
+        check(sha(shared/name)==expected,f'Scoring source changed: {name}')
     instructions=collections.Counter()
     def count(body,multiplicity=1):
         for node in body:
@@ -99,6 +104,7 @@ def main():
             check(item['sha256']==reference['snapshots'][source_name]['sha256'] and item['all_finite'],'Independent numerical region differs')
     score_audit=json.loads((evidence/'conformance/full-score-audit.json').read_text())
     check(score_audit['passed'] and score_audit['full_score_sha256']==sha(evidence/'grid-score.json'),'Score audit differs')
+    check(score_audit['score_run_sha256']==sha(evidence/'score-run.json'),'Score audit run metadata differs')
     report={'verified':True,'program_sha256':canonical,'frozen_source_hashes_verified':True,
             'all11_input_datasets_match_a100':True,'accuracy_and_argmax_verified':True,
             'score_source_hashes_and_arithmetic_verified':True,'reduced_numerical_parity_verified':True,
