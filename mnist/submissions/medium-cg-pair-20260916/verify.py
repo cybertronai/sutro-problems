@@ -1,4 +1,4 @@
-"""Independently rescore saved predictions and recompute A100 measurements."""
+"""Verify saved A100 results, or all packaged evidence with --all."""
 
 from __future__ import annotations
 
@@ -10,6 +10,7 @@ import json
 import math
 from pathlib import Path
 import statistics
+import subprocess
 import sys
 import zipfile
 
@@ -32,6 +33,37 @@ def prediction_bytes(path):
         return path.read_bytes()
     with zipfile.ZipFile(path.parent / "predictions.npz") as archive:
         return archive.read(path.name)
+
+
+def check_checksums():
+    """Validate each packaged artifact against SHA256SUMS before verification."""
+    checked = set()
+    for line_number, line in enumerate((HERE / "SHA256SUMS").read_text().splitlines(), 1):
+        fields = line.split("  ", 1)
+        if len(fields) != 2:
+            raise ValueError(f"SHA256SUMS:{line_number}: expected SHA256 and filename")
+        expected, name = fields
+        path = (HERE / name).resolve()
+        if (len(expected) != 64 or any(char not in "0123456789abcdef" for char in expected)
+                or not path.is_relative_to(HERE) or name in checked):
+            raise ValueError(f"SHA256SUMS:{line_number}: invalid or duplicate entry {name!r}")
+        if not path.is_file():
+            raise ValueError(f"Missing packaged artifact: {name}")
+        if file_hash(path) != expected:
+            raise ValueError(f"Package checksum differs: {name}")
+        checked.add(name)
+    if not checked:
+        raise ValueError("SHA256SUMS contains no artifacts")
+    return {"verified": True, "files_checked": len(checked)}
+
+
+def check_grid(raw_dir):
+    """Run the lightweight grid evidence verifier; do not invoke the full scorer."""
+    command = [sys.executable, str(HERE / "grid/verify.py"), "--raw-dir", str(raw_dir)]
+    completed = subprocess.run(command, capture_output=True, text=True)
+    if completed.returncode:
+        raise ValueError(f"Grid evidence verification failed:\n{completed.stderr.strip()}")
+    return json.loads(completed.stdout)
 
 
 def close(actual, expected, context):
@@ -233,10 +265,17 @@ def main():
                         help="Directory containing the canonical MNIST training IDX gzip files")
     parser.add_argument("--a100-dir", type=Path, default=HERE / "evidence/a100",
                         help="Directory containing two A100 .json or .json.gz records and their predictions")
+    parser.add_argument("--all", dest="all_results", action="store_true",
+                        help="Check package checksums and saved A100/grid evidence; no GPU or full scorer needed")
     args = parser.parse_args()
     if np.__version__ != "2.1.2":
         parser.error("Use NumPy 2.1.2 to reproduce dataset hashes")
-    result = {"a100": check_a100(args.raw_dir, args.a100_dir)}
+    result = {}
+    if args.all_results:
+        result["checksums"] = check_checksums()
+    result["a100"] = check_a100(args.raw_dir, args.a100_dir)
+    if args.all_results:
+        result["grid"] = check_grid(args.raw_dir)
     print(json.dumps(result, indent=2, allow_nan=False))
 
 
