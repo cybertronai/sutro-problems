@@ -1,0 +1,37 @@
+# name: mnist-medium-5pct-energy (prototype)
+
+files:
+  - {"name": "submission.py", "source": "@SUBMISSION@"}
+  - {"name": "task.py", "source": "../task.py"}
+  - {"name": "reference.py", "source": "../reference.py"}
+  - {"name": "eval.py", "source": "../eval.py"}
+  - {"name": "worker.py", "source": "../worker.py"}
+  - {"name": "nvml.py", "source": "../nvml.py"}
+  - {"name": "energy.py", "source": "../../code/energy.py"}
+  - {"name": "mnist_data.py", "source": "../../code/data.py"}
+
+lang: "py"
+
+description: |
+  MNIST-medium (9x9 images, 10,000 train / 10,000 test), 5% mean-error band.
+  Train from scratch and predict on every call. Ranked by GPU board energy above
+  idle per complete training-and-prediction call, measured with NVML; the
+  leaderboard's time column shows nanojoules as nanoseconds (1 s = 1 J).
+  Test labels, draw seeds and a per-draw label permutation are secret.
+
+config:
+  main: "eval.py"
+
+templates:
+  Python: "../template.py"
+
+tests:
+  - {"size": 9, "train": 10000, "test": 10000, "error_bp": 500, "draws": 1, "seed": 101}
+
+benchmarks:
+  - {"size": 9, "train": 10000, "test": 10000, "error_bp": 500, "draws": 11, "seed": 202}
+
+test_timeout: 300
+benchmark_timeout: 900
+ranked_timeout: 1800
+ranking_by: "last"
