@@ -229,7 +229,10 @@ different train/test split protocol; matching counts alone is insufficient.
 <summary>Historical submissions (previous specification)</summary>
 
 The entries below retain their original measurements. Small used 600 training
-and 600 test images; medium used 6,000 of each, except Ordered ConvNets, which
+and 600 test images, except Static dataflow 3x3, whose row reports its
+int8-safe model on 1,000 of each (the 600-example prototype had a logit
+overflow in bytecode and is documented in its report, not the table); medium
+used 6,000 of each, except Ordered ConvNets, which
 used 10,000 of each and meets the 3% mean-error target. Reported Dally scores
 and areas use the former **single-core-with-tape** model. These results do not
 establish spatial-computer costs; consult each report for its accuracy scope.
@@ -242,6 +245,7 @@ scores.
 
 | Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| 2026-09-14 | 48.4% | 0.11 | 0.0062 | — | — | [Static dataflow 3x3 int8-safe (1,000/1,000)](submissions/static-dataflow-3x3-20260914/report.md) |
 | 2026-09-12 | 65.0% ± 2.1 pp | 1,800 | 57 | — | — | [Panel-cached MLP (600/600)](submissions/mlp-panels-v4-20260911/report.md) |
 | 2026-09-10 | 62% | 2,000 | 71 | — | — | [32-unit MLP](https://cybertronai.github.io/sutro-problems/docs/submissions/mlp60-affine-20260911/) |
 | 2026-09-10 | 51% | 0.52 | 0.0069 | — | — | [1NN](https://cybertronai.github.io/sutro-problems/docs/submissions/1nn-v4-20260911/) |
