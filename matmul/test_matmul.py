@@ -227,6 +227,12 @@ def test_best_675_cost_matches_record_history():
     }
 
 
+def test_best_674_cost_matches_record_history():
+    from matmul.submissions.best_674 import verify
+
+    assert verify() == 674
+
+
 def test_macro_b_staging_66633_cost_matches_record_history():
     from matmul.submissions.macro_b_staging_66633 import (
         generate_macro_b_staging_66633,
