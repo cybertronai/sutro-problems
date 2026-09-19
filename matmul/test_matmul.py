@@ -282,6 +282,16 @@ def test_best_65084_cost_matches_record_history():
 
 
 # ---------------------------------------------------------------------------
+# New record: exact output proof and frozen-artifact accounting
+# ---------------------------------------------------------------------------
+
+def test_best_63290_cost_matches_record_history():
+    from matmul.submissions.best_63290 import verify
+
+    assert verify() == 63_290
+
+
+# ---------------------------------------------------------------------------
 # Newline / semicolon line separators are interchangeable
 # ---------------------------------------------------------------------------
 

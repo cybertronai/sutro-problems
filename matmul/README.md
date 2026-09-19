@@ -73,6 +73,7 @@ rejected, which admits the usual bilinear matmul algorithms.
 | 2026-09-07 |  63,819 | [ir](submissions/best_63819.ir), [report](submissions/best_63819.md), [py](submissions/best_63819.py) | [@SecurityQQ](https://github.com/SecurityQQ) | 6+10 asymmetric panels + dependency-safe scheduling + input captures and address allocation (frozen-artifact verifier) |
 | 2026-09-15 |  63,639 | [ir](submissions/best_63639.ir), [report](submissions/best_63639.md), [py](submissions/best_63639.py) | [@jurajselep](https://github.com/jurajselep) | input copy-chain and neutral-plan optimization + whole-program allocation with an exact rational certificate |
 | 2026-09-15 |  63,354 | [ir](submissions/best_63354.ir), [py](submissions/best_63354.py) | [@jurajselep](https://github.com/jurajselep) | exact block reordering + joint reduction-tree and storage allocation |
-| 2026-09-18 |  63,350 | [ir](submissions/best_63350.ir), [report](submissions/best_63350.md), [py](submissions/best_63350.py) | [@jurajselep](https://github.com/jurajselep) | joint reduction-tree/storage repair + redundant-copy elimination ★ best |
+| 2026-09-18 |  63,350 | [ir](submissions/best_63350.ir), [report](submissions/best_63350.md), [py](submissions/best_63350.py) | [@jurajselep](https://github.com/jurajselep) | joint reduction-tree/storage repair + redundant-copy elimination |
+| 2026-09-18 |  63,290 | [ir](submissions/best_63290.ir), [report](submissions/best_63290.md), [py](submissions/best_63290.py) | [@jurajselep](https://github.com/jurajselep) | structural schedule search + six local sum reassociations (frozen-artifact verifier) ★ best |
 
 [access_distance](doc/access_distance/) — read-distance histograms for the plotted submission set.
