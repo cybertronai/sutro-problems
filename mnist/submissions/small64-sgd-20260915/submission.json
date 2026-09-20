@@ -1,0 +1,54 @@
+{
+  "date": "2026-09-15",
+  "tier": "MNIST-small",
+  "target_accuracy": 0.67,
+  "target_met": true,
+  "accuracy": {
+    "correct": 7523,
+    "total": 11000,
+    "mean": 0.6839090909090909,
+    "sample_stddev_pp": 1.4376748905469148,
+    "source": "evidence/accuracy/accuracy.json"
+  },
+  "learner": {
+    "architecture": "9-64-10 ReLU MLP",
+    "parameters": 1290,
+    "optimizer": "constant-lr squared-error minibatch SGD",
+    "epochs": 500,
+    "batch_size": 25,
+    "learning_rate": 0.1,
+    "learner_seed": 101,
+    "selection": "predeclared on pilot seeds 20261120-30, 69.80% pilot mean (evidence/pilot_results.json)"
+  },
+  "a100": {
+    "status": "pending: Modal workspace spend limit exhausted at packaging time; protocol and scripts complete",
+    "energy_mj": null,
+    "time_ms": null,
+    "source": "results/gpu_results.json (to be produced)",
+    "scope": "steady-state complete training and prediction via CUDA-graph replays; NVML board energy with paired idle subtraction; three trials"
+  },
+  "grid": {
+    "energy_mj": 0.86490908161,
+    "time_ms": 10361.24328,
+    "energy_fj": 864909081610,
+    "cycles": 10361243280,
+    "peak_scratch_bytes": 100076,
+    "time_to_score_seconds": 0.047046493000379996,
+    "model_spec_commit": "01a0bd5e0d2564825b0f53dd766f763c82dbc7c0",
+    "source": "../grid-mlp-scoring-20260912/small64-sgd-20260915/grid-score.json",
+    "scope": "complete serialized instruction schedule on the reviewed SGD scorer path; no scorer modification",
+    "status": "final",
+    "report": "../grid-mlp-scoring-20260912/small64-sgd-20260915"
+  },
+  "source_sha256": {
+    "run.py": "6e3f674e1651331a0fca42c3c3e016dd780bce143e9c216dc681eda732c3177d",
+    "reference.py": "d030eb8b27ce852e58753772b9ecaf936d09e864135be8fdf2f9616a2bd0e2b8",
+    "gpu_benchmark.py": "6fe9e0a8f57c6e8b0497b415f1843eb8c568ed6dc1f0571a2903463b9892112f",
+    "verify.py": "e925b5ac1b6b97edb920c796ec2908a9897dc41c2a3e023cb779276a106c0737",
+    "pilot.py": "647e9029bb4b32a27c8e3b63ad62d5559f151d06c904207621b94268213e40fa"
+  },
+  "contributors": [
+    "Sutro"
+  ],
+  "report": "report.md"
+}
