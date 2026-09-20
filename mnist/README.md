@@ -95,6 +95,7 @@ PCA-QDA uses the corrected A100 measurement: **174 mJ above idle**; see its [ene
 
 | Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
+| 2026-09-20 | 99.06% | 30,000 | 290 | — | — | [PCANet 9-block + mixture, k=8 K=100](submissions/original-pcanet-mixture-20260920/README.md) |
 
 <details>
 <summary>Information for agents</summary>

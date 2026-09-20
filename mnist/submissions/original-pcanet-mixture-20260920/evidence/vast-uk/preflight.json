@@ -1,0 +1,111 @@
+{
+  "started_utc": "2026-09-20T21:15:22Z",
+  "hostname": "f3641ab76b4c",
+  "platform": "Linux-6.8.0-107-generic-x86_64-with-glibc2.35",
+  "python": "3.11.10",
+  "python_executable": "/opt/conda/bin/python",
+  "package_path": "/workspace/pcanet-k100-audit",
+  "environment": {
+    "MAX_JOBS": "2",
+    "TORCH_CUDA_ARCH_LIST": "8.0",
+    "CUDA_VISIBLE_DEVICES": null,
+    "NVIDIA_VISIBLE_DEVICES": "all",
+    "CUDA_HOME": null,
+    "CXX": null
+  },
+  "nvidia_smi_query": {
+    "command": [
+      "nvidia-smi",
+      "--query-gpu=index,name,uuid,pci.bus_id,driver_version,memory.total,power.limit",
+      "--format=csv,noheader,nounits"
+    ],
+    "returncode": 0,
+    "stdout": "0, NVIDIA A100-SXM4-40GB, GPU-a23d0d2d-46c8-90d4-7cb7-5392ef355941, 00000000:01:00.0, 570.211.01, 40960, 270.00\n",
+    "stderr": ""
+  },
+  "gpu": {
+    "index": "0",
+    "name": "NVIDIA A100-SXM4-40GB",
+    "uuid": "GPU-a23d0d2d-46c8-90d4-7cb7-5392ef355941",
+    "pci_bus_id": "00000000:01:00.0",
+    "driver": "570.211.01",
+    "memory_mib": "40960",
+    "power_limit_w": "270.00"
+  },
+  "cxx": {
+    "command": [
+      "/usr/bin/c++",
+      "--version"
+    ],
+    "returncode": 0,
+    "stdout": "c++ (Ubuntu 11.4.0-1ubuntu1~22.04) 11.4.0\nCopyright (C) 2021 Free Software Foundation, Inc.\nThis is free software; see the source for copying conditions.  There is NO\nwarranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.\n\n",
+    "stderr": ""
+  },
+  "nvcc": {
+    "command": [
+      "/usr/local/cuda/bin/nvcc",
+      "--version"
+    ],
+    "returncode": 0,
+    "stdout": "nvcc: NVIDIA (R) Cuda compiler driver\nCopyright (c) 2005-2024 NVIDIA Corporation\nBuilt on Thu_Mar_28_02:18:24_PDT_2024\nCuda compilation tools, release 12.4, V12.4.131\nBuild cuda_12.4.r12.4/compiler.34097967_0\n",
+    "stderr": ""
+  },
+  "dependencies": {
+    "before": {
+      "torch": "2.5.1+cu124",
+      "numpy": "2.1.2",
+      "nvidia-ml-py": null,
+      "ninja": "1.11.1.1"
+    },
+    "after": {
+      "torch": "2.5.1+cu124",
+      "numpy": "2.1.2",
+      "nvidia-ml-py": "13.610.43",
+      "ninja": "1.11.1.1"
+    },
+    "installation_commands": [
+      [
+        "/opt/conda/bin/python",
+        "-m",
+        "pip",
+        "install",
+        "--disable-pip-version-check",
+        "--no-input",
+        "nvidia-ml-py==13.610.43"
+      ]
+    ],
+    "initial_torch_probe": {
+      "command": [
+        "/opt/conda/bin/python",
+        "-c",
+        "\nimport json\nimport torch\nassert not torch.cuda.is_initialized(), 'Import unexpectedly initialized CUDA'\ninfo = {'version': torch.__version__, 'cuda': torch.version.cuda,\n        'cudnn': torch.backends.cudnn.version(),\n        'cuda_initialized': torch.cuda.is_initialized()}\nassert not info['cuda_initialized'], 'Version query initialized CUDA'\nprint(json.dumps(info))\n"
+      ],
+      "returncode": 0,
+      "stdout": "{\"version\": \"2.5.1+cu124\", \"cuda\": \"12.4\", \"cudnn\": 90100, \"cuda_initialized\": false}\n",
+      "stderr": ""
+    },
+    "final_torch_probe": {
+      "command": [
+        "/opt/conda/bin/python",
+        "-c",
+        "\nimport json\nimport torch\nassert not torch.cuda.is_initialized(), 'Import unexpectedly initialized CUDA'\ninfo = {'version': torch.__version__, 'cuda': torch.version.cuda,\n        'cudnn': torch.backends.cudnn.version(),\n        'cuda_initialized': torch.cuda.is_initialized()}\nassert not info['cuda_initialized'], 'Version query initialized CUDA'\nprint(json.dumps(info))\n"
+      ],
+      "returncode": 0,
+      "stdout": "{\"version\": \"2.5.1+cu124\", \"cuda\": \"12.4\", \"cudnn\": 90100, \"cuda_initialized\": false}\n",
+      "stderr": ""
+    },
+    "torch": {
+      "version": "2.5.1+cu124",
+      "cuda": "12.4",
+      "cudnn": 90100,
+      "cuda_initialized": false
+    }
+  },
+  "source_sha256": {
+    "model.py": "5b463b3ebb81480f22ef523c9639a638e7039f94f7b589348cf2b70beb2fd6cc",
+    "cuda_kernel.py": "063e924cbfb805afbf1c6c4102a7147889d696af6fc73da970092995c33f9939",
+    "data.py": "d4fea0554ed96a3f555fc18ba278dadf9b80b3d7c258b3bf4e4fae87b33fcf84",
+    "validate.py": "ae7cd45c975799b22c1fa55ba11294c986ac6e9f1a24fda79c5ca1a27def823a"
+  },
+  "completed_utc": "2026-09-20T21:15:28Z"
+}

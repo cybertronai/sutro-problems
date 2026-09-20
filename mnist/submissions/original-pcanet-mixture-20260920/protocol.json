@@ -1,0 +1,79 @@
+{
+  "frozen_utc": "2026-09-20T20:58:28.323232+00:00",
+  "primary_configuration": {
+    "name": "PCANet 9-block + mixture k=8 K=100",
+    "K": 100,
+    "k": 8,
+    "L1": 8,
+    "L2": 5,
+    "patch_size": 7,
+    "block_size": 14,
+    "block_stride": 7,
+    "blocks": 9,
+    "features": 2304
+  },
+  "secondary_configuration": {
+    "K": 80,
+    "purpose": "Audit the configuration actually measured in the quoted historical 24.1 / 26.6 J row; not post-rerun selection."
+  },
+  "dataset": "Official MNIST 60000 train and 10000 test, original IDX order, FP32 pixels /255, no resizing/augmentation",
+  "learning": {
+    "filter1_images_prefix": 255,
+    "filter2_images_prefix": 250,
+    "filter2_planes_prefix": 2000,
+    "filter_covariance_patch_cap": 200000,
+    "filter_pca_dtype": "float64 covariance and eigensolve; filters float32",
+    "head_pca_dtype": "float32 covariance and eigensolve",
+    "mixture_seed_by_class": [
+      900,
+      901,
+      902,
+      903,
+      904,
+      905,
+      906,
+      907,
+      908,
+      909
+    ],
+    "kmeans_iterations": 8,
+    "EM_iterations": 8,
+    "final_refit": true,
+    "mixture_lam": 0.5,
+    "class_covariance_shrink": 0.05,
+    "ridge": 0.0001,
+    "TF32_matmul": true,
+    "TF32_cudnn": true
+  },
+  "measurement": {
+    "rounds": 4,
+    "tasks_per_round": 60,
+    "idle_before_seconds": 10,
+    "idle_after_seconds": 10,
+    "power_sample_period_seconds": 0.02,
+    "primary": "median paired-idle-adjusted NVML counter energy",
+    "cross_check": "trapezoidal sampled-power integral with interpolated endpoints",
+    "gpu": "NVIDIA A100-SXM4-40GB"
+  },
+  "source_sha256": {
+    "modal_rerun.py": "1230373fa8064ab322b33a65dd76df4abdfcce1ef7d5ba2f5b88898c287fdd5d",
+    "validate.py": "ae7cd45c975799b22c1fa55ba11294c986ac6e9f1a24fda79c5ca1a27def823a",
+    "cuda_kernel.py": "063e924cbfb805afbf1c6c4102a7147889d696af6fc73da970092995c33f9939",
+    "model.py": "5b463b3ebb81480f22ef523c9639a638e7039f94f7b589348cf2b70beb2fd6cc",
+    "data.py": "d4fea0554ed96a3f555fc18ba278dadf9b80b3d7c258b3bf4e4fae87b33fcf84"
+  },
+  "import": {
+    "host": "server-v80",
+    "project": "/home/mnau/Projects/sutro_unsat",
+    "commit": "65aed7fb618688081914c6193dd1472e59b97fa9",
+    "selected_original_source_sha256": {
+      "cuda_kernel.py": "c4de3dbf684b0110ea449309367adfeb120cef68c0cb8266b243898ae0a6a05a",
+      "fast4.py": "65358d10e3a4d996171e35dc989252097e66ae0a7cb65fdb08933a18b1efa572",
+      "fast_pcanet.py": "6ec224d40356d9dcbf068cf4103c2727fd57111ea72fa41308e948b8b8746d42",
+      "bench6.py": "478b234a9ff0115c0fe988e1048649c8e13778ff652619da5c5efd8a75abb0a6",
+      "bench_two.py": "4f6108f52d4000ed0725d0c46a3c3430cdb259123b45b31d0b96c9f934ec2e03"
+    },
+    "changes": "Standalone extraction removing unrelated scattering and benchmark side effects. Kernel arithmetic unchanged; wrapper uses current CUDA stream, device guard, argument checks, launch-error check. Learner returns labels; test labels excluded from its API."
+  },
+  "selection_disclosure": "Historical configuration was developed using official-test feedback. This rerun freezes K100 and K80 before new results but is not a new held-out evaluation."
+}
