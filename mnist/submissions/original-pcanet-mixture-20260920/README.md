@@ -8,7 +8,8 @@ and prediction on all 10,000 test images.
 September 20, 2026. Contributor: [@jurajselep](https://github.com/jurajselep).
 Prepared with AI assistance. The primary A100 measurement is **30,000 mJ above
 idle and 290 ms**, with two further A100 hosts reproducing the predictions.
-Grid costs are unavailable.
+The separately validated [grid implementation](grid/README.md) achieves
+**99.11%**, with modeled costs of **23,000 mJ and 1.8 × 10⁸ ms**.
 
 ## A100 measurements on three boards
 
@@ -52,10 +53,10 @@ all rounds and raw power traces are preserved. Both Vast.ai rentals were
 
 ## Initial Modal A100 result
 
-| Configuration | Correct / 10,000 | Accuracy | A100 energy above idle (mJ) | A100 time (ms) | Grid energy / time |
-| --- | ---: | ---: | ---: | ---: | --- |
-| **K=100, k=8 — submitted model** | **9,906** | **99.06%** | **30,000** | **290** | — / — |
-| K=80, k=8 — historical comparison | 9,906 | 99.06% | 27,000 | 270 | — / — |
+| Configuration | Correct / 10,000 | Accuracy | A100 energy above idle (mJ) | A100 time (ms) |
+| --- | ---: | ---: | ---: | ---: |
+| **K=100, k=8 — submitted model** | **9,906** | **99.06%** | **30,000** | **290** |
+| K=80, k=8 — historical comparison | 9,906 | 99.06% | 27,000 | 270 |
 
 Costs are displayed at two significant figures. For K=100, the exact medians are
 **29,709.265735 mJ above idle and 287.581293 ms**; the separate power-integral
@@ -90,6 +91,23 @@ and historical test-set tuning remain limitations of the claim.
 [completed GPU job](https://modal.com/apps/jurajselep/main/ap-sbUnakIg9FEhrpRekTR0ZR).
 
 
+## Complete spatial-grid result
+
+The separately implemented FP32 grid port achieves **9,911 / 10,000 correct
+(99.11%)**. Complete modeled energy is **23,000 mJ**, time **1.8 × 10⁸ ms**,
+and peak scratch **1,253,845,632 bytes**. Exact energy is 23,317.800433846864 mJ.
+The globally serialized schedule takes approximately 50.3 modeled hours;
+250 processors issue instructions, with arithmetic on one processor.
+
+The grid prediction differs from the A100 prediction on 14 images, so each
+implementation retains its own accuracy. Ordered FP32 reductions, subspace
+iteration and explicit scalar math account for implementation differences;
+the architecture, K100/k8 hyperparameters and class seeds are preserved.
+All **150 full-run checks** passed, and reduced serial/parallel/interpreter
+executions agree bit-for-bit. See the [standalone grid report](grid/README.md)
+for the pinned model, exact counts, numerical limitations, frozen source,
+saved evidence and CPU reproduction commands.
+
 ## Historical result attribution
 
 An earlier working summary combined results from different configurations. The historical
@@ -101,7 +119,9 @@ The quoted **~3,542 mJ** is **3,343.457 mJ for the K=80 head plus 198.538 mJ
 for a four-block front end**. That sum does not describe the nine-block model.
 The historical K=100 head alone is reported as **5,513.176 mJ**. The front-end
 grid program was also explicitly flagged as numerically unvalidated.
-**No complete grid energy or runtime is claimed here.**
+Those historical partial results do not establish a complete grid cost. The
+new [grid report](grid/README.md) independently validates the full nine-block
+K100 port and scores its complete training-and-prediction program.
 
 See [the attribution audit](evidence/historical_audit.json), its unchanged
 [historical records](evidence/historical/), and

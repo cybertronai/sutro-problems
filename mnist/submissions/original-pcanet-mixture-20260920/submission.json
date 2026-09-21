@@ -31,9 +31,33 @@
     "primary_measurement_host": "Initial Modal A100-SXM4-40GB"
   },
   "grid": {
-    "energy_mj": null,
-    "runtime_ms": null,
-    "status": "Uncertified frontend; no complete grid claim"
+    "energy_mj": 23317.800433846864,
+    "runtime_ms": 181126315.554952,
+    "status": "Complete independently qualified grid port; serialized spatial-model score",
+    "correct": 9911,
+    "total": 10000,
+    "accuracy_percent": 99.11,
+    "passes_target": true,
+    "a100_prediction_differences": 14,
+    "energy_fj": 23317800433846862,
+    "word_node_hops": 23317800433846862,
+    "cycles": 181126315554952,
+    "peak_scratch_bytes": 1253845632,
+    "instruction_issuing_processors": 250,
+    "arithmetic_processors": 1,
+    "time_to_score_seconds": 195.99277520296164,
+    "model_spec_commit": "01a0bd5e0d2564825b0f53dd766f763c82dbc7c0",
+    "report": "grid/README.md",
+    "score": "grid/placed-score.json",
+    "verification": "grid/verification.json",
+    "accuracy_evidence": "grid/full-execution/predictions.npy",
+    "numerical_differences": [
+      "Ordered FP32 covariance/reductions instead of FP64 filter covariance and CUDA reductions.",
+      "Orthonormal subspace iteration instead of library eigendecomposition.",
+      "Gauss-Jordan inverses and primitive log/exp/sqrt approximations replace library operations.",
+      "No A100 accuracy claim transfers to this grid program."
+    ],
+    "scope": "Complete training and prediction including tape I/O and initialization. Input normalization precedes tape input. Energy is theoretical data movement under the pinned model, not physical board energy."
   },
   "accuracy_evidence": "evidence/rerun/predictions-k100.npy",
   "measurements": "evidence/rerun/results.json",
