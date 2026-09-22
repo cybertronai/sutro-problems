@@ -1,0 +1,36 @@
+{
+  "results_directory": "/workspace/pcanet-k100-audit/generated/vast-rerun",
+  "raw_directory": "/workspace/pcanet-k100-audit/raw",
+  "runs": {
+    "100": {
+      "correct": 9906,
+      "total": 10000,
+      "reference_prediction_matches": 9999,
+      "median_task_ms": 288.31034305815894,
+      "median_gross_mj": 42394.73333333334,
+      "median_counter_above_idle_mj": 30351.582470262656,
+      "median_sampled_above_idle_mj": 30130.74250225941
+    }
+  },
+  "independent_accuracy_check": true,
+  "idle_only_control_net_j": {
+    "counter_net_j": 0.9740734812712617,
+    "sampled_net_j": -0.4794248852209648
+  },
+  "feature_validation": {
+    "images": 1536,
+    "values": 3538944,
+    "mismatched_values": 5976,
+    "max_abs_difference": 0.008417937904596329,
+    "nondefault_stream_checked": true
+  },
+  "checks": 322,
+  "passed": true,
+  "errors": [],
+  "limitations": [
+    "K=100: 1 predictions differ from the PyTorch feature reference. TF32/convolution arithmetic can cause threshold changes; this is not exact reference equivalence.",
+    "Feature cross-check records differences. TF32 reference and the fused FP32-FMA convolution are not established as bitwise equivalent; raw feature arrays were not retained.",
+    "Repeated-run stability, training-label perturbation, process monitoring and feature checks are retained scalar observations; this offline checker cannot replay them. Only the last measured prediction vector in each round was compared during execution.",
+    "NVML energy counter and sampled-power integration share GPU sensors. Above-idle energy excludes host/platform power and the documented setup stages."
+  ]
+}

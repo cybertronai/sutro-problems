@@ -1,0 +1,295 @@
+{
+  "created_date": "2026-09-20",
+  "purpose": "Inspect the selected PCANet source provenance and structural equivalence without access to the private source server.",
+  "scope": "Only selected PCANet functions, relevant benchmark context, and the PCANet CUDA source; unrelated scattering code is excluded.",
+  "archive_linkage_limit": "These hashes identify the retrieved original files and match historical_audit.json. Historical result JSONs do not embed source hashes, so this does not establish a cryptographic link between those past executions and their co-located source.",
+  "sources": [
+    {
+      "filename": "bench_two.py",
+      "remote_path": "/home/mnau/Projects/sutro_unsat/mnist/medium98/evidence/a100_two_best/bench_two.py",
+      "whole_file_sha256": "4f6108f52d4000ed0725d0c46a3c3430cdb259123b45b31d0b96c9f934ec2e03",
+      "whole_file_bytes": 15986,
+      "historical_audit_hash_matches": true,
+      "excerpts": [
+        {
+          "name": "pca_filters",
+          "start_line": 196,
+          "end_line": 200,
+          "sha256": "c7710b59a012e72f3c21e3689d6aca3b46c6fc660b84e43f11f5f9e7a63fd11a",
+          "text": "def pca_filters(P, L):\n    X = P.reshape(-1, P.shape[-1]).double()\n    if len(X) > 200000: X = X[:200000]\n    ev, V = torch.linalg.eigh(X.T @ X / len(X))\n    return V[:, -L:].float()\n"
+        },
+        {
+          "name": "patches",
+          "start_line": 203,
+          "end_line": 206,
+          "sha256": "5f665a54cda51f388e3ded367c533f2e00034ac0a00b09ea3da9354f67c87672",
+          "text": "def patches(img, k):\n    p = k // 2\n    u = F.unfold(F.pad(img.unsqueeze(1), (p, p, p, p)), k).transpose(1, 2)\n    return u - u.mean(-1, keepdim=True)\n"
+        },
+        {
+          "name": "stage",
+          "start_line": 209,
+          "end_line": 213,
+          "sha256": "0d33c62623ee196fbb002ada08dc60c9f0ae077184614546657b896f30ab9339",
+          "text": "def stage(img, W, k):\n    \"\"\"sum_i (p_i - pbar) w_i == sum_i p_i (w_i - wbar): centring the filter once removes the unfold,\n    which a100-005 measured at 72 % of the task when it was left in.\"\"\"\n    Wc = (W - W.mean(0, keepdim=True)).T.reshape(-1, 1, k, k).contiguous()\n    return F.conv2d(img.unsqueeze(1) if img.dim() == 3 else img, Wc, padding=k // 2)\n"
+        },
+        {
+          "name": "pcanet_feats",
+          "start_line": 216,
+          "end_line": 235,
+          "sha256": "270e17f3a438d3d548ff2b0ca801d983e52bac516c2a6a37c672518017115134",
+          "text": "def pcanet_feats(x, W1, W2, L1, L2, blk=14, stride=7, chunk=5000):\n    outs = []\n    nb = 1 << L2\n    org = [(r, c) for r in range(0, 28 - blk + 1, stride) for c in range(0, 28 - blk + 1, stride)]\n    for s in range(0, len(x), chunk):\n        img = x[s:s + chunk]; n = img.shape[0]\n        M1 = stage(img, W1, 7)\n        code = torch.zeros(n, L1, 28, 28, device=dev)\n        for i in range(L1):\n            S = stage(M1[:, i:i + 1], W2, 7)\n            for b in range(L2): code[:, i] += (1 << b) * (S[:, b] > 0).float()\n        hist = torch.zeros(n, L1, len(org), nb, device=dev)\n        ci = code.long()\n        for j, (r0, c0) in enumerate(org):\n            v = ci[:, :, r0:r0 + blk, c0:c0 + blk].reshape(n, L1, -1)\n            hist[:, :, j] = torch.zeros(n, L1, nb, device=dev).scatter_add_(\n                2, v, torch.ones_like(v, dtype=torch.float32))\n        h = hist.reshape(n, -1)\n        outs.append(torch.sqrt(h / (h.sum(1, keepdim=True) + 1e-9)))\n    return torch.cat(outs, 0)\n"
+        },
+        {
+          "name": "mixture",
+          "start_line": 247,
+          "end_line": 282,
+          "sha256": "3633ea4ddec6b889e935c637e2007afb5a838b5f96bf295e4c0d195b10e70856",
+          "text": "def mixture(z, y, zq, k, NC=CLS, lam=0.5, steps=8, shrink=0.05, ridge=1e-4):\n    K = z.shape[1]; Id = torch.eye(K, device=dev); out = torch.zeros(len(zq), NC, device=dev)\n    for c in range(NC):\n        zc = z[y == c]; n = len(zc); mu_c = zc.mean(0)\n        cov_c = ((zc - mu_c).T @ (zc - mu_c)) / n\n        cov_c = (1 - shrink) * cov_c + shrink * torch.trace(cov_c) / K * Id\n        g = torch.Generator(device='cpu').manual_seed(900 + c)\n        ctr = zc[torch.randperm(n, generator=g)[:k].to(dev)].clone()\n        for _ in range(8):\n            a = torch.cdist(zc, ctr).argmin(1)\n            for j in range(k):\n                m = a == j\n                if m.sum() > 1: ctr[j] = zc[m].mean(0)\n        Rw = F.one_hot(a, k).float()\n        for step in range(steps + 1):\n            Nj = Rw.sum(0) + 1e-9; pi = Nj / n\n            mu = (Rw.T @ zc) / Nj[:, None]\n            dif = zc[:, None, :] - mu[None]\n            Sj = torch.einsum('nki,nkj,nk->kij', dif, dif, Rw) / Nj[:, None, None]\n            Sj = (1 - lam) * Sj + lam * cov_c[None] + ridge * Id[None]\n            L = torch.linalg.cholesky(Sj)\n            ld = 2 * torch.log(torch.diagonal(L, dim1=1, dim2=2)).sum(1)\n            if step == steps: break\n            sol = torch.cholesky_solve(dif.permute(1, 2, 0), L)\n            qd = torch.einsum('nki,kin->nk', dif, sol)\n            ll = torch.log(pi)[None] - 0.5 * qd - 0.5 * ld[None]\n            Rw = torch.softmax(ll, 1)\n        sc = torch.empty(len(zq), device=dev)\n        for i in range(0, len(zq), 2500):\n            d = zq[i:i + 2500, None, :] - mu[None]\n            sol = torch.cholesky_solve(d.permute(1, 2, 0), L)\n            qd = torch.einsum('nki,kin->nk', d, sol)\n            llq = torch.log(pi)[None] - 0.5 * qd - 0.5 * ld[None]\n            sc[i:i + 2500] = torch.logsumexp(llq, 1)\n        out[:, c] = sc + math.log(n / len(z))\n    return out\n"
+        },
+        {
+          "name": "task_pcanet",
+          "start_line": 299,
+          "end_line": 305,
+          "sha256": "dc4d0fe20d9fa8a0bba5151ab38f878f55ffb27fece377a16f17c305e2db529a",
+          "text": "def task_pcanet(x, y, q, qy, K=80, L1=8, L2=5, dtype=torch.float32):\n    W1 = pca_filters(patches(x[:255].to(dtype), 7), L1)\n    M1 = stage(x[:250], W1, 7)\n    W2 = pca_filters(patches(M1.reshape(-1, 28, 28)[:2000], 7), L2)\n    Ftr = pcanet_feats(x, W1, W2, L1, L2); Fte = pcanet_feats(q, W1, W2, L1, L2)\n    z, zq = pca_project(Ftr, Fte, K)\n    return (mixture(z, y, zq, 8).argmax(1) == qy).float().mean().item() * 100\n"
+        }
+      ]
+    },
+    {
+      "filename": "fast_pcanet.py",
+      "remote_path": "/home/mnau/Projects/sutro_unsat/mnist/medium98/evidence/a100_two_best/fast_pcanet.py",
+      "whole_file_sha256": "6ec224d40356d9dcbf068cf4103c2727fd57111ea72fa41308e948b8b8746d42",
+      "whole_file_bytes": 6112,
+      "historical_audit_hash_matches": true,
+      "excerpts": [
+        {
+          "name": "fast_mixture",
+          "start_line": 42,
+          "end_line": 74,
+          "sha256": "11c9c774c10db33b379a86c312c17099fe7ab2ac6a4c96ce0d67dd21acf7dd37",
+          "text": "def fast_mixture(z, y, zq, k, NC=CLS, lam=0.5, steps=8, shrink=0.05, ridge=1e-4):\n    \"\"\"same arithmetic, batched: scatter matrices by bmm, quadratic forms by triangular solve\"\"\"\n    K = z.shape[1]; Id = torch.eye(K, device=dev); out = torch.empty(len(zq), NC, device=dev)\n    for c in range(NC):\n        zc = z[y == c]; n = len(zc); mu_c = zc.mean(0)\n        cov_c = ((zc - mu_c).T @ (zc - mu_c)) / n\n        cov_c = (1 - shrink) * cov_c + shrink * torch.trace(cov_c) / K * Id\n        g = torch.Generator(device='cpu').manual_seed(900 + c)\n        ctr = zc[torch.randperm(n, generator=g)[:k].to(dev)].clone()\n        for _ in range(8):\n            a = torch.cdist(zc, ctr).argmin(1)\n            oh = F.one_hot(a, k).float()\n            cnt = oh.sum(0).clamp(min=1)\n            ctr = torch.where((oh.sum(0) > 1)[:, None], (oh.T @ zc) / cnt[:, None], ctr)\n        Rw = F.one_hot(a, k).float()\n        for step in range(steps + 1):\n            Nj = Rw.sum(0) + 1e-9; pi = Nj / n\n            mu = (Rw.T @ zc) / Nj[:, None]\n            d = zc[:, None, :] - mu[None]                       # (n, k, K)\n            dt = d.permute(1, 2, 0)                             # (k, K, n)\n            Sj = torch.bmm(dt * Rw.T[:, None, :], dt.transpose(1, 2)) / Nj[:, None, None]\n            Sj = (1 - lam) * Sj + lam * cov_c[None] + ridge * Id[None]\n            L = torch.linalg.cholesky(Sj)\n            ld = 2 * torch.log(torch.diagonal(L, dim1=1, dim2=2)).sum(1)\n            if step == steps: break\n            w = torch.linalg.solve_triangular(L, dt, upper=False)   # (k, K, n)\n            qd = (w * w).sum(1).T                                   # (n, k)\n            Rw = torch.softmax(torch.log(pi)[None] - 0.5 * qd - 0.5 * ld[None], 1)\n        dq = (zq[:, None, :] - mu[None]).permute(1, 2, 0)\n        w = torch.linalg.solve_triangular(L, dq, upper=False)\n        qd = (w * w).sum(1).T\n        out[:, c] = torch.logsumexp(torch.log(pi)[None] - 0.5 * qd - 0.5 * ld[None], 1) + math.log(n / len(z))\n    return out\n"
+        }
+      ]
+    },
+    {
+      "filename": "fast4.py",
+      "remote_path": "/home/mnau/Projects/sutro_unsat/mnist/medium98/evidence/a100_two_best/fast4.py",
+      "whole_file_sha256": "65358d10e3a4d996171e35dc989252097e66ae0a7cb65fdb08933a18b1efa572",
+      "whole_file_bytes": 1276,
+      "historical_audit_hash_matches": true,
+      "excerpts": [
+        {
+          "name": "feats_cuda",
+          "start_line": 10,
+          "end_line": 19,
+          "sha256": "86e166927c76886df17e7f98ad2e3150d3051270c809fbea5d3c9a98cc24cfa2",
+          "text": "def feats_cuda(x, W1, W2, L1, L2, chunk=15000):\n    W2c = (W2 - W2.mean(0, keepdim=True)).T.reshape(L2, 1, 7, 7).contiguous()\n    W2g = W2c.repeat(L1, 1, 1, 1)\n    outs = []\n    for s in range(0, len(x), chunk):\n        M1 = B.stage(x[s:s + chunk], W1, 7).contiguous()\n        h = cuda_hist(M1, W2g, L1, L2).reshape(M1.shape[0], -1)   # conv, threshold, pack, histogram\n        outs.append(torch.sqrt(h / (h.sum(1, keepdim=True) + 1e-9)))\n        del M1\n    return torch.cat(outs, 0)\n"
+        },
+        {
+          "name": "task_cuda",
+          "start_line": 22,
+          "end_line": 30,
+          "sha256": "3e7149afb7c67c591ed21e24f9a8683d1703a3c930281e3aee5203025f2a388b",
+          "text": "def task_cuda(x, y, q, qy, K=80, L1=8, L2=5):\n    W1 = B.pca_filters(B.patches(x[:255], 7), L1)\n    M1 = B.stage(x[:250], W1, 7)\n    W2 = B.pca_filters(B.patches(M1.reshape(-1, 28, 28)[:2000], 7), L2)\n    Ftr = feats_cuda(x, W1, W2, L1, L2); Fte = feats_cuda(q, W1, W2, L1, L2)\n    m = Ftr.mean(0); dd = Ftr - m\n    ev, V = torch.linalg.eigh((dd.T @ dd) / len(Ftr)); W = V[:, -K:]\n    z, zq = dd @ W, (Fte - m) @ W\n    return (fast_mixture(z, y, zq, 8).argmax(1) == qy).float().mean().item() * 100\n"
+        }
+      ]
+    },
+    {
+      "filename": "bench6.py",
+      "remote_path": "/home/mnau/Projects/sutro_unsat/mnist/medium98/evidence/a100_two_best/bench6.py",
+      "whole_file_sha256": "478b234a9ff0115c0fe988e1048649c8e13778ff652619da5c5efd8a75abb0a6",
+      "historical_audit_hash_matches": true,
+      "excerpts": [
+        {
+          "start_line": 15,
+          "end_line": 15,
+          "sha256": "e66aa172d89735ee7f21746bb84bce55087f32b87ce75a6fbe603f946cab5d94",
+          "text": "from fast4 import task_cuda\n"
+        },
+        {
+          "start_line": 17,
+          "end_line": 17,
+          "sha256": "9f115c11ce4cd27d31a9d53081fcd279b2c2cc4ef3ca7e562c4f8b26bba79339",
+          "text": "torch.backends.cuda.matmul.allow_tf32 = True; torch.backends.cudnn.allow_tf32 = True\n"
+        },
+        {
+          "start_line": 17,
+          "end_line": 17,
+          "sha256": "9f115c11ce4cd27d31a9d53081fcd279b2c2cc4ef3ca7e562c4f8b26bba79339",
+          "text": "torch.backends.cuda.matmul.allow_tf32 = True; torch.backends.cudnn.allow_tf32 = True\n"
+        },
+        {
+          "start_line": 19,
+          "end_line": 19,
+          "sha256": "3b61855e3273120f697de1e5238a56405c054a4415feb52e9eb033e43e30e85f",
+          "text": "REPS = 30\n"
+        },
+        {
+          "start_line": 22,
+          "end_line": 39,
+          "sha256": "4cdd18bd73d800f71ea2dcbbfbf17a7dda3b15adb2032d314417963265865345",
+          "text": "def measured_rep(name, task, rounds=4, idle_s=10.0):\n    out = []\n    for r in range(rounds):\n        before = B.window(seconds=idle_s)\n        run = B.window(lambda: [task() for _ in range(REPS)])\n        after = B.window(seconds=idle_s)\n        ic = (before['counter_w'] + after['counter_w']) / 2\n        isw = (before['sampled_w'] + after['sampled_w']) / 2\n        row = {'round': r, 'reps': REPS, 'task_ms': run['seconds'] * 1000 / REPS,\n               'gross_j': run['counter_j'] / REPS,\n               'adjusted_j_counter': (run['counter_j'] - ic * run['seconds']) / REPS,\n               'adjusted_j_sampled': (run['sampled_j'] - isw * run['seconds']) / REPS,\n               'window_s': run['seconds'], 'run_w': run['counter_w'], 'idle_w': ic}\n        out.append(row)\n        print(f'  {name} r{r}: window {run[\"seconds\"]:.1f} s, {row[\"task_ms\"]:.0f} ms/task, '\n              f'{row[\"adjusted_j_counter\"]:.2f} J/task, {run[\"counter_w\"]:.0f} W vs {ic:.0f} W idle', flush=True)\n    med = lambda k: statistics.median(x[k] for x in out)\n    return {'rounds': out, 'summary': {k: med(k) for k in out[0] if k != 'round'}}\n"
+        },
+        {
+          "start_line": 43,
+          "end_line": 52,
+          "sha256": "50181b8934f8eee103a4f3729c4988c95333de1908b6df7ab0044c2dc73db9b6",
+          "text": "for name, fn in (('v1 original', lambda: B.task_pcanet(x, y, q, qy)),\n                 ('v4 cuda/ptx', lambda: task_cuda(x, y, q, qy)),\n                 ('v5 +batched EM', lambda: task_v5(x, y, q, qy))):\n    acc = fn(); torch.cuda.synchronize()\n    m = measured_rep(name, lambda: fn())\n    m['accuracy_pct'] = acc; res['runs'][name] = m\n    s = m['summary']\n    print(f'>> {name}: {acc:.2f} %, {s[\"adjusted_j_counter\"]:.2f} J/task '\n          f'(sampled {s[\"adjusted_j_sampled\"]:.2f}), {s[\"task_ms\"]:.0f} ms', flush=True)\n    json.dump(res, open(sys.argv[1], 'w'), indent=1)\n"
+        }
+      ],
+      "interpretation": "The v4 lambda passes only x,y,q,qy; fast4.task_cuda defaults K=80. TF32 is allowed. Each round contains 30 complete task calls, bracketed by two 10-second idle windows. Four rounds are summarized by fieldwise medians."
+    }
+  ],
+  "packaged_files": {
+    "model.py": {
+      "sha256": "5b463b3ebb81480f22ef523c9639a638e7039f94f7b589348cf2b70beb2fd6cc",
+      "bytes": 10175
+    },
+    "cuda_kernel.py": {
+      "sha256": "063e924cbfb805afbf1c6c4102a7147889d696af6fc73da970092995c33f9939",
+      "bytes": 5992
+    }
+  },
+  "ast_check_method": "Parse with Python ast; compare ast.dump(include_attributes=False) after only the per-function documented normalizations. Hashes are SHA256 of the normalized AST dump strings.",
+  "ast_equivalence_checks": [
+    {
+      "source": "bench_two.py:pca_filters",
+      "target": "model.py:pca_filters",
+      "allowed_normalizations": [
+        "Ignore comments, whitespace, source locations, and function docstrings."
+      ],
+      "normalized_source_ast_sha256": "5fadc2f33f0b24b3acc3471578c7e2ae066c36b103d5915985ae065618c89590",
+      "normalized_target_ast_sha256": "5fadc2f33f0b24b3acc3471578c7e2ae066c36b103d5915985ae065618c89590",
+      "equivalent": true
+    },
+    {
+      "source": "bench_two.py:patches",
+      "target": "model.py:patches",
+      "allowed_normalizations": [
+        "Ignore comments, whitespace, source locations, and function docstrings."
+      ],
+      "normalized_source_ast_sha256": "8c5ace35e15e364213e03dbaa482ed5e1efe902953b9a96bda10d19e2cad72ff",
+      "normalized_target_ast_sha256": "8c5ace35e15e364213e03dbaa482ed5e1efe902953b9a96bda10d19e2cad72ff",
+      "equivalent": true
+    },
+    {
+      "source": "bench_two.py:stage",
+      "target": "model.py:stage",
+      "allowed_normalizations": [
+        "Ignore comments, whitespace, source locations, and function docstrings."
+      ],
+      "normalized_source_ast_sha256": "fe310399cb7d6ebf04cd8fb40df24af918fd3f9d4056c2e78fa9aacaa6665cc6",
+      "normalized_target_ast_sha256": "fe310399cb7d6ebf04cd8fb40df24af918fd3f9d4056c2e78fa9aacaa6665cc6",
+      "equivalent": true
+    },
+    {
+      "source": "bench_two.py:pcanet_feats",
+      "target": "model.py:pcanet_feats",
+      "allowed_normalizations": [
+        "Ignore comments, whitespace, source locations, and function docstrings.",
+        "Replace original global dev with x.device; CPU Generator(device=\"cpu\") is unchanged."
+      ],
+      "normalized_source_ast_sha256": "7c6fe5f34d3390b95492914eb31b6beea379c04222f51365a0d3f10cb54b1809",
+      "normalized_target_ast_sha256": "7c6fe5f34d3390b95492914eb31b6beea379c04222f51365a0d3f10cb54b1809",
+      "equivalent": true
+    },
+    {
+      "source": "bench_two.py:mixture",
+      "target": "model.py:mixture",
+      "allowed_normalizations": [
+        "Ignore comments, whitespace, source locations, and function docstrings.",
+        "Replace original global dev with z.device; CPU Generator(device=\"cpu\") is unchanged."
+      ],
+      "normalized_source_ast_sha256": "750977736f8f2bd85e4836e9100df93862768234c565c7aa7949332d4f3149d5",
+      "normalized_target_ast_sha256": "750977736f8f2bd85e4836e9100df93862768234c565c7aa7949332d4f3149d5",
+      "equivalent": true
+    },
+    {
+      "source": "fast_pcanet.py:fast_mixture",
+      "target": "model.py:fast_mixture",
+      "allowed_normalizations": [
+        "Ignore comments, whitespace, source locations, and function docstrings.",
+        "Replace original global dev with z.device; CPU Generator(device=\"cpu\") is unchanged."
+      ],
+      "normalized_source_ast_sha256": "827ae71ad2204ae5d0f9eb0274330721c0c6fc726bc9a8b799910b21890fc46e",
+      "normalized_target_ast_sha256": "827ae71ad2204ae5d0f9eb0274330721c0c6fc726bc9a8b799910b21890fc46e",
+      "equivalent": true
+    },
+    {
+      "source": "fast4.py:feats_cuda",
+      "target": "model.py:feats_cuda",
+      "allowed_normalizations": [
+        "Ignore comments, whitespace, source locations, and function docstrings.",
+        "Resolve B.stage to local stage and remove only the exact package-aware lazy cuda_hist import guard at function entry."
+      ],
+      "normalized_source_ast_sha256": "bcdffaa5d6999df039596c43edb7eb3cdd262e9f692b6e1ab17240ec54dfe690",
+      "normalized_target_ast_sha256": "bcdffaa5d6999df039596c43edb7eb3cdd262e9f692b6e1ab17240ec54dfe690",
+      "equivalent": true
+    },
+    {
+      "source": "fast4.py:task_cuda first three assignments",
+      "target": "model.py:learn_filters",
+      "allowed_normalizations": [
+        "Resolve B.pca_filters, B.patches and B.stage to local functions.",
+        "Ignore docstring; target adds return W1,W2.",
+        "L1=8 and L2=5 become package constants with the same values."
+      ],
+      "normalized_source_ast_sha256": "5fa7d51b2f2284435a092915cd7aff458e1cd2aadbfd6c9905603f8f10255445",
+      "normalized_target_ast_sha256": "5fa7d51b2f2284435a092915cd7aff458e1cd2aadbfd6c9905603f8f10255445",
+      "equivalent": true
+    },
+    {
+      "source": "fast4.py:task_cuda centered covariance/eigh/projection assignments",
+      "target": "model.py:pca_project",
+      "allowed_normalizations": [
+        "Rename the unused eigenvalue variable ev to _.",
+        "Target returns the projected pair directly instead of assigning z,zq.",
+        "Ignore function docstring."
+      ],
+      "normalized_source_ast_sha256": "b79a2e37e2573b4faf867413677074a4ddb36a2bf5fb1304cf7332f10f43d73b",
+      "normalized_target_ast_sha256": "b79a2e37e2573b4faf867413677074a4ddb36a2bf5fb1304cf7332f10f43d73b",
+      "equivalent": true
+    },
+    {
+      "source": "fast4.py:task_cuda prediction expression inside accuracy comparison",
+      "target": "model.py:train_predict return expression",
+      "allowed_normalizations": [
+        "Resolve MIXTURE_COMPONENTS to its package constant 8.",
+        "Extract prediction labels before the original test-label comparison/accuracy mean; packaged learner returns predictions and does not receive qy."
+      ],
+      "normalized_source_ast_sha256": "1e6b9504ecf2f559405b84fa5c0b714684834e47c7dcd376bc7656c7839d03fa",
+      "normalized_target_ast_sha256": "1e6b9504ecf2f559405b84fa5c0b714684834e47c7dcd376bc7656c7839d03fa",
+      "equivalent": true
+    }
+  ],
+  "all_recorded_ast_checks_pass": true,
+  "cuda_source_check": {
+    "original_file_sha256": "c4de3dbf684b0110ea449309367adfeb120cef68c0cb8266b243898ae0a6a05a",
+    "remote_path": "/home/mnau/Projects/sutro_unsat/mnist/medium98/evidence/a100_two_best/cuda_kernel.py",
+    "historical_audit_hash_matches": true,
+    "original_src_string": "\n#include <torch/extension.h>\n#include <cuda.h>\n#include <cuda_runtime.h>\n\n#define H   28\n#define KS  7\n#define PAD 3\n#define SH  (H + 2*PAD)          // 34\n#define BLK 14\n#define NBS 3                    // blocks per side at stride 7\n#define NB  (NBS*NBS)            // 9\n\n// one block per (image, group) plane; blockDim.x = 256\ntemplate<int L2>\n__global__ void pcanet_fused(const float* __restrict__ M, const float* __restrict__ W,\n                             float* __restrict__ HIST, int n, int L1, int stride_blk) {\n    const int plane = blockIdx.x;\n    const int img   = plane / L1;\n    const int grp   = plane % L1;\n    const int NBINS = 1 << L2;\n\n    extern __shared__ float sm[];\n    float* tile = sm;                          // SH*SH staged input\n    float* wts  = tile + SH*SH;                // L2*KS*KS filters for this group\n    float* hist = wts + L2*KS*KS;              // NB*NBINS accumulator\n\n    const float* Mp = M + (size_t)img * L1 * H * H + (size_t)grp * H * H;\n\n    for (int i = threadIdx.x; i < SH*SH; i += blockDim.x) {\n        int y = i / SH - PAD, x = i % SH - PAD;\n        tile[i] = (y >= 0 && y < H && x >= 0 && x < H) ? Mp[y*H + x] : 0.0f;\n    }\n    for (int i = threadIdx.x; i < L2*KS*KS; i += blockDim.x) wts[i] = W[(size_t)grp*L2*KS*KS + i];\n    for (int i = threadIdx.x; i < NB*NBINS; i += blockDim.x) hist[i] = 0.0f;\n    __syncthreads();\n\n    for (int p = threadIdx.x; p < H*H; p += blockDim.x) {\n        const int py = p / H, px = p % H;\n        int code = 0;\n        #pragma unroll\n        for (int b = 0; b < L2; ++b) {\n            float s = 0.0f;\n            const float* wb = wts + b*KS*KS;\n            #pragma unroll\n            for (int ky = 0; ky < KS; ++ky) {\n                const float* trow = tile + (py + ky)*SH + px;\n                #pragma unroll\n                for (int kx = 0; kx < KS; ++kx) {\n                    // inline PTX: one fused multiply-add, round-to-nearest, no library call\n                    asm(\"fma.rn.f32 %0, %1, %2, %0;\" : \"+f\"(s) : \"f\"(trow[kx]), \"f\"(wb[ky*KS + kx]));\n                }\n            }\n            unsigned pred;\n            asm(\"set.gt.u32.f32 %0, %1, 0f00000000;\" : \"=r\"(pred) : \"f\"(s));\n            code |= (int)(pred & 1u) << b;\n        }\n        // this pixel lands in every block whose window covers it\n        #pragma unroll\n        for (int br = 0; br < NBS; ++br) {\n            int r0 = br * stride_blk;\n            if (py < r0 || py >= r0 + BLK) continue;\n            #pragma unroll\n            for (int bc = 0; bc < NBS; ++bc) {\n                int c0 = bc * stride_blk;\n                if (px < c0 || px >= c0 + BLK) continue;\n                atomicAdd(&hist[(br*NBS + bc)*NBINS + code], 1.0f);\n            }\n        }\n    }\n    __syncthreads();\n    float* Hp = HIST + (size_t)plane * NB * NBINS;\n    for (int i = threadIdx.x; i < NB*NBINS; i += blockDim.x) Hp[i] = hist[i];\n}\n\ntorch::Tensor pcanet_hist(torch::Tensor M1, torch::Tensor W, int64_t L1, int64_t L2, int64_t stride_blk) {\n    TORCH_CHECK(M1.is_cuda() && M1.scalar_type() == torch::kFloat32);\n    const int n = M1.size(0);\n    const int NBINS = 1 << L2;\n    auto out = torch::empty({n, (long)L1, NB, (long)NBINS}, M1.options());\n    size_t shmem = (SH*SH + L2*KS*KS + NB*NBINS) * sizeof(float);\n    dim3 grid(n * L1), block(256);\n    if (L2 == 5)\n        pcanet_fused<5><<<grid, block, shmem>>>(M1.data_ptr<float>(), W.data_ptr<float>(),\n                                                out.data_ptr<float>(), n, (int)L1, (int)stride_blk);\n    else TORCH_CHECK(false, \"only L2=5 compiled\");\n    return out;\n}\n",
+    "kernel_extraction_rule": "From template<int L2> through immediately before torch::Tensor pcanet_hist(",
+    "original_fused_body_sha256": "b8798740a858c1b5e75789800343d2b15e24445bc9fe830cbb405ebb452ec9d7",
+    "packaged_fused_body_sha256": "b8798740a858c1b5e75789800343d2b15e24445bc9fe830cbb405ebb452ec9d7",
+    "fused_body_byte_identical": true,
+    "dimension_macros_byte_identical": true,
+    "src_wrapper_diff": "--- original SRC\n+++ packaged SRC\n@@ -2,6 +2,9 @@\n #include <torch/extension.h>\n #include <cuda.h>\n #include <cuda_runtime.h>\n+#include <c10/cuda/CUDAException.h>\n+#include <c10/cuda/CUDAGuard.h>\n+#include <c10/cuda/CUDAStream.h>\n \n #define H   28\n #define KS  7\n@@ -74,15 +77,28 @@\n }\n \n torch::Tensor pcanet_hist(torch::Tensor M1, torch::Tensor W, int64_t L1, int64_t L2, int64_t stride_blk) {\n-    TORCH_CHECK(M1.is_cuda() && M1.scalar_type() == torch::kFloat32);\n+    TORCH_CHECK(M1.is_cuda() && W.is_cuda(), \"inputs must be CUDA tensors\");\n+    TORCH_CHECK(M1.device() == W.device(), \"inputs must share a CUDA device\");\n+    TORCH_CHECK(M1.scalar_type() == torch::kFloat32 && W.scalar_type() == torch::kFloat32,\n+                \"inputs must have dtype float32\");\n+    TORCH_CHECK(M1.is_contiguous() && W.is_contiguous(), \"inputs must be contiguous\");\n+    TORCH_CHECK(L1 > 0 && L2 == 5, \"L1 must be positive; only L2=5 is compiled\");\n+    TORCH_CHECK(stride_blk == 7, \"the nine-block histogram requires stride 7\");\n+    TORCH_CHECK(M1.dim() == 4 && M1.size(1) == L1 && M1.size(2) == H && M1.size(3) == H,\n+                \"M1 must have shape (n, L1, 28, 28)\");\n+    TORCH_CHECK(W.numel() == L1 * L2 * KS * KS, \"unexpected filter element count\");\n+    TORCH_CHECK(M1.size(0) * L1 <= 2147483647, \"too many image/filter planes\");\n+    const c10::cuda::CUDAGuard device_guard(M1.device());\n+    const auto stream = c10::cuda::getCurrentCUDAStream(M1.get_device());\n     const int n = M1.size(0);\n     const int NBINS = 1 << L2;\n     auto out = torch::empty({n, (long)L1, NB, (long)NBINS}, M1.options());\n+    if (n == 0) return out;\n     size_t shmem = (SH*SH + L2*KS*KS + NB*NBINS) * sizeof(float);\n     dim3 grid(n * L1), block(256);\n-    if (L2 == 5)\n-        pcanet_fused<5><<<grid, block, shmem>>>(M1.data_ptr<float>(), W.data_ptr<float>(),\n-                                                out.data_ptr<float>(), n, (int)L1, (int)stride_blk);\n-    else TORCH_CHECK(false, \"only L2=5 compiled\");\n+    pcanet_fused<5><<<grid, block, shmem, stream.stream()>>>(\n+        M1.data_ptr<float>(), W.data_ptr<float>(), out.data_ptr<float>(),\n+        n, (int)L1, (int)stride_blk);\n+    C10_CUDA_KERNEL_LAUNCH_CHECK();\n     return out;\n }\n",
+    "wrapper_changes": "Input validation, device guard, PyTorch current-stream launch, empty-input handling, and launch error checking; fused arithmetic body and compile flags remain unchanged.",
+    "python_extension_name_change": [
+      "pcanet_cuda",
+      "sutro_original_pcanet_cuda_v1"
+    ],
+    "compiler_flags": [
+      "-O3",
+      "--use_fast_math"
+    ]
+  },
+  "intentional_interface_changes": [
+    "train_predict defaults K=100; historical task_cuda and task_pcanet default K=80.",
+    "The packaged learner returns predictions without receiving test labels.",
+    "The CUDA backend uses the archived fast4 FP32 PCA projection and fast_mixture head.",
+    "The reference backend combines the original PyTorch pcanet_feats with that same optimized head; it is not the complete original task_pcanet, whose PCA covariance eigensolve is FP64 and whose mixture uses a different reduction order.",
+    "Input validation, torch.no_grad, lazy extension import, and device-derived allocations are packaging adaptations."
+  ],
+  "validation_boundary": "AST agreement establishes preservation of selected arithmetic code after documented packaging changes. It does not establish bitwise equality between the PyTorch and fused CUDA feature extractors, nor between FP32 optimized and FP64 original PCA paths, or validate a historical accuracy/energy execution."
+}

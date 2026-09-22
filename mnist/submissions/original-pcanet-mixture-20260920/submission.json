@@ -1,0 +1,136 @@
+{
+  "name": "PCANet 9-block + mixture k=8 K=100",
+  "date": "2026-09-20",
+  "tier": "MNIST-original",
+  "correct": 9906,
+  "total": 10000,
+  "accuracy_percent": 99.06,
+  "error_target_percent": 1,
+  "passes_target": true,
+  "a100": {
+    "energy_above_idle_mj": 29709.265734753117,
+    "sampled_energy_above_idle_mj": 28955.648679115973,
+    "gross_energy_mj": 49985.225,
+    "runtime_ms": 287.58129282916684,
+    "runs": 4,
+    "repetitions_per_run": 60,
+    "hardware": {
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "uuid": "GPU-debd444e-9a15-8e7f-f1ab-c8398c31f6b6",
+      "driver": "580.95.05",
+      "power_limit_w": 400.0
+    },
+    "software": {
+      "python": "3.11.10",
+      "torch": "2.5.1+cu124",
+      "cuda": "12.4",
+      "cudnn": 90100,
+      "numpy": "2.1.2"
+    },
+    "scope": "Every repetition learns both filter banks, extracts all 70000 features, fits PCA and all class mixtures, and predicts 10000 labels. Device-resident normalized input. Includes tensor allocation and host dispatch; excludes data download, normalization, transfer, compilation, warmup, validation and test-label scoring.",
+    "primary_measurement_host": "Initial Modal A100-SXM4-40GB"
+  },
+  "grid": {
+    "energy_mj": 23317.800433846864,
+    "runtime_ms": 181126315.554952,
+    "status": "Complete independently qualified grid port; serialized spatial-model score",
+    "correct": 9911,
+    "total": 10000,
+    "accuracy_percent": 99.11,
+    "passes_target": true,
+    "a100_prediction_differences": 14,
+    "energy_fj": 23317800433846862,
+    "word_node_hops": 23317800433846862,
+    "cycles": 181126315554952,
+    "peak_scratch_bytes": 1253845632,
+    "instruction_issuing_processors": 250,
+    "arithmetic_processors": 1,
+    "time_to_score_seconds": 195.99277520296164,
+    "model_spec_commit": "01a0bd5e0d2564825b0f53dd766f763c82dbc7c0",
+    "report": "grid/README.md",
+    "score": "grid/placed-score.json",
+    "verification": "grid/verification.json",
+    "accuracy_evidence": "grid/full-execution/predictions.npy",
+    "numerical_differences": [
+      "Ordered FP32 covariance/reductions instead of FP64 filter covariance and CUDA reductions.",
+      "Orthonormal subspace iteration instead of library eigendecomposition.",
+      "Gauss-Jordan inverses and primitive log/exp/sqrt approximations replace library operations.",
+      "No A100 accuracy claim transfers to this grid program."
+    ],
+    "scope": "Complete training and prediction including tape I/O and initialization. Input normalization precedes tape input. Energy is theoretical data movement under the pinned model, not physical board energy."
+  },
+  "accuracy_evidence": "evidence/rerun/predictions-k100.npy",
+  "measurements": "evidence/rerun/results.json",
+  "verification": "evidence/verification.json",
+  "historical_attribution": "evidence/historical_audit.json",
+  "limitations": [
+    "Not bitwise equivalent to PyTorch feature reference: 9999/10000 prediction agreement.",
+    "Configuration historically selected with official-test feedback; no fresh held-out test set.",
+    "Input preparation and transfer, compilation and warmup excluded from warm device-resident measurement.",
+    "Three fresh A100 boards now agree on predictions; drivers and power limits differ, and energies remain per-host results.",
+    "Historical 24.1/26.6 J figures were K80, not K100."
+  ],
+  "modal_app": "ap-sbUnakIg9FEhrpRekTR0ZR",
+  "vast_ai_validation": {
+    "model": "K100, k8, same frozen source and dataset as primary result",
+    "comparison": "evidence/vast-comparison.json",
+    "cleanup": "evidence/vast-provisioning.json",
+    "both_rentals_destroyed": true,
+    "hosts": [
+      {
+        "location": "United Kingdom",
+        "hardware": {
+          "gpu": "NVIDIA A100-SXM4-40GB",
+          "uuid": "GPU-a23d0d2d-46c8-90d4-7cb7-5392ef355941",
+          "driver": "570.211.01",
+          "power_limit_w": 270.0
+        },
+        "software": {
+          "python": "3.11.10",
+          "torch": "2.5.1+cu124",
+          "cuda": "12.4",
+          "cudnn": 90100,
+          "numpy": "2.1.2"
+        },
+        "correct": 9906,
+        "total": 10000,
+        "prediction_sha256": "cf57fea5667c6bcc2915510ae51ce3a32dec0d7fb1ffa33767471727441100e7",
+        "energy_above_idle_mj": 28777.896731818983,
+        "sampled_energy_above_idle_mj": 28291.346543889722,
+        "gross_energy_mj": 43881.53333333334,
+        "runtime_ms": 297.2565030281354,
+        "rounds": 4,
+        "repetitions_per_round": 60,
+        "evidence": "evidence/vast-uk/results.json",
+        "verification": "evidence/vast-uk/verification.json"
+      },
+      {
+        "location": "Slovenia",
+        "hardware": {
+          "gpu": "NVIDIA A100-SXM4-40GB",
+          "uuid": "GPU-61d56efc-2291-5bb3-c9b2-25d16c9179d9",
+          "driver": "570.133.20",
+          "power_limit_w": 400.0
+        },
+        "software": {
+          "python": "3.11.10",
+          "torch": "2.5.1+cu124",
+          "cuda": "12.4",
+          "cudnn": 90100,
+          "numpy": "2.1.2"
+        },
+        "correct": 9906,
+        "total": 10000,
+        "prediction_sha256": "cf57fea5667c6bcc2915510ae51ce3a32dec0d7fb1ffa33767471727441100e7",
+        "energy_above_idle_mj": 30351.582470262656,
+        "sampled_energy_above_idle_mj": 30130.74250225941,
+        "gross_energy_mj": 42394.73333333334,
+        "runtime_ms": 288.31034305815894,
+        "rounds": 4,
+        "repetitions_per_round": 60,
+        "evidence": "evidence/vast-slovenia/results.json",
+        "verification": "evidence/vast-slovenia/verification.json"
+      }
+    ]
+  }
+}

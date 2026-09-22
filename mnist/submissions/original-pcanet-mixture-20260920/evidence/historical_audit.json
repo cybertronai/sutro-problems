@@ -1,0 +1,645 @@
+{
+  "audit_date": "2026-09-20",
+  "kind": "Historical attribution and numerical consistency audit, not a new model execution or energy measurement",
+  "requested_row": "PCANet 9-block + mixture k=8 K=100 | 99.06-99.08% | ~3542 mJ (front end uncertified) | 24.1 / 26.6 J",
+  "verdict": "The requested row combines K=100 accuracy with K=80 GPU accuracy/energy and an invalid sum of a K=80 head plus a four-block frontend. It is not a coherent measured K=100 result.",
+  "requested_configuration": {
+    "input": "MNIST-original 28x28",
+    "training_examples": 60000,
+    "test_examples": 10000,
+    "L1": 8,
+    "L2": 5,
+    "filter_size": 7,
+    "block_size": 14,
+    "block_stride": 7,
+    "blocks": 9,
+    "histogram_dimensions": 2304,
+    "K": 100,
+    "mixture_components_per_class": 8
+  },
+  "accuracy_evidence": {
+    "K100": {
+      "correct": 9908,
+      "test_examples": 10000,
+      "accuracy_pct": 99.08,
+      "sources": [
+        "historical/pcanet60k_best.json",
+        "historical/pcawide.json"
+      ],
+      "basis": "Exact integer counts in two named historical summary JSONs. Official 60000/10000 split context is documented in log records m997/m1003. These may reuse the same baseline; independence is not established.",
+      "limitation": "No associated prediction arrays, launch command, source revision, data hashes, random state, or numerical environment are retained in these summaries. The original accuracy execution cannot be reconstructed or validated from the counts alone."
+    },
+    "K80": {
+      "historical_numpy_style_sweep_correct": 9904,
+      "historical_sweep_accuracy_pct": 99.04,
+      "gpu_original_accuracy_pct": 99.06999468803406,
+      "gpu_v4_accuracy_pct": 99.05999898910522,
+      "basis": "GPU percentages were computed through FP32 mean().item()*100 and explain the displayed 99.07/99.06; exact integer correctness counts are not stored in the host JSONs."
+    }
+  },
+  "grid_energy_evidence": {
+    "unit": "mJ per full official train-and-predict task for the historical grid head scores",
+    "K80_head_mj": 3343.457472705574,
+    "K100_head_mj": 5513.176430066004,
+    "four_block_frontend_mj": 198.538343403548,
+    "invalid_mixed_total_mj": 3541.995816109122,
+    "invalid_mixed_total_rounds_to_requested_3542": true,
+    "arithmetic": "3343.457472705574 + 198.538343403548 = 3541.995816109122 mJ",
+    "reason_invalid": "K is 80 rather than 100; frontend score belongs to four non-overlapping blocks (DF=1024), while the head and target use nine overlapping blocks (DF=2304). PLAYBOOK c99-004 and log m1004 additionally document unvalidated frontend output, including a large discrepancy against its mirror.",
+    "K100_complete_pipeline_energy_mj": null,
+    "limitation": "The K100 value is a retained head-score summary; this audit checks attribution, not a fresh exact-grid execution or a certified complete pipeline score."
+  },
+  "gpu_energy_attribution": {
+    "variant": "v4 cuda/ptx",
+    "K": 80,
+    "mixture_components_per_class": 8,
+    "blocks": 9,
+    "tf32_allowed": true,
+    "number_of_rounds_per_host": 4,
+    "task_repetitions_per_window": 30,
+    "idle_brackets_seconds_each": 10.0,
+    "host1_median_idle_adjusted_counter_j": 24.094260925085663,
+    "host2_median_idle_adjusted_counter_j": 26.583618649850393,
+    "rounded_report_j": [
+      24.1,
+      26.6
+    ],
+    "K100_energy_j": null,
+    "limitation": "Historical A100 results; they are not server-v80 measurements or results for K100."
+  },
+  "numerical_checks": {
+    "v6_host1.json": {
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "recorded_sensor_check": {
+        "idle_w": 57.89103932696603,
+        "load_w_counter": 290.36065795892307,
+        "load_w_sampled": 288.87709715674276,
+        "trustworthy": true
+      },
+      "measurement_scope": "One task fits filters, extracts 60000 training and 10000 test features, fits feature PCA and mixture, and predicts the complete test set. Data is already loaded on the GPU. First warm-up task and JIT compilation are outside the recorded windows.",
+      "runs": {
+        "v1 original": {
+          "source_accuracy_pct": 99.06999468803406,
+          "K_attribution": 80,
+          "K_attribution_basis": "bench6.py calls the task with no K override; bench_two.task_pcanet and fast4.task_cuda default to K=80.",
+          "recomputed_summary_medians": {
+            "reps": 30.0,
+            "task_ms": 679.5131913386285,
+            "gross_j": 147.18129999836287,
+            "adjusted_j_counter": 106.14340327536905,
+            "adjusted_j_sampled": 104.14338955281352,
+            "window_s": 20.385395740158856,
+            "run_w": 216.6028199741685,
+            "idle_w": 60.120985942680726
+          },
+          "summary_residuals": {
+            "reps": 0.0,
+            "task_ms": 0.0,
+            "gross_j": 0.0,
+            "adjusted_j_counter": 0.0,
+            "adjusted_j_sampled": 0.0,
+            "window_s": 0.0,
+            "run_w": 0.0,
+            "idle_w": 0.0
+          },
+          "all_medians_match_exactly": true,
+          "per_round_arithmetic": [
+            {
+              "round": 0,
+              "recomputed_task_ms": 679.5115650631487,
+              "task_ms_residual": 0.0,
+              "recomputed_gross_j_from_run_w": 147.20750000079474,
+              "gross_j_residual": 0.0,
+              "recomputed_adjusted_j_counter": 104.92992000909558,
+              "adjusted_j_counter_residual": 1.4210854715202004e-14,
+              "counter_vs_sampled_adjusted_relative_pct": 0.9660885550316902
+            },
+            {
+              "round": 1,
+              "recomputed_task_ms": 679.4822579870622,
+              "task_ms_residual": 1.1368683772161603e-13,
+              "recomputed_gross_j_from_run_w": 147.155133330822,
+              "gross_j_residual": 0.0,
+              "recomputed_adjusted_j_counter": 106.37199726135995,
+              "adjusted_j_counter_residual": 0.0,
+              "counter_vs_sampled_adjusted_relative_pct": 1.6188288787292977
+            },
+            {
+              "round": 2,
+              "recomputed_task_ms": 679.5148176141083,
+              "task_ms_residual": 0.0,
+              "recomputed_gross_j_from_run_w": 147.20746666590372,
+              "gross_j_residual": 0.0,
+              "recomputed_adjusted_j_counter": 106.39795731992182,
+              "adjusted_j_counter_residual": 0.0,
+              "counter_vs_sampled_adjusted_relative_pct": 1.9519594432107072
+            },
+            {
+              "round": 3,
+              "recomputed_task_ms": 680.1794079442819,
+              "task_ms_residual": 0.0,
+              "recomputed_gross_j_from_run_w": 146.8514999985695,
+              "gross_j_residual": 0.0,
+              "recomputed_adjusted_j_counter": 105.91480928937816,
+              "adjusted_j_counter_residual": 1.4210854715202004e-14,
+              "counter_vs_sampled_adjusted_relative_pct": 2.5639497457094063
+            }
+          ],
+          "per_round_arithmetic_pass_1e_minus_9_absolute": true
+        },
+        "v4 cuda/ptx": {
+          "source_accuracy_pct": 99.05999898910522,
+          "K_attribution": 80,
+          "K_attribution_basis": "bench6.py calls the task with no K override; bench_two.task_pcanet and fast4.task_cuda default to K=80.",
+          "recomputed_summary_medians": {
+            "reps": 30.0,
+            "task_ms": 246.2638651796927,
+            "gross_j": 38.908749999602634,
+            "adjusted_j_counter": 24.094260925085663,
+            "adjusted_j_sampled": 23.861062758696704,
+            "window_s": 7.387915955390781,
+            "run_w": 158.11190781422607,
+            "idle_w": 59.59615702312952
+          },
+          "summary_residuals": {
+            "reps": 0.0,
+            "task_ms": 0.0,
+            "gross_j": 0.0,
+            "adjusted_j_counter": 0.0,
+            "adjusted_j_sampled": 0.0,
+            "window_s": 0.0,
+            "run_w": 0.0,
+            "idle_w": 0.0
+          },
+          "all_medians_match_exactly": true,
+          "per_round_arithmetic": [
+            {
+              "round": 0,
+              "recomputed_task_ms": 246.37907200182477,
+              "task_ms_residual": 0.0,
+              "recomputed_gross_j_from_run_w": 39.027933331330615,
+              "gross_j_residual": 0.0,
+              "recomputed_adjusted_j_counter": 24.083685282580323,
+              "adjusted_j_counter_residual": -3.552713678800501e-15,
+              "counter_vs_sampled_adjusted_relative_pct": 3.416868481325516
+            },
+            {
+              "round": 1,
+              "recomputed_task_ms": 245.78705858439207,
+              "task_ms_residual": 0.0,
+              "recomputed_gross_j_from_run_w": 38.78956666787465,
+              "gross_j_residual": 0.0,
+              "recomputed_adjusted_j_counter": 24.104836567590997,
+              "adjusted_j_counter_residual": 0.0,
+              "counter_vs_sampled_adjusted_relative_pct": 0.5610261414579737
+            },
+            {
+              "round": 2,
+              "recomputed_task_ms": 246.7981946033736,
+              "task_ms_residual": -2.842170943040401e-14,
+              "recomputed_gross_j_from_run_w": 38.57759999831517,
+              "gross_j_residual": 0.0,
+              "recomputed_adjusted_j_counter": 23.906293252735278,
+              "adjusted_j_counter_residual": -3.552713678800501e-15,
+              "counter_vs_sampled_adjusted_relative_pct": -0.8692154656388201
+            },
+            {
+              "round": 3,
+              "recomputed_task_ms": 246.14865835756063,
+              "task_ms_residual": 0.0,
+              "recomputed_gross_j_from_run_w": 39.0394666671753,
+              "gross_j_residual": 7.105427357601002e-15,
+              "recomputed_adjusted_j_counter": 24.47262380831504,
+              "adjusted_j_counter_residual": -3.552713678800501e-15,
+              "counter_vs_sampled_adjusted_relative_pct": 3.034952446338929
+            }
+          ],
+          "per_round_arithmetic_pass_1e_minus_9_absolute": true
+        },
+        "v5 +batched EM": {
+          "source_accuracy_pct": 99.05999898910522,
+          "K_attribution": null,
+          "K_attribution_basis": "Not audited: variant is outside the requested v4 row.",
+          "recomputed_summary_medians": {
+            "reps": 30.0,
+            "task_ms": 223.42836330644786,
+            "gross_j": 41.54769999980927,
+            "adjusted_j_counter": 27.959124481955712,
+            "adjusted_j_sampled": 27.605082286161092,
+            "window_s": 6.702850899193436,
+            "run_w": 185.96072645577777,
+            "idle_w": 60.27125017779521
+          },
+          "summary_residuals": {
+            "reps": 0.0,
+            "task_ms": 0.0,
+            "gross_j": 0.0,
+            "adjusted_j_counter": 0.0,
+            "adjusted_j_sampled": 0.0,
+            "window_s": 0.0,
+            "run_w": 0.0,
+            "idle_w": 0.0
+          },
+          "all_medians_match_exactly": true,
+          "per_round_arithmetic": [
+            {
+              "round": 0,
+              "recomputed_task_ms": 223.40083591019115,
+              "task_ms_residual": 0.0,
+              "recomputed_gross_j_from_run_w": 41.89906666676204,
+              "gross_j_residual": 7.105427357601002e-15,
+              "recomputed_adjusted_j_counter": 28.196051887921058,
+              "adjusted_j_counter_residual": 0.0,
+              "counter_vs_sampled_adjusted_relative_pct": 3.4562645366705103
+            },
+            {
+              "round": 1,
+              "recomputed_task_ms": 223.41338644425073,
+              "task_ms_residual": 0.0,
+              "recomputed_gross_j_from_run_w": 40.94646666844686,
+              "gross_j_residual": 0.0,
+              "recomputed_adjusted_j_counter": 27.688582199832865,
+              "adjusted_j_counter_residual": 3.552713678800501e-15,
+              "counter_vs_sampled_adjusted_relative_pct": 1.8413603426034515
+            },
+            {
+              "round": 2,
+              "recomputed_task_ms": 223.44334016864497,
+              "task_ms_residual": -2.842170943040401e-14,
+              "recomputed_gross_j_from_run_w": 41.1963333328565,
+              "gross_j_residual": 0.0,
+              "recomputed_adjusted_j_counter": 27.722197075990373,
+              "adjusted_j_counter_residual": 3.552713678800501e-15,
+              "counter_vs_sampled_adjusted_relative_pct": -4.233021082867767
+            },
+            {
+              "round": 3,
+              "recomputed_task_ms": 223.50114583969116,
+              "task_ms_residual": 0.0,
+              "recomputed_gross_j_from_run_w": 42.12453333536784,
+              "gross_j_residual": 7.105427357601002e-15,
+              "recomputed_adjusted_j_counter": 28.660768452430112,
+              "adjusted_j_counter_residual": -3.552713678800501e-15,
+              "counter_vs_sampled_adjusted_relative_pct": 2.5206772978096255
+            }
+          ],
+          "per_round_arithmetic_pass_1e_minus_9_absolute": true
+        }
+      },
+      "v4_observed_ranges": {
+        "task_ms": {
+          "min": 245.78705858439207,
+          "max": 246.79819460337362
+        },
+        "adjusted_j_counter": {
+          "min": 23.90629325273528,
+          "max": 24.472623808315042
+        },
+        "idle_w": {
+          "min": 59.179046337519154,
+          "max": 60.65550911986392
+        }
+      },
+      "v4_counter_vs_sampled_median_relative_pct": 0.9773167639147378
+    },
+    "v6_host2.json": {
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "recorded_sensor_check": {
+        "idle_w": 191.42124552242507,
+        "load_w_counter": 262.3259257959672,
+        "load_w_sampled": 264.57062777115243,
+        "trustworthy": true
+      },
+      "measurement_scope": "One task fits filters, extracts 60000 training and 10000 test features, fits feature PCA and mixture, and predicts the complete test set. Data is already loaded on the GPU. First warm-up task and JIT compilation are outside the recorded windows.",
+      "runs": {
+        "v1 original": {
+          "source_accuracy_pct": 99.06999468803406,
+          "K_attribution": 80,
+          "K_attribution_basis": "bench6.py calls the task with no K override; bench_two.task_pcanet and fast4.task_cuda default to K=80.",
+          "recomputed_summary_medians": {
+            "reps": 30.0,
+            "task_ms": 923.0413703015074,
+            "gross_j": 170.26331666683157,
+            "adjusted_j_counter": 91.95374218534783,
+            "adjusted_j_sampled": 90.47414347666123,
+            "window_s": 27.691241109045222,
+            "run_w": 185.56610797559247,
+            "idle_w": 84.82460866792877
+          },
+          "summary_residuals": {
+            "reps": 0.0,
+            "task_ms": 0.0,
+            "gross_j": 0.0,
+            "adjusted_j_counter": 0.0,
+            "adjusted_j_sampled": 0.0,
+            "window_s": 0.0,
+            "run_w": 0.0,
+            "idle_w": 0.0
+          },
+          "all_medians_match_exactly": true,
+          "per_round_arithmetic": [
+            {
+              "round": 0,
+              "recomputed_task_ms": 774.4039296871051,
+              "task_ms_residual": 0.0,
+              "recomputed_gross_j_from_run_w": 151.1985333333413,
+              "gross_j_residual": 0.0,
+              "recomputed_adjusted_j_counter": 60.89353488226277,
+              "adjusted_j_counter_residual": 7.105427357601002e-15,
+              "counter_vs_sampled_adjusted_relative_pct": -1.1989892758699439
+            },
+            {
+              "round": 1,
+              "recomputed_task_ms": 776.6753317167362,
+              "task_ms_residual": 0.0,
+              "recomputed_gross_j_from_run_w": 148.70523333301148,
+              "gross_j_residual": 0.0,
+              "recomputed_adjusted_j_counter": 84.47441779492483,
+              "adjusted_j_counter_residual": 0.0,
+              "counter_vs_sampled_adjusted_relative_pct": 1.5878059375295324
+            },
+            {
+              "round": 2,
+              "recomputed_task_ms": 1069.4074088862785,
+              "task_ms_residual": -2.2737367544323206e-13,
+              "recomputed_gross_j_from_run_w": 189.32810000032185,
+              "gross_j_residual": 0.0,
+              "recomputed_adjusted_j_counter": 141.9104542699709,
+              "adjusted_j_counter_residual": -2.842170943040401e-14,
+              "counter_vs_sampled_adjusted_relative_pct": 2.875795758292141
+            },
+            {
+              "round": 3,
+              "recomputed_task_ms": 1072.4145959519471,
+              "task_ms_residual": 0.0,
+              "recomputed_gross_j_from_run_w": 192.67900000015896,
+              "gross_j_residual": 2.842170943040401e-14,
+              "recomputed_adjusted_j_counter": 99.43306657577081,
+              "adjusted_j_counter_residual": -2.842170943040401e-14,
+              "counter_vs_sampled_adjusted_relative_pct": 1.675837515959803
+            }
+          ],
+          "per_round_arithmetic_pass_1e_minus_9_absolute": true
+        },
+        "v4 cuda/ptx": {
+          "source_accuracy_pct": 99.05999898910522,
+          "K_attribution": 80,
+          "K_attribution_basis": "bench6.py calls the task with no K override; bench_two.task_pcanet and fast4.task_cuda default to K=80.",
+          "recomputed_summary_medians": {
+            "reps": 30.0,
+            "task_ms": 348.58775946583285,
+            "gross_j": 51.89323333327969,
+            "adjusted_j_counter": 26.583618649850393,
+            "adjusted_j_sampled": 26.533775061540464,
+            "window_s": 10.457632783974987,
+            "run_w": 148.76512219150283,
+            "idle_w": 72.91581548023808
+          },
+          "summary_residuals": {
+            "reps": 0.0,
+            "task_ms": 0.0,
+            "gross_j": 0.0,
+            "adjusted_j_counter": 0.0,
+            "adjusted_j_sampled": 0.0,
+            "window_s": 0.0,
+            "run_w": 0.0,
+            "idle_w": 0.0
+          },
+          "all_medians_match_exactly": true,
+          "per_round_arithmetic": [
+            {
+              "round": 0,
+              "recomputed_task_ms": 433.73287326733896,
+              "task_ms_residual": 5.684341886080802e-14,
+              "recomputed_gross_j_from_run_w": 66.08283333331346,
+              "gross_j_residual": 0.0,
+              "recomputed_adjusted_j_counter": 39.983352368992016,
+              "adjusted_j_counter_residual": -7.105427357601002e-15,
+              "counter_vs_sampled_adjusted_relative_pct": -1.0617220786638244
+            },
+            {
+              "round": 1,
+              "recomputed_task_ms": 373.83906496688724,
+              "task_ms_residual": 0.0,
+              "recomputed_gross_j_from_run_w": 56.14026666631301,
+              "gross_j_residual": 0.0,
+              "recomputed_adjusted_j_counter": 30.47960002794881,
+              "adjusted_j_counter_residual": -3.552713678800501e-15,
+              "counter_vs_sampled_adjusted_relative_pct": -0.6119494934895887
+            },
+            {
+              "round": 2,
+              "recomputed_task_ms": 323.33645396477857,
+              "task_ms_residual": 5.684341886080802e-14,
+              "recomputed_gross_j_from_run_w": 47.64620000024637,
+              "gross_j_residual": 0.0,
+              "recomputed_adjusted_j_counter": 22.687637271751978,
+              "adjusted_j_counter_residual": 0.0,
+              "counter_vs_sampled_adjusted_relative_pct": 1.282820325261313
+            },
+            {
+              "round": 3,
+              "recomputed_task_ms": 284.46450671957183,
+              "task_ms_residual": 0.0,
+              "recomputed_gross_j_from_run_w": 40.731933333476384,
+              "gross_j_residual": 0.0,
+              "recomputed_adjusted_j_counter": 16.322499526324247,
+              "adjusted_j_counter_residual": 0.0,
+              "counter_vs_sampled_adjusted_relative_pct": -1.7011852022510197
+            }
+          ],
+          "per_round_arithmetic_pass_1e_minus_9_absolute": true
+        },
+        "v5 +batched EM": {
+          "source_accuracy_pct": 99.05999898910522,
+          "K_attribution": null,
+          "K_attribution_basis": "Not audited: variant is outside the requested v4 row.",
+          "recomputed_summary_medians": {
+            "reps": 30.0,
+            "task_ms": 237.51338529982604,
+            "gross_j": 39.93900000005961,
+            "adjusted_j_counter": 30.07474635367973,
+            "adjusted_j_sampled": 28.624302073194563,
+            "window_s": 7.125401558994781,
+            "run_w": 168.19045506452193,
+            "idle_w": 41.51345470838961
+          },
+          "summary_residuals": {
+            "reps": 0.0,
+            "task_ms": 0.0,
+            "gross_j": 0.0,
+            "adjusted_j_counter": 0.0,
+            "adjusted_j_sampled": 0.0,
+            "window_s": 0.0,
+            "run_w": 0.0,
+            "idle_w": 0.0
+          },
+          "all_medians_match_exactly": true,
+          "per_round_arithmetic": [
+            {
+              "round": 0,
+              "recomputed_task_ms": 237.6376173342578,
+              "task_ms_residual": 0.0,
+              "recomputed_gross_j_from_run_w": 39.96780000030994,
+              "gross_j_residual": 0.0,
+              "recomputed_adjusted_j_counter": 29.594799723326503,
+              "adjusted_j_counter_residual": -3.552713678800501e-15,
+              "counter_vs_sampled_adjusted_relative_pct": -0.5061844309590922
+            },
+            {
+              "round": 1,
+              "recomputed_task_ms": 237.5184282194823,
+              "task_ms_residual": 0.0,
+              "recomputed_gross_j_from_run_w": 40.44410000046094,
+              "gross_j_residual": 0.0,
+              "recomputed_adjusted_j_counter": 30.569850567672574,
+              "adjusted_j_counter_residual": 0.0,
+              "counter_vs_sampled_adjusted_relative_pct": 6.787263475756563
+            },
+            {
+              "round": 2,
+              "recomputed_task_ms": 237.50834238016978,
+              "task_ms_residual": 0.0,
+              "recomputed_gross_j_from_run_w": 39.880500000218554,
+              "gross_j_residual": 0.0,
+              "recomputed_adjusted_j_counter": 30.03474651030543,
+              "adjusted_j_counter_residual": 7.105427357601002e-15,
+              "counter_vs_sampled_adjusted_relative_pct": 4.9368491848921225
+            },
+            {
+              "round": 3,
+              "recomputed_task_ms": 237.28826844599098,
+              "task_ms_residual": 0.0,
+              "recomputed_gross_j_from_run_w": 39.910199999809265,
+              "gross_j_residual": 0.0,
+              "recomputed_adjusted_j_counter": 30.114746197054036,
+              "adjusted_j_counter_residual": -3.552713678800501e-15,
+              "counter_vs_sampled_adjusted_relative_pct": 5.349653254073118
+            }
+          ],
+          "per_round_arithmetic_pass_1e_minus_9_absolute": true
+        }
+      },
+      "v4_observed_ranges": {
+        "task_ms": {
+          "min": 284.46450671957183,
+          "max": 433.7328732673389
+        },
+        "adjusted_j_counter": {
+          "min": 16.322499526324247,
+          "max": 39.98335236899202
+        },
+        "idle_w": {
+          "min": 60.174090028529065,
+          "max": 85.8083635411683
+        }
+      },
+      "v4_counter_vs_sampled_median_relative_pct": 0.18784959243200877
+    }
+  },
+  "provenance_limitations": [
+    "Source files and result JSONs were co-located in the historical evidence directory, but no embedded source hashes connect the JSONs to the current source files. K attribution is based on those retained sources and the benchmark docstring.",
+    "Host JSONs contain only the GPU model, not host identity, timestamps, software versions or data hashes. The log describes two independent hosts, but independence cannot be established from the host JSONs alone.",
+    "Raw NVML counter endpoints, sampled power time series, and individual idle windows are not retained. Derived counter arithmetic and summary medians are internally consistent; this does not independently validate the sensors.",
+    "Host2 v4 runtime and idle-adjusted energy fall monotonically across rounds (434 to 284 ms, 39.98 to 16.32 J) while idle power rises (60.17 to 85.81 W). Its 26.58 J median is arithmetically valid but hides substantial variation.",
+    "All three variants in each original host JSON were checked for arithmetic/median consistency; only v1/v4 source configuration attribution is within this audit scope.",
+    "Historical m1018 says counter/sample integrals agree within 2% everywhere, but some individual adjusted v4 rounds exceed 2%; v4 summary medians agree within about 1%. This audit uses the numerical JSON rather than the prose claim.",
+    "Historical m1018 lists host2 v5 as 27.23 J, while retained v6_host2.json yields 30.07474635367973 J. This discrepancy concerns an unused variant and does not change the v4 attribution.",
+    "Historical K sweeps reuse the official test split to compare configurations. The retained accuracy is a historical benchmark result rather than an untouched holdout estimate."
+  ],
+  "source_provenance": [
+    {
+      "sha256": "b1296a90879a8c5913f963d7ad76597f54cf8e6dd6de1b48f135d6964bbbba8f",
+      "bytes": 968,
+      "remote_path": "/home/mnau/Projects/sutro_unsat/mnist/medium98/evidence/pcanet60k_best.json",
+      "captured_from": "server-v80",
+      "bundled_file": "historical/pcanet60k_best.json"
+    },
+    {
+      "sha256": "85d300b537ad70ce240ca0d7daa3e269cd51fc33ed628f85d0f46a76e37f29c2",
+      "bytes": 167,
+      "remote_path": "/home/mnau/Projects/sutro_unsat/mnist/medium98/evidence/pcanet_ksweep.json",
+      "captured_from": "server-v80",
+      "bundled_file": "historical/pcanet_ksweep.json"
+    },
+    {
+      "sha256": "6f5fb237ba873933d772ba7403f9f79bf7c408a1f6db43fab84e63b3d580040b",
+      "bytes": 201,
+      "remote_path": "/home/mnau/Projects/sutro_unsat/mnist/medium98/evidence/pcanet_ksweep_energy.json",
+      "captured_from": "server-v80",
+      "bundled_file": "historical/pcanet_ksweep_energy.json"
+    },
+    {
+      "sha256": "92feafc343eddbec70321c33f8498cd970c009adc0ead43fba37a5addc1f3ccd",
+      "bytes": 175,
+      "remote_path": "/home/mnau/Projects/sutro_unsat/mnist/medium98/evidence/pcanet_fe60k.json",
+      "captured_from": "server-v80",
+      "bundled_file": "historical/pcanet_fe60k.json"
+    },
+    {
+      "sha256": "978478fee83389d9326bf40195880f9648e20bc63a054fe6c54d1c90d4299fe2",
+      "bytes": 332,
+      "remote_path": "/home/mnau/Projects/sutro_unsat/mnist/medium98/evidence/pcawide.json",
+      "captured_from": "server-v80",
+      "bundled_file": "historical/pcawide.json"
+    },
+    {
+      "sha256": "18e127fe7c455642be67cd0ce6d5eb1504416b295c975203b23508b79024eca1",
+      "bytes": 5149,
+      "remote_path": "/home/mnau/Projects/sutro_unsat/mnist/medium98/evidence/a100_two_best/v6_host1.json",
+      "captured_from": "server-v80",
+      "bundled_file": "historical/v6_host1.json"
+    },
+    {
+      "sha256": "9e5cee7ca324202581f79522b0920491e9a781d90f91830762716f2d0c522f26",
+      "bytes": 5144,
+      "remote_path": "/home/mnau/Projects/sutro_unsat/mnist/medium98/evidence/a100_two_best/v6_host2.json",
+      "captured_from": "server-v80",
+      "bundled_file": "historical/v6_host2.json"
+    },
+    {
+      "sha256": "478b234a9ff0115c0fe988e1048649c8e13778ff652619da5c5efd8a75abb0a6",
+      "bytes": 2806,
+      "remote_path": "/home/mnau/Projects/sutro_unsat/mnist/medium98/evidence/a100_two_best/bench6.py",
+      "captured_from": "server-v80"
+    },
+    {
+      "sha256": "65358d10e3a4d996171e35dc989252097e66ae0a7cb65fdb08933a18b1efa572",
+      "bytes": 1276,
+      "remote_path": "/home/mnau/Projects/sutro_unsat/mnist/medium98/evidence/a100_two_best/fast4.py",
+      "captured_from": "server-v80"
+    },
+    {
+      "sha256": "4f6108f52d4000ed0725d0c46a3c3430cdb259123b45b31d0b96c9f934ec2e03",
+      "bytes": 15986,
+      "remote_path": "/home/mnau/Projects/sutro_unsat/mnist/medium98/evidence/a100_two_best/bench_two.py",
+      "captured_from": "server-v80"
+    },
+    {
+      "sha256": "6ec224d40356d9dcbf068cf4103c2727fd57111ea72fa41308e948b8b8746d42",
+      "bytes": 6112,
+      "remote_path": "/home/mnau/Projects/sutro_unsat/mnist/medium98/evidence/a100_two_best/fast_pcanet.py",
+      "captured_from": "server-v80"
+    },
+    {
+      "sha256": "c4de3dbf684b0110ea449309367adfeb120cef68c0cb8266b243898ae0a6a05a",
+      "bytes": 5130,
+      "remote_path": "/home/mnau/Projects/sutro_unsat/mnist/medium98/evidence/a100_two_best/cuda_kernel.py",
+      "captured_from": "server-v80"
+    },
+    {
+      "sha256": "457e07b44752689d51d7c5942404098707128a71cfbdebb600071d8779619d96",
+      "bytes": 147416,
+      "remote_path": "/home/mnau/Projects/sutro_unsat/mnist/medium98/PLAYBOOK.md",
+      "captured_from": "server-v80"
+    },
+    {
+      "sha256": "1ed227f5be70a99743b493c21a36a046a23c7004ab323e06044a2c304e0122f9",
+      "bytes": 616285,
+      "remote_path": "/home/mnau/Projects/sutro_unsat/mnist/medium98/evidence/log.jsonl",
+      "captured_from": "server-v80"
+    }
+  ],
+  "context_excerpts_file": "historical/context_excerpts.json",
+  "recommendation": "Report K100 historical accuracy as 9908/10000 (99.08%) and historical grid head only as 5513.176430066004 mJ, with no certified total. Keep the K80 v4 A100 24.094/26.584 J results separately. Attach new explicitly K100 rerun results with full provenance before presenting current reproducibility."
+}

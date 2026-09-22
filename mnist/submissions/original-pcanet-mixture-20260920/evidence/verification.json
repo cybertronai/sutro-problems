@@ -1,0 +1,46 @@
+{
+  "results_directory": "mnist/submissions/original-pcanet-mixture-20260920/evidence/rerun",
+  "raw_directory": "/tmp/pcanet-source-20260920/raw",
+  "runs": {
+    "100": {
+      "correct": 9906,
+      "total": 10000,
+      "reference_prediction_matches": 9999,
+      "median_task_ms": 287.58129282916684,
+      "median_gross_mj": 49985.225,
+      "median_counter_above_idle_mj": 29709.265734753117,
+      "median_sampled_above_idle_mj": 28955.648679115973
+    },
+    "80": {
+      "correct": 9906,
+      "total": 10000,
+      "reference_prediction_matches": 9999,
+      "median_task_ms": 268.76142779166656,
+      "median_gross_mj": 46030.541666666664,
+      "median_counter_above_idle_mj": 26893.63338109382,
+      "median_sampled_above_idle_mj": 26632.919183611015
+    }
+  },
+  "independent_accuracy_check": true,
+  "idle_only_control_net_j": {
+    "counter_net_j": -7.901337852705296,
+    "sampled_net_j": -1.088055535468584
+  },
+  "feature_validation": {
+    "images": 1536,
+    "values": 3538944,
+    "mismatched_values": 5976,
+    "max_abs_difference": 0.008417937904596329,
+    "nondefault_stream_checked": true
+  },
+  "checks": 506,
+  "passed": true,
+  "errors": [],
+  "limitations": [
+    "K=100: 1 predictions differ from the PyTorch feature reference. TF32/convolution arithmetic can cause threshold changes; this is not exact reference equivalence.",
+    "K=80: 1 predictions differ from the PyTorch feature reference. TF32/convolution arithmetic can cause threshold changes; this is not exact reference equivalence.",
+    "Feature cross-check records differences. TF32 reference and the fused FP32-FMA convolution are not established as bitwise equivalent; raw feature arrays were not retained.",
+    "Repeated-run stability, training-label perturbation, process monitoring and feature checks are retained scalar observations; this offline checker cannot replay them. Only the last measured prediction vector in each round was compared during execution.",
+    "NVML energy counter and sampled-power integration share GPU sensors. Above-idle energy excludes host/platform power and the documented setup stages."
+  ]
+}

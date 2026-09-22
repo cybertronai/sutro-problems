@@ -1,0 +1,209 @@
+{
+  "description": "Exact relevant excerpts; source hashes in historical_audit.json identify the complete files from which these excerpts were taken.",
+  "PLAYBOOK.md": [
+    {
+      "line_number": 541,
+      "text": "## A cheaper PCANet route to 99 % (2026-09-18; evidence m1001-m1004)"
+    },
+    {
+      "line_number": 542,
+      "text": ""
+    },
+    {
+      "line_number": 543,
+      "text": "- [c99-001] (+1/-0) THE CHEAP ROUTE TO 99 % IS K, NOT k, which reverses the plan. On the nine-block DF=2304"
+    },
+    {
+      "line_number": 544,
+      "text": "  front end at k=8: K = 60/70/80/90/100 give 98.96 / 98.99 / 99.04 / 99.07 / 99.08 % for exact head energies"
+    },
+    {
+      "line_number": 545,
+      "text": "  1,836.861 / 2,506.774 / 3,343.457 / 4,342.292 / 5,513.176 mJ. K=80 is the cheapest crossing. Against"
+    },
+    {
+      "line_number": 546,
+      "text": "  p99-002's k=32 route at 21,851.575 mJ, holding k=8 and raising K is 6.5x cheaper and still clears the"
+    },
+    {
+      "line_number": 547,
+      "text": "  target.  <src: evidence/log.jsonl m1001>"
+    },
+    {
+      "line_number": 548,
+      "text": "- [c99-002] (+0/-1) REFUTES THE HYPOTHESIS THE EXPERIMENT STARTED FROM. tf-012 makes the feature count"
+    },
+    {
+      "line_number": 549,
+      "text": "  nearly free at 60,000 rows, so the plan was to buy accuracy with filters and bits at k=8. It does not"
+    },
+    {
+      "line_number": 550,
+      "text": "  work: at K=100 k=8, L1=16 reads 99.07 and L1=8 L2=6 reads 99.12 against the baseline 99.08, and at K=60"
+    },
+    {
+      "line_number": 551,
+      "text": "  BOTH ARE WORSE. Doubling the feature count is worth at most +0.04. The representation is not"
+    },
+    {
+      "line_number": 552,
+      "text": "  feature-count-limited.  <src: evidence/log.jsonl m1003>"
+    },
+    {
+      "line_number": 553,
+      "text": "- [c99-003] (+0/-1) AND THE PILOT SCREEN BADLY UNDERSTATED THE BLOCK GEOMETRY. m997 measured overlapping"
+    },
+    {
+      "line_number": 554,
+      "text": "  blocks at +0.04 on three 10,000-row draws; at 60,000 rows the four-block geometry cannot reach 99 % at all"
+    },
+    {
+      "line_number": 555,
+      "text": "  (K=80 98.82, K=100 98.88, K=120 98.89, K=150 98.93) while nine blocks reaches 99.04 at K=80. The overlap"
+    },
+    {
+      "line_number": 556,
+      "text": "  is worth 0.15 points and is the difference between clearing the target and missing it.  <src: evidence/log.jsonl m1002>"
+    },
+    {
+      "line_number": 557,
+      "text": "- [c99-004] (+0/-0) OPEN, AND IT BLOCKS THE RESULT. pcanet_ir now accepts overlapping blocks (a no-op at"
+    },
+    {
+      "line_number": 558,
+      "text": "  stride = blk) but is NOT certified: checking it exposed a pre-existing gap where the features_only"
+    },
+    {
+      "line_number": 559,
+      "text": "  program disagrees with mirror()'s feats() even in the already-published non-overlapping case, by a factor"
+    },
+    {
+      "line_number": 560,
+      "text": "  near 8e9 and not fixable by rescaling. The original validate compared predicted LABELS through the ridge"
+    },
+    {
+      "line_number": 561,
+      "text": "  and never the emitted features. So the 99.04 % learner has an exactly scored HEAD (3,343.457 mJ) and NO"
+    },
+    {
+      "line_number": 562,
+      "text": "  certified front end; the 198.538 mJ figure belongs to the four-block geometry, which does not clear 99 %."
+    },
+    {
+      "line_number": 563,
+      "text": "  <src: evidence/log.jsonl m1004>"
+    }
+  ],
+  "evidence/log.jsonl": [
+    {
+      "line_number": 998,
+      "record": {
+        "id": "m997",
+        "date": "2026-09-18",
+        "family": "closed-form feature pipeline",
+        "context": "MNIST-original, complete official splits, 60,000 train / 10,000 test, one run",
+        "target": "accuracy of the PCANet learner pushed past 99 % (%)",
+        "lever": "K=200 and k=32, and nine 14x14 blocks at stride 7 instead of four non-overlapping",
+        "base": 98.87,
+        "result": 99.27,
+        "effect": 0.4,
+        "note": "PCANET DOES REACH 99 %, AND THE LEVER IS NOT THE ONE EXPECTED. On the official split: K=100 gives 99.08 / 99.12 / 99.20 at k = 8 / 16 / 32 and K=200 gives 99.16 / 99.21 / 99.27. The screen over six block geometries says K is worth +0.14 and overlapping blocks only +0.04, while 25 and 49 smaller blocks LOSE (98.90 and 98.92 against 98.98). So the paper's fine block grid was never the handicap; nobody had simply tried K above 100 or k above 8",
+        "source": "evidence/pcanet60k_best.json, evidence/pcascreen.json",
+        "cost": {
+          "compute_seconds": 9000,
+          "human_hours": null,
+          "tokens": null,
+          "usd": 0.0
+        }
+      }
+    },
+    {
+      "line_number": 1002,
+      "record": {
+        "id": "m1001",
+        "date": "2026-09-18",
+        "family": "closed-form feature pipeline",
+        "context": "MNIST-original, complete official splits, 60,000 train / 10,000 test, one run",
+        "target": "cheapest PCANet head that clears 1 % error (mJ)",
+        "lever": "sweep K at k=8 on the nine-block geometry instead of buying components",
+        "base": 21851.575,
+        "result": 3343.457,
+        "effect": -18508.1,
+        "note": "THE CHEAP ROUTE TO 99 % IS K, NOT k. On the nine-block DF=2304 front end at k=8: K=60 98.96 %, K=70 98.99, K=80 99.04, K=90 99.07, K=100 99.08, with exact head energies 1,836.861 / 2,506.774 / 3,343.457 / 4,342.292 / 5,513.176 mJ. K=80 is the cheapest crossing at 3,343.457 mJ for the head. Against p99-002's k=32 route at 21,851.575 mJ for 99.20 %, holding k=8 and raising K instead is 6.5x cheaper and still clears the target",
+        "source": "evidence/pcanet_ksweep.json, evidence/pcanet_ksweep_energy.json",
+        "cost": {
+          "compute_seconds": 5400,
+          "human_hours": null,
+          "tokens": null,
+          "usd": 0.0
+        }
+      }
+    },
+    {
+      "line_number": 1004,
+      "record": {
+        "id": "m1003",
+        "date": "2026-09-18",
+        "family": "closed-form feature pipeline",
+        "context": "MNIST-original, complete official splits, 60,000 train / 10,000 test, one run",
+        "target": "whether widening the histogram helps",
+        "lever": "L1=16 filters and L2=6 bits on the nine-block geometry",
+        "base": 99.08,
+        "result": 99.12,
+        "effect": 0.04,
+        "note": "REFUTES THE HYPOTHESIS THIS EXPERIMENT STARTED FROM. tf-012 says the feature count is nearly free at 60,000 rows, so the plan was to buy accuracy with filters and bits and keep k=8. It does not work: at K=100 k=8, L1=16 reads 99.07 and L1=8 L2=6 reads 99.12 against the baseline's 99.08, and at K=60 both are WORSE (98.95 and 98.93 against 98.96). Doubling the feature count is worth at most +0.04 and sometimes negative. The representation is not feature-count-limited; K is the binding constraint",
+        "source": "evidence/pcawide.json",
+        "cost": {
+          "compute_seconds": 3600,
+          "human_hours": null,
+          "tokens": null,
+          "usd": 0.0
+        }
+      }
+    },
+    {
+      "line_number": 1005,
+      "record": {
+        "id": "m1004",
+        "date": "2026-09-18",
+        "family": "grid lowering",
+        "context": "MNIST-original, complete official splits, 60,000 train / 10,000 test, one run",
+        "target": "can the overlapping-block front end be scored",
+        "lever": "extend pcanet_ir to stride < blk",
+        "base": null,
+        "result": 0,
+        "effect": null,
+        "note": "THE LOWERING NOW ACCEPTS OVERLAPPING BLOCKS - NBS = (IN-blk)//stride+1 and the block-origin pitch becomes stride*PS instead of blk*PS, which is a no-op at stride=blk (NBS 2 either way) - BUT IT IS NOT CERTIFIED. Checking it exposed a PRE-EXISTING gap: the features_only program's output does not agree with mirror()'s feats() even for the non-overlapping case that was already published, differing by a factor near 8e9 and not reconcilable by rescaling. The original validate compared predicted LABELS through the ridge, never the emitted features, so this path was never checked. Until that is resolved the 99.04 % configuration has an exactly scored HEAD and no certified front end",
+        "source": "medium98/pcanet_ir.py",
+        "cost": {
+          "compute_seconds": 1800,
+          "human_hours": null,
+          "tokens": null,
+          "usd": 0.0
+        }
+      }
+    },
+    {
+      "line_number": 1019,
+      "record": {
+        "id": "m1018",
+        "date": "2026-09-18",
+        "family": "measurement",
+        "context": "MNIST-original, official 60,000 / 10,000, A100-SXM4-40GB, two independent hosts, 30 repetitions per measurement window",
+        "target": "corrected A100 energy of the optimised PCANet (J)",
+        "lever": "re-measure with 30 task repetitions per window instead of one",
+        "base": 15.4,
+        "result": 24.09,
+        "effect": 8.69,
+        "note": "MY EARLIER FIGURES FOR v4 WERE WRONG AND TOO LOW. Four rounds of optimisation took the task to about a quarter of a second, and at that length the harness became the limiting instrument: with 8-second idle brackets, a one-watt drift in idle power moves the adjusted figure by more than the task costs. The tell was v5 reading HIGHER energy than v4 while running 30 ms faster, and v4 reading 9.9 J on a host where it had read 15.3 J an hour earlier. Re-measured with 30 repetitions per window: v1 106.14 / 91.95 J, v4 24.09 / 26.58 J, v5 27.96 / 27.23 J, with counter and sampled integrals now agreeing within 2 % everywhere against wild disagreement before. THE TRUE SPEEDUP IS 3.5-3.8x, NOT THE 5.6-9.1x I REPORTED",
+        "source": "evidence/a100_two_best/v6_host1.json, v6_host2.json",
+        "cost": {
+          "compute_seconds": 7200,
+          "human_hours": null,
+          "tokens": null,
+          "usd": 0.9
+        }
+      }
+    }
+  ]
+}
