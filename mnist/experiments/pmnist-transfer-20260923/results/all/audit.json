@@ -1,0 +1,1308 @@
+{
+  "audited_at_utc": "2026-09-23T13:08:44.194155+00:00",
+  "passed": true,
+  "auditor_source_sha256": "6ca958e3ee3d6b33f2bb65e04c8c46a76f10a0b4b49bed7ae01c3133ac7f60c8",
+  "frozen_training_sources": {
+    "model.py": "a6647310c30e20fe558a951a336bf0816c3b337447328abc345a4349900d0cc3",
+    "train.py": "c2bcb2180972ba5c05cef9910f8aecc8b31336566279d79ace5d95df9bc6b16c",
+    "run_study.py": "36271dbd826988b0a6ee1ec10559977a463d353376ed0982537a50f1b2d71ea1"
+  },
+  "transfer_dataset_manifest_sha256": "08e6f58dad660f8bb931a73b0239030cd20c76cd3e8cde344cf3d4c535748167",
+  "transfer_prediction_manifest_sha256": "0cba5d9315969161fa0ee353a7627ca4efd7e569b5809dd911ad86ef0e79398c",
+  "execution_record_sha256": "15081c2c4fc42a35b4d874396264a50dbf5752ca6729ebf0046fb0f1d720ba2c",
+  "official_plan_sha256": "d38e67a11850e597cfd2e6dc8350bcd53d2b7772ffb2e97d7cda77b5cae0b635",
+  "transfer_plan_sha256": "9e1b09c8df63b5d81934ac280d5c0b6b147a3b0e6b06840c0d3a0c6763b7e9ff",
+  "fits_verified": 56,
+  "predictions_verified_against_logits": 560000,
+  "configuration": {
+    "seed": 11,
+    "permutation_seed": 20260923,
+    "epochs": 150,
+    "decay_start": 100,
+    "batch_size": 100,
+    "learning_rate": 0.002,
+    "device": "cuda",
+    "cuda_graph": true,
+    "independent_reconstruction_stream": true,
+    "checkpoint_selection": "last_fixed_epoch"
+  },
+  "permutation_algorithm": "NumPy Generator(PCG64(20260923)).permutation(input_dim)",
+  "draw_algorithm": "NumPy PCG64(SeedSequence(20261101+draw).spawn(2)[0]), first10000 train/next10000 query",
+  "original_mnist_test_labels_opened": false,
+  "query_labels_scored": false,
+  "training_label_hashes_verified": true,
+  "fresh_initialization_declarations_verified": true,
+  "limitations": [
+    "Fresh initialization is checked as a declaration plus the frozen source implementation; this audit does not rerun training.",
+    "Checkpoint replay uses CPU/PyTorch 2.2.2 versus GPU/PyTorch 2.5.1 and a smaller inference batch; numerical tolerance is recorded, not bitwise equivalence.",
+    "Only the first 100 queries of the official checkpoint and KMNIST draw 0 are independently inferred; all 560,000 saved predictions are checked against saved logits."
+  ],
+  "checkpoint_replays": [
+    {
+      "dataset": "official_mnist_60000_10000",
+      "draw": 0,
+      "query_examples": 100,
+      "logit_values": 1000,
+      "device": "cpu",
+      "python": "3.11.13",
+      "numpy": "1.26.4",
+      "torch": "2.2.2",
+      "max_absolute_logit_error": 7.62939453125e-06,
+      "mean_absolute_logit_error": 1.1575100415939232e-06,
+      "absolute_tolerance": 0.0001,
+      "predictions_mismatched": 0,
+      "checkpoint_sha256": "8dd57f9feb63b00e64cee33329d693ead9a8667b12f92065eeee04b37b77d8da",
+      "frozen_model_source_sha256": "a6647310c30e20fe558a951a336bf0816c3b337447328abc345a4349900d0cc3"
+    },
+    {
+      "dataset": "kmnist",
+      "draw": 0,
+      "query_examples": 100,
+      "logit_values": 1000,
+      "device": "cpu",
+      "python": "3.11.13",
+      "numpy": "1.26.4",
+      "torch": "2.2.2",
+      "max_absolute_logit_error": 3.814697265625e-06,
+      "mean_absolute_logit_error": 2.9648700206053036e-07,
+      "absolute_tolerance": 0.0001,
+      "predictions_mismatched": 0,
+      "checkpoint_sha256": "c653a8ba76f3e3f8054679fef314f018679d0453de5ed43a3c6f144fca4edfb5",
+      "frozen_model_source_sha256": "a6647310c30e20fe558a951a336bf0816c3b337447328abc345a4349900d0cc3"
+    }
+  ],
+  "records": [
+    {
+      "dataset": "official_mnist_60000_10000",
+      "draw": 0,
+      "metadata_sha256": "127f547d623412fc1c06379edf94bf02beeb2c32bfbd62a68d4b9eebea08399b",
+      "input_sha256": {
+        "test_images": "bc9f8f501f39b3ca61f899a2f402edf2024bde012b73223431b6bd735e47a165",
+        "train_images": "257f039238a0be158bad088c051a53908383fd47df03a7b1c229bb7bc968f160",
+        "train_labels": "e474323ac02fc156161b0bbb1f8c9cfeb327a74bcd9f9680a8385269a24f566c"
+      },
+      "checkpoint_sha256": "8dd57f9feb63b00e64cee33329d693ead9a8667b12f92065eeee04b37b77d8da",
+      "predictions_sha256": "5794b57469209547afa665a7170600c03863a88aebc281f66ee1020d97e9b2b2",
+      "permutation_sha256": "32292352c8b4db1841c11644eefe8b39bb1cc972d5a659c872a46a8366e71e26",
+      "completed_at_utc": "2026-09-23T12:58:52.563828+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "kmnist",
+      "draw": 0,
+      "metadata_sha256": "518a7fdccf44e195c8264cbcaf25f6b53be97ecb3c680a52a2997994f68ff569",
+      "input_sha256": {
+        "train_images": "8dc9891af89c8d4d68de9e65d4207a880591bdba3962bc5e23457fa60371dc11",
+        "train_labels": "490d6de2a880b94f00f6b87d65c21c5c35065b5e75993589a87f1a42a270b3f3",
+        "test_images": "f8f69588d113ab9a7bfa3c4e9cb1fca3ef48b39d994778a516366bca29c6694a"
+      },
+      "checkpoint_sha256": "c653a8ba76f3e3f8054679fef314f018679d0453de5ed43a3c6f144fca4edfb5",
+      "predictions_sha256": "c75ed37a14a2b458478d1a5be25558d05ed47124b9d5e44e1097d738230a6c84",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:53:49.611148+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "kmnist",
+      "draw": 1,
+      "metadata_sha256": "a11b9d3844a3922556124e7b67200ed6c7721c0102214ee16f09c7cb03082b52",
+      "input_sha256": {
+        "train_images": "fa7fe6d5b7b0d86f5ecfd62e4c666237a432afbbacdb1c1f81ade1bdb0fd46af",
+        "train_labels": "af9560f746bcd64f0dfd1528fa8737842ab736ed7dfeec711150f584b9c2577d",
+        "test_images": "d1ea76c5d668755e319c403811d2ce3bb920098fc63612365bd388fa94023362"
+      },
+      "checkpoint_sha256": "bf4990e562b9a866a3b50953129ccce9d5ed167c46e59f3bd7c1c6b0372b8e15",
+      "predictions_sha256": "30dcb4d0113af6dedbe8aa95332c367a3025cd0f7b634560812d8b0fa4cf0177",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:54:04.919357+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "kmnist",
+      "draw": 2,
+      "metadata_sha256": "f86b2a988216fdf6f58979b05d6fddee5feb10bdc1a4944904902658b2fce272",
+      "input_sha256": {
+        "train_images": "cb3d0159368bf220e1458dd187bb5967546db8aae0c8515e73cbfe74e3b97ce4",
+        "train_labels": "dfaa48b9f44871b90cdcdec3660936805327c1e54bd348609cffd091d8ac36d2",
+        "test_images": "9a229f4360db4adb3e82dcb50c5f0f7ae3792e178d7873581d10648232ecd014"
+      },
+      "checkpoint_sha256": "6e35ddae7bf6b11f8da4a90bc615d6dc2f0ed3325fb0f5fc859296e81506e09e",
+      "predictions_sha256": "2237ff75fc665c296f16985a4e6e67f15b64f5d1af54a90d16ec8a19a5803e78",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:54:32.592619+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "kmnist",
+      "draw": 3,
+      "metadata_sha256": "88674800b9d18bfaa4b1718c8b4013382b8c84a3458bf4367f326dd706a30845",
+      "input_sha256": {
+        "train_images": "d99e04a9669c477ed8c49814e857522317808ed61ef7d7ca7c6d4f3a19c876da",
+        "train_labels": "566618884bbd80c4aa341e5adfd3a018a7fdfe6f6b0e11ee835cca536383e0ff",
+        "test_images": "f971b1ccaa9b926c2276b3870d3c8ae2e85cce9bc36e35a7611fdcb57a5b4e38"
+      },
+      "checkpoint_sha256": "c844cdfe35e60217eba3bd9995773b4d13da099de1843f941cef8c67cd83bc93",
+      "predictions_sha256": "53e3a860e0c823f1ce1fed36ef6ee28cf3baee6cfde9e221b8e1e395bf19edab",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:54:47.053095+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "kmnist",
+      "draw": 4,
+      "metadata_sha256": "77675d6b3bda52d73551ee443304991d4656d9ebbbe6c7bc9e08310aee9e0dd9",
+      "input_sha256": {
+        "train_images": "b2102935dcd5a940b872800dc599f70ee214dd197fbe20ca1e81fccd8db31afe",
+        "train_labels": "3442b241bc0e5772856624890a38159a429b2aecdf6163b7785cda06a8f702c0",
+        "test_images": "d341f3b2dd730a9e32b21c13e400d1e27670279ce9548adb212ce6907233bc5f"
+      },
+      "checkpoint_sha256": "bed9861dc2025d0f9389c6593e48e1a98e51b66887a3c0e1c4005a99127fc8b6",
+      "predictions_sha256": "492399a1fcd45284ab5a8d3cd4e5d3e33f32aad0c3aa7cdc0787dcce063a0a72",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:55:02.612968+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "kmnist",
+      "draw": 5,
+      "metadata_sha256": "c68528d96a0bfceabc46c3fc4654055897e6c342949c8be7025e96954039f81a",
+      "input_sha256": {
+        "train_images": "24f2528383e5608e5eb8a843f3500d4ab45bf5865ba3b4a994cbd5597bbcca38",
+        "train_labels": "9391d47856cdc6eea65b8b4bd2ea99833d1d0e12473933b94d08ea1bb4a95e65",
+        "test_images": "e398fa46c8ffcea144d67f3d97d2bc236ef32fae567585708e676ae729a3ebe2"
+      },
+      "checkpoint_sha256": "836c5be8dc4cbaf831fb83df8c3cf0a7f17655e843c548704e17d400ba99b0b3",
+      "predictions_sha256": "3c6cf915a9f3fe7b1f8019582eb77aaa256033b2794ac429ab910aa15b1e99a7",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:55:30.306661+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "kmnist",
+      "draw": 6,
+      "metadata_sha256": "fc0c9791a00e6d2a1bd9d8f0375033a0fbeb5b95e4d8d42ff01671356930ce82",
+      "input_sha256": {
+        "train_images": "a2cf3ac72a73f2d09820e9e9340a61516b60220d1ab38d2f4379cb35a58cb1e7",
+        "train_labels": "2ba56dec8fb2a1e29cef1160fb65c0032e006b5332e57989cb128981dbf3122f",
+        "test_images": "12b757237020b786497c4ebbbb34458af5fb113a3ca90a157c8c377e79e7cdbd"
+      },
+      "checkpoint_sha256": "6213cdb20e87917ee15812b143dde678f7e76b2c9794f55e6e5b5b2b2d277b70",
+      "predictions_sha256": "9697f37c1fe1203d6335ef21d9b8d91e91725400fd66cf2d5a44066a98c2ccdc",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:55:44.047359+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "kmnist",
+      "draw": 7,
+      "metadata_sha256": "9b33091132c220b3ec0b21f52bafaf107796e6da8a9ffd1c8f51128e9f849d53",
+      "input_sha256": {
+        "train_images": "efdb632378725be065e88cfea5514c12c6648d1abf947548c3c3b2ca421f55ea",
+        "train_labels": "c214627b79fbf93dd5bf8c676ad14674d7ef8aaf47bbe372db231cd379b55373",
+        "test_images": "890811f8cb349a2356b1e974f383766887c35d6da67839912772e8b69e81ec2c"
+      },
+      "checkpoint_sha256": "2568d9eef91f6c38599bc6cc8d5b2e9cb8892d11ab007ed8480c49f51db649e1",
+      "predictions_sha256": "5704b8a0967814a698717767504a2e91d3f34c8ec19909e474cf67703d6ce2dd",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:55:59.809250+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "kmnist",
+      "draw": 8,
+      "metadata_sha256": "fb0f2440f4039d72e697fbd217a03c8e2ccf9a11f028113c34679783e8fd9dea",
+      "input_sha256": {
+        "train_images": "6b2be11339e593d889398fa375079b9067a99169b89a23efa0d430290bd439e3",
+        "train_labels": "e8556f32279f24f4822c7a4ba9a7a104b6f6d85562e7f512e3258cb6b8252a57",
+        "test_images": "d318d8755e83d771ab5244a31e2102ba36eafb3827953a36f917350baa3537ad"
+      },
+      "checkpoint_sha256": "2b471b90d37b63a78b4ec00a4d9406a567f417bce809c558bc4db33d70f75a33",
+      "predictions_sha256": "6cd4e9948d364daa45276b78d0094a533148a23627c513cc9f46b9d8d7f7a897",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:56:27.984862+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "kmnist",
+      "draw": 9,
+      "metadata_sha256": "5dc770edbf62035d1d1877364aec6e92fb1ab2f7c2ce4be14bc8a6cf6321231b",
+      "input_sha256": {
+        "train_images": "f26d142ab367d7549b6d5a2550cbe60dc7c3ec35d12e1c13468b537b740b8edb",
+        "train_labels": "a07e3c7385e3309525f0b3a459625638f28bd69d9aada476bf72b6429d365af8",
+        "test_images": "5afc49ba4da172c6d07072fe72b94716b6cf6cbaf288446ea4ed171934268aa0"
+      },
+      "checkpoint_sha256": "c7b9c117260c326f91df839b9556fddaa8b9296eda82abbeb984f8f5803a0e71",
+      "predictions_sha256": "90a7bf57010626b46e8f13dd051e824ff7da57b15ed7cf908021eea6f1150a9c",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:56:41.035604+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "kmnist",
+      "draw": 10,
+      "metadata_sha256": "134e1f75b373cba7cf779f782484f09e9cf2b0803f8e44445a70afed8608552d",
+      "input_sha256": {
+        "train_images": "ca4c84ec1a8f1e40de2d41f87ce8544fe0d41410fc9b66d572109dba98450813",
+        "train_labels": "b5672dcf48ec46453c934fa1482037b5fd7da684af89be7884eeb5d65640b226",
+        "test_images": "5167d091b5bcb28eed027d21f4ddbcdbe3321c1acd04f9f4db39bae313e8d797"
+      },
+      "checkpoint_sha256": "898dc5e947836130b6586c1d3d897d1bad542ffa1b7ad2340c6ab727ac5c2474",
+      "predictions_sha256": "6b8841581f6a3b783733ff3c79634130177e67769b47ed98cfbd1d9455326fa7",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:56:57.120935+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "emnist_letters_aj",
+      "draw": 0,
+      "metadata_sha256": "4a243fadfbe8a241e998f6ac5d56d54bb68390cbeda8527cc3a75153f0e469e1",
+      "input_sha256": {
+        "train_images": "fcb0f55e3488d91aeaddd6960d237c20c89ac4c0fc8d2ec8e3dceb09c7042ede",
+        "train_labels": "cd7f9078b89168ba76c5577eb44ff4808f18ad9f10f1ba45df089b47e218c6bb",
+        "test_images": "f802d31ac938932810f0f6729cd2e70478d98e16980f75617053bc5949307a38"
+      },
+      "checkpoint_sha256": "007217cc02de838f466d785f81931fa6c97c98a870792c16bfe0a41b48c46c7d",
+      "predictions_sha256": "df29ad36e0f37b1ff5568f154226d88065e247eb501278e17dfc8daa684b1259",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:57:24.936223+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "emnist_letters_aj",
+      "draw": 1,
+      "metadata_sha256": "4937aef47b5a58aa00aace3e704f1e22ef53e291ca3c9640601aa526facb9710",
+      "input_sha256": {
+        "train_images": "b77b7769c2df9dfe04faa0f90789539c392dea9e5b316bf9dbdf60fdeba2d3ac",
+        "train_labels": "0f63a5ce2ae0aacc8674fb1c1724bc046e7130e311da7c20de6cc0a669305eac",
+        "test_images": "2b511b182ba3c9534f0aff097f8298fc282363e55b0c61c4f9fa5c65c31d863a"
+      },
+      "checkpoint_sha256": "75de9fdb8f80b0127f97538d0709a1c7c1082295c779b7b9e076b933f6091e46",
+      "predictions_sha256": "11f9b06b9461fa2ad8a7fe479f4d06cb305f92228f03569d85e13f29e0a7753c",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:57:37.930077+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "emnist_letters_aj",
+      "draw": 2,
+      "metadata_sha256": "10d516b069fe19a6f4c4cf41cbaad626ddac5458bb0e9774e7b20530f0243257",
+      "input_sha256": {
+        "train_images": "2fdb8fb05f6de0e52612ab4b29c95f6fcf52d3b5b76e1611bf46695b710c8ba3",
+        "train_labels": "7431565d7aa1717548910d85d830359bc19263f4267ddbf0f2ef38997a0a364a",
+        "test_images": "742c0258098001e4b3fa7aa458b88a877854720affea48aa02ca570d7b7c89ab"
+      },
+      "checkpoint_sha256": "5618daa3bc8f7d890afa42603d471f0f25ed1240bc2ed7598ab675d8bb0e12f7",
+      "predictions_sha256": "fa99dc971a781bb71cf2b4acd26fab5ec2c7dce063eb310890043211304cc951",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:57:54.272904+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "emnist_letters_aj",
+      "draw": 3,
+      "metadata_sha256": "370a3c542118358c4337e24859c20d1f42662139f119088244951dae6692d910",
+      "input_sha256": {
+        "train_images": "5ff3fe5a20e8f0aa0bc48e417486375b895e07c6330dbec81fb614fb311bc177",
+        "train_labels": "bed4c2e40cc4a73be077e92560e9cc6f9bc0a43fcd920d6d1d1b411f7482c4c8",
+        "test_images": "55aea483d2027a5d582aead9784f1e6a67c03a542a99f66990cd196045d9e416"
+      },
+      "checkpoint_sha256": "f7c899ba053e55110b8c2bcade8fe1fad3faaec5dd591f104ee6c499b9f31acd",
+      "predictions_sha256": "46938b67848ebd50f3511f4803a0b45a25694a106a1abd838a99a61d85784583",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:58:22.353946+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "emnist_letters_aj",
+      "draw": 4,
+      "metadata_sha256": "71fba936e7685b0dff7c7ddc40b61eb38fd7b3ec6d23cd3e3847e6158e3f3203",
+      "input_sha256": {
+        "train_images": "7d55fdd14f0764b96b60b6bc1ddb507fb793cfe40c7bd42d1a436d4c3dca6c62",
+        "train_labels": "addca01d469745240ccb6547d84a1013716936f3424310fd1e0b0e413d164e96",
+        "test_images": "1eaa0d389a73eb3fdc6f37b4a12746b16360453fdd1b0a8899c50881000b80ec"
+      },
+      "checkpoint_sha256": "a9ff8d90716cd933f9f57db21eccc85326201e3063f6daaa6960c0dacc5a70c4",
+      "predictions_sha256": "8a9192ceab1eec4bbc12a14219b98e9bf72cb6df5634a02d21160dcf50189f37",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:58:34.855519+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "emnist_letters_aj",
+      "draw": 5,
+      "metadata_sha256": "f5d20573d2fe2ec55ed576295ece5803d740ea009c859a62e7eb7f933b0344b4",
+      "input_sha256": {
+        "train_images": "d01b55c2eb14bf0b79f74408e0e7904cbac8d1cc16fcb7e1877f8e3032ec5e6a",
+        "train_labels": "558fd15f74c485e887e12294df5b8234e52e4f667a1db8fc799d0c0750395fe8",
+        "test_images": "d904b5c191d7d269069bb28fcbf4b968f14a47ebe6c73e34211942916936e172"
+      },
+      "checkpoint_sha256": "5f29dc2879885eeec9f322e04188bfb3bd1edb045bd803a3c7003ec824702be0",
+      "predictions_sha256": "ef640a89065ceb2b095355aae60be93a51b6939cb5abba84f02d39cd22b9c937",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:58:51.509349+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "emnist_letters_aj",
+      "draw": 6,
+      "metadata_sha256": "9c1cca47480bc56da674d9bd1dcd4a5763a7f6ab51d583353d71128e9bb048ee",
+      "input_sha256": {
+        "train_images": "11cceee0cbe0474802e9880b6f3a4e3f5447ae21ce9b9833894f715485af8ab5",
+        "train_labels": "f73b2cd36dfdf5a7a7e785b0d68894c823a6e1ceaad2ed153d7ef611a66fd0d5",
+        "test_images": "c962b4b291cd75dc0f54a1cbe535069042d8ac17f9dfdca5887d86c58adedc1e"
+      },
+      "checkpoint_sha256": "e0b15cd3db24eaa7fc6d01e2ec581064a8845d75d04b93ec40517299215e79c9",
+      "predictions_sha256": "0aba58b659f38e9aed1fd821e43b861618776c4024e0701c0b571881d3b5f444",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:59:19.382790+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "emnist_letters_aj",
+      "draw": 7,
+      "metadata_sha256": "148eaa72b10ba305adf1b989dd69278c4f2d627a769f9e8debee4c3e945ab650",
+      "input_sha256": {
+        "train_images": "66c7cdc005a75fa4a6ac203c917a5ebf1035d822b63faf3fdb304b423c2ae488",
+        "train_labels": "2d89b8e9134a9e215aac11b5476aff30f04a405e0f39454a01ec4c74af1f31e0",
+        "test_images": "b9e45b351f6535e1e13038268c41587a91bbb54a857484ad5521d271e23404b7"
+      },
+      "checkpoint_sha256": "cfc65d910e6e4704d6e7fd957be867eb10c185809efa7235d430f0ffb5bc2713",
+      "predictions_sha256": "e128d22a430d40958156c72ad8f8934273bd70979443848f7d78a00d00be31b7",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:59:31.657876+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "emnist_letters_aj",
+      "draw": 8,
+      "metadata_sha256": "4d05deec199bf47817449c65d7c95e751e536ed82091b4d51a4c106a4e4db631",
+      "input_sha256": {
+        "train_images": "d3c83307d532b8088bdf6044d61a4513fa9b4546b33f956cf78f6be2d513203f",
+        "train_labels": "4a4e88c91b99bd6c04f7af1ff7f0201bef1614588653051999e27441689c3aff",
+        "test_images": "497d76f3dfdc406841138eda9e9432844f84064931744a3fb862c15b11400e16"
+      },
+      "checkpoint_sha256": "2c58c0218b51c1350bda3ed96fea2a8206844ad84e721848d791e71d0de8ae22",
+      "predictions_sha256": "ffdb031b89c5fda228ece71d4bed667c059bbccf1379404a9527c673321fbc89",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:59:48.635164+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "emnist_letters_aj",
+      "draw": 9,
+      "metadata_sha256": "f6419f56ea5b2d6b82e53136aab352ddddbc8d46b75110d9a3b1c0840f89a636",
+      "input_sha256": {
+        "train_images": "e60282eb5f135fa90ee0440b1f4ee5404542d26fd9eae485f31a1b3ba1c97a8d",
+        "train_labels": "2a6de21e9d94611852a3950ac182cc138540461c783829eb95e437797512c749",
+        "test_images": "41115ffb3737f69fe4e6634b703d76499cf146295193b645e661af80007454a8"
+      },
+      "checkpoint_sha256": "ae81f1064f79171d5c7d82d8bdaf04c84ba708e6cb0c09c04256364c5d7306b5",
+      "predictions_sha256": "f12680906cdd9aa98c7fabb7229609b2d2999d6c19550f7cfa1c408835c8bd01",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T12:59:51.183695+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "emnist_letters_aj",
+      "draw": 10,
+      "metadata_sha256": "4a58db32e9b4c8ff60005e1dfed1442e3222945060ef098f091392216106cbd9",
+      "input_sha256": {
+        "train_images": "ef05e765005352cbf77db925bf26005b9b3bfd9ccfb667158490472313d9e446",
+        "train_labels": "fd1b5808d92f0e380b0ab540dda60bdc4e336f2eb24df44965ba4de94e17483e",
+        "test_images": "1869c1dc130a92d0d832ff881c677a0b982c375e5fc3efc77bbabc9c9a299b04"
+      },
+      "checkpoint_sha256": "f9b47e0d3ee98dc3e9f8839dd2c63dceef32eb9a02b8bb1c8d63bbe007084f81",
+      "predictions_sha256": "56836bc6a19ad2fcb742f4f08e07684ba0a573c6206c1a543873d7be3eb5ab66",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:00:16.062870+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "qmnist_recovered",
+      "draw": 0,
+      "metadata_sha256": "f8b746ac18a576e25dc8efbe98bf575ab0affd211adea864fda866f186b9c693",
+      "input_sha256": {
+        "train_images": "662ca75578140f9146818ca10982127a69880bbca7ced2aaea751564ad004877",
+        "train_labels": "6c4c2c3414c860369064bd7062add87f51da7d6e40fdd71f9b278a9f916879fc",
+        "test_images": "69f1b3e1f4d0ec20d6bc606b6c4e095b3635a27ab83551c2d506b0fb2128afba"
+      },
+      "checkpoint_sha256": "6b549c80ef08c20a800abee311efc8a90ba4c3dce1a3b7850b07e5049aa28ead",
+      "predictions_sha256": "c4be6b41ad534227565f43d5ae4b233448fd4b444264de92bc7eafde03d099e4",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:00:28.573409+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "qmnist_recovered",
+      "draw": 1,
+      "metadata_sha256": "f28171834f980f74c6d4000662e228d5b721a929452a953ce93d2b8f3a198cb4",
+      "input_sha256": {
+        "train_images": "5bee58297afef7b34097c6bde7771e7d7c7d8e3747c0b55ef6f9ad3eca5e30d4",
+        "train_labels": "15d04a4ab59c7be61198ce92bab140911934c9d5a38b7e4d24f932a4ed432929",
+        "test_images": "6da42b6417721ab989aa59333f56a89a6eb2362fa752e10ab70a623993bcd98d"
+      },
+      "checkpoint_sha256": "5a50b68aecdc2f587b3bb0a05e9cdd17ebd2e69c5254db607320996780283334",
+      "predictions_sha256": "a5b19932c783ba166541ee7131a41092d7a452e3eecde3fb1fd0f24aee1262dc",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:00:45.581022+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "qmnist_recovered",
+      "draw": 2,
+      "metadata_sha256": "666af09a1ffa165e3d428a4142f51d6a514cef622218caad66bf0bcf92e5891a",
+      "input_sha256": {
+        "train_images": "0ed4066001f14ec3a00ee943b466a7651085825ee3cb0bc504432d120a8729a3",
+        "train_labels": "6bad573f6cb375437c5c06f6baffd2b6cde36ade6c31270dc6dc17d8c43fbfd4",
+        "test_images": "656c1c1e838d0902c6a0e64c1964ad5358cffd1fc52ae1fcef13446f44a1e21c"
+      },
+      "checkpoint_sha256": "f454abecec7b076cd706de72d754830a2340e9891823f7030c9090958cf4cc86",
+      "predictions_sha256": "c3a18a917f03664dca71ae43d9c698bc2699fdf6dac4e081d39c24d96e729b34",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:00:47.992956+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "qmnist_recovered",
+      "draw": 3,
+      "metadata_sha256": "09bfd6ad86c3e766472a11cba231d4c8aeab65e000b786c03bab0e1556f2dfb8",
+      "input_sha256": {
+        "train_images": "bb5a93465172f9ee2f03e57e9a781c1d0ddfcc54f6f1fc44d24422e567d81145",
+        "train_labels": "cb46705a240b2fb1d85b0d8f4124999723d5467529167043183a279f5174a1b4",
+        "test_images": "a468dcf03faa66414bc18642761dee148ccb043f832a7275886f3da51e83fe02"
+      },
+      "checkpoint_sha256": "52e5d0042ae7c69028808a44bde26d1ab6b41669df8575a501e4443d42025155",
+      "predictions_sha256": "d5139b2826d72a1e048ad11f6dc4af36c23cff6827b837857c8b3de416d3c948",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:01:21.581313+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "qmnist_recovered",
+      "draw": 4,
+      "metadata_sha256": "b4333de581bfe9240d53039df5cd1ef9a50c9c7b0d6eac28ef4743ca1f202fc7",
+      "input_sha256": {
+        "train_images": "2ee5b4d6b5c04ae15c635e9de3affa8bc9a32b259f0c5f00d521aa4e7a3a1302",
+        "train_labels": "54e6d9f21fe24c594971f2ac1dff94616e6795afebaf54c2ae75be75d74149ed",
+        "test_images": "47965e545d37ff3a3c2b449bdfc47380f6d0a85775319453a9be9bdf6ae64f9d"
+      },
+      "checkpoint_sha256": "fa2c42fb62bb788942baad1ca2dc0eb9119988949afc436d41a209b625df154c",
+      "predictions_sha256": "ab36b15f67a9f0b8f8d871b5b532282416412671177e3fb71bbee0f3afc90aac",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:01:25.429679+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "qmnist_recovered",
+      "draw": 5,
+      "metadata_sha256": "2ed34a958461fe7204f3892881fd0e9aa5bc2f3551bc52a1bbc155abe5486f1c",
+      "input_sha256": {
+        "train_images": "244f5a6429ed897051b82664bc686705a2f80e7dd39e9e1dadf63222836ca7fb",
+        "train_labels": "78bfbdd63efc1fe7019895a5640706b5e129fd51a4798fc3cb83d86c39d598a1",
+        "test_images": "0806896ddaad2b2f7dd451c3f5c8125cf909ccfe4d9370b92c9f87aeaace632a"
+      },
+      "checkpoint_sha256": "9b800bc7c94b3d1e0802c7e58338e4982ac6d90cc9b2b90813473bb367006fd4",
+      "predictions_sha256": "9e6b91d642fe7d7ecb6a360d846ae11ed4eb513654b30b6cc891b308cdfd8f52",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:01:42.725976+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "qmnist_recovered",
+      "draw": 6,
+      "metadata_sha256": "a15ff3e42f759975205bd69b34824126090a18480e16665287461a79ca7cbbb7",
+      "input_sha256": {
+        "train_images": "13668d52ec75e90ea767ac55ee153fd8d27a40bbde65fe345d33b5a093595afe",
+        "train_labels": "4364c9a6af5b51af62ea0d6e41f006680c2756dd1be0e021fe17ca2e8437501c",
+        "test_images": "7dee4a1ccbf789571badcfb3f1eb5aa10e0d79618f9bef2b3af386d958f773e3"
+      },
+      "checkpoint_sha256": "7a7293aef8f092e0fb0ac6d1a07b25a093e08e8ca7454289807d1637d8531039",
+      "predictions_sha256": "e8ea08cbe5af84f5700234c0c0b58755b55e4e66b6bcf0c3d9b492da2e91bd09",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:01:45.760328+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "qmnist_recovered",
+      "draw": 7,
+      "metadata_sha256": "69929bd6fd776d4e6de7131410dc1144cf8d6178d0908dca4e3bd137cbc31c02",
+      "input_sha256": {
+        "train_images": "f4c6e01b7724d23792b097da8f538a6780c76db5678b23fc8a2f6b981e1ea743",
+        "train_labels": "6c367320219d056fd791667fcdd6c3d23e5988adce906bb754f21a12e0e63f2f",
+        "test_images": "5d95f36e908a98a1edfb65ef69525090208b6d75d54d72f4a6d92cf2a4f5f016"
+      },
+      "checkpoint_sha256": "f7e3dc74493a0d5af5d2c2eecfc9049ce1d2e44a91da921f23a1b00914b79e4c",
+      "predictions_sha256": "5711754a36d5f83c5a390608367c195ca06dd90d9d2f8d20ec1d0588c7aed057",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:02:18.130470+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "qmnist_recovered",
+      "draw": 8,
+      "metadata_sha256": "04cedb98c2f141348bb9b62b2d6030cbc9c18824ec2400008342631f376b99dc",
+      "input_sha256": {
+        "train_images": "7daf01f369d6c36f6a54d886cb715b0c584f9f2dbecea8047cafa2daba31119a",
+        "train_labels": "adeb6ceeedc367b4ec51bf6f370a92ed847a1b31c497158f75cf69c16747b35b",
+        "test_images": "2442fdd3df7248cd9020621ca5ed9c49abeb98f739795422872538342b89df79"
+      },
+      "checkpoint_sha256": "40e213c3742ae8fe1b65a56b5d36ec5f59f02df6518cc2c5355010e5b05a8557",
+      "predictions_sha256": "cbe97d6f11e1556d7155b218714d7c9dec68c2ae1a40627cc3a82a2184f61715",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:02:22.352446+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "qmnist_recovered",
+      "draw": 9,
+      "metadata_sha256": "f13977a455516a77cfc6599766c5f7037d6cce3ba84edb991d47b158119bcaf3",
+      "input_sha256": {
+        "train_images": "c853897d3f1c2904a65fd546514d166aa5debc65f68381bd1f093f2de8cecc34",
+        "train_labels": "dabf0de1822243ca6c6712ced346d897c1358b101cd61f32a42738271a0689c4",
+        "test_images": "b90338b6110e49a29644b5c026b160ee5969e8aa5d58f7a192f8b3ed5236daaf"
+      },
+      "checkpoint_sha256": "111349fcea19d59dc803b54f3ea44a3e935b193b277d9802af374f5b9e9c30e4",
+      "predictions_sha256": "24cc4d1b39b618bd94fca7f02fab5861b4d15ed69776b73a1608d0e5eb95428c",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:02:39.763739+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "qmnist_recovered",
+      "draw": 10,
+      "metadata_sha256": "d0593c34607fe38fcc16e94214586e5f30a97fe8ce146f20d4c6991f52d66957",
+      "input_sha256": {
+        "train_images": "b39106eff007e27837ae27932be485cdf53bc40904abd6060e3497d2c7aa609f",
+        "train_labels": "8ede8a3919a27bbcc70ed02b23334e229deca6129a737641ac70ed6dae9d9fd0",
+        "test_images": "2f10254805de271b92af17ab2ec2ae2090766a30c41cbc7504a5fbe81d424f18"
+      },
+      "checkpoint_sha256": "332d0f003f489cecd6f082ec15f275ad1dd097afce35124b46838dac06f51132",
+      "predictions_sha256": "caf64f726a16300026821eb17a5a5fee951faf30d99fdd03989910e25f70b674",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:02:43.073440+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "fashion_mnist",
+      "draw": 0,
+      "metadata_sha256": "ea56761a79c604a11978d98b7a8cd5b73e2732c7236a596659a85b05b241b558",
+      "input_sha256": {
+        "train_images": "f5d7b0dc89eaa2363b668efefc0599c1cee7ee7dc1cd4ce44ac17caaa14ddc82",
+        "train_labels": "5d96c31fa093391bf919bbb61ced415a95532a0f5742cf3deee7099b4773af63",
+        "test_images": "b4b0188c6bad023febdfd1dbe7b7fc96e4754b0f37b3392153d05c97e3c15078"
+      },
+      "checkpoint_sha256": "48100fb795079d4967a6cbe9c0289d135883570da5b694ed4f369e0a59daca5f",
+      "predictions_sha256": "06e7960fbee3ce3e363d948d68ec32fdab8efc990dd06924b3bd6af9b8bafcb2",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:03:14.997133+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "fashion_mnist",
+      "draw": 1,
+      "metadata_sha256": "30a2f58b1923e2581f3664b83bdf806237b3f2f45d9b78ef40f9914d1cd5d5c8",
+      "input_sha256": {
+        "train_images": "89cbd9492126f56a7df843823f422e95602968d4fb5e2a96e8deb63d869a4868",
+        "train_labels": "3d23289989a3cd34fdc60a4b640f6aed044cec60216a7ac6f13ad4bfd0fff7bb",
+        "test_images": "3ea3cba735e06a27439252da84fc275aacbec206b3282160d648eaac6230c01d"
+      },
+      "checkpoint_sha256": "2231b65a691ede4bc964a91b701f3dd68ef1956e94040c49c4ad451c8cb7be39",
+      "predictions_sha256": "542e6d1c52dccfa619fa846439d7d3c889b62963285c58f71d3db16370b2a837",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:03:19.113434+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "fashion_mnist",
+      "draw": 2,
+      "metadata_sha256": "3fc53c57b07ef98c35082aedca12080cd14d5a68fe1ef4b8405099419d1bbe2b",
+      "input_sha256": {
+        "train_images": "76d8c5e9acec10bfe367344200aca4a70427a07c75bd80ac9337473555a396a8",
+        "train_labels": "0acf827eb13fcb0ba6ad373fc2a104ecb8e161dab423a21625aadbcad9b6f14c",
+        "test_images": "5259761518eb10168806780077aa7e4e014991c21b477f1a8acb855599cb61de"
+      },
+      "checkpoint_sha256": "3778c535ae45fc73f15bf936922562617de4ea7b9ddc43093c7558ef7f6c2b9d",
+      "predictions_sha256": "fb5dcafeeda95963f4ff325bbb2585e71ac28654bb8205cfcfb59c83432f031e",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:03:36.961568+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "fashion_mnist",
+      "draw": 3,
+      "metadata_sha256": "7af339347384fed70fab782a57aba958b19fbb4215a6601cc1bf10ebc1e594fa",
+      "input_sha256": {
+        "train_images": "c7706221d8638b902329bef775addbbf967b439bcfa7d02df0d1a566b89c943e",
+        "train_labels": "e1fd1b05ccbb697b894df9f6b3e1189c82f8313a3b98d0d7920274e200f1c7c4",
+        "test_images": "ee16928053b42670ad0d801592d4519c00adf7bef81a56b11d8571ddef06052f"
+      },
+      "checkpoint_sha256": "9a95399801913326141647f93bac613872cc58c596a909a66aecafae8b944be8",
+      "predictions_sha256": "df77bb92149534b90841117779997cf1ed96ecc1a4ee20415049b527321923c9",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:03:41.844062+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "fashion_mnist",
+      "draw": 4,
+      "metadata_sha256": "e456df998dc772970c855575c464cdebe16945122c8f2d24ed5ba1d87f1b5b16",
+      "input_sha256": {
+        "train_images": "1407085cba0ea2f9c626840034b5c182068311495ebf3c0b29d033b8a4049d90",
+        "train_labels": "afcc1b42b4498138c3062bbe9619c14c8215244e241cc4115136e1f82bb30a67",
+        "test_images": "580a15ca44d2dc6ec18bd3def9507e21bacc17e1296d403d3049b4fb44590c95"
+      },
+      "checkpoint_sha256": "20cda73cc2c73ee038e4fc5c44acb9c5303871f5dcade581ba0ef333a4ee88eb",
+      "predictions_sha256": "280526699f3921c9c3ce7ce27a1d20c4a59922168f73e4a718fc0920cf43f405",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:04:12.798508+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "fashion_mnist",
+      "draw": 5,
+      "metadata_sha256": "050d88cee01d2c7c8b02599426027e154d82605efa1c266a1f7d79ad4e812569",
+      "input_sha256": {
+        "train_images": "e988ca639f3017a9a0eec81d7ab40bdbd0997a78b6defcf948ba8172e8aeb752",
+        "train_labels": "b01cb215d2b2391961f606296261a46714113880f0c9211f43d9495b99b7ce20",
+        "test_images": "08d4d942689258c0b11607bc9150ec0d3ccbc00f608e3f96db5ce5059066f38c"
+      },
+      "checkpoint_sha256": "782c151396d6ba4b05105d668fc54da4fe3412869002a612b5ed7deeed067a37",
+      "predictions_sha256": "d1897f6a57e70eb17e364c59565fa4e6813c8301c9a6f37292c2250b41fa39ec",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:04:16.200950+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "fashion_mnist",
+      "draw": 6,
+      "metadata_sha256": "9bec17acc2cc9b24d5f259f491b127cdc724228af183a91b4ab583aa597aae22",
+      "input_sha256": {
+        "train_images": "2dd958341c6db0cfa87fd0487fc537843235a8d2fbd3777944ce747a6af58864",
+        "train_labels": "5f11c6d9beba687ca355bb3e6dbdae7f08ed22463210b426d1cbdb2f82b3a604",
+        "test_images": "f470c0a429a943d4c3bebbdc2dd5fc2ca5427ad5f4c29c3b69fcf1b77a97a312"
+      },
+      "checkpoint_sha256": "44b29bc75424df9fd7e050910a6291774392bba2ab75667cbb0538fd2117fa53",
+      "predictions_sha256": "b8e24b9e79848205aa8e4150ddc27352af79f2f4e77de98d3c1d0e062c804139",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:04:34.090965+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "fashion_mnist",
+      "draw": 7,
+      "metadata_sha256": "9b0d67eb302f83eb159bd9b84594300a8bf6ae026cc61572ccdfebfdaa33355c",
+      "input_sha256": {
+        "train_images": "290337b0dc7d865a3f43e32a5d81b4fc401ba5f3eac35eaf9a15b6e51e627bbf",
+        "train_labels": "460f95ead8bd5fb6e7655efe8b43134b2a571b7e5ab0ccc33ff55c650c6deda2",
+        "test_images": "2044d89a1b31a560900af7a1a7d0621309884f0c63ff1e0d9bea03fe5eb2b521"
+      },
+      "checkpoint_sha256": "f1f84ad255f4fa2673d74a5f7833ea4633429a97d865cd6611560b04fde8e232",
+      "predictions_sha256": "bc6e1af80e927a4670646d58c433ed4024b93da07c4a1666bd9ce60fe85349ac",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:04:39.745700+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "fashion_mnist",
+      "draw": 8,
+      "metadata_sha256": "0b043328c4b74a7e243cb4c6da796031cb421edd92f114286ad63ed2d7ef7d2c",
+      "input_sha256": {
+        "train_images": "f470dc169fce081d6f3bff0549944391eb214d4f9369895ec35fe3367ac12270",
+        "train_labels": "61f48d35fc18742a2849b78d834d8693df6415b79e167804c82d3279a65dc5d5",
+        "test_images": "45a0afc1d503810b2012ea30f3f7ae5c2f24ae607c3c9db25bdfbb89ceb76907"
+      },
+      "checkpoint_sha256": "77d9fb0b4bfc38218f9c0f97b039d2a59b136b1631be09cfcfb82fc46d2a43ee",
+      "predictions_sha256": "76a8195685c961198ab0bc45d23b9d28ea558be5e43b49db80b8ff3437087f2d",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:05:11.874931+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "fashion_mnist",
+      "draw": 9,
+      "metadata_sha256": "67dd942c67ef1dad68ee21070ed27b816af848fbd274ad5e96300f897c6bc292",
+      "input_sha256": {
+        "train_images": "8a75679bbf51a9a00f171eb8e45c1d536c3163ef780f413b402a850d8740f727",
+        "train_labels": "b702410c47fae918272952386086580a93b9306c32d8d9daebea63d27a0b73e3",
+        "test_images": "fe8c9e123959834a129af281454b1a4bb4d383986ae4e231e6e15a85bfac7e4b"
+      },
+      "checkpoint_sha256": "bc217df559adcc93bef494e1404464cbe63dc6977e13c50b2a6bfa9e49978593",
+      "predictions_sha256": "83514e90537dd810e65f6bf82fed9333354ea01203f0165fcb6ff7a419fd264d",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:05:13.075139+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "fashion_mnist",
+      "draw": 10,
+      "metadata_sha256": "f9d5f88335cee6f2806f90a64b118d8546902f8305acd083dff06818bfcdabc9",
+      "input_sha256": {
+        "train_images": "bba12a9a72f0a6cca8e798edfd3b57c0b713b890c744fc78c721bbe598908a51",
+        "train_labels": "3aa3b6c45c90eeb586fd30effb30d562404a76e37ffbba42d5d39bcbfbb7f544",
+        "test_images": "c8dd4b22ec3df699d5fdae1584ee96b9d98cd4a6b1eb5ad31db36a34bfd882b1"
+      },
+      "checkpoint_sha256": "367ed93a0da5ded7ff41f8b533c47d587716d75501bc5d8bb77a7f8a0cabf1c2",
+      "predictions_sha256": "1f569bf23e00ebeb7a3edec8201fb68b0f35e35710993d168b49a527c5c18d77",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:05:31.202310+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "cifar10",
+      "draw": 0,
+      "metadata_sha256": "68f3bd6455f29f75fc810be348d929cf50e8dcdd1b5cbfe662fc5d5f31e8ce22",
+      "input_sha256": {
+        "train_images": "a51f42c4019630501baa8abe1f6dd10083484e56e3bcfe7208cf3cf0342da101",
+        "train_labels": "3f9cd2635e29cc25b86f120355fa51bf4cedf94d686144ea9d29c3865ff2f204",
+        "test_images": "c5ab12e7dfa0ef4f594d3eb5d34d1cdd57f2d61e11bba4549ba6f68fa12a13ba"
+      },
+      "checkpoint_sha256": "be20344a8141a004e55559fc82d13f52281a11df0155738d9d2505727c964cb8",
+      "predictions_sha256": "56b6a52cd010db3dba02ebd892dbd5a00aa20479bdcf5dcf20aedecf0f821a76",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:05:37.189891+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "cifar10",
+      "draw": 1,
+      "metadata_sha256": "0f077875e482dd04f9caa1fd2fa590f22547d2e21f6861d253ae8a64ffd08f42",
+      "input_sha256": {
+        "train_images": "5928268dfffe4c4755aef4e0bce45ef0ef62d7e53850cc68ef4cd86477faf5cd",
+        "train_labels": "94fda88a7f2cbc4d6ff24be551e426319e0321707e837351e5cbb696e1cf7505",
+        "test_images": "7ee9d1f53179600012772317677db9889b777b41b4820b0f014244a27bf2e864"
+      },
+      "checkpoint_sha256": "712717bfd07d02699a3e9b3156579d3881693167e00da1a7ba4b5a4cdf45f437",
+      "predictions_sha256": "91c1f4b4fd6757d03243806917025064fdfc3fe4cbd95782b82155573261ac9b",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:06:09.384216+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "cifar10",
+      "draw": 2,
+      "metadata_sha256": "07374cc782d963e2138c3df9e02d664c80fcc6d2c9e2f289254facc0492adc81",
+      "input_sha256": {
+        "train_images": "8da01c5fb2437bf133006c2d73555f81608bc7ab17ba6283329a97c96b1480e1",
+        "train_labels": "15c6d437a5f32e1fdb6b01094307980bba774eb8d31cb6b4dbe5b544acab529d",
+        "test_images": "d9f95ebf1b96907a90e5e42387ed343f98bfa4e01fd5bc164c0feb9c110dc888"
+      },
+      "checkpoint_sha256": "0ae4b40d3f53c01bb1d532a413f8c07c54637401ebad43cfc74e26830e809f8d",
+      "predictions_sha256": "00c332cf6409fe3737e7766a6c11c77ef3cb56f2f969646f1890499eafa87527",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:06:10.020321+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "cifar10",
+      "draw": 3,
+      "metadata_sha256": "8e9b33e6ddb81d864f0027e80aba1b9db68a989bb63f322fb7dc9314fe401c16",
+      "input_sha256": {
+        "train_images": "f1501b58af53c85d4356979fd59e33994a725131a8dda38cbdeab283eaa303bf",
+        "train_labels": "17e42207964435b31081a8260e5d06e0f93992927a9d271deb9083dc7c771318",
+        "test_images": "2aac05be5495472e5ebf2a9670fc1fc21be3f8a418ecc92f09d05cb2259f46bd"
+      },
+      "checkpoint_sha256": "a9b3ae9dfe1df44923df013c92eff7ac833d68217d49cf1f5ac042d1997d18d2",
+      "predictions_sha256": "219095439e68575c1430e8c78bc49cef031be39954917ea8099a4645ac5cea2c",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:06:28.383304+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "cifar10",
+      "draw": 4,
+      "metadata_sha256": "1bf8da4958ce1f16745c223f867d122941587aff0bc49e07198bfa295d803c8b",
+      "input_sha256": {
+        "train_images": "b2e53a2bb2a6996ac26cce3b20f425f0b18b7ab95157c1ec4cb25af4a2e118c1",
+        "train_labels": "d9b33b5d94ae384a82048c9d45d850bcfcc9289eb24ce6de3b20c720ee189d71",
+        "test_images": "4d3e1b5b6c0d3fd14e9d13f3a1eee6a968371402b857b184308b5525d154551f"
+      },
+      "checkpoint_sha256": "310f999b58a5beaba41ea38781df622975980e5bfafc698272b1b3f5c259c7e8",
+      "predictions_sha256": "ffe0bc4c43c2579db73e0f6bd947a147f70a65b08752d34111f7a22628b06f86",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:06:35.009956+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "cifar10",
+      "draw": 5,
+      "metadata_sha256": "57981badb7752dcd9201ea31bdf8b263f8f41a93a1f2a832cd7cab9f41654bcf",
+      "input_sha256": {
+        "train_images": "27d4ce3b2fc5c4b8d7433871dc42b43a0dd9a1435455846458ce1575b788ac0e",
+        "train_labels": "e9312aa5a8cdb04ba4a1a9435837ee462981640fc7fb5d94edaa3af9f4bf0e64",
+        "test_images": "8c3a88d28f9a7d200960e048f4438eaf5b674c82f2599dce771e171de532b9d0"
+      },
+      "checkpoint_sha256": "5b8af080cae2a68d48ca0f4b3a9358027d054eefcf58b04ef4e5fdfd7f45ba98",
+      "predictions_sha256": "bde9c5860c1a5e6f053cfc3527482a28b11f61018cd0fb68ee0a6db98ce80852",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:07:06.979250+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "cifar10",
+      "draw": 6,
+      "metadata_sha256": "9ed932f80c65a805df877d47afbaeacb2bc643a6a16012de99564e193229ae3b",
+      "input_sha256": {
+        "train_images": "43038194278ecde2ddd2e0928a2c876d0d348fece39cee41365082d3ab7b2419",
+        "train_labels": "94558c9ecd03a01c06b0746c604ba6f65649d01526095ee9bef88b516c2b3f5a",
+        "test_images": "68d6184b1c4645f5074d65bec1c7c3e26afd2798598aeee3c8daff5d7484dc77"
+      },
+      "checkpoint_sha256": "fc870c23af1ad14d335a34cee5bd976f0afe83306daeb8930b5885412dd8125d",
+      "predictions_sha256": "897e922109208dd82f43ff463d9376249a22e336aabd97a7e994687252b4ee0a",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:07:08.311641+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "cifar10",
+      "draw": 7,
+      "metadata_sha256": "7806c954041ce71a5143a0d3d2f2400453f94a6e2682c83c492aee8215414217",
+      "input_sha256": {
+        "train_images": "ef0bb2f4fb4d1ada803066f53eac2532a28569847de12dab0b6c22f16fe02764",
+        "train_labels": "9c06c0ab901e1c578cbe29808a2ef99cd11d8026250b17f233d6b0cc7088a4ef",
+        "test_images": "cbae7d200d7825b49477cd64364e5cdeb7c7db3d087b9a5e4f9ceceba8ec3744"
+      },
+      "checkpoint_sha256": "ce1c8c4919423f5857eceb6c881a2645dd7289612057b641a6274b811e244ddc",
+      "predictions_sha256": "8730c1148218a98b8377be93838da4f7f33dc3aa697f9e6d8e4e954e1ed5cbe9",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:07:25.611651+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "cifar10",
+      "draw": 8,
+      "metadata_sha256": "7ccbbe335bdb01700f14080c6c9617f0306a86f85927cf8fbb2ceda3cb75af13",
+      "input_sha256": {
+        "train_images": "5b0101a9750fbac3cef941b95989e5494f4f9f3df3c3dc3d8a9c7acf1ac28968",
+        "train_labels": "28b5803069588bb21191fad382cfa2558e023ade0b99accdfb5741522ca78321",
+        "test_images": "ae8015da14a12379a6c12263e9fd90d03193c16d4638ec8fd5cae99ede81fa95"
+      },
+      "checkpoint_sha256": "aee2628685c5d221b9c04aed9130ca528b63107a6bb40d8683db22ee8c4d589d",
+      "predictions_sha256": "10208d78504ed6e685def1513d633990917c993f08c298076a9140654bdeb3cc",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:07:32.824561+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "cifar10",
+      "draw": 9,
+      "metadata_sha256": "cfc60163c98f9ba68add58a3c605067b04d5215e6cc60b043dc7ee9f3ea8b5e9",
+      "input_sha256": {
+        "train_images": "f0d8a084ceec575480787918caccfe00cc8202322c54f28840036715822392c1",
+        "train_labels": "8a894af348abeeecb5557ce3a11e53964fcccd7d337bfd1e408250add044b287",
+        "test_images": "bbb242e40c8b2973d8889f7fbe610772822ae8aa3389b2ce83a300a2af8d349b"
+      },
+      "checkpoint_sha256": "0c0622e1fac7a2d303ef7f02ff188f358b365475b5196619c6b06e0f9685af76",
+      "predictions_sha256": "9adacb5551ebb52c7d23d6266523e7488bde41b891d0800c1d3d0557409b4628",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:08:03.922981+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100 80GB PCIe",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    },
+    {
+      "dataset": "cifar10",
+      "draw": 10,
+      "metadata_sha256": "d74d17b1a97adb6ec4c6e84fbc47ea8d7b948ab16bb2cdc6c9bdc7cdc178844b",
+      "input_sha256": {
+        "train_images": "0675e402854de0e414cde2429d30cb6f189a5df2fba89f41a82c118bf0b960a9",
+        "train_labels": "3a87a4963ed31677ed659a861b537896cb360beccec33de44212a37fbba13441",
+        "test_images": "a4528a1d32ec90bacb554e86e85b259813d1ca9834f2d39ebf3b26fa934b1917"
+      },
+      "checkpoint_sha256": "9747ba8bb7eff54600b284234bb15ff226a4181ea430349a418d862ac54d7251",
+      "predictions_sha256": "761fa77c9b718fee5039981bc72c570e1ae67686ce04628b72b3e3c9b303302b",
+      "permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+      "completed_at_utc": "2026-09-23T13:08:05.413453+00:00",
+      "epochs_completed": 150,
+      "gpu": "NVIDIA A100-SXM4-40GB",
+      "software": {
+        "python": "3.11.15",
+        "numpy": "2.2.6",
+        "torch": "2.5.1+cu124",
+        "cuda": "12.4"
+      }
+    }
+  ]
+}

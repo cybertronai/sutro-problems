@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aminist21-validation"
+version = "1.0.0"
+description = "Fifteen reproducible 9x9 image tasks for validating a learning procedure"
+requires-python = ">=3.10"
+dependencies = ["numpy==2.2.6", "certifi==2026.7.22"]
+
+[project.optional-dependencies]
+baselines = ["torch==2.5.1"]
+build-data = ["scipy==1.15.3", "pillow==11.1.0"]
+experiments = ["modal==1.5.5", "scipy==1.15.3", "matplotlib==3.10.3"]
+test = ["pytest==8.3.5"]
+
+[project.scripts]
+aminist21 = "aminist21.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["aminist21*"]

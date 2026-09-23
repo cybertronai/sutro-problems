@@ -1,0 +1,1479 @@
+{
+  "schema_version": 1,
+  "generated_at_utc": "2026-09-22T22:19:52.083326+00:00",
+  "dataset_order": [
+    "kmnist",
+    "emnist_letters_aj",
+    "emnist_letters_kt",
+    "emnist_balanced_aj",
+    "emnist_digits",
+    "emnist_mnist",
+    "qmnist_recovered",
+    "k49_10",
+    "kannada_digits",
+    "devanagari_digits",
+    "madbase",
+    "notmnist_large",
+    "fashion_mnist",
+    "svhn",
+    "cifar10"
+  ],
+  "recipe_order": [
+    "linear-sgd",
+    "mlp64-sgd",
+    "mlp256-sgd",
+    "cnn16-sgd",
+    "cnn32-ensemble3",
+    "reversible82-sgd"
+  ],
+  "verified_procedure_draw_results": 990,
+  "verified_fresh_model_fits": 1320,
+  "interpretation": "Observed minimum/maximum mean accuracy across six prespecified procedures, not universal acceptance bounds. A new procedure above the upper value is valid. Values below the lower value can reflect a weaker procedure, not necessarily a harness error.",
+  "spread_definition": "Sample standard deviation across eleven overlapping-source random draws. Mean +/-2 SD is descriptive, clipped to 0..100, not a confidence interval or formal pass/fail test.",
+  "global_prediction_freeze_sha256": "6b43fc1e4b0b81d8cc6111451ef49096755343b40067a367a2765330da0dae98",
+  "protocol_sha256": "fcd6b6fae4f73e3f7b948b19c8bf8b647f457aca81b1b9f7577a5068b2a9eee5",
+  "source_result_sha256": {
+    "linear-sgd": {
+      "scores_sha256": "d4b3c0dddba026e0a2ad8eddf8494870852b472bc949c1824d5329f8ac2c4bf9",
+      "prediction_manifest_sha256": "74f25d6f710535fb7d3ab66a28a19c14ba96eaa756bcc42e9a545da74adf5818",
+      "plan_sha256": "774858c286a52e211d125fabfb572c208806b3c4117f3b31c7ad8a3d8068ac7b"
+    },
+    "mlp64-sgd": {
+      "scores_sha256": "15b7f759d7b9fd5c3ea8a08d7c2cd125e4b027aef66fec5462c7a9ec6f0b5fc2",
+      "prediction_manifest_sha256": "052fd44b499d820470545deffeae83677056e15e6771de773323f69f6c19046d",
+      "plan_sha256": "72ac738af11ecb3581544709e56cd532fa59b11cbf0a91437e88b85766961441"
+    },
+    "mlp256-sgd": {
+      "scores_sha256": "90e0bf21b6e8a126654cebeec1f9f67f1a3bf8b9f2bd1d7a23932aa9e6211a23",
+      "prediction_manifest_sha256": "18de179e96f25af41a68f2a56deebcfc18c16056d5fa709ca20be88ef56cd9f6",
+      "plan_sha256": "d446cee8ae245d8ba0b3248802dfdd7bc14ab588a0a328d5ea85b262bc8f1f67"
+    },
+    "cnn16-sgd": {
+      "scores_sha256": "147a9e7ccf9a671ebfa80ee25af1a10c4356c32bcf5ffe95a56376a6c7a5e68a",
+      "prediction_manifest_sha256": "235516c5025cdf285fda15bb39292a0c419f4fb425bab8da5b8b0fd026b33712",
+      "plan_sha256": "1f34c10756a760954e1509675714207b069d17bf4fdf08abbb35b18f373d37d6"
+    },
+    "cnn32-ensemble3": {
+      "scores_sha256": "74cd716aa61c5abf0308555b39f543962c3d07f9fa1684a60c79929a2dd9e400",
+      "prediction_manifest_sha256": "9a809c892082852e19a20bcc9eaf2c213a44bd1cba821de8cc2a5c9ef4e31d90",
+      "plan_sha256": "be9b673392093c1d40478cef6a265df20ca0f9d97d07ab2928604256791a1abd"
+    },
+    "reversible82-sgd": {
+      "scores_sha256": "b47aa20fd57efbe4c0d08d5d39106d5af3d95caa0189ccff3292833314a7d77a",
+      "prediction_manifest_sha256": "18b79d37cb28d52e3dee2ce51030589a9554259c1867b75c31baa1bed4a8f224",
+      "plan_sha256": "1099601cea9a239b76b84a429f5e1f1672954c1526818ccdfbf79aea55a90dfc"
+    }
+  },
+  "datasets": [
+    {
+      "dataset": "kmnist",
+      "display_name": "KMNIST",
+      "observed_reference_envelope_percent": [
+        79.44636363636363,
+        96.27636363636363
+      ],
+      "lowest_mean_recipes": [
+        "linear-sgd"
+      ],
+      "highest_mean_recipes": [
+        "cnn32-ensemble3"
+      ],
+      "recipes": {
+        "linear-sgd": {
+          "mean_accuracy_percent": 79.44636363636363,
+          "sample_sd_pp": 0.5252289544050832,
+          "min_draw_accuracy_percent": 78.77,
+          "max_draw_accuracy_percent": 80.4,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            78.39590572755347,
+            80.49682154517379
+          ],
+          "correct": 87391,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 3.009940205454546
+        },
+        "mlp64-sgd": {
+          "mean_accuracy_percent": 90.28090909090909,
+          "sample_sd_pp": 0.25457629683277755,
+          "min_draw_accuracy_percent": 89.9,
+          "max_draw_accuracy_percent": 90.75,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            89.77175649724353,
+            90.79006168457465
+          ],
+          "correct": 99309,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.579084228363636
+        },
+        "mlp256-sgd": {
+          "mean_accuracy_percent": 92.85090909090908,
+          "sample_sd_pp": 0.22300020383195135,
+          "min_draw_accuracy_percent": 92.46,
+          "max_draw_accuracy_percent": 93.17,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            92.40490868324518,
+            93.29690949857299
+          ],
+          "correct": 102136,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.7098176998181818
+        },
+        "cnn16-sgd": {
+          "mean_accuracy_percent": 93.8409090909091,
+          "sample_sd_pp": 0.33883490214128165,
+          "min_draw_accuracy_percent": 93.17,
+          "max_draw_accuracy_percent": 94.29,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            93.16323928662653,
+            94.51857889519165
+          ],
+          "correct": 103225,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.51756357609091
+        },
+        "cnn32-ensemble3": {
+          "mean_accuracy_percent": 96.27636363636363,
+          "sample_sd_pp": 0.17995959142389573,
+          "min_draw_accuracy_percent": 96.0,
+          "max_draw_accuracy_percent": 96.54,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            95.91644445351584,
+            96.63628281921142
+          ],
+          "correct": 105904,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 7.421219887363634
+        },
+        "reversible82-sgd": {
+          "mean_accuracy_percent": 79.86636363636364,
+          "sample_sd_pp": 0.3524563157973715,
+          "min_draw_accuracy_percent": 79.32,
+          "max_draw_accuracy_percent": 80.21,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            79.1614510047689,
+            80.57127626795838
+          ],
+          "correct": 87853,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.028225670181819
+        }
+      }
+    },
+    {
+      "dataset": "emnist_letters_aj",
+      "display_name": "EMNIST Letters A–J",
+      "observed_reference_envelope_percent": [
+        78.32363636363635,
+        95.40181818181819
+      ],
+      "lowest_mean_recipes": [
+        "reversible82-sgd"
+      ],
+      "highest_mean_recipes": [
+        "cnn32-ensemble3"
+      ],
+      "recipes": {
+        "linear-sgd": {
+          "mean_accuracy_percent": 78.36363636363636,
+          "sample_sd_pp": 0.6869683067983966,
+          "min_draw_accuracy_percent": 77.32,
+          "max_draw_accuracy_percent": 79.17,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            76.98969975003956,
+            79.73757297723316
+          ],
+          "correct": 86200,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 0.8167904072727268
+        },
+        "mlp64-sgd": {
+          "mean_accuracy_percent": 88.85727272727273,
+          "sample_sd_pp": 0.4207633755233667,
+          "min_draw_accuracy_percent": 88.12,
+          "max_draw_accuracy_percent": 89.61,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            88.015745976226,
+            89.69879947831946
+          ],
+          "correct": 97743,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.3847417248181815
+        },
+        "mlp256-sgd": {
+          "mean_accuracy_percent": 92.03545454545454,
+          "sample_sd_pp": 0.42788698592884883,
+          "min_draw_accuracy_percent": 91.3,
+          "max_draw_accuracy_percent": 92.62,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            91.17968057359684,
+            92.89122851731224
+          ],
+          "correct": 101239,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.6186586406363648
+        },
+        "cnn16-sgd": {
+          "mean_accuracy_percent": 93.09454545454545,
+          "sample_sd_pp": 0.5631760583754196,
+          "min_draw_accuracy_percent": 91.77,
+          "max_draw_accuracy_percent": 93.83,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            91.96819333779462,
+            94.22089757129629
+          ],
+          "correct": 102404,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.2526556334545447
+        },
+        "cnn32-ensemble3": {
+          "mean_accuracy_percent": 95.40181818181819,
+          "sample_sd_pp": 0.15961316874357342,
+          "min_draw_accuracy_percent": 95.16,
+          "max_draw_accuracy_percent": 95.65,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            95.08259184433103,
+            95.72104451930534
+          ],
+          "correct": 104942,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 7.192672182090911
+        },
+        "reversible82-sgd": {
+          "mean_accuracy_percent": 78.32363636363635,
+          "sample_sd_pp": 0.8092375760834751,
+          "min_draw_accuracy_percent": 77.05,
+          "max_draw_accuracy_percent": 79.56,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            76.7051612114694,
+            79.9421115158033
+          ],
+          "correct": 86156,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.0325884569090882
+        }
+      }
+    },
+    {
+      "dataset": "emnist_letters_kt",
+      "display_name": "EMNIST Letters K–T",
+      "observed_reference_envelope_percent": [
+        82.44,
+        97.49545454545454
+      ],
+      "lowest_mean_recipes": [
+        "reversible82-sgd"
+      ],
+      "highest_mean_recipes": [
+        "cnn32-ensemble3"
+      ],
+      "recipes": {
+        "linear-sgd": {
+          "mean_accuracy_percent": 82.85454545454546,
+          "sample_sd_pp": 0.7270263218943798,
+          "min_draw_accuracy_percent": 81.62,
+          "max_draw_accuracy_percent": 83.95,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            81.4004928107567,
+            84.30859809833422
+          ],
+          "correct": 91140,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 0.8820699980909048
+        },
+        "mlp64-sgd": {
+          "mean_accuracy_percent": 92.71090909090908,
+          "sample_sd_pp": 0.34098253754274505,
+          "min_draw_accuracy_percent": 92.28,
+          "max_draw_accuracy_percent": 93.49,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            92.0289440158236,
+            93.39287416599457
+          ],
+          "correct": 101982,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.392197559727274
+        },
+        "mlp256-sgd": {
+          "mean_accuracy_percent": 94.86818181818184,
+          "sample_sd_pp": 0.17971189063710855,
+          "min_draw_accuracy_percent": 94.46,
+          "max_draw_accuracy_percent": 95.16,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            94.50875803690762,
+            95.22760559945606
+          ],
+          "correct": 104355,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.864555213909094
+        },
+        "cnn16-sgd": {
+          "mean_accuracy_percent": 95.63727272727273,
+          "sample_sd_pp": 0.22878334332249342,
+          "min_draw_accuracy_percent": 95.29,
+          "max_draw_accuracy_percent": 96.11,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            95.17970604062775,
+            96.09483941391771
+          ],
+          "correct": 105201,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.520426477000001
+        },
+        "cnn32-ensemble3": {
+          "mean_accuracy_percent": 97.49545454545454,
+          "sample_sd_pp": 0.12258577701867422,
+          "min_draw_accuracy_percent": 97.36,
+          "max_draw_accuracy_percent": 97.71,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            97.2502829914172,
+            97.74062609949188
+          ],
+          "correct": 107245,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 7.8935318363636355
+        },
+        "reversible82-sgd": {
+          "mean_accuracy_percent": 82.44,
+          "sample_sd_pp": 0.6005663993265035,
+          "min_draw_accuracy_percent": 81.36,
+          "max_draw_accuracy_percent": 83.42,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            81.23886720134699,
+            83.641132798653
+          ],
+          "correct": 90684,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.083329328090908
+        }
+      }
+    },
+    {
+      "dataset": "emnist_balanced_aj",
+      "display_name": "EMNIST Balanced A–J",
+      "observed_reference_envelope_percent": [
+        87.19909090909091,
+        97.13636363636364
+      ],
+      "lowest_mean_recipes": [
+        "reversible82-sgd"
+      ],
+      "highest_mean_recipes": [
+        "cnn32-ensemble3"
+      ],
+      "recipes": {
+        "linear-sgd": {
+          "mean_accuracy_percent": 87.28090909090909,
+          "sample_sd_pp": 0.5320423769861676,
+          "min_draw_accuracy_percent": 86.37,
+          "max_draw_accuracy_percent": 88.05,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            86.21682433693675,
+            88.34499384488143
+          ],
+          "correct": 96009,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.0044483280909033
+        },
+        "mlp64-sgd": {
+          "mean_accuracy_percent": 92.94,
+          "sample_sd_pp": 0.3345444664017032,
+          "min_draw_accuracy_percent": 92.49,
+          "max_draw_accuracy_percent": 93.6,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            92.2709110671966,
+            93.6090889328034
+          ],
+          "correct": 102234,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.5366731766363686
+        },
+        "mlp256-sgd": {
+          "mean_accuracy_percent": 94.68363636363634,
+          "sample_sd_pp": 0.23483069336322732,
+          "min_draw_accuracy_percent": 94.25,
+          "max_draw_accuracy_percent": 95.11,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            94.21397497690988,
+            95.1532977503628
+          ],
+          "correct": 104152,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 3.004108736272728
+        },
+        "cnn16-sgd": {
+          "mean_accuracy_percent": 95.61090909090909,
+          "sample_sd_pp": 0.3320076669432364,
+          "min_draw_accuracy_percent": 94.93,
+          "max_draw_accuracy_percent": 96.2,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            94.94689375702262,
+            96.27492442479556
+          ],
+          "correct": 105172,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.6569181925454526
+        },
+        "cnn32-ensemble3": {
+          "mean_accuracy_percent": 97.13636363636364,
+          "sample_sd_pp": 0.16584768477568326,
+          "min_draw_accuracy_percent": 96.96,
+          "max_draw_accuracy_percent": 97.38,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            96.80466826681227,
+            97.46805900591501
+          ],
+          "correct": 106850,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 7.560448356636357
+        },
+        "reversible82-sgd": {
+          "mean_accuracy_percent": 87.19909090909091,
+          "sample_sd_pp": 0.5372607289846241,
+          "min_draw_accuracy_percent": 86.33,
+          "max_draw_accuracy_percent": 88.02,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            86.12456945112166,
+            88.27361236706017
+          ],
+          "correct": 95919,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.1327752135454536
+        }
+      }
+    },
+    {
+      "dataset": "emnist_digits",
+      "display_name": "EMNIST Digits",
+      "observed_reference_envelope_percent": [
+        91.69999999999999,
+        98.33181818181819
+      ],
+      "lowest_mean_recipes": [
+        "reversible82-sgd"
+      ],
+      "highest_mean_recipes": [
+        "cnn32-ensemble3"
+      ],
+      "recipes": {
+        "linear-sgd": {
+          "mean_accuracy_percent": 92.07909090909091,
+          "sample_sd_pp": 0.3999863634039188,
+          "min_draw_accuracy_percent": 91.39,
+          "max_draw_accuracy_percent": 92.65,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            91.27911818228307,
+            92.87906363589875
+          ],
+          "correct": 101287,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 0.9400293836363574
+        },
+        "mlp64-sgd": {
+          "mean_accuracy_percent": 95.49090909090908,
+          "sample_sd_pp": 0.26677535663754653,
+          "min_draw_accuracy_percent": 94.9,
+          "max_draw_accuracy_percent": 95.8,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            94.957358377634,
+            96.02445980418418
+          ],
+          "correct": 105040,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.5196524652727263
+        },
+        "mlp256-sgd": {
+          "mean_accuracy_percent": 96.5918181818182,
+          "sample_sd_pp": 0.30245059701769966,
+          "min_draw_accuracy_percent": 95.84,
+          "max_draw_accuracy_percent": 96.93,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            95.98691698778279,
+            97.1967193758536
+          ],
+          "correct": 106251,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.9293075141818163
+        },
+        "cnn16-sgd": {
+          "mean_accuracy_percent": 97.40454545454546,
+          "sample_sd_pp": 0.21087264575395634,
+          "min_draw_accuracy_percent": 96.97,
+          "max_draw_accuracy_percent": 97.62,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            96.98280016303754,
+            97.82629074605337
+          ],
+          "correct": 107145,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.5218250460909117
+        },
+        "cnn32-ensemble3": {
+          "mean_accuracy_percent": 98.33181818181819,
+          "sample_sd_pp": 0.2539219636745978,
+          "min_draw_accuracy_percent": 97.72,
+          "max_draw_accuracy_percent": 98.74,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            97.823974254469,
+            98.83966210916739
+          ],
+          "correct": 108165,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 8.08995965436364
+        },
+        "reversible82-sgd": {
+          "mean_accuracy_percent": 91.69999999999999,
+          "sample_sd_pp": 0.6060693029679007,
+          "min_draw_accuracy_percent": 90.65,
+          "max_draw_accuracy_percent": 92.6,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            90.48786139406418,
+            92.9121386059358
+          ],
+          "correct": 100870,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.0978988222727304
+        }
+      }
+    },
+    {
+      "dataset": "emnist_mnist",
+      "display_name": "EMNIST MNIST",
+      "observed_reference_envelope_percent": [
+        91.36363636363637,
+        98.35272727272728
+      ],
+      "lowest_mean_recipes": [
+        "reversible82-sgd"
+      ],
+      "highest_mean_recipes": [
+        "cnn32-ensemble3"
+      ],
+      "recipes": {
+        "linear-sgd": {
+          "mean_accuracy_percent": 92.17727272727272,
+          "sample_sd_pp": 0.3319967141129822,
+          "min_draw_accuracy_percent": 91.4,
+          "max_draw_accuracy_percent": 92.53,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            91.51327929904676,
+            92.84126615549869
+          ],
+          "correct": 101395,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 0.9231140882727196
+        },
+        "mlp64-sgd": {
+          "mean_accuracy_percent": 95.31,
+          "sample_sd_pp": 0.25270536203254407,
+          "min_draw_accuracy_percent": 94.81,
+          "max_draw_accuracy_percent": 95.74,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            94.80458927593492,
+            95.81541072406509
+          ],
+          "correct": 104841,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.448243702727268
+        },
+        "mlp256-sgd": {
+          "mean_accuracy_percent": 96.66,
+          "sample_sd_pp": 0.1769180601295438,
+          "min_draw_accuracy_percent": 96.3,
+          "max_draw_accuracy_percent": 96.93,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            96.30616387974091,
+            97.01383612025909
+          ],
+          "correct": 106326,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.7123821727272714
+        },
+        "cnn16-sgd": {
+          "mean_accuracy_percent": 97.26818181818182,
+          "sample_sd_pp": 0.19077831018321792,
+          "min_draw_accuracy_percent": 96.88,
+          "max_draw_accuracy_percent": 97.55,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            96.88662519781538,
+            97.64973843854825
+          ],
+          "correct": 106995,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.3380075663636277
+        },
+        "cnn32-ensemble3": {
+          "mean_accuracy_percent": 98.35272727272728,
+          "sample_sd_pp": 0.11340995627288665,
+          "min_draw_accuracy_percent": 98.15,
+          "max_draw_accuracy_percent": 98.51,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            98.1259073601815,
+            98.57954718527306
+          ],
+          "correct": 108188,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 7.475812296272721
+        },
+        "reversible82-sgd": {
+          "mean_accuracy_percent": 91.36363636363637,
+          "sample_sd_pp": 0.5352994064497493,
+          "min_draw_accuracy_percent": 90.23,
+          "max_draw_accuracy_percent": 91.89,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            90.29303755073687,
+            92.43423517653588
+          ],
+          "correct": 100500,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.0869567279999925
+        }
+      }
+    },
+    {
+      "dataset": "qmnist_recovered",
+      "display_name": "QMNIST recovered",
+      "observed_reference_envelope_percent": [
+        89.38818181818182,
+        97.73272727272729
+      ],
+      "lowest_mean_recipes": [
+        "reversible82-sgd"
+      ],
+      "highest_mean_recipes": [
+        "cnn32-ensemble3"
+      ],
+      "recipes": {
+        "linear-sgd": {
+          "mean_accuracy_percent": 89.63,
+          "sample_sd_pp": 0.3769350076604734,
+          "min_draw_accuracy_percent": 88.97,
+          "max_draw_accuracy_percent": 90.15,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            88.87612998467905,
+            90.38387001532094
+          ],
+          "correct": 98593,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 0.863690351181829
+        },
+        "mlp64-sgd": {
+          "mean_accuracy_percent": 94.30818181818182,
+          "sample_sd_pp": 0.21999173538195446,
+          "min_draw_accuracy_percent": 93.86,
+          "max_draw_accuracy_percent": 94.67,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            93.86819834741792,
+            94.74816528894573
+          ],
+          "correct": 103739,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.373362436363643
+        },
+        "mlp256-sgd": {
+          "mean_accuracy_percent": 96.15,
+          "sample_sd_pp": 0.2116128540519227,
+          "min_draw_accuracy_percent": 95.84,
+          "max_draw_accuracy_percent": 96.47,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            95.72677429189616,
+            96.57322570810385
+          ],
+          "correct": 105765,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.6689742209090923
+        },
+        "cnn16-sgd": {
+          "mean_accuracy_percent": 96.42545454545453,
+          "sample_sd_pp": 0.3860405065887163,
+          "min_draw_accuracy_percent": 95.53,
+          "max_draw_accuracy_percent": 97.02,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            95.6533735322771,
+            97.19753555863196
+          ],
+          "correct": 106068,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.326127404272732
+        },
+        "cnn32-ensemble3": {
+          "mean_accuracy_percent": 97.73272727272729,
+          "sample_sd_pp": 0.13424536558786052,
+          "min_draw_accuracy_percent": 97.58,
+          "max_draw_accuracy_percent": 98.02,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            97.46423654155157,
+            98.001218003903
+          ],
+          "correct": 107506,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 7.305112283000002
+        },
+        "reversible82-sgd": {
+          "mean_accuracy_percent": 89.38818181818182,
+          "sample_sd_pp": 0.47719635752629364,
+          "min_draw_accuracy_percent": 88.37,
+          "max_draw_accuracy_percent": 89.85,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            88.43378910312923,
+            90.34257453323441
+          ],
+          "correct": 98327,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.043545750727281
+        }
+      }
+    },
+    {
+      "dataset": "k49_10",
+      "display_name": "K49 extra ten",
+      "observed_reference_envelope_percent": [
+        82.30545454545455,
+        96.34363636363636
+      ],
+      "lowest_mean_recipes": [
+        "reversible82-sgd"
+      ],
+      "highest_mean_recipes": [
+        "cnn32-ensemble3"
+      ],
+      "recipes": {
+        "linear-sgd": {
+          "mean_accuracy_percent": 82.5590909090909,
+          "sample_sd_pp": 0.4175034022724759,
+          "min_draw_accuracy_percent": 81.83,
+          "max_draw_accuracy_percent": 83.4,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            81.72408410454595,
+            83.39409771363584
+          ],
+          "correct": 90815,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 0.8398576087272897
+        },
+        "mlp64-sgd": {
+          "mean_accuracy_percent": 91.3,
+          "sample_sd_pp": 0.32121643793554544,
+          "min_draw_accuracy_percent": 90.83,
+          "max_draw_accuracy_percent": 91.89,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            90.6575671241289,
+            91.94243287587109
+          ],
+          "correct": 100430,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.3826608222727208
+        },
+        "mlp256-sgd": {
+          "mean_accuracy_percent": 93.40636363636364,
+          "sample_sd_pp": 0.3728343526895742,
+          "min_draw_accuracy_percent": 92.84,
+          "max_draw_accuracy_percent": 94.13,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            92.66069493098449,
+            94.15203234174278
+          ],
+          "correct": 102747,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.693102681999996
+        },
+        "cnn16-sgd": {
+          "mean_accuracy_percent": 94.32272727272726,
+          "sample_sd_pp": 0.44822072484638364,
+          "min_draw_accuracy_percent": 93.54,
+          "max_draw_accuracy_percent": 94.92,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            93.42628582303449,
+            95.21916872242004
+          ],
+          "correct": 103755,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.3898708245454414
+        },
+        "cnn32-ensemble3": {
+          "mean_accuracy_percent": 96.34363636363636,
+          "sample_sd_pp": 0.2945937109740381,
+          "min_draw_accuracy_percent": 96.0,
+          "max_draw_accuracy_percent": 96.9,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            95.75444894168828,
+            96.93282378558445
+          ],
+          "correct": 105978,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 7.655937187636374
+        },
+        "reversible82-sgd": {
+          "mean_accuracy_percent": 82.30545454545455,
+          "sample_sd_pp": 0.5818653389980144,
+          "min_draw_accuracy_percent": 81.21,
+          "max_draw_accuracy_percent": 83.28,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            81.14172386745852,
+            83.46918522345058
+          ],
+          "correct": 90536,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.02973469509091
+        }
+      }
+    },
+    {
+      "dataset": "kannada_digits",
+      "display_name": "Kannada-MNIST",
+      "observed_reference_envelope_percent": [
+        95.05454545454545,
+        98.65363636363637
+      ],
+      "lowest_mean_recipes": [
+        "reversible82-sgd"
+      ],
+      "highest_mean_recipes": [
+        "cnn32-ensemble3"
+      ],
+      "recipes": {
+        "linear-sgd": {
+          "mean_accuracy_percent": 95.39454545454545,
+          "sample_sd_pp": 0.20631837709538273,
+          "min_draw_accuracy_percent": 94.96,
+          "max_draw_accuracy_percent": 95.61,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            94.98190870035468,
+            95.80718220873622
+          ],
+          "correct": 104934,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 0.84991775918183
+        },
+        "mlp64-sgd": {
+          "mean_accuracy_percent": 96.36454545454545,
+          "sample_sd_pp": 0.3269973588995375,
+          "min_draw_accuracy_percent": 95.58,
+          "max_draw_accuracy_percent": 96.79,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            95.71055073674637,
+            97.01854017234453
+          ],
+          "correct": 106001,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.3588864229999806
+        },
+        "mlp256-sgd": {
+          "mean_accuracy_percent": 97.50181818181818,
+          "sample_sd_pp": 0.18578580041640344,
+          "min_draw_accuracy_percent": 97.2,
+          "max_draw_accuracy_percent": 97.84,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            97.13024658098537,
+            97.87338978265099
+          ],
+          "correct": 107252,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.6529793509090855
+        },
+        "cnn16-sgd": {
+          "mean_accuracy_percent": 97.88454545454546,
+          "sample_sd_pp": 0.2997787062605911,
+          "min_draw_accuracy_percent": 97.27,
+          "max_draw_accuracy_percent": 98.25,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            97.28498804202428,
+            98.48410286706664
+          ],
+          "correct": 107673,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.217978226727274
+        },
+        "cnn32-ensemble3": {
+          "mean_accuracy_percent": 98.65363636363637,
+          "sample_sd_pp": 0.1324592561713017,
+          "min_draw_accuracy_percent": 98.44,
+          "max_draw_accuracy_percent": 98.82,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            98.38871785129376,
+            98.91855487597897
+          ],
+          "correct": 108519,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 7.282083950363637
+        },
+        "reversible82-sgd": {
+          "mean_accuracy_percent": 95.05454545454545,
+          "sample_sd_pp": 0.23406681252854483,
+          "min_draw_accuracy_percent": 94.47,
+          "max_draw_accuracy_percent": 95.33,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            94.58641182948836,
+            95.52267907960254
+          ],
+          "correct": 104560,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.0410872269999965
+        }
+      }
+    },
+    {
+      "dataset": "devanagari_digits",
+      "display_name": "Devanagari digits",
+      "observed_reference_envelope_percent": [
+        93.31272727272727,
+        99.29727272727273
+      ],
+      "lowest_mean_recipes": [
+        "reversible82-sgd"
+      ],
+      "highest_mean_recipes": [
+        "cnn32-ensemble3"
+      ],
+      "recipes": {
+        "linear-sgd": {
+          "mean_accuracy_percent": 94.24363636363637,
+          "sample_sd_pp": 0.39580987171298937,
+          "min_draw_accuracy_percent": 93.58,
+          "max_draw_accuracy_percent": 94.75,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            93.45201662021039,
+            95.03525610706235
+          ],
+          "correct": 103668,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 0.804261888818184
+        },
+        "mlp64-sgd": {
+          "mean_accuracy_percent": 97.4,
+          "sample_sd_pp": 0.15145956556124116,
+          "min_draw_accuracy_percent": 97.25,
+          "max_draw_accuracy_percent": 97.65,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            97.09708086887753,
+            97.70291913112248
+          ],
+          "correct": 107140,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.3351238417272797
+        },
+        "mlp256-sgd": {
+          "mean_accuracy_percent": 98.22636363636362,
+          "sample_sd_pp": 0.13894406984630206,
+          "min_draw_accuracy_percent": 98.01,
+          "max_draw_accuracy_percent": 98.49,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            97.94847549667101,
+            98.50425177605622
+          ],
+          "correct": 108049,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.6307792911818213
+        },
+        "cnn16-sgd": {
+          "mean_accuracy_percent": 98.76363636363637,
+          "sample_sd_pp": 0.1862940002937702,
+          "min_draw_accuracy_percent": 98.38,
+          "max_draw_accuracy_percent": 99.01,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            98.39104836304882,
+            99.1362243642239
+          ],
+          "correct": 108640,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.2275322534545436
+        },
+        "cnn32-ensemble3": {
+          "mean_accuracy_percent": 99.29727272727273,
+          "sample_sd_pp": 0.07471156658656163,
+          "min_draw_accuracy_percent": 99.14,
+          "max_draw_accuracy_percent": 99.42,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            99.1478495940996,
+            99.44669586044586
+          ],
+          "correct": 109227,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 7.362575234181815
+        },
+        "reversible82-sgd": {
+          "mean_accuracy_percent": 93.31272727272727,
+          "sample_sd_pp": 0.7212363123011889,
+          "min_draw_accuracy_percent": 91.87,
+          "max_draw_accuracy_percent": 94.06,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            91.8702546481249,
+            94.75519989732965
+          ],
+          "correct": 102644,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 0.9864401238181802
+        }
+      }
+    },
+    {
+      "dataset": "madbase",
+      "display_name": "MADBase Arabic digits",
+      "observed_reference_envelope_percent": [
+        95.72000000000001,
+        98.70363636363636
+      ],
+      "lowest_mean_recipes": [
+        "reversible82-sgd"
+      ],
+      "highest_mean_recipes": [
+        "cnn32-ensemble3"
+      ],
+      "recipes": {
+        "linear-sgd": {
+          "mean_accuracy_percent": 96.14727272727272,
+          "sample_sd_pp": 0.16793396970779523,
+          "min_draw_accuracy_percent": 95.92,
+          "max_draw_accuracy_percent": 96.4,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            95.81140478785713,
+            96.48314066668831
+          ],
+          "correct": 105762,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 0.7907359782727265
+        },
+        "mlp64-sgd": {
+          "mean_accuracy_percent": 97.16727272727272,
+          "sample_sd_pp": 0.19483792798584434,
+          "min_draw_accuracy_percent": 96.9,
+          "max_draw_accuracy_percent": 97.52,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            96.77759687130103,
+            97.5569485832444
+          ],
+          "correct": 106884,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.3960772196363573
+        },
+        "mlp256-sgd": {
+          "mean_accuracy_percent": 97.85090909090908,
+          "sample_sd_pp": 0.1018287332195163,
+          "min_draw_accuracy_percent": 97.66,
+          "max_draw_accuracy_percent": 98.03,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            97.64725162447006,
+            98.05456655734811
+          ],
+          "correct": 107636,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.5882905892727206
+        },
+        "cnn16-sgd": {
+          "mean_accuracy_percent": 98.22363636363637,
+          "sample_sd_pp": 0.17025115137776312,
+          "min_draw_accuracy_percent": 97.96,
+          "max_draw_accuracy_percent": 98.52,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            97.88313406088085,
+            98.5641386663919
+          ],
+          "correct": 108046,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.186496819181808
+        },
+        "cnn32-ensemble3": {
+          "mean_accuracy_percent": 98.70363636363636,
+          "sample_sd_pp": 0.07242551032236193,
+          "min_draw_accuracy_percent": 98.55,
+          "max_draw_accuracy_percent": 98.79,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            98.55878534299164,
+            98.84848738428109
+          ],
+          "correct": 108574,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 7.080007552909106
+        },
+        "reversible82-sgd": {
+          "mean_accuracy_percent": 95.72000000000001,
+          "sample_sd_pp": 0.26615784790232894,
+          "min_draw_accuracy_percent": 95.29,
+          "max_draw_accuracy_percent": 96.0,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            95.18768430419536,
+            96.25231569580467
+          ],
+          "correct": 105292,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 0.9778904836363567
+        }
+      }
+    },
+    {
+      "dataset": "notmnist_large",
+      "display_name": "notMNIST A–J",
+      "observed_reference_envelope_percent": [
+        76.33090909090907,
+        87.57727272727274
+      ],
+      "lowest_mean_recipes": [
+        "linear-sgd"
+      ],
+      "highest_mean_recipes": [
+        "cnn32-ensemble3"
+      ],
+      "recipes": {
+        "linear-sgd": {
+          "mean_accuracy_percent": 76.33090909090907,
+          "sample_sd_pp": 1.6017081790729222,
+          "min_draw_accuracy_percent": 74.49,
+          "max_draw_accuracy_percent": 78.42,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            73.12749273276323,
+            79.53432544905492
+          ],
+          "correct": 83964,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 0.8059634438181795
+        },
+        "mlp64-sgd": {
+          "mean_accuracy_percent": 82.48454545454547,
+          "sample_sd_pp": 0.4656256787670458,
+          "min_draw_accuracy_percent": 81.87,
+          "max_draw_accuracy_percent": 83.19,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            81.55329409701137,
+            83.41579681207956
+          ],
+          "correct": 90733,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.3248218763636403
+        },
+        "mlp256-sgd": {
+          "mean_accuracy_percent": 83.88545454545455,
+          "sample_sd_pp": 0.322563594857311,
+          "min_draw_accuracy_percent": 83.4,
+          "max_draw_accuracy_percent": 84.3,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            83.24032735573992,
+            84.53058173516918
+          ],
+          "correct": 92274,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.5242414711818086
+        },
+        "cnn16-sgd": {
+          "mean_accuracy_percent": 85.50545454545455,
+          "sample_sd_pp": 0.6428897827211687,
+          "min_draw_accuracy_percent": 83.98,
+          "max_draw_accuracy_percent": 86.25,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            84.21967498001221,
+            86.7912341108969
+          ],
+          "correct": 94056,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.1096703143636186
+        },
+        "cnn32-ensemble3": {
+          "mean_accuracy_percent": 87.57727272727274,
+          "sample_sd_pp": 0.3699754291595844,
+          "min_draw_accuracy_percent": 86.98,
+          "max_draw_accuracy_percent": 88.22,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            86.83732186895358,
+            88.3172235855919
+          ],
+          "correct": 96335,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 6.93639290681819
+        },
+        "reversible82-sgd": {
+          "mean_accuracy_percent": 78.71363636363637,
+          "sample_sd_pp": 0.5020213686143806,
+          "min_draw_accuracy_percent": 77.47,
+          "max_draw_accuracy_percent": 79.17,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            77.70959362640761,
+            79.71767910086513
+          ],
+          "correct": 86585,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 0.9834328986363723
+        }
+      }
+    },
+    {
+      "dataset": "fashion_mnist",
+      "display_name": "Fashion-MNIST",
+      "observed_reference_envelope_percent": [
+        77.78454545454544,
+        87.21454545454546
+      ],
+      "lowest_mean_recipes": [
+        "reversible82-sgd"
+      ],
+      "highest_mean_recipes": [
+        "cnn32-ensemble3"
+      ],
+      "recipes": {
+        "linear-sgd": {
+          "mean_accuracy_percent": 78.78909090909092,
+          "sample_sd_pp": 1.6563118942122848,
+          "min_draw_accuracy_percent": 76.29,
+          "max_draw_accuracy_percent": 81.48,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            75.47646712066634,
+            82.10171469751549
+          ],
+          "correct": 86668,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 0.8125700753636548
+        },
+        "mlp64-sgd": {
+          "mean_accuracy_percent": 82.49181818181818,
+          "sample_sd_pp": 1.0169839544635717,
+          "min_draw_accuracy_percent": 80.44,
+          "max_draw_accuracy_percent": 84.23,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            80.45785027289104,
+            84.52578609074531
+          ],
+          "correct": 90741,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.3312179793636418
+        },
+        "mlp256-sgd": {
+          "mean_accuracy_percent": 85.03727272727272,
+          "sample_sd_pp": 0.6714028732302374,
+          "min_draw_accuracy_percent": 83.8,
+          "max_draw_accuracy_percent": 85.92,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            83.69446698081225,
+            86.38007847373319
+          ],
+          "correct": 93541,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.675056628727289
+        },
+        "cnn16-sgd": {
+          "mean_accuracy_percent": 84.52999999999999,
+          "sample_sd_pp": 1.089100546322513,
+          "min_draw_accuracy_percent": 82.54,
+          "max_draw_accuracy_percent": 86.15,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            82.35179890735496,
+            86.70820109264501
+          ],
+          "correct": 92983,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.1768122387273108
+        },
+        "cnn32-ensemble3": {
+          "mean_accuracy_percent": 87.21454545454546,
+          "sample_sd_pp": 0.4119068738529039,
+          "min_draw_accuracy_percent": 86.6,
+          "max_draw_accuracy_percent": 88.02,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            86.39073170683965,
+            88.03835920225127
+          ],
+          "correct": 95936,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 7.10701218545453
+        },
+        "reversible82-sgd": {
+          "mean_accuracy_percent": 77.78454545454544,
+          "sample_sd_pp": 3.043111445991961,
+          "min_draw_accuracy_percent": 70.56,
+          "max_draw_accuracy_percent": 80.78,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            71.69832256256151,
+            83.87076834652936
+          ],
+          "correct": 85563,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 0.985957635000008
+        }
+      }
+    },
+    {
+      "dataset": "svhn",
+      "display_name": "SVHN grayscale",
+      "observed_reference_envelope_percent": [
+        14.69272727272727,
+        80.59272727272727
+      ],
+      "lowest_mean_recipes": [
+        "linear-sgd"
+      ],
+      "highest_mean_recipes": [
+        "cnn32-ensemble3"
+      ],
+      "recipes": {
+        "linear-sgd": {
+          "mean_accuracy_percent": 14.69272727272727,
+          "sample_sd_pp": 4.448530298669642,
+          "min_draw_accuracy_percent": 8.0,
+          "max_draw_accuracy_percent": 20.7,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            5.795666675387986,
+            23.58978787006655
+          ],
+          "correct": 16162,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 0.8403685622727153
+        },
+        "mlp64-sgd": {
+          "mean_accuracy_percent": 44.28363636363636,
+          "sample_sd_pp": 4.176511158197167,
+          "min_draw_accuracy_percent": 37.14,
+          "max_draw_accuracy_percent": 49.05,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            35.93061404724203,
+            52.63665868003069
+          ],
+          "correct": 48712,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.3810571795454403
+        },
+        "mlp256-sgd": {
+          "mean_accuracy_percent": 63.962727272727264,
+          "sample_sd_pp": 2.9804029623830757,
+          "min_draw_accuracy_percent": 59.09,
+          "max_draw_accuracy_percent": 68.44,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            58.001921347961115,
+            69.92353319749341
+          ],
+          "correct": 70359,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.670430221545437
+        },
+        "cnn16-sgd": {
+          "mean_accuracy_percent": 72.94454545454545,
+          "sample_sd_pp": 2.639099708750555,
+          "min_draw_accuracy_percent": 66.59,
+          "max_draw_accuracy_percent": 75.8,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            67.66634603704433,
+            78.22274487204656
+          ],
+          "correct": 80239,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.1703773412727245
+        },
+        "cnn32-ensemble3": {
+          "mean_accuracy_percent": 80.59272727272727,
+          "sample_sd_pp": 1.1082516944186556,
+          "min_draw_accuracy_percent": 78.22,
+          "max_draw_accuracy_percent": 82.33,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            78.37622388388996,
+            82.80923066156458
+          ],
+          "correct": 88652,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 7.4898601777272855
+        },
+        "reversible82-sgd": {
+          "mean_accuracy_percent": 20.506363636363634,
+          "sample_sd_pp": 1.463688988325544,
+          "min_draw_accuracy_percent": 18.01,
+          "max_draw_accuracy_percent": 23.23,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            17.578985659712547,
+            23.43374161301472
+          ],
+          "correct": 22557,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.1208276977272673
+        }
+      }
+    },
+    {
+      "dataset": "cifar10",
+      "display_name": "CIFAR-10 grayscale",
+      "observed_reference_envelope_percent": [
+        17.37181818181818,
+        44.56545454545455
+      ],
+      "lowest_mean_recipes": [
+        "linear-sgd"
+      ],
+      "highest_mean_recipes": [
+        "cnn32-ensemble3"
+      ],
+      "recipes": {
+        "linear-sgd": {
+          "mean_accuracy_percent": 17.37181818181818,
+          "sample_sd_pp": 3.3099118362331597,
+          "min_draw_accuracy_percent": 10.99,
+          "max_draw_accuracy_percent": 21.89,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            10.751994509351862,
+            23.991641854284502
+          ],
+          "correct": 19109,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 0.8144863632727183
+        },
+        "mlp64-sgd": {
+          "mean_accuracy_percent": 29.846363636363638,
+          "sample_sd_pp": 1.1322303010189463,
+          "min_draw_accuracy_percent": 28.36,
+          "max_draw_accuracy_percent": 31.83,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            27.581903034325745,
+            32.11082423840153
+          ],
+          "correct": 32831,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 1.3559731770908974
+        },
+        "mlp256-sgd": {
+          "mean_accuracy_percent": 34.845454545454544,
+          "sample_sd_pp": 1.0619356255099808,
+          "min_draw_accuracy_percent": 32.66,
+          "max_draw_accuracy_percent": 36.32,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            32.72158329443458,
+            36.96932579647451
+          ],
+          "correct": 38330,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.5978966057272768
+        },
+        "cnn16-sgd": {
+          "mean_accuracy_percent": 37.56272727272728,
+          "sample_sd_pp": 1.284601813085213,
+          "min_draw_accuracy_percent": 35.54,
+          "max_draw_accuracy_percent": 38.82,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            34.99352364655685,
+            40.13193089889771
+          ],
+          "correct": 41319,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 2.1866563602727327
+        },
+        "cnn32-ensemble3": {
+          "mean_accuracy_percent": 44.56545454545455,
+          "sample_sd_pp": 0.5119445992754222,
+          "min_draw_accuracy_percent": 43.53,
+          "max_draw_accuracy_percent": 45.53,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            43.5415653469037,
+            45.5893437440054
+          ],
+          "correct": 49022,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 7.190698374000021
+        },
+        "reversible82-sgd": {
+          "mean_accuracy_percent": 23.94545454545454,
+          "sample_sd_pp": 1.7882693512799668,
+          "min_draw_accuracy_percent": 19.97,
+          "max_draw_accuracy_percent": 25.64,
+          "descriptive_mean_plus_minus_2sd_percent": [
+            20.36891584289461,
+            27.521993248014475
+          ],
+          "correct": 26340,
+          "total": 110000,
+          "mean_adapter_wall_seconds": 0.986439232000004
+        }
+      }
+    }
+  ]
+}

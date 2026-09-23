@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "dataset": "svhn",
+  "id": "svhn",
+  "path": "data/pools/svhn.npz",
+  "sha256": "9cfabaa544b622519fccaafac6699339455a6c4378d975ab9cdb71bfe818bc60",
+  "bytes": 23918452,
+  "count": 73255,
+  "shape": [
+    73255,
+    1,
+    9,
+    9
+  ],
+  "class_names": [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9"
+  ],
+  "class_counts": [
+    4948,
+    13861,
+    10585,
+    8497,
+    7457,
+    6882,
+    5727,
+    5595,
+    5045,
+    4658
+  ],
+  "curation": {
+    "raw_count": 73257,
+    "unique_native_images": 73256,
+    "same_label_duplicate_rows_removed": 0,
+    "conflicting_image_groups": 1,
+    "conflicting_rows_removed": 2,
+    "clean_count": 73255
+  },
+  "curation_policy": "SHA256 of native image bytes; discard all conflicting-label groups; retain first source row of remaining groups; preserve source order",
+  "array_sha256": {
+    "images": "72fcd177a5c47612ca2bdbf9c9274b747e0d0d5613edd2caab0111bb15ba2a07",
+    "labels": "7e97e06a7bd416993edc6a6916f8eaa4ea620b593e3c9f0f979e649b9a1f9022",
+    "example_hashes": "99967f95fa34f90189e0e46dea70fbaab3bd14de112344017fd26f715e268b66",
+    "source_indices": "a436542a61a3a1f866cc11975bec0b1f3f2f79f92988e65f98262ca1f28e55cf",
+    "pool_indices": "a436542a61a3a1f866cc11975bec0b1f3f2f79f92988e65f98262ca1f28e55cf"
+  },
+  "array_dtypes": {
+    "images": "float32",
+    "labels": "int64",
+    "example_hashes": "|S64",
+    "source_indices": "int64",
+    "pool_indices": "int64"
+  },
+  "source_metadata": {
+    "display_name": "SVHN (grayscale)",
+    "dataset_page": "http://ufldl.stanford.edu/housenumbers/",
+    "description": "Cropped color photographs of house-number digits, converted to grayscale; no handwriting.",
+    "class_names": [
+      "0",
+      "1",
+      "2",
+      "3",
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9"
+    ],
+    "source_order": "Original official train_32x32.mat fourth-axis row order",
+    "label_mapping": "Original label 10 (digit zero) remapped to 0; labels 1..9 unchanged",
+    "sources": [
+      {
+        "filename": "svhn-train_32x32.mat",
+        "url": "http://ufldl.stanford.edu/housenumbers/train_32x32.mat",
+        "md5": "e26dedcc434d2e4c54c9b2d4a06d8373",
+        "checksum_reference": "https://docs.pytorch.org/vision/main/_modules/torchvision/datasets/svhn.html",
+        "sha256": "435e94d69a87fde4fd4d7f3dd208dfc32cb6ae8af2240d066de1df7508d083b8",
+        "bytes": 182040794
+      }
+    ],
+    "name": "svhn",
+    "format_version": 1,
+    "source_split": "Official training split only",
+    "pool_size": 73257,
+    "class_counts": [
+      4948,
+      13861,
+      10585,
+      8497,
+      7458,
+      6882,
+      5727,
+      5595,
+      5045,
+      4659
+    ],
+    "native_shape": [
+      32,
+      32,
+      3
+    ],
+    "native_dtype": "uint8",
+    "image_shape": [
+      73257,
+      1,
+      9,
+      9
+    ],
+    "image_dtype": "float32",
+    "labels_dtype": "int64",
+    "preprocessing": {
+      "normalization": "Convert uint8 to float32 and divide by 255",
+      "grayscale": "RGB luminance 0.299 R + 0.587 G + 0.114 B",
+      "resize": "mnist.code.data.area_resize: exact separable box-area averaging to 9x9",
+      "inversion": "None; preserve original intensity polarity",
+      "additional_transforms": "None"
+    },
+    "example_hash_definition": "SHA256 of C-order native uint8 image bytes only; native RGB represented H,W,C before hashing; excludes labels",
+    "exact_native_duplicate_rows": 1,
+    "deduplication": "Not applied here; all original rows retained for common experiment protocol",
+    "array_sha256": {
+      "images": "1ddb5ad684f36424ce55eb886414b08f3bbc81a4a569ec0e057964fb39ec725e",
+      "labels": "d12587a1e0efc1b8ecc006ec91da5eb53f2230cedb3a0357ef50737f72285765",
+      "example_hashes": "2c977748aded048824526b5426c0d6426b490b8c0dd559545ed5187a8609549f",
+      "source_indices": "4fb74595e214ca01ff8da5d7db34d7bb98d3cf4a3c82f71b767e48d0a7538c0e"
+    },
+    "pool_sha256": "bed20125cbaf04fe34087f53da8e451616f43c79c8e2f6c8998b2aa108635b50"
+  },
+  "acquisition": [],
+  "source_npz_sha256": "bed20125cbaf04fe34087f53da8e451616f43c79c8e2f6c8998b2aa108635b50",
+  "source_metadata_sha256": "c03edc52f1807d77d201b85c043b5f627ce1db9fd3b2c079c82cf26b0237d5fb",
+  "build_source_sha256": {
+    "aminist21/preprocessing/__init__.py": "f4f011b2bda24964fa47947f56bf31bfae128893bc0fe9f25abcae9805074ae2",
+    "aminist21/preprocessing/characters.py": "e90028df239ff43b98c35321d15784ed68f827c31e6d8c67b768e0cefe223241",
+    "aminist21/preprocessing/common.py": "34d438bf929d61c22baf9742c6e992010658c07a1f7f179163d8e139d1ccac5b",
+    "aminist21/preprocessing/objects.py": "77b1e3e884381241df5e2e8965728b59d896228e041d1d559cb5883603304652",
+    "aminist21/preprocessing/sources.py": "c2ef78bceb12d885df80ba9654edfb972bd4d28c599a093cc32bb763c7533ade",
+    "aminist21/preprocessing/standards.py": "6447a14e2f1b2a787d04eb5fb9fd172802fa3886377d60ea4adcb7343daa5dcc",
+    "tools/build_data.py": "9b963de2309026c92dfbb5c207fda01b55ee0e23746a525ce6fda0b3fd40ee1c"
+  },
+  "numpy_version": "2.2.6"
+}

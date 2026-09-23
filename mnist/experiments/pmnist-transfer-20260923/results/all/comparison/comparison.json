@@ -1,0 +1,820 @@
+{
+  "generated_at_utc": "2026-09-23T18:56:54.714909+00:00",
+  "candidate_label": "Ladder AMLP",
+  "candidate_config": {
+    "seed": 11,
+    "permutation_seed": 20260923,
+    "epochs": 150,
+    "decay_start": 100,
+    "batch_size": 100,
+    "learning_rate": 0.002,
+    "device": "cuda",
+    "cuda_graph": true,
+    "independent_reconstruction_stream": true,
+    "checkpoint_selection": "last_fixed_epoch"
+  },
+  "complete_fifteen_dataset_suite": false,
+  "all_selected_tasks_have_eleven_draws": true,
+  "comparison_basis": "Exactly matched task IDs and draw indices; fixed v1 9x9 inputs and 10000/10000 draws",
+  "caveats": [
+    "Reference CNNs use the original ordered 9x9 grid, whereas the candidate may use a fixed pixel permutation. This is a comparison of complete procedures, not an architecture-only or compute-matched ablation.",
+    "These transfer tasks repartition curated pools; they are not official-test 28x28 pMNIST results.",
+    "Models train from fresh initialization on each draw; this measures training-procedure transfer, not transfer of learned MNIST weights.",
+    "Draws overlap and datasets share ancestry. Draw SD and paired-delta SD are descriptive, not confidence intervals or significance tests.",
+    "A subset of tasks is an incomplete v1 fifteen-number suite even when all eleven draws are run for each selected task."
+  ],
+  "provenance": {
+    "path_base": "comparison output directory",
+    "candidate_scores": {
+      "path": "../transfer/scores.json",
+      "sha256": "6b464ef96d0d85be0c8db02afc1054bcc181a919222fad59d8d22dc0e17d1ac3"
+    },
+    "reference_scores": {
+      "linear-sgd": {
+        "path": "../../../vendor/aminist21/reference-results/linear-sgd/scores.json",
+        "sha256": "d4b3c0dddba026e0a2ad8eddf8494870852b472bc949c1824d5329f8ac2c4bf9"
+      },
+      "mlp64-sgd": {
+        "path": "../../../vendor/aminist21/reference-results/mlp64-sgd/scores.json",
+        "sha256": "15b7f759d7b9fd5c3ea8a08d7c2cd125e4b027aef66fec5462c7a9ec6f0b5fc2"
+      },
+      "mlp256-sgd": {
+        "path": "../../../vendor/aminist21/reference-results/mlp256-sgd/scores.json",
+        "sha256": "90e0bf21b6e8a126654cebeec1f9f67f1a3bf8b9f2bd1d7a23932aa9e6211a23"
+      },
+      "cnn16-sgd": {
+        "path": "../../../vendor/aminist21/reference-results/cnn16-sgd/scores.json",
+        "sha256": "147a9e7ccf9a671ebfa80ee25af1a10c4356c32bcf5ffe95a56376a6c7a5e68a"
+      },
+      "cnn32-ensemble3": {
+        "path": "../../../vendor/aminist21/reference-results/cnn32-ensemble3/scores.json",
+        "sha256": "74cd716aa61c5abf0308555b39f543962c3d07f9fa1684a60c79929a2dd9e400"
+      },
+      "reversible82-sgd": {
+        "path": "../../../vendor/aminist21/reference-results/reversible82-sgd/scores.json",
+        "sha256": "b47aa20fd57efbe4c0d08d5d39106d5af3d95caa0189ccff3292833314a7d77a"
+      }
+    },
+    "comparison_source_sha256": "ebfd277715b29e51cadfc79ef7cafdce0828338c9fa6a717981a5381e411f2e5",
+    "plan.json": {
+      "path": "../transfer/plan.json",
+      "sha256": "9e1b09c8df63b5d81934ac280d5c0b6b147a3b0e6b06840c0d3a0c6763b7e9ff"
+    },
+    "prediction-manifest.json": {
+      "path": "../transfer/prediction-manifest.json",
+      "sha256": "0cba5d9315969161fa0ee353a7627ca4efd7e569b5809dd911ad86ef0e79398c"
+    }
+  },
+  "datasets": [
+    {
+      "dataset": "kmnist",
+      "draws": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "candidate": {
+        "mean_accuracy_percent": 94.43636363636364,
+        "sample_sd_pp": 0.16770645349972318,
+        "min_draw_accuracy_percent": 94.22,
+        "max_draw_accuracy_percent": 94.76
+      },
+      "references": {
+        "linear-sgd": {
+          "mean_accuracy_percent": 79.44636363636363,
+          "sample_sd_pp": 0.5252289544050832,
+          "min_draw_accuracy_percent": 78.77,
+          "max_draw_accuracy_percent": 80.4,
+          "candidate_minus_reference_mean_pp": 14.990000000000004,
+          "paired_draw_delta_sample_sd_pp": 0.5549053973426475,
+          "paired_draw_deltas_pp": [
+            15.550000000000011,
+            15.64,
+            14.870000000000005,
+            15.060000000000002,
+            13.819999999999993,
+            14.430000000000007,
+            14.89,
+            15.459999999999994,
+            14.830000000000013,
+            15.570000000000007,
+            14.77000000000001
+          ]
+        },
+        "mlp64-sgd": {
+          "mean_accuracy_percent": 90.28090909090909,
+          "sample_sd_pp": 0.25457629683277755,
+          "min_draw_accuracy_percent": 89.9,
+          "max_draw_accuracy_percent": 90.75,
+          "candidate_minus_reference_mean_pp": 4.155454545454546,
+          "paired_draw_delta_sample_sd_pp": 0.2756216115025664,
+          "paired_draw_deltas_pp": [
+            4.359999999999999,
+            4.209999999999994,
+            4.359999999999999,
+            4.349999999999994,
+            3.9399999999999977,
+            3.6500000000000057,
+            4.530000000000001,
+            4.170000000000002,
+            3.9000000000000057,
+            4.3700000000000045,
+            3.8700000000000045
+          ]
+        },
+        "mlp256-sgd": {
+          "mean_accuracy_percent": 92.85090909090908,
+          "sample_sd_pp": 0.22300020383195135,
+          "min_draw_accuracy_percent": 92.46,
+          "max_draw_accuracy_percent": 93.17,
+          "candidate_minus_reference_mean_pp": 1.5854545454545492,
+          "paired_draw_delta_sample_sd_pp": 0.3124536329237884,
+          "paired_draw_deltas_pp": [
+            1.5500000000000114,
+            1.8399999999999892,
+            1.7700000000000102,
+            2.0400000000000063,
+            1.5100000000000051,
+            1.1200000000000045,
+            1.4200000000000017,
+            1.5600000000000023,
+            2.0500000000000114,
+            1.4099999999999966,
+            1.1700000000000017
+          ]
+        },
+        "cnn16-sgd": {
+          "mean_accuracy_percent": 93.8409090909091,
+          "sample_sd_pp": 0.3388349021412816,
+          "min_draw_accuracy_percent": 93.17,
+          "max_draw_accuracy_percent": 94.29,
+          "candidate_minus_reference_mean_pp": 0.5954545454545478,
+          "paired_draw_delta_sample_sd_pp": 0.3193231478099777,
+          "paired_draw_deltas_pp": [
+            0.38000000000000966,
+            0.4199999999999875,
+            0.8500000000000085,
+            1.0400000000000063,
+            1.0499999999999972,
+            0.44000000000001194,
+            0.4300000000000068,
+            0.9099999999999966,
+            0.5300000000000011,
+            0.04999999999999716,
+            0.45000000000000284
+          ]
+        },
+        "cnn32-ensemble3": {
+          "mean_accuracy_percent": 96.27636363636364,
+          "sample_sd_pp": 0.17995959142389575,
+          "min_draw_accuracy_percent": 96.0,
+          "max_draw_accuracy_percent": 96.54,
+          "candidate_minus_reference_mean_pp": -1.8399999999999983,
+          "paired_draw_delta_sample_sd_pp": 0.23112767034693504,
+          "paired_draw_deltas_pp": [
+            -1.6499999999999915,
+            -1.7000000000000028,
+            -1.7800000000000011,
+            -1.7099999999999937,
+            -2.3200000000000074,
+            -1.7999999999999972,
+            -1.759999999999991,
+            -1.5900000000000034,
+            -1.7299999999999898,
+            -2.030000000000001,
+            -2.1700000000000017
+          ]
+        },
+        "reversible82-sgd": {
+          "mean_accuracy_percent": 79.86636363636363,
+          "sample_sd_pp": 0.3524563157973716,
+          "min_draw_accuracy_percent": 79.32,
+          "max_draw_accuracy_percent": 80.21,
+          "candidate_minus_reference_mean_pp": 14.570000000000002,
+          "paired_draw_delta_sample_sd_pp": 0.3353505628443173,
+          "paired_draw_deltas_pp": [
+            14.329999999999998,
+            14.39,
+            14.61,
+            15.180000000000007,
+            14.319999999999993,
+            14.080000000000013,
+            14.25,
+            14.939999999999998,
+            14.560000000000002,
+            14.870000000000005,
+            14.740000000000009
+          ]
+        }
+      }
+    },
+    {
+      "dataset": "emnist_letters_aj",
+      "draws": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "candidate": {
+        "mean_accuracy_percent": 93.33727272727273,
+        "sample_sd_pp": 0.1743038100037361,
+        "min_draw_accuracy_percent": 93.08,
+        "max_draw_accuracy_percent": 93.7
+      },
+      "references": {
+        "linear-sgd": {
+          "mean_accuracy_percent": 78.36363636363636,
+          "sample_sd_pp": 0.6869683067983967,
+          "min_draw_accuracy_percent": 77.32,
+          "max_draw_accuracy_percent": 79.17,
+          "candidate_minus_reference_mean_pp": 14.973636363636363,
+          "paired_draw_delta_sample_sd_pp": 0.6612302583408121,
+          "paired_draw_deltas_pp": [
+            16.060000000000002,
+            14.58999999999999,
+            15.810000000000002,
+            14.64,
+            14.579999999999998,
+            14.200000000000003,
+            15.14,
+            14.079999999999998,
+            15.049999999999997,
+            14.799999999999997,
+            15.760000000000005
+          ]
+        },
+        "mlp64-sgd": {
+          "mean_accuracy_percent": 88.85727272727273,
+          "sample_sd_pp": 0.4207633755233667,
+          "min_draw_accuracy_percent": 88.12,
+          "max_draw_accuracy_percent": 89.61,
+          "candidate_minus_reference_mean_pp": 4.479999999999999,
+          "paired_draw_delta_sample_sd_pp": 0.4150662597706532,
+          "paired_draw_deltas_pp": [
+            3.9000000000000057,
+            4.599999999999994,
+            5.219999999999999,
+            4.8700000000000045,
+            4.539999999999992,
+            4.489999999999995,
+            4.390000000000001,
+            3.9000000000000057,
+            4.920000000000002,
+            4.209999999999994,
+            4.239999999999995
+          ]
+        },
+        "mlp256-sgd": {
+          "mean_accuracy_percent": 92.03545454545454,
+          "sample_sd_pp": 0.42788698592884883,
+          "min_draw_accuracy_percent": 91.3,
+          "max_draw_accuracy_percent": 92.62,
+          "candidate_minus_reference_mean_pp": 1.301818181818181,
+          "paired_draw_delta_sample_sd_pp": 0.3615471803739654,
+          "paired_draw_deltas_pp": [
+            1.6800000000000068,
+            1.0899999999999892,
+            1.0799999999999983,
+            1.0799999999999983,
+            1.25,
+            0.5900000000000034,
+            1.480000000000004,
+            1.3499999999999943,
+            1.7800000000000011,
+            1.1599999999999966,
+            1.7800000000000011
+          ]
+        },
+        "cnn16-sgd": {
+          "mean_accuracy_percent": 93.09454545454545,
+          "sample_sd_pp": 0.5631760583754196,
+          "min_draw_accuracy_percent": 91.77,
+          "max_draw_accuracy_percent": 93.83,
+          "candidate_minus_reference_mean_pp": 0.24272727272727287,
+          "paired_draw_delta_sample_sd_pp": 0.5086470467640798,
+          "paired_draw_deltas_pp": [
+            0.2600000000000051,
+            -0.38000000000000966,
+            0.21000000000000796,
+            -0.12999999999999545,
+            0.04999999999999716,
+            0.21000000000000796,
+            -0.010000000000005116,
+            0.030000000000001137,
+            0.5499999999999972,
+            1.5900000000000034,
+            0.28999999999999204
+          ]
+        },
+        "cnn32-ensemble3": {
+          "mean_accuracy_percent": 95.40181818181819,
+          "sample_sd_pp": 0.1596131687435734,
+          "min_draw_accuracy_percent": 95.16,
+          "max_draw_accuracy_percent": 95.65,
+          "candidate_minus_reference_mean_pp": -2.064545454545454,
+          "paired_draw_delta_sample_sd_pp": 0.17466331248225317,
+          "paired_draw_deltas_pp": [
+            -1.8199999999999932,
+            -2.1000000000000085,
+            -2.049999999999997,
+            -1.9200000000000017,
+            -1.9500000000000028,
+            -2.289999999999992,
+            -2.430000000000007,
+            -1.9099999999999966,
+            -2.0600000000000023,
+            -2.0999999999999943,
+            -2.0799999999999983
+          ]
+        },
+        "reversible82-sgd": {
+          "mean_accuracy_percent": 78.32363636363637,
+          "sample_sd_pp": 0.8092375760834751,
+          "min_draw_accuracy_percent": 77.05,
+          "max_draw_accuracy_percent": 79.56,
+          "candidate_minus_reference_mean_pp": 15.013636363636362,
+          "paired_draw_delta_sample_sd_pp": 0.834820612194893,
+          "paired_draw_deltas_pp": [
+            13.950000000000003,
+            15.929999999999993,
+            13.829999999999998,
+            16.010000000000005,
+            15.029999999999987,
+            14.519999999999996,
+            16.17,
+            15.25,
+            15.269999999999996,
+            15.120000000000005,
+            14.069999999999993
+          ]
+        }
+      }
+    },
+    {
+      "dataset": "qmnist_recovered",
+      "draws": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "candidate": {
+        "mean_accuracy_percent": 95.68454545454546,
+        "sample_sd_pp": 0.12746479014721282,
+        "min_draw_accuracy_percent": 95.46,
+        "max_draw_accuracy_percent": 95.87
+      },
+      "references": {
+        "linear-sgd": {
+          "mean_accuracy_percent": 89.63,
+          "sample_sd_pp": 0.37693500766047333,
+          "min_draw_accuracy_percent": 88.97,
+          "max_draw_accuracy_percent": 90.15,
+          "candidate_minus_reference_mean_pp": 6.0545454545454565,
+          "paired_draw_delta_sample_sd_pp": 0.3746562060439894,
+          "paired_draw_deltas_pp": [
+            5.890000000000001,
+            6.440000000000012,
+            5.75,
+            6.269999999999996,
+            6.070000000000007,
+            6.060000000000002,
+            6.570000000000007,
+            6.200000000000003,
+            5.309999999999988,
+            6.3700000000000045,
+            5.670000000000002
+          ]
+        },
+        "mlp64-sgd": {
+          "mean_accuracy_percent": 94.30818181818182,
+          "sample_sd_pp": 0.21999173538195446,
+          "min_draw_accuracy_percent": 93.86,
+          "max_draw_accuracy_percent": 94.67,
+          "candidate_minus_reference_mean_pp": 1.3763636363636365,
+          "paired_draw_delta_sample_sd_pp": 0.24158943384480783,
+          "paired_draw_deltas_pp": [
+            1.4599999999999937,
+            1.440000000000012,
+            1.0999999999999943,
+            1.4599999999999937,
+            1.5100000000000051,
+            1.769999999999996,
+            1.25,
+            1.6400000000000006,
+            1.0699999999999932,
+            1.4300000000000068,
+            1.0100000000000051
+          ]
+        },
+        "mlp256-sgd": {
+          "mean_accuracy_percent": 96.15,
+          "sample_sd_pp": 0.2116128540519227,
+          "min_draw_accuracy_percent": 95.84,
+          "max_draw_accuracy_percent": 96.47,
+          "candidate_minus_reference_mean_pp": -0.46545454545454584,
+          "paired_draw_delta_sample_sd_pp": 0.14861787485788241,
+          "paired_draw_deltas_pp": [
+            -0.6200000000000045,
+            -0.5,
+            -0.4900000000000091,
+            -0.75,
+            -0.519999999999996,
+            -0.37000000000000455,
+            -0.5799999999999983,
+            -0.3299999999999983,
+            -0.38000000000000966,
+            -0.2599999999999909,
+            -0.3199999999999932
+          ]
+        },
+        "cnn16-sgd": {
+          "mean_accuracy_percent": 96.42545454545454,
+          "sample_sd_pp": 0.3860405065887163,
+          "min_draw_accuracy_percent": 95.53,
+          "max_draw_accuracy_percent": 97.02,
+          "candidate_minus_reference_mean_pp": -0.7409090909090875,
+          "paired_draw_delta_sample_sd_pp": 0.3545265729237931,
+          "paired_draw_deltas_pp": [
+            -0.6200000000000045,
+            -0.8099999999999881,
+            -1.25,
+            -0.519999999999996,
+            -0.8599999999999994,
+            0.09999999999999432,
+            -1.1099999999999994,
+            -0.7299999999999898,
+            -0.75,
+            -0.6199999999999903,
+            -0.9799999999999898
+          ]
+        },
+        "cnn32-ensemble3": {
+          "mean_accuracy_percent": 97.73272727272727,
+          "sample_sd_pp": 0.13424536558786054,
+          "min_draw_accuracy_percent": 97.58,
+          "max_draw_accuracy_percent": 98.02,
+          "candidate_minus_reference_mean_pp": -2.0481818181818157,
+          "paired_draw_delta_sample_sd_pp": 0.13991555895026217,
+          "paired_draw_deltas_pp": [
+            -1.8299999999999983,
+            -2.0,
+            -2.0600000000000023,
+            -1.9399999999999977,
+            -2.1499999999999915,
+            -2.0799999999999983,
+            -2.089999999999989,
+            -1.9699999999999989,
+            -2.3800000000000097,
+            -1.9799999999999898,
+            -2.049999999999997
+          ]
+        },
+        "reversible82-sgd": {
+          "mean_accuracy_percent": 89.38818181818182,
+          "sample_sd_pp": 0.47719635752629364,
+          "min_draw_accuracy_percent": 88.37,
+          "max_draw_accuracy_percent": 89.85,
+          "candidate_minus_reference_mean_pp": 6.296363636363637,
+          "paired_draw_delta_sample_sd_pp": 0.43483957334337964,
+          "paired_draw_deltas_pp": [
+            5.900000000000006,
+            6.719999999999999,
+            6.009999999999991,
+            5.909999999999997,
+            6.63000000000001,
+            7.259999999999991,
+            6.280000000000001,
+            6.109999999999999,
+            6.489999999999995,
+            5.930000000000007,
+            6.02000000000001
+          ]
+        }
+      }
+    },
+    {
+      "dataset": "fashion_mnist",
+      "draws": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "candidate": {
+        "mean_accuracy_percent": 82.69545454545455,
+        "sample_sd_pp": 0.3586464453013209,
+        "min_draw_accuracy_percent": 82.11,
+        "max_draw_accuracy_percent": 83.34
+      },
+      "references": {
+        "linear-sgd": {
+          "mean_accuracy_percent": 78.78909090909092,
+          "sample_sd_pp": 1.6563118942122843,
+          "min_draw_accuracy_percent": 76.29,
+          "max_draw_accuracy_percent": 81.48,
+          "candidate_minus_reference_mean_pp": 3.906363636363635,
+          "paired_draw_delta_sample_sd_pp": 1.7897948079446018,
+          "paired_draw_deltas_pp": [
+            4.569999999999993,
+            5.25,
+            2.3800000000000097,
+            4.359999999999999,
+            6.6299999999999955,
+            1.039999999999992,
+            1.9200000000000017,
+            4.069999999999993,
+            2.489999999999995,
+            3.980000000000004,
+            6.280000000000001
+          ]
+        },
+        "mlp64-sgd": {
+          "mean_accuracy_percent": 82.49181818181818,
+          "sample_sd_pp": 1.0169839544635717,
+          "min_draw_accuracy_percent": 80.44,
+          "max_draw_accuracy_percent": 84.23,
+          "candidate_minus_reference_mean_pp": 0.20363636363636448,
+          "paired_draw_delta_sample_sd_pp": 1.1052988078096593,
+          "paired_draw_deltas_pp": [
+            -0.46999999999999886,
+            -0.5899999999999892,
+            -1.5300000000000011,
+            -0.5600000000000023,
+            0.4000000000000057,
+            -0.4200000000000017,
+            0.6400000000000006,
+            0.10999999999999943,
+            0.6299999999999955,
+            2.3100000000000023,
+            1.7199999999999989
+          ]
+        },
+        "mlp256-sgd": {
+          "mean_accuracy_percent": 85.03727272727272,
+          "sample_sd_pp": 0.6714028732302374,
+          "min_draw_accuracy_percent": 83.8,
+          "max_draw_accuracy_percent": 85.92,
+          "candidate_minus_reference_mean_pp": -2.3418181818181782,
+          "paired_draw_delta_sample_sd_pp": 0.7890224100976881,
+          "paired_draw_deltas_pp": [
+            -3.219999999999999,
+            -2.0999999999999943,
+            -3.009999999999991,
+            -2.6899999999999977,
+            -1.6599999999999966,
+            -1.2800000000000011,
+            -3.239999999999995,
+            -2.8900000000000006,
+            -2.780000000000001,
+            -1.8499999999999943,
+            -1.039999999999992
+          ]
+        },
+        "cnn16-sgd": {
+          "mean_accuracy_percent": 84.53,
+          "sample_sd_pp": 1.089100546322513,
+          "min_draw_accuracy_percent": 82.54,
+          "max_draw_accuracy_percent": 86.15,
+          "candidate_minus_reference_mean_pp": -1.8345454545454551,
+          "paired_draw_delta_sample_sd_pp": 1.097217969560865,
+          "paired_draw_deltas_pp": [
+            -2.6700000000000017,
+            -2.1599999999999966,
+            -3.039999999999992,
+            -1.3599999999999994,
+            -2.469999999999999,
+            -1.8100000000000023,
+            -2.489999999999995,
+            -1.210000000000008,
+            -3.010000000000005,
+            0.20999999999999375,
+            -0.1700000000000017
+          ]
+        },
+        "cnn32-ensemble3": {
+          "mean_accuracy_percent": 87.21454545454546,
+          "sample_sd_pp": 0.4119068738529039,
+          "min_draw_accuracy_percent": 86.6,
+          "max_draw_accuracy_percent": 88.02,
+          "candidate_minus_reference_mean_pp": -4.519090909090909,
+          "paired_draw_delta_sample_sd_pp": 0.4477600818620309,
+          "paired_draw_deltas_pp": [
+            -5.070000000000007,
+            -4.1299999999999955,
+            -4.739999999999995,
+            -4.810000000000002,
+            -3.8400000000000034,
+            -4.660000000000011,
+            -4.489999999999995,
+            -4.829999999999998,
+            -4.8799999999999955,
+            -4.579999999999998,
+            -3.6799999999999926
+          ]
+        },
+        "reversible82-sgd": {
+          "mean_accuracy_percent": 77.78454545454545,
+          "sample_sd_pp": 3.043111445991961,
+          "min_draw_accuracy_percent": 70.56,
+          "max_draw_accuracy_percent": 80.78,
+          "candidate_minus_reference_mean_pp": 4.910909090909089,
+          "paired_draw_delta_sample_sd_pp": 2.9697456273070086,
+          "paired_draw_deltas_pp": [
+            2.6799999999999926,
+            4.219999999999999,
+            7.070000000000007,
+            4.340000000000003,
+            3.489999999999995,
+            7.75,
+            3.9599999999999937,
+            2.819999999999993,
+            2.9399999999999977,
+            12.189999999999998,
+            2.5600000000000023
+          ]
+        }
+      }
+    },
+    {
+      "dataset": "cifar10",
+      "draws": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10
+      ],
+      "candidate": {
+        "mean_accuracy_percent": 38.653636363636366,
+        "sample_sd_pp": 0.2795093103019198,
+        "min_draw_accuracy_percent": 38.28,
+        "max_draw_accuracy_percent": 39.02
+      },
+      "references": {
+        "linear-sgd": {
+          "mean_accuracy_percent": 17.37181818181818,
+          "sample_sd_pp": 3.3099118362331597,
+          "min_draw_accuracy_percent": 10.99,
+          "max_draw_accuracy_percent": 21.89,
+          "candidate_minus_reference_mean_pp": 21.28181818181818,
+          "paired_draw_delta_sample_sd_pp": 3.2637917157251883,
+          "paired_draw_deltas_pp": [
+            20.319999999999997,
+            17.130000000000003,
+            22.150000000000002,
+            24.810000000000002,
+            20.720000000000002,
+            18.799999999999997,
+            20.55,
+            27.6,
+            17.82,
+            24.830000000000002,
+            19.37
+          ]
+        },
+        "mlp64-sgd": {
+          "mean_accuracy_percent": 29.846363636363638,
+          "sample_sd_pp": 1.1322303010189463,
+          "min_draw_accuracy_percent": 28.36,
+          "max_draw_accuracy_percent": 31.83,
+          "candidate_minus_reference_mean_pp": 8.807272727272728,
+          "paired_draw_delta_sample_sd_pp": 1.1187054206455846,
+          "paired_draw_deltas_pp": [
+            10.369999999999997,
+            8.080000000000002,
+            7.050000000000004,
+            8.980000000000004,
+            8.930000000000003,
+            10.319999999999997,
+            9.399999999999999,
+            8.690000000000005,
+            7.640000000000001,
+            7.620000000000001,
+            9.8
+          ]
+        },
+        "mlp256-sgd": {
+          "mean_accuracy_percent": 34.845454545454544,
+          "sample_sd_pp": 1.0619356255099808,
+          "min_draw_accuracy_percent": 32.66,
+          "max_draw_accuracy_percent": 36.32,
+          "candidate_minus_reference_mean_pp": 3.808181818181819,
+          "paired_draw_delta_sample_sd_pp": 0.9784561122688981,
+          "paired_draw_deltas_pp": [
+            3.6699999999999946,
+            2.8700000000000045,
+            3.8400000000000034,
+            4.850000000000001,
+            4.700000000000003,
+            2.4399999999999977,
+            3.6899999999999977,
+            3.9200000000000017,
+            3.75,
+            5.6200000000000045,
+            2.539999999999999
+          ]
+        },
+        "cnn16-sgd": {
+          "mean_accuracy_percent": 37.56272727272727,
+          "sample_sd_pp": 1.284601813085213,
+          "min_draw_accuracy_percent": 35.54,
+          "max_draw_accuracy_percent": 38.82,
+          "candidate_minus_reference_mean_pp": 1.0909090909090915,
+          "paired_draw_delta_sample_sd_pp": 1.3642980212948674,
+          "paired_draw_deltas_pp": [
+            1.3499999999999943,
+            2.3500000000000014,
+            0.060000000000002274,
+            3.020000000000003,
+            2.6499999999999986,
+            0.14000000000000057,
+            0.5799999999999983,
+            -0.13999999999999346,
+            2.740000000000002,
+            -0.5300000000000011,
+            -0.21999999999999886
+          ]
+        },
+        "cnn32-ensemble3": {
+          "mean_accuracy_percent": 44.56545454545455,
+          "sample_sd_pp": 0.5119445992754221,
+          "min_draw_accuracy_percent": 43.53,
+          "max_draw_accuracy_percent": 45.53,
+          "candidate_minus_reference_mean_pp": -5.911818181818182,
+          "paired_draw_delta_sample_sd_pp": 0.42132690827475455,
+          "paired_draw_deltas_pp": [
+            -5.970000000000006,
+            -5.589999999999996,
+            -5.890000000000001,
+            -6.689999999999998,
+            -5.859999999999999,
+            -5.690000000000005,
+            -6.310000000000002,
+            -5.439999999999998,
+            -6.0,
+            -5.25,
+            -6.339999999999996
+          ]
+        },
+        "reversible82-sgd": {
+          "mean_accuracy_percent": 23.945454545454545,
+          "sample_sd_pp": 1.7882693512799666,
+          "min_draw_accuracy_percent": 19.97,
+          "max_draw_accuracy_percent": 25.64,
+          "candidate_minus_reference_mean_pp": 14.708181818181819,
+          "paired_draw_delta_sample_sd_pp": 1.7896469941405666,
+          "paired_draw_deltas_pp": [
+            14.709999999999997,
+            13.380000000000003,
+            14.270000000000003,
+            13.350000000000005,
+            17.37,
+            13.549999999999997,
+            15.579999999999998,
+            18.620000000000005,
+            13.39,
+            13.400000000000002,
+            14.170000000000002
+          ]
+        }
+      }
+    }
+  ]
+}

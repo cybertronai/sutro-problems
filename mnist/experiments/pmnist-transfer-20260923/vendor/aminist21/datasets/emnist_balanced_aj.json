@@ -1,0 +1,163 @@
+{
+  "schema_version": 1,
+  "dataset": "emnist_balanced_aj",
+  "id": "emnist_balanced_aj",
+  "path": "data/pools/emnist_balanced_aj.npz",
+  "sha256": "c9bbc7b9da74f03de30483fd0dc9d1472947e6d7ee3b336f8e74d1af1c9e6c6c",
+  "bytes": 5562842,
+  "count": 23998,
+  "shape": [
+    23998,
+    1,
+    9,
+    9
+  ],
+  "class_names": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "J"
+  ],
+  "class_counts": [
+    2400,
+    2400,
+    2399,
+    2400,
+    2400,
+    2400,
+    2400,
+    2400,
+    2400,
+    2399
+  ],
+  "curation": {
+    "raw_count": 24000,
+    "unique_native_images": 23998,
+    "same_label_duplicate_rows_removed": 2,
+    "conflicting_image_groups": 0,
+    "conflicting_rows_removed": 0,
+    "clean_count": 23998
+  },
+  "curation_policy": "SHA256 of native image bytes; discard all conflicting-label groups; retain first source row of remaining groups; preserve source order",
+  "array_sha256": {
+    "images": "0f8c4d78c9756545387acb2659b0751b9824c5ccdb0b1a68aa43b17c3f6bf19e",
+    "labels": "30f0ea7e75bb4d62fe87ce7452b3cdae8958e5287f08ad7dd0382205da3fa801",
+    "example_hashes": "3faaa104f7d044ab0371c9a7447f83bf0681e535af5e243d7312f0bb3c2e1e30",
+    "source_indices": "0a9ffd0499626883ef69f08cbc9e9ddf9b0bfc458b82fdbda45997834f452313",
+    "pool_indices": "88a00cf3a52ca0e0d8b63439f56e31a7c0e2fa71914a07dce3a05474e3e53520"
+  },
+  "array_dtypes": {
+    "images": "float32",
+    "labels": "int64",
+    "example_hashes": "|S64",
+    "source_indices": "int64",
+    "pool_indices": "int64"
+  },
+  "source_metadata": {
+    "name": "emnist_balanced_aj",
+    "class_names": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "G",
+      "H",
+      "I",
+      "J"
+    ],
+    "source_split": "Official training split only",
+    "orientation": "Transpose each raw IDX image (swap height and width) before hashing and resizing",
+    "label_mapping": "Official balanced labels 10..19 selected before experiments; subtract 10",
+    "display_name": "EMNIST Balanced A–J",
+    "dataset_page": "https://www.nist.gov/itl/products-and-services/emnist-dataset",
+    "sources": [
+      {
+        "filename": "emnist-balanced-train-images-idx3-ubyte.gz",
+        "url": "https://biometrics.nist.gov/cs_links/EMNIST/gzip.zip",
+        "member": "gzip/emnist-balanced-train-images-idx3-ubyte.gz",
+        "sha256": "74295e75e4e9fa2c102147460ee7eb763653d5132d883a84fb88932bfb8d2db4",
+        "bytes": 28207740,
+        "archive_bytes": 561753746,
+        "archive_etag": "\"217bae92-6139d8b9ca42b\"",
+        "member_crc32": "6703aa86",
+        "verification": "Official ZIP central-directory CRC32 and size; pinned SHA256 when available"
+      },
+      {
+        "filename": "emnist-balanced-train-labels-idx1-ubyte.gz",
+        "url": "https://biometrics.nist.gov/cs_links/EMNIST/gzip.zip",
+        "member": "gzip/emnist-balanced-train-labels-idx1-ubyte.gz",
+        "sha256": "b46d41e5156a0a8aaaa4d18979fdd1588850fa8571018acffd5d93b325a7d6ed",
+        "bytes": 80618,
+        "archive_bytes": 561753746,
+        "archive_etag": "\"217bae92-6139d8b9ca42b\"",
+        "member_crc32": "32279a6c",
+        "verification": "Official ZIP central-directory CRC32 and size; pinned SHA256 when available"
+      }
+    ],
+    "relationship": "Related NIST handwriting control; not an independent MNIST-family source",
+    "format_version": 1,
+    "pool_size": 24000,
+    "class_counts": [
+      2400,
+      2400,
+      2400,
+      2400,
+      2400,
+      2400,
+      2400,
+      2400,
+      2400,
+      2400
+    ],
+    "native_shape": [
+      28,
+      28
+    ],
+    "native_dtype": "uint8",
+    "image_shape": [
+      24000,
+      1,
+      9,
+      9
+    ],
+    "image_dtype": "float32",
+    "labels_dtype": "int64",
+    "example_hash_definition": "SHA256 native C-order image bytes, excluding labels; EMNIST orientation corrected; USPS little-endian float32 in original [-1,1], all others uint8",
+    "exact_native_duplicate_rows": 2,
+    "deduplication": "Not applied here; common protocol decides after inspecting all pools",
+    "preprocessing": {
+      "normalization": "uint8 converted to float32 and divided by 255",
+      "resize": "mnist.code.data.area_resize exact box-area averaging to9x9, clip roundoff to [0,1]",
+      "orientation": "Transpose each raw IDX image (swap height and width) before hashing and resizing",
+      "inversion": "None"
+    },
+    "array_sha256": {
+      "images": "9dbc984e6552956bd0f1a7a40ceedd5506a5fb640eeca292c345d55e5ea111a1",
+      "labels": "0ee06d4e44d0a13cec3b6c42beffc7bfa88169aadc7e078a549f5d99517b5402",
+      "example_hashes": "9b4b08e976122a575378ed5b6927f3b5d2168853bc0ccbca29607ac8ebc5087f",
+      "source_indices": "f9ed1f95f93fbbe14733691f4330ea1eec791434ee11207fdf811eb7942d0b9b"
+    },
+    "pool_sha256": "c8cbfa5edc38ad7935677c9f0821b14beb7cfd18d487f1b6e25db4c1e9726da7"
+  },
+  "acquisition": [],
+  "source_npz_sha256": "c8cbfa5edc38ad7935677c9f0821b14beb7cfd18d487f1b6e25db4c1e9726da7",
+  "source_metadata_sha256": "1c37917956b3dbdc0be69394ea9d0dbb9d53ef715e13ff6cc8a4fb28ccfa8ef5",
+  "build_source_sha256": {
+    "aminist21/preprocessing/__init__.py": "f4f011b2bda24964fa47947f56bf31bfae128893bc0fe9f25abcae9805074ae2",
+    "aminist21/preprocessing/characters.py": "e90028df239ff43b98c35321d15784ed68f827c31e6d8c67b768e0cefe223241",
+    "aminist21/preprocessing/common.py": "34d438bf929d61c22baf9742c6e992010658c07a1f7f179163d8e139d1ccac5b",
+    "aminist21/preprocessing/objects.py": "77b1e3e884381241df5e2e8965728b59d896228e041d1d559cb5883603304652",
+    "aminist21/preprocessing/sources.py": "c2ef78bceb12d885df80ba9654edfb972bd4d28c599a093cc32bb763c7533ade",
+    "aminist21/preprocessing/standards.py": "6447a14e2f1b2a787d04eb5fb9fd172802fa3886377d60ea4adcb7343daa5dcc",
+    "tools/build_data.py": "9b963de2309026c92dfbb5c207fda01b55ee0e23746a525ce6fda0b3fd40ee1c"
+  },
+  "numpy_version": "2.2.6"
+}

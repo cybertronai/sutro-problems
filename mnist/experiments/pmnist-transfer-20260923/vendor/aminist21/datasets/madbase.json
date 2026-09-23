@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "dataset": "madbase",
+  "id": "madbase",
+  "path": "data/pools/madbase.npz",
+  "sha256": "bc9ea5d84db9d711d642d48d0a44f32d290c904e5f3f1ea14c411fb82f2df94a",
+  "bytes": 9762241,
+  "count": 59944,
+  "shape": [
+    59944,
+    1,
+    9,
+    9
+  ],
+  "class_names": [
+    "٠",
+    "١",
+    "٢",
+    "٣",
+    "٤",
+    "٥",
+    "٦",
+    "٧",
+    "٨",
+    "٩"
+  ],
+  "class_counts": [
+    5999,
+    5945,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000
+  ],
+  "curation": {
+    "raw_count": 60000,
+    "unique_native_images": 59944,
+    "same_label_duplicate_rows_removed": 56,
+    "conflicting_image_groups": 0,
+    "conflicting_rows_removed": 0,
+    "clean_count": 59944
+  },
+  "curation_policy": "SHA256 of native image bytes; discard all conflicting-label groups; retain first source row of remaining groups; preserve source order",
+  "array_sha256": {
+    "images": "fe1802166462554ce9dfdfd25510ff4d3ddac7b02b63216ac8523c9473ed3e79",
+    "labels": "752bac5e3e25b42c4fb30da05fcd5ee0bb5d4e9bc9130fd2d548ca54689942d8",
+    "example_hashes": "786ffe8be36d83dcbfdca0caec9d44254d65df417ecf6fede87268156d9ae177",
+    "source_indices": "881e9ed936d80cbae81f6ef8584ea5e414a1b21c9072e93386270e4f2c6a4ed6",
+    "pool_indices": "881e9ed936d80cbae81f6ef8584ea5e414a1b21c9072e93386270e4f2c6a4ed6"
+  },
+  "array_dtypes": {
+    "images": "float32",
+    "labels": "int64",
+    "example_hashes": "|S64",
+    "source_indices": "int64",
+    "pool_indices": "int64"
+  },
+  "source_metadata": {
+    "title": "MADBase Arabic handwritten digits",
+    "kind": "handwritten Arabic-Indic digits",
+    "homepage": "https://datacenter.aucegypt.edu/shazeem/",
+    "class_names": [
+      "٠",
+      "١",
+      "٢",
+      "٣",
+      "٤",
+      "٥",
+      "٦",
+      "٧",
+      "٨",
+      "٩"
+    ],
+    "original_class_ids": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "selection_policy": "All ten native digit classes.",
+    "pool_policy": "Official training split only; official test withheld.",
+    "original_split_counts": {
+      "train": 60000,
+      "test": 10000
+    },
+    "source_index_definition": "row in lexicographically sorted original BMP relative paths",
+    "native_transform": "Invert white-background BMP pixel values (255 - grayscale).",
+    "caveat": "Official split is writer-disjoint, but fresh draws from official training pool are image-disjoint, not writer-disjoint.",
+    "name": "madbase",
+    "count": 60000,
+    "class_counts": [
+      6000,
+      6000,
+      6000,
+      6000,
+      6000,
+      6000,
+      6000,
+      6000,
+      6000,
+      6000
+    ],
+    "sources": [
+      {
+        "filename": "MAHDBase_TrainingSet.rar",
+        "url": "https://datacenter.aucegypt.edu/shazeem/Files/MAHDBase_TrainingSet.rar",
+        "sha256": "ae2d5bcd658320eaf054de1ba46aac187a0470830d685258a0a2b0659c8d2eb8",
+        "bytes": 31184713
+      }
+    ],
+    "preprocessing": {
+      "native_shape": [
+        28,
+        28
+      ],
+      "native_dtype": "uint8",
+      "resize": "mnist.code.data.area_resize: exact separable box-area averaging",
+      "output_shape": [
+        1,
+        9,
+        9
+      ],
+      "pixel_range": [
+        0,
+        1
+      ],
+      "pixel_dtype": "float32",
+      "polarity": "dark background, bright ink",
+      "native_hash": "sha256 of canonical bright-ink uint8 image bytes in C order",
+      "deduplication": "deferred to unified experiment pool preparation"
+    },
+    "images_sha256": "2184d8f0eb0d4f30073f4991968d081324648ea07c9a268ff9e5ae4dd6bd1e7c",
+    "labels_sha256": "851be4b13ceef93bc6d8a49851dbb1bcc1f4359dbdc2df39acd9965d8cfb8aa4",
+    "example_hashes_sha256": "7a35353ec59f7e20e69ef48f235317d51a2c74fbbce6493e3b72407e353fdd47",
+    "source_indices_sha256": "fe4e39bbf5e7508e2743343e541d967d3a36c5d8560d34e7e1d41073ece735ba",
+    "npz_sha256": "d16c82ae36a6a2f1bddfc0984ea5916a6859167c8f318cfdcf26be5ce83e8659"
+  },
+  "acquisition": [],
+  "source_npz_sha256": "d16c82ae36a6a2f1bddfc0984ea5916a6859167c8f318cfdcf26be5ce83e8659",
+  "source_metadata_sha256": "cde90f47c1afdf793cc79c70102cb7d0490e04bebf8ad557bf6ec9ea23e6bbcb",
+  "build_source_sha256": {
+    "aminist21/preprocessing/__init__.py": "f4f011b2bda24964fa47947f56bf31bfae128893bc0fe9f25abcae9805074ae2",
+    "aminist21/preprocessing/characters.py": "e90028df239ff43b98c35321d15784ed68f827c31e6d8c67b768e0cefe223241",
+    "aminist21/preprocessing/common.py": "34d438bf929d61c22baf9742c6e992010658c07a1f7f179163d8e139d1ccac5b",
+    "aminist21/preprocessing/objects.py": "77b1e3e884381241df5e2e8965728b59d896228e041d1d559cb5883603304652",
+    "aminist21/preprocessing/sources.py": "c2ef78bceb12d885df80ba9654edfb972bd4d28c599a093cc32bb763c7533ade",
+    "aminist21/preprocessing/standards.py": "6447a14e2f1b2a787d04eb5fb9fd172802fa3886377d60ea4adcb7343daa5dcc",
+    "tools/build_data.py": "9b963de2309026c92dfbb5c207fda01b55ee0e23746a525ce6fda0b3fd40ee1c"
+  },
+  "numpy_version": "2.2.6"
+}

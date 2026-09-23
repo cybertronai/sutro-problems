@@ -1,0 +1,159 @@
+{
+  "schema_version": 1,
+  "dataset": "cifar10",
+  "id": "cifar10",
+  "path": "data/pools/cifar10.npz",
+  "sha256": "1d19839f0acacb9b165eb8ff997c7827767238688dd31c3fdd50a052572f8265",
+  "bytes": 16366802,
+  "count": 50000,
+  "shape": [
+    50000,
+    1,
+    9,
+    9
+  ],
+  "class_names": [
+    "airplane",
+    "automobile",
+    "bird",
+    "cat",
+    "deer",
+    "dog",
+    "frog",
+    "horse",
+    "ship",
+    "truck"
+  ],
+  "class_counts": [
+    5000,
+    5000,
+    5000,
+    5000,
+    5000,
+    5000,
+    5000,
+    5000,
+    5000,
+    5000
+  ],
+  "curation": {
+    "raw_count": 50000,
+    "unique_native_images": 50000,
+    "same_label_duplicate_rows_removed": 0,
+    "conflicting_image_groups": 0,
+    "conflicting_rows_removed": 0,
+    "clean_count": 50000
+  },
+  "curation_policy": "SHA256 of native image bytes; discard all conflicting-label groups; retain first source row of remaining groups; preserve source order",
+  "array_sha256": {
+    "images": "d775e4fcb96755ad4cae328cd2d053bfedf19655e721c2b7e7a53b7d5d82f98f",
+    "labels": "f5cfe00b0f00968c0cc5ff3b1d2de51b10e33efa277c2986f4e0fa63e58c9f4f",
+    "example_hashes": "6f580c20102340d24656171b15d36cf6ec8f935282c5e82d8e01faa280f4990d",
+    "source_indices": "33236cc6bd19fa6b89e06d441d3fcd8eb37dc8540f6a4f2b627b20af10894a41",
+    "pool_indices": "33236cc6bd19fa6b89e06d441d3fcd8eb37dc8540f6a4f2b627b20af10894a41"
+  },
+  "array_dtypes": {
+    "images": "float32",
+    "labels": "int64",
+    "example_hashes": "|S64",
+    "source_indices": "int64",
+    "pool_indices": "int64"
+  },
+  "source_metadata": {
+    "display_name": "CIFAR-10 (grayscale)",
+    "dataset_page": "https://www.cs.toronto.edu/~kriz/cifar.html",
+    "description": "Color photographs of animals and vehicles, converted to grayscale.",
+    "class_names": [
+      "airplane",
+      "automobile",
+      "bird",
+      "cat",
+      "deer",
+      "dog",
+      "frog",
+      "horse",
+      "ship",
+      "truck"
+    ],
+    "source_order": "Concatenated official data_batch_1.bin through data_batch_5.bin, preserving row order",
+    "label_mapping": "Original labels 0..9 unchanged",
+    "sources": [
+      {
+        "filename": "cifar-10-binary.tar.gz",
+        "url": "https://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz",
+        "md5": "c32a1d4ab5d03f1284b67883e8d87530",
+        "checksum_reference": "https://www.cs.toronto.edu/~kriz/cifar.html",
+        "sha256": "c4a38c50a1bc5f3a1c5537f2155ab9d68f9f25eb1ed8d9ddda3db29a59bca1dd",
+        "bytes": 170052171
+      }
+    ],
+    "name": "cifar10",
+    "format_version": 1,
+    "source_split": "Official training split only",
+    "pool_size": 50000,
+    "class_counts": [
+      5000,
+      5000,
+      5000,
+      5000,
+      5000,
+      5000,
+      5000,
+      5000,
+      5000,
+      5000
+    ],
+    "native_shape": [
+      32,
+      32,
+      3
+    ],
+    "native_dtype": "uint8",
+    "image_shape": [
+      50000,
+      1,
+      9,
+      9
+    ],
+    "image_dtype": "float32",
+    "labels_dtype": "int64",
+    "preprocessing": {
+      "normalization": "Convert uint8 to float32 and divide by 255",
+      "grayscale": "RGB luminance 0.299 R + 0.587 G + 0.114 B",
+      "resize": "mnist.code.data.area_resize: exact separable box-area averaging to 9x9",
+      "inversion": "None; preserve original intensity polarity",
+      "additional_transforms": "None"
+    },
+    "example_hash_definition": "SHA256 of C-order native uint8 image bytes only; native RGB represented H,W,C before hashing; excludes labels",
+    "exact_native_duplicate_rows": 0,
+    "deduplication": "Not applied here; all original rows retained for common experiment protocol",
+    "array_sha256": {
+      "images": "d775e4fcb96755ad4cae328cd2d053bfedf19655e721c2b7e7a53b7d5d82f98f",
+      "labels": "f5cfe00b0f00968c0cc5ff3b1d2de51b10e33efa277c2986f4e0fa63e58c9f4f",
+      "example_hashes": "6f580c20102340d24656171b15d36cf6ec8f935282c5e82d8e01faa280f4990d",
+      "source_indices": "33236cc6bd19fa6b89e06d441d3fcd8eb37dc8540f6a4f2b627b20af10894a41"
+    },
+    "pool_sha256": "e9af1bf011d00b70d50e8cea1ec1ccb985e20cd8fe09337bbfceba966cc7c364"
+  },
+  "acquisition": [
+    {
+      "upstream_url": "https://www.cs.toronto.edu/~kriz/cifar-10-binary.tar.gz",
+      "retrieved_from": "https://data.brainchip.com/dataset-mirror/cifar10/cifar-10-binary.tar.gz",
+      "reason": "Official host downloaded at approximately 0.05 MB/s; mirror content matches original pinned MD5",
+      "md5": "c32a1d4ab5d03f1284b67883e8d87530",
+      "sha256": "c4a38c50a1bc5f3a1c5537f2155ab9d68f9f25eb1ed8d9ddda3db29a59bca1dd"
+    }
+  ],
+  "source_npz_sha256": "e9af1bf011d00b70d50e8cea1ec1ccb985e20cd8fe09337bbfceba966cc7c364",
+  "source_metadata_sha256": "bf718d07cf868ed4e7a8afe77ba8c139fe2839b998dc3104f6761dcd20733127",
+  "build_source_sha256": {
+    "aminist21/preprocessing/__init__.py": "f4f011b2bda24964fa47947f56bf31bfae128893bc0fe9f25abcae9805074ae2",
+    "aminist21/preprocessing/characters.py": "e90028df239ff43b98c35321d15784ed68f827c31e6d8c67b768e0cefe223241",
+    "aminist21/preprocessing/common.py": "34d438bf929d61c22baf9742c6e992010658c07a1f7f179163d8e139d1ccac5b",
+    "aminist21/preprocessing/objects.py": "77b1e3e884381241df5e2e8965728b59d896228e041d1d559cb5883603304652",
+    "aminist21/preprocessing/sources.py": "c2ef78bceb12d885df80ba9654edfb972bd4d28c599a093cc32bb763c7533ade",
+    "aminist21/preprocessing/standards.py": "6447a14e2f1b2a787d04eb5fb9fd172802fa3886377d60ea4adcb7343daa5dcc",
+    "tools/build_data.py": "9b963de2309026c92dfbb5c207fda01b55ee0e23746a525ce6fda0b3fd40ee1c"
+  },
+  "numpy_version": "2.2.6"
+}

@@ -1,0 +1,173 @@
+{
+  "schema_version": 1,
+  "dataset": "k49_10",
+  "id": "k49_10",
+  "path": "data/pools/k49_10.npz",
+  "sha256": "6d59a3c568bba5d2b0b1804dc0a0ae415af1deb2a1e943bd202c60d0c1040f52",
+  "bytes": 12679352,
+  "count": 60000,
+  "shape": [
+    60000,
+    1,
+    9,
+    9
+  ],
+  "class_names": [
+    "あ",
+    "い",
+    "う",
+    "か",
+    "く",
+    "こ",
+    "さ",
+    "し",
+    "た",
+    "て"
+  ],
+  "class_counts": [
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000
+  ],
+  "curation": {
+    "raw_count": 60000,
+    "unique_native_images": 60000,
+    "same_label_duplicate_rows_removed": 0,
+    "conflicting_image_groups": 0,
+    "conflicting_rows_removed": 0,
+    "clean_count": 60000
+  },
+  "curation_policy": "SHA256 of native image bytes; discard all conflicting-label groups; retain first source row of remaining groups; preserve source order",
+  "array_sha256": {
+    "images": "87a64d89bacb1beb83e8af13a19ef375e2038ef097a6fddd40d0b0e2de2f28ba",
+    "labels": "fddbf5258561f26232c651b889fc1b9c0bf039332e0a729cd3826a59997c29da",
+    "example_hashes": "9fcc38e28b1fd918b342a460368451ddb229055063ac61ee4079357da31511f3",
+    "source_indices": "ffc22c70c569e4ee0be69ecbf7c2bcf633848fa9eea3e6cfc6a85c16412cdbdd",
+    "pool_indices": "fe4e39bbf5e7508e2743343e541d967d3a36c5d8560d34e7e1d41073ece735ba"
+  },
+  "array_dtypes": {
+    "images": "float32",
+    "labels": "int64",
+    "example_hashes": "|S64",
+    "source_indices": "int64",
+    "pool_indices": "int64"
+  },
+  "source_metadata": {
+    "title": "Kuzushiji-49: fixed 10-class subset",
+    "kind": "handwritten Japanese hiragana",
+    "homepage": "https://github.com/rois-codh/kmnist",
+    "class_names": [
+      "あ",
+      "い",
+      "う",
+      "か",
+      "く",
+      "こ",
+      "さ",
+      "し",
+      "た",
+      "て"
+    ],
+    "original_class_ids": [
+      0,
+      1,
+      2,
+      5,
+      7,
+      9,
+      10,
+      11,
+      15,
+      18
+    ],
+    "selection_policy": "Fixed IDs before experiments; 6,000 official training examples per selected class. These ten characters are disjoint from KMNIST's ten characters.",
+    "pool_policy": "Selected classes from official training split only; official test withheld.",
+    "original_split_counts": {
+      "selected_train": 60000,
+      "selected_test": 10000
+    },
+    "source_index_definition": "row index in k49-train-imgs.npz",
+    "caveat": "K49 extends KMNIST; these are related source collections and cannot be counted as independent corpora.",
+    "license": "CC BY-SA 4.0",
+    "name": "k49_10",
+    "count": 60000,
+    "class_counts": [
+      6000,
+      6000,
+      6000,
+      6000,
+      6000,
+      6000,
+      6000,
+      6000,
+      6000,
+      6000
+    ],
+    "sources": [
+      {
+        "filename": "k49-train-imgs.npz",
+        "url": "https://codh.rois.ac.jp/kmnist/dataset/k49/k49-train-imgs.npz",
+        "sha256": "1c42adc463ed8efe598cf002f6ecafbca6d8c38f0551f7a35e0b23755fca1c8d",
+        "bytes": 66117696
+      },
+      {
+        "filename": "k49-train-labels.npz",
+        "url": "https://codh.rois.ac.jp/kmnist/dataset/k49/k49-train-labels.npz",
+        "sha256": "fbfef4750ce9aa70b6072f0bca7daa9e80e2d79b379d5ae923265a63396260e4",
+        "bytes": 164485
+      },
+      {
+        "filename": "k49_classmap.csv",
+        "url": "https://codh.rois.ac.jp/kmnist/dataset/k49/k49_classmap.csv",
+        "sha256": "95f5a2cfbfba1721f566059cf77c22808898b63044a5f9a08de9d8a2950eed84",
+        "bytes": 697
+      }
+    ],
+    "preprocessing": {
+      "native_shape": [
+        28,
+        28
+      ],
+      "native_dtype": "uint8",
+      "resize": "mnist.code.data.area_resize: exact separable box-area averaging",
+      "output_shape": [
+        1,
+        9,
+        9
+      ],
+      "pixel_range": [
+        0,
+        1
+      ],
+      "pixel_dtype": "float32",
+      "polarity": "dark background, bright ink",
+      "native_hash": "sha256 of canonical bright-ink uint8 image bytes in C order",
+      "deduplication": "deferred to unified experiment pool preparation"
+    },
+    "images_sha256": "87a64d89bacb1beb83e8af13a19ef375e2038ef097a6fddd40d0b0e2de2f28ba",
+    "labels_sha256": "fddbf5258561f26232c651b889fc1b9c0bf039332e0a729cd3826a59997c29da",
+    "example_hashes_sha256": "9fcc38e28b1fd918b342a460368451ddb229055063ac61ee4079357da31511f3",
+    "source_indices_sha256": "ffc22c70c569e4ee0be69ecbf7c2bcf633848fa9eea3e6cfc6a85c16412cdbdd",
+    "npz_sha256": "fa225119b06460ee9c53531441ef42bd8e3477a82a0075eabc84f21fe0d2bee9"
+  },
+  "acquisition": [],
+  "source_npz_sha256": "fa225119b06460ee9c53531441ef42bd8e3477a82a0075eabc84f21fe0d2bee9",
+  "source_metadata_sha256": "69c4d76080acf4661ef69a25f34983f60989555ea4352008bfc861d6755377c7",
+  "build_source_sha256": {
+    "aminist21/preprocessing/__init__.py": "f4f011b2bda24964fa47947f56bf31bfae128893bc0fe9f25abcae9805074ae2",
+    "aminist21/preprocessing/characters.py": "e90028df239ff43b98c35321d15784ed68f827c31e6d8c67b768e0cefe223241",
+    "aminist21/preprocessing/common.py": "34d438bf929d61c22baf9742c6e992010658c07a1f7f179163d8e139d1ccac5b",
+    "aminist21/preprocessing/objects.py": "77b1e3e884381241df5e2e8965728b59d896228e041d1d559cb5883603304652",
+    "aminist21/preprocessing/sources.py": "c2ef78bceb12d885df80ba9654edfb972bd4d28c599a093cc32bb763c7533ade",
+    "aminist21/preprocessing/standards.py": "6447a14e2f1b2a787d04eb5fb9fd172802fa3886377d60ea4adcb7343daa5dcc",
+    "tools/build_data.py": "9b963de2309026c92dfbb5c207fda01b55ee0e23746a525ce6fda0b3fd40ee1c"
+  },
+  "numpy_version": "2.2.6"
+}

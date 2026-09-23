@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "dataset": "devanagari_digits",
+  "id": "devanagari_digits",
+  "path": "data/pools/devanagari_digits.npz",
+  "sha256": "97b202e9402c7c0d7305fd906de2a621036eef5b0d50464f98de7b83c8aa1f69",
+  "bytes": 5077807,
+  "count": 20000,
+  "shape": [
+    20000,
+    1,
+    9,
+    9
+  ],
+  "class_names": [
+    "०",
+    "१",
+    "२",
+    "३",
+    "४",
+    "५",
+    "६",
+    "७",
+    "८",
+    "९"
+  ],
+  "class_counts": [
+    2000,
+    2000,
+    2000,
+    2000,
+    2000,
+    2000,
+    2000,
+    2000,
+    2000,
+    2000
+  ],
+  "curation": {
+    "raw_count": 20000,
+    "unique_native_images": 20000,
+    "same_label_duplicate_rows_removed": 0,
+    "conflicting_image_groups": 0,
+    "conflicting_rows_removed": 0,
+    "clean_count": 20000
+  },
+  "curation_policy": "SHA256 of native image bytes; discard all conflicting-label groups; retain first source row of remaining groups; preserve source order",
+  "array_sha256": {
+    "images": "a3f272e896b7cb8130608fe38a6469eaa88112fba4d98bcaebfd815226c8b7be",
+    "labels": "57d6c875cb297101704bae564898abdc8154f7ba5baa2929f2180de9d42feed2",
+    "example_hashes": "2399c0fda60b4201fdf91e5a4c137f4648ee3951a657f6c689c57498dc2b4397",
+    "source_indices": "b49ed4334fe4a57fe3fdec8fe84b7b708cdd3022f6a6e8a3d1ce5e7476c4304e",
+    "pool_indices": "b49ed4334fe4a57fe3fdec8fe84b7b708cdd3022f6a6e8a3d1ce5e7476c4304e"
+  },
+  "array_dtypes": {
+    "images": "float32",
+    "labels": "int64",
+    "example_hashes": "|S64",
+    "source_indices": "int64",
+    "pool_indices": "int64"
+  },
+  "source_metadata": {
+    "title": "Devanagari handwritten digits (UCI DHCD)",
+    "kind": "handwritten Devanagari digits",
+    "homepage": "https://archive.ics.uci.edu/dataset/389/devanagari+handwritten+character+dataset",
+    "class_names": [
+      "०",
+      "१",
+      "२",
+      "३",
+      "४",
+      "५",
+      "६",
+      "७",
+      "८",
+      "९"
+    ],
+    "original_class_ids": [
+      "digit_0",
+      "digit_1",
+      "digit_2",
+      "digit_3",
+      "digit_4",
+      "digit_5",
+      "digit_6",
+      "digit_7",
+      "digit_8",
+      "digit_9"
+    ],
+    "selection_policy": "All ten digit classes; 36 consonant classes excluded.",
+    "pool_policy": "Combined official train (17,000) and test (3,000), because training-only pool is below 20,000.",
+    "original_split_counts": {
+      "selected_train": 17000,
+      "selected_test": 3000
+    },
+    "source_index_definition": "row in lexicographically sorted digit PNG archive member names",
+    "caveat": "Native 32x32 includes its original 2-pixel border; direct area resize retains it. Deduplication may reduce total below 20,000.",
+    "license": "CC BY 4.0",
+    "name": "devanagari_digits",
+    "count": 20000,
+    "class_counts": [
+      2000,
+      2000,
+      2000,
+      2000,
+      2000,
+      2000,
+      2000,
+      2000,
+      2000,
+      2000
+    ],
+    "sources": [
+      {
+        "filename": "devanagari.zip",
+        "url": "https://archive.ics.uci.edu/static/public/389/devanagari+handwritten+character+dataset.zip",
+        "sha256": "752e6a2e6b0d1b475375e6a9db937918bbbf7c6b7d137dbe234264029fd3b88d",
+        "bytes": 80417803
+      }
+    ],
+    "preprocessing": {
+      "native_shape": [
+        32,
+        32
+      ],
+      "native_dtype": "uint8",
+      "resize": "mnist.code.data.area_resize: exact separable box-area averaging",
+      "output_shape": [
+        1,
+        9,
+        9
+      ],
+      "pixel_range": [
+        0,
+        1
+      ],
+      "pixel_dtype": "float32",
+      "polarity": "dark background, bright ink",
+      "native_hash": "sha256 of canonical bright-ink uint8 image bytes in C order",
+      "deduplication": "deferred to unified experiment pool preparation"
+    },
+    "images_sha256": "a3f272e896b7cb8130608fe38a6469eaa88112fba4d98bcaebfd815226c8b7be",
+    "labels_sha256": "57d6c875cb297101704bae564898abdc8154f7ba5baa2929f2180de9d42feed2",
+    "example_hashes_sha256": "2399c0fda60b4201fdf91e5a4c137f4648ee3951a657f6c689c57498dc2b4397",
+    "source_indices_sha256": "b49ed4334fe4a57fe3fdec8fe84b7b708cdd3022f6a6e8a3d1ce5e7476c4304e",
+    "npz_sha256": "7d7bf3e2103d101e82f3bd6018e9c55531cf0c69dbccee19d6b8cdff42d2eef6"
+  },
+  "acquisition": [],
+  "source_npz_sha256": "7d7bf3e2103d101e82f3bd6018e9c55531cf0c69dbccee19d6b8cdff42d2eef6",
+  "source_metadata_sha256": "a7ad8bdd4cb6bdfa5f03dd80f017ed4136868f02f4a4cb9e7aadc24f7a30e54e",
+  "build_source_sha256": {
+    "aminist21/preprocessing/__init__.py": "f4f011b2bda24964fa47947f56bf31bfae128893bc0fe9f25abcae9805074ae2",
+    "aminist21/preprocessing/characters.py": "e90028df239ff43b98c35321d15784ed68f827c31e6d8c67b768e0cefe223241",
+    "aminist21/preprocessing/common.py": "34d438bf929d61c22baf9742c6e992010658c07a1f7f179163d8e139d1ccac5b",
+    "aminist21/preprocessing/objects.py": "77b1e3e884381241df5e2e8965728b59d896228e041d1d559cb5883603304652",
+    "aminist21/preprocessing/sources.py": "c2ef78bceb12d885df80ba9654edfb972bd4d28c599a093cc32bb763c7533ade",
+    "aminist21/preprocessing/standards.py": "6447a14e2f1b2a787d04eb5fb9fd172802fa3886377d60ea4adcb7343daa5dcc",
+    "tools/build_data.py": "9b963de2309026c92dfbb5c207fda01b55ee0e23746a525ce6fda0b3fd40ee1c"
+  },
+  "numpy_version": "2.2.6"
+}

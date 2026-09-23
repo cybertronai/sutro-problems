@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "dataset": "emnist_letters_aj",
+  "id": "emnist_letters_aj",
+  "path": "data/pools/emnist_letters_aj.npz",
+  "sha256": "d37e351b0e82cea906c405003936400be7b8e1f4bf2d13a7f59646e173305a10",
+  "bytes": 10667893,
+  "count": 47998,
+  "shape": [
+    47998,
+    1,
+    9,
+    9
+  ],
+  "class_names": [
+    "A",
+    "B",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "J"
+  ],
+  "class_counts": [
+    4800,
+    4800,
+    4800,
+    4800,
+    4800,
+    4799,
+    4800,
+    4800,
+    4800,
+    4799
+  ],
+  "curation": {
+    "raw_count": 48000,
+    "unique_native_images": 47998,
+    "same_label_duplicate_rows_removed": 2,
+    "conflicting_image_groups": 0,
+    "conflicting_rows_removed": 0,
+    "clean_count": 47998
+  },
+  "curation_policy": "SHA256 of native image bytes; discard all conflicting-label groups; retain first source row of remaining groups; preserve source order",
+  "array_sha256": {
+    "images": "d07940f575b080e15ed0d2a56815cfe5ab687668523919c311043ce36cf050b1",
+    "labels": "6b76dab23bb34b4a3d830416e093954650faa948c1a3f6bd0a10faaf322cdb59",
+    "example_hashes": "469e0b0494052dc8aab809d60d4124715d2ac259a5e0adc70c7066fb0fc9a5bf",
+    "source_indices": "27c28a107371b7d17982704cf7cee810fb96df6ec6c36001c015f91eb9f0f271",
+    "pool_indices": "bf0963e6942e3872f3887e4e35b6d57cfb1ea29931bcae6d1566fe537f18be12"
+  },
+  "array_dtypes": {
+    "images": "float32",
+    "labels": "int64",
+    "example_hashes": "|S64",
+    "source_indices": "int64",
+    "pool_indices": "int64"
+  },
+  "source_metadata": {
+    "name": "emnist_letters_aj",
+    "class_names": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "G",
+      "H",
+      "I",
+      "J"
+    ],
+    "source_split": "Official training split only",
+    "orientation": "Transpose each raw IDX image (swap height and width) before hashing and resizing",
+    "label_mapping": "Official letters labels 1..10 selected before experiments; subtract 1",
+    "display_name": "EMNIST Letters A–J",
+    "dataset_page": "https://www.nist.gov/itl/products-and-services/emnist-dataset",
+    "sources": [
+      {
+        "filename": "emnist-letters-train-images-idx3-ubyte.gz",
+        "url": "https://biometrics.nist.gov/cs_links/EMNIST/gzip.zip",
+        "member": "gzip/emnist-letters-train-images-idx3-ubyte.gz",
+        "sha256": "6288f418a917e007bf5fddb823a2dc7a5c6a35031401b93292a539cb12bd881f",
+        "bytes": 30804864
+      },
+      {
+        "filename": "emnist-letters-train-labels-idx1-ubyte.gz",
+        "url": "https://biometrics.nist.gov/cs_links/EMNIST/gzip.zip",
+        "member": "gzip/emnist-letters-train-labels-idx1-ubyte.gz",
+        "sha256": "9759af91ea6bccdf07a6040fd085861f2ec88e37f7c3f5760f6feb57106fbe5c",
+        "bytes": 79283
+      }
+    ],
+    "relationship": "Related NIST handwriting control; not an independent MNIST-family source",
+    "format_version": 1,
+    "pool_size": 48000,
+    "class_counts": [
+      4800,
+      4800,
+      4800,
+      4800,
+      4800,
+      4800,
+      4800,
+      4800,
+      4800,
+      4800
+    ],
+    "native_shape": [
+      28,
+      28
+    ],
+    "native_dtype": "uint8",
+    "image_shape": [
+      48000,
+      1,
+      9,
+      9
+    ],
+    "image_dtype": "float32",
+    "labels_dtype": "int64",
+    "example_hash_definition": "SHA256 native C-order image bytes, excluding labels; EMNIST orientation corrected; USPS little-endian float32 in original [-1,1], all others uint8",
+    "exact_native_duplicate_rows": 2,
+    "deduplication": "Not applied here; common protocol decides after inspecting all pools",
+    "preprocessing": {
+      "normalization": "uint8 converted to float32 and divided by 255",
+      "resize": "mnist.code.data.area_resize exact box-area averaging to9x9, clip roundoff to [0,1]",
+      "orientation": "Transpose each raw IDX image (swap height and width) before hashing and resizing",
+      "inversion": "None"
+    },
+    "array_sha256": {
+      "images": "ed680ae2d8f6e9ace2e3608bd2ffb91c32c74e501469cbb97653c70187ece8d1",
+      "labels": "dacffdf8488396c5469b9e19763f1a4286c9f0b7087731f868fa40ca61cf291f",
+      "example_hashes": "90157bcb93a11a081fc8c506001c5aae54476ff4589bfa8b6eb2ada2fc21cf7e",
+      "source_indices": "941c7aa0749b21425e24b007d06a7c4397c23f3b711d48e5c58f85b898da0007"
+    },
+    "pool_sha256": "018040252e373a26af8358848a411d689fdfc26f6d4ac99b8ccdbb225fb20681"
+  },
+  "acquisition": [],
+  "source_npz_sha256": "018040252e373a26af8358848a411d689fdfc26f6d4ac99b8ccdbb225fb20681",
+  "source_metadata_sha256": "cf18ea01bc716bd19baa36e5b2a1abdf025c5e074be09784041f674b4351b16f",
+  "build_source_sha256": {
+    "aminist21/preprocessing/__init__.py": "f4f011b2bda24964fa47947f56bf31bfae128893bc0fe9f25abcae9805074ae2",
+    "aminist21/preprocessing/characters.py": "e90028df239ff43b98c35321d15784ed68f827c31e6d8c67b768e0cefe223241",
+    "aminist21/preprocessing/common.py": "34d438bf929d61c22baf9742c6e992010658c07a1f7f179163d8e139d1ccac5b",
+    "aminist21/preprocessing/objects.py": "77b1e3e884381241df5e2e8965728b59d896228e041d1d559cb5883603304652",
+    "aminist21/preprocessing/sources.py": "c2ef78bceb12d885df80ba9654edfb972bd4d28c599a093cc32bb763c7533ade",
+    "aminist21/preprocessing/standards.py": "6447a14e2f1b2a787d04eb5fb9fd172802fa3886377d60ea4adcb7343daa5dcc",
+    "tools/build_data.py": "9b963de2309026c92dfbb5c207fda01b55ee0e23746a525ce6fda0b3fd40ee1c"
+  },
+  "numpy_version": "2.2.6"
+}

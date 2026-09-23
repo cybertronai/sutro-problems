@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "dataset": "kmnist",
+  "id": "kmnist",
+  "path": "data/pools/kmnist.npz",
+  "sha256": "63e461863d9545457ec8837b52e33f04ecf1693af86603c98387ef62ac781285",
+  "bytes": 14037173,
+  "count": 60000,
+  "shape": [
+    60000,
+    1,
+    9,
+    9
+  ],
+  "class_names": [
+    "お",
+    "き",
+    "す",
+    "つ",
+    "な",
+    "は",
+    "ま",
+    "や",
+    "れ",
+    "を"
+  ],
+  "class_counts": [
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000
+  ],
+  "curation": {
+    "raw_count": 60000,
+    "unique_native_images": 60000,
+    "same_label_duplicate_rows_removed": 0,
+    "conflicting_image_groups": 0,
+    "conflicting_rows_removed": 0,
+    "clean_count": 60000
+  },
+  "curation_policy": "SHA256 of native image bytes; discard all conflicting-label groups; retain first source row of remaining groups; preserve source order",
+  "array_sha256": {
+    "images": "f9496b56d247b753bda083d3acd1bd751f0adb10536d5368f4ec942676f93909",
+    "labels": "675a1bc99c0fb402449cfb1884e928ca83de316cdf5eda00ad5e1299b01f67e8",
+    "example_hashes": "521b8ed07096a84c727bb04d32b484adc244e40b32d9f29d0cccf667188aa645",
+    "source_indices": "fe4e39bbf5e7508e2743343e541d967d3a36c5d8560d34e7e1d41073ece735ba",
+    "pool_indices": "fe4e39bbf5e7508e2743343e541d967d3a36c5d8560d34e7e1d41073ece735ba"
+  },
+  "array_dtypes": {
+    "images": "float32",
+    "labels": "int64",
+    "example_hashes": "|S64",
+    "source_indices": "int64",
+    "pool_indices": "int64"
+  },
+  "source_metadata": {
+    "name": "kmnist",
+    "class_names": [
+      "お",
+      "き",
+      "す",
+      "つ",
+      "な",
+      "は",
+      "ま",
+      "や",
+      "れ",
+      "を"
+    ],
+    "source_split": "Official training split only",
+    "orientation": "Original orientation unchanged",
+    "label_mapping": "Original labels 0..9 unchanged",
+    "display_name": "KMNIST",
+    "dataset_page": "https://github.com/rois-codh/kmnist",
+    "sources": [
+      {
+        "filename": "kmnist-train-imgs.npz",
+        "url": "https://codh.rois.ac.jp/kmnist/dataset/kmnist/kmnist-train-imgs.npz",
+        "sha256": "11d69e17c8fd294905864aef177fd10c2185e5a3655f4da03d72ea5a64c17a72",
+        "bytes": 18384171
+      },
+      {
+        "filename": "kmnist-train-labels.npz",
+        "url": "https://codh.rois.ac.jp/kmnist/dataset/kmnist/kmnist-train-labels.npz",
+        "sha256": "a325c877035602cb9b9ba54f4194a2a1b5f718026a463db5b5e0cdc124c03720",
+        "bytes": 29700
+      }
+    ],
+    "relationship": "Independent Japanese cursive character source; MNIST-format images",
+    "format_version": 1,
+    "pool_size": 60000,
+    "class_counts": [
+      6000,
+      6000,
+      6000,
+      6000,
+      6000,
+      6000,
+      6000,
+      6000,
+      6000,
+      6000
+    ],
+    "native_shape": [
+      28,
+      28
+    ],
+    "native_dtype": "uint8",
+    "image_shape": [
+      60000,
+      1,
+      9,
+      9
+    ],
+    "image_dtype": "float32",
+    "labels_dtype": "int64",
+    "example_hash_definition": "SHA256 native C-order image bytes, excluding labels; EMNIST orientation corrected; USPS little-endian float32 in original [-1,1], all others uint8",
+    "exact_native_duplicate_rows": 0,
+    "deduplication": "Not applied here; common protocol decides after inspecting all pools",
+    "preprocessing": {
+      "normalization": "uint8 converted to float32 and divided by 255",
+      "resize": "mnist.code.data.area_resize exact box-area averaging to9x9, clip roundoff to [0,1]",
+      "orientation": "Original orientation unchanged",
+      "inversion": "None"
+    },
+    "array_sha256": {
+      "images": "f9496b56d247b753bda083d3acd1bd751f0adb10536d5368f4ec942676f93909",
+      "labels": "675a1bc99c0fb402449cfb1884e928ca83de316cdf5eda00ad5e1299b01f67e8",
+      "example_hashes": "521b8ed07096a84c727bb04d32b484adc244e40b32d9f29d0cccf667188aa645",
+      "source_indices": "fe4e39bbf5e7508e2743343e541d967d3a36c5d8560d34e7e1d41073ece735ba"
+    },
+    "pool_sha256": "3dc2e941f943a03562f6cf38a80bc64949777df0ce30bd999aa92c7cc919b9f2"
+  },
+  "acquisition": [],
+  "source_npz_sha256": "3dc2e941f943a03562f6cf38a80bc64949777df0ce30bd999aa92c7cc919b9f2",
+  "source_metadata_sha256": "0f876796b19e6bfb348d843562ecd2ed4fdf98e60d4144f706f4c2eb37044696",
+  "build_source_sha256": {
+    "aminist21/preprocessing/__init__.py": "f4f011b2bda24964fa47947f56bf31bfae128893bc0fe9f25abcae9805074ae2",
+    "aminist21/preprocessing/characters.py": "e90028df239ff43b98c35321d15784ed68f827c31e6d8c67b768e0cefe223241",
+    "aminist21/preprocessing/common.py": "34d438bf929d61c22baf9742c6e992010658c07a1f7f179163d8e139d1ccac5b",
+    "aminist21/preprocessing/objects.py": "77b1e3e884381241df5e2e8965728b59d896228e041d1d559cb5883603304652",
+    "aminist21/preprocessing/sources.py": "c2ef78bceb12d885df80ba9654edfb972bd4d28c599a093cc32bb763c7533ade",
+    "aminist21/preprocessing/standards.py": "6447a14e2f1b2a787d04eb5fb9fd172802fa3886377d60ea4adcb7343daa5dcc",
+    "tools/build_data.py": "9b963de2309026c92dfbb5c207fda01b55ee0e23746a525ce6fda0b3fd40ee1c"
+  },
+  "numpy_version": "2.2.6"
+}

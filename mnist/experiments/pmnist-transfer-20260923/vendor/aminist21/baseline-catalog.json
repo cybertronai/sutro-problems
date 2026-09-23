@@ -1,0 +1,133 @@
+{
+  "title": "Aminist 21 validation: fixed baseline recipes",
+  "version": 1,
+  "default_seed": 11,
+  "input_shape": [
+    1,
+    9,
+    9
+  ],
+  "classes": 10,
+  "pixel_dtype": "float32",
+  "pixel_range": [
+    0,
+    1
+  ],
+  "normalization": "4*x-0.5",
+  "loss": "mean cross-entropy",
+  "precision": "float32, TF32 disabled",
+  "optimizer": "SGD; no learning-rate schedule; no Nesterov",
+  "query_batch_size": 512,
+  "configuration_policy": "Only recipe, seed, and device may be selected. Every dataset uses identical recipe hyperparameters, selected before scoring. No warm starts, checkpoints, early stopping, or query-label access.",
+  "rng": "CPU torch initialization; NumPy PCG64 shuffling. Independent PCG64([member_seed,20260922]) affine schedule. Ensemble member seeds seed+11*i.",
+  "augmentation": {
+    "mild_affine": {
+      "probability": 0.5,
+      "rotation_degrees": [
+        -8,
+        8
+      ],
+      "scale": [
+        0.94,
+        1.06
+      ],
+      "translation_pixels": [
+        -0.35,
+        0.35
+      ],
+      "mapping": "destination-to-source",
+      "interpolation": "bilinear; zero padding; align_corners=False",
+      "normalization_order": "warp raw [0,1] pixels, then 4*x-0.5"
+    }
+  },
+  "initialization": {
+    "linear_mlp_cnn": "Construct all CPU layers, then Kaiming-uniform fan_in ReLU weight reset and zero biases.",
+    "reversible": "Four 41x41 branch matrices drawn independently Normal(0,0.05/sqrt(41)); ordinary torch Linear(82,10) constructor initialization for classifier."
+  },
+  "architecture_notes": {
+    "linear": "Flatten81\u219210 biased linear classifier.",
+    "mlp": "Biased Linear/ReLU hidden layers and biased 10-class output.",
+    "cnn": "3x3, stride1, padding1, bias-free convolution and ReLU at every stage; no pooling, dropout or batchnorm. Flatten all spatial coordinates; biased head/ReLU/output.",
+    "reversible": "Zero-pad normalized81-pixel vector to82, split41/41. Each block performs two additive couplings with ReLU-before-linear. Custom backward reconstructs states and saves one endpoint plus weights. Classifier is not reversible."
+  },
+  "interpretation": "These fixed references establish empirical ranges, not universal acceptable accuracy thresholds. The cnn32-ensemble3 recipe is inspired by the earlier 97% MNIST procedure but uses native PyTorch cross-entropy, native interpolation and independently specified shuffling; it is not a bitwise port of the ordered-arithmetic submission. The reversible reference uses the earlier architecture and 2-epoch SGD settings but a portable eager runner.",
+  "reproducibility": "Bitwise equality expected only for repeated execution in the same pinned software/hardware environment; cross-CPU/GPU equality is not promised. All returned model, schedule, logit and prediction hashes are recorded.",
+  "recipes": {
+    "linear-sgd": {
+      "family": "linear",
+      "epochs": 8,
+      "learning_rate": 0.1,
+      "batch_size": 128,
+      "momentum": 0.9,
+      "weight_decay": 0.0,
+      "augmentation": "none",
+      "members": 1
+    },
+    "mlp64-sgd": {
+      "family": "mlp",
+      "hidden_widths": [
+        64
+      ],
+      "epochs": 8,
+      "learning_rate": 0.05,
+      "batch_size": 128,
+      "momentum": 0.9,
+      "weight_decay": 0.0001,
+      "augmentation": "none",
+      "members": 1
+    },
+    "mlp256-sgd": {
+      "family": "mlp",
+      "hidden_widths": [
+        256,
+        256
+      ],
+      "epochs": 12,
+      "learning_rate": 0.03,
+      "batch_size": 128,
+      "momentum": 0.9,
+      "weight_decay": 0.0001,
+      "augmentation": "none",
+      "members": 1
+    },
+    "cnn16-sgd": {
+      "family": "cnn",
+      "width": 16,
+      "depth": 2,
+      "head_width": 64,
+      "epochs": 8,
+      "learning_rate": 0.03,
+      "batch_size": 128,
+      "momentum": 0.9,
+      "weight_decay": 0.0001,
+      "augmentation": "mild_affine",
+      "members": 1
+    },
+    "cnn32-ensemble3": {
+      "family": "cnn",
+      "width": 32,
+      "depth": 3,
+      "head_width": 128,
+      "epochs": 8,
+      "learning_rate": 0.03,
+      "batch_size": 128,
+      "momentum": 0.9,
+      "weight_decay": 0.0001,
+      "augmentation": "mild_affine",
+      "members": 3
+    },
+    "reversible82-sgd": {
+      "family": "reversible",
+      "depth": 2,
+      "state_width": 82,
+      "alpha": 0.5,
+      "epochs": 2,
+      "learning_rate": 0.1,
+      "batch_size": 128,
+      "momentum": 0.9,
+      "weight_decay": 0.0,
+      "augmentation": "none",
+      "members": 1
+    }
+  }
+}

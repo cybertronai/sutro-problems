@@ -1,0 +1,166 @@
+{
+  "schema_version": 1,
+  "dataset": "kannada_digits",
+  "id": "kannada_digits",
+  "path": "data/pools/kannada_digits.npz",
+  "sha256": "f58ce80af1c43d7d77c4bdf13f02df827626e3e32c6d281cc81f7fc0c1b99155",
+  "bytes": 9278246,
+  "count": 60000,
+  "shape": [
+    60000,
+    1,
+    9,
+    9
+  ],
+  "class_names": [
+    "೦",
+    "೧",
+    "೨",
+    "೩",
+    "೪",
+    "೫",
+    "೬",
+    "೭",
+    "೮",
+    "೯"
+  ],
+  "class_counts": [
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000,
+    6000
+  ],
+  "curation": {
+    "raw_count": 60000,
+    "unique_native_images": 60000,
+    "same_label_duplicate_rows_removed": 0,
+    "conflicting_image_groups": 0,
+    "conflicting_rows_removed": 0,
+    "clean_count": 60000
+  },
+  "curation_policy": "SHA256 of native image bytes; discard all conflicting-label groups; retain first source row of remaining groups; preserve source order",
+  "array_sha256": {
+    "images": "9d57bf85ff80c5b72c3c73011ba151b787f4733330b77a1508a8f11bb2886b07",
+    "labels": "851be4b13ceef93bc6d8a49851dbb1bcc1f4359dbdc2df39acd9965d8cfb8aa4",
+    "example_hashes": "a91dee0bb6654c338967034ffbfd6ec1ad1c88b05e987f5818c8d2b5874df168",
+    "source_indices": "fe4e39bbf5e7508e2743343e541d967d3a36c5d8560d34e7e1d41073ece735ba",
+    "pool_indices": "fe4e39bbf5e7508e2743343e541d967d3a36c5d8560d34e7e1d41073ece735ba"
+  },
+  "array_dtypes": {
+    "images": "float32",
+    "labels": "int64",
+    "example_hashes": "|S64",
+    "source_indices": "int64",
+    "pool_indices": "int64"
+  },
+  "source_metadata": {
+    "title": "Kannada-MNIST",
+    "kind": "handwritten Kannada digits",
+    "homepage": "https://github.com/vinayprabhu/Kannada_MNIST",
+    "class_names": [
+      "೦",
+      "೧",
+      "೨",
+      "೩",
+      "೪",
+      "೫",
+      "೬",
+      "೭",
+      "೮",
+      "೯"
+    ],
+    "original_class_ids": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "selection_policy": "All ten native digit classes.",
+    "pool_policy": "Official training split only; official test withheld.",
+    "original_split_counts": {
+      "train": 60000,
+      "test": 10000
+    },
+    "source_index_definition": "row index in X_kannada_MNIST_train.npz",
+    "caveat": "MNIST format but independently collected Kannada handwriting; unrelated to NIST samples.",
+    "name": "kannada_digits",
+    "count": 60000,
+    "class_counts": [
+      6000,
+      6000,
+      6000,
+      6000,
+      6000,
+      6000,
+      6000,
+      6000,
+      6000,
+      6000
+    ],
+    "sources": [
+      {
+        "filename": "X_kannada_MNIST_train.npz",
+        "url": "https://raw.githubusercontent.com/vinayprabhu/Kannada_MNIST/master/data/output_tensors/MNIST_format/X_kannada_MNIST_train.npz",
+        "sha256": "705210ec1a9e83be08defa8cc25b91a5b88232ffee1e4a70fcba49b2dde798ab",
+        "bytes": 47040244
+      },
+      {
+        "filename": "y_kannada_MNIST_train.npz",
+        "url": "https://raw.githubusercontent.com/vinayprabhu/Kannada_MNIST/master/data/output_tensors/MNIST_format/y_kannada_MNIST_train.npz",
+        "sha256": "462e31f9c9b78ac0e920d6dbdc7ee3e8260ed39fb4d3a48cf45dca0e03a1c415",
+        "bytes": 60244
+      }
+    ],
+    "preprocessing": {
+      "native_shape": [
+        28,
+        28
+      ],
+      "native_dtype": "uint8",
+      "resize": "mnist.code.data.area_resize: exact separable box-area averaging",
+      "output_shape": [
+        1,
+        9,
+        9
+      ],
+      "pixel_range": [
+        0,
+        1
+      ],
+      "pixel_dtype": "float32",
+      "polarity": "dark background, bright ink",
+      "native_hash": "sha256 of canonical bright-ink uint8 image bytes in C order",
+      "deduplication": "deferred to unified experiment pool preparation"
+    },
+    "images_sha256": "9d57bf85ff80c5b72c3c73011ba151b787f4733330b77a1508a8f11bb2886b07",
+    "labels_sha256": "851be4b13ceef93bc6d8a49851dbb1bcc1f4359dbdc2df39acd9965d8cfb8aa4",
+    "example_hashes_sha256": "a91dee0bb6654c338967034ffbfd6ec1ad1c88b05e987f5818c8d2b5874df168",
+    "source_indices_sha256": "fe4e39bbf5e7508e2743343e541d967d3a36c5d8560d34e7e1d41073ece735ba",
+    "npz_sha256": "898680fd3f0bc0359841389f16b9de831ef27ee503a7b7b7d460dccc81fab1ab"
+  },
+  "acquisition": [],
+  "source_npz_sha256": "898680fd3f0bc0359841389f16b9de831ef27ee503a7b7b7d460dccc81fab1ab",
+  "source_metadata_sha256": "a6e0fb7fa300e8e0f116340d9582126cbf5e786620b7b8af3e42c2a6fd7882fd",
+  "build_source_sha256": {
+    "aminist21/preprocessing/__init__.py": "f4f011b2bda24964fa47947f56bf31bfae128893bc0fe9f25abcae9805074ae2",
+    "aminist21/preprocessing/characters.py": "e90028df239ff43b98c35321d15784ed68f827c31e6d8c67b768e0cefe223241",
+    "aminist21/preprocessing/common.py": "34d438bf929d61c22baf9742c6e992010658c07a1f7f179163d8e139d1ccac5b",
+    "aminist21/preprocessing/objects.py": "77b1e3e884381241df5e2e8965728b59d896228e041d1d559cb5883603304652",
+    "aminist21/preprocessing/sources.py": "c2ef78bceb12d885df80ba9654edfb972bd4d28c599a093cc32bb763c7533ade",
+    "aminist21/preprocessing/standards.py": "6447a14e2f1b2a787d04eb5fb9fd172802fa3886377d60ea4adcb7343daa5dcc",
+    "tools/build_data.py": "9b963de2309026c92dfbb5c207fda01b55ee0e23746a525ce6fda0b3fd40ee1c"
+  },
+  "numpy_version": "2.2.6"
+}
