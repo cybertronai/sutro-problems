@@ -1,0 +1,140 @@
+{
+ "attack": "holdout",
+ "holdout_draw": {
+  "dataset": "fashion",
+  "case_seed": 101,
+  "draw_seed": 9203,
+  "release_dims": 60,
+  "z_train_shape": [
+   10000,
+   60
+  ],
+  "z_test_shape": [
+   10000,
+   60
+  ],
+  "z_train_dtype": "float32",
+  "released_train_cov_offdiag_rms": 4.3945358795287696e-10,
+  "released_train_cov_diag_mean": 1.0000000000916436,
+  "oracle_map_fit_rel_rms": 2.5135203375430362e-08,
+  "make_draw_seconds": 0.08178927502012812,
+  "secret_label_permutation_recovered_for_scoring": [
+   0,
+   7,
+   8,
+   2,
+   5,
+   4,
+   6,
+   3,
+   1,
+   9
+  ],
+  "construction_check": {
+   "checked": true,
+   "refit_whitener_orthogonality_error": 2.4342187154857697e-09,
+   "offset_matches_minus_A_mu": 6.711955158333893e-10,
+   "smallest_kept_eigenvalue": 0.0017634058528509693,
+   "rotation_is_not_identity": 1.274068823470192
+  }
+ },
+ "mnist_draw_for_attacker_world": {
+  "dataset": "mnist",
+  "case_seed": 101,
+  "draw_seed": 114,
+  "release_dims": 60,
+  "z_train_shape": [
+   10000,
+   60
+  ],
+  "z_test_shape": [
+   10000,
+   60
+  ],
+  "z_train_dtype": "float32",
+  "released_train_cov_offdiag_rms": 4.5505763929811865e-10,
+  "released_train_cov_diag_mean": 0.9999999999721199,
+  "oracle_map_fit_rel_rms": 2.512641692617491e-08,
+  "make_draw_seconds": 0.10604438700829633,
+  "secret_label_permutation_recovered_for_scoring": [
+   1,
+   5,
+   7,
+   9,
+   4,
+   2,
+   8,
+   0,
+   3,
+   6
+  ],
+  "construction_check": null
+ },
+ "holdout_min_bp": 3000,
+ "holdout_floor_percent": 70.0,
+ "label_permutation": {
+  "recovered": [
+   0,
+   7,
+   4,
+   2,
+   5,
+   3,
+   1,
+   9,
+   6,
+   8
+  ],
+  "true_for_scoring": [
+   0,
+   7,
+   8,
+   2,
+   5,
+   4,
+   6,
+   3,
+   1,
+   9
+  ],
+  "classes_correct": 4,
+  "seconds": 0.2628025970188901,
+  "assignment_cost": 7.427619756961118,
+  "mean_matched_cost": 0.7427619756961118,
+  "mean_unmatched_cost": 3.4776945009949913
+ },
+ "recovery_seconds": 137.76069896199624,
+ "inits": {
+  "eig": {
+   "final_loss": 769.9819503947114,
+   "rel_rms_vs_true_fashion_pixels": 0.8197563886642456
+  },
+  "cls": {
+   "final_loss": 752.8892868516534,
+   "rel_rms_vs_true_fashion_pixels": 0.8240688443183899
+  },
+  "random": {
+   "final_loss": 765.5066271504977,
+   "rel_rms_vs_true_fashion_pixels": 0.8179269433021545
+  },
+  "rlc": {
+   "final_loss": 764.9869428136825,
+   "rel_rms_vs_true_fashion_pixels": 0.8162961006164551
+  }
+ },
+ "attacker_pick": "cls",
+ "offline_cnn_train_seconds": 232.77155459098867,
+ "offline_cnn_on_true_holdout_pixels": 14.08,
+ "offline_cnn_on_recovered": {
+  "eig": 58.48,
+  "cls": 57.120000000000005,
+  "random": 56.599999999999994,
+  "rlc": 57.21000000000001
+ },
+ "smuggler_accuracy": 57.120000000000005,
+ "honest_mlp_on_holdout_release": 85.95,
+ "honest_mlp_seconds": 10.544324088987196,
+ "smuggler_passes_holdout": false,
+ "honest_mlp_passes_holdout": true,
+ "total_seconds": 387.9874479730206
+}

@@ -1,0 +1,62 @@
+✓ Initialized. View run at 
+https://modal.com/apps/yaroslavvb/main/ap-AgJE67CTamljLEkCAgbkjv
+✓ Created objects.
+├── 🔨 Created mount /Users/yaroslavvb/git/sutro-problems/gpumode/run_modal.py
+├── 🔨 Created mount /Users/yaroslavvb/git/sutro-problems/gpumode
+└── 🔨 Created function remote_evaluate.
+
+==========
+== CUDA ==
+==========
+
+CUDA Version 13.3.0
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+
+Stopping app - local entrypoint completed.
+✓ App completed. View run at 
+https://modal.com/apps/yaroslavvb/main/ap-AgJE67CTamljLEkCAgbkjv
+[compile] pass exit=0 4.72s
+    check: pass
+[benchmark] pass exit=0 11.7s
+    system.seed_source: popcorn
+    benchmark-count: 1
+    benchmark.0.spec: size: 9; release_dims: 60; train: 10000; test: 10000; error_bp: 500; draw_slack_bp: 150; dispersion_x10: 20; max_call_ms: 60000; warmup_max_call_ms: 120000; max_source_bytes: 20480; max_literal_bytes: 4096; test_timeout: 300; benchmark_timeout: 600; ranked_timeout: 1200; draws: 11; bench_draws: 3; seed: 202; holdout: 1; holdout_draws: 2; holdout_min_bp: 3000
+    system.harness: sutro-mnist-medium-time/1.2.0
+    system.torch: 2.12.0+cu130
+    system.cuda: 13.0
+    system.device: NVIDIA A100-SXM4-40GB
+    system.device_count: 1
+    system.capability: 8.0
+    system.driver: unknown (AttributeError: module 'torch._C' has no attribute '_cuda_getDriverVersion')
+    system.numpy: 2.5.3
+    system.python: 3.13.0
+    system.platform: Linux-4.19.0-gvisor-x86_64-with-glibc2.39
+    benchmark.0.runs: 3
+    benchmark.0.mean: 253305511.47460938
+    benchmark.0.std: 150373.18614693588
+    benchmark.0.err: 86817.99950083514
+    benchmark.0.best: 253161468.50585938
+    benchmark.0.worst: 253461502.0751953
+    benchmark.0.median: 253293563.84277344
+    benchmark.0.accuracy: 0.959167
+    benchmark.0.correct: 28775
+    benchmark.0.total: 30000
+    benchmark.0.required: 28500
+    benchmark.0.draw_floor: 9350
+    benchmark.0.per_draw: [9584, 9576, 9615]
+    benchmark.0.durations: [253293564, 253161469, 253461502]
+    benchmark.0.wall_mean: 255340939.3
+    benchmark.0.child_wall_mean: 253901274.3
+    benchmark.0.stage_mean: 17161712.3
+    benchmark.0.ipc_calibration: 1243580.0
+    benchmark.0.stage_calibration: 620494756.0
+    benchmark.0.loop_wall: 960704348.0
+    check: pass
+wrote results/gpu-release-cg-pair-5pct-benchmark.json

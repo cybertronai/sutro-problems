@@ -1,0 +1,32 @@
+ok
+profile patched
+### submissions/pca_qda.py
+exit=0
+    benchmark.0.spec: size: 9; train: 10000; test: 10000; error_bp: 1200; max_call_ms: 60000; draws: 2; bench_draws: 3; seed: 202; holdout: 1; holdout_min_bp: 5000
+    benchmark.0.mean: 74145092.497929
+    benchmark.0.parent_wall_mean: 75837542.5
+    benchmark.0.ipc_calibration: 604432.0
+    check: pass
+### submissions/ncm_baseline.py
+exit=1
+    benchmark.0.spec: size: 9; train: 10000; test: 10000; error_bp: 1200; max_call_ms: 60000; draws: 2; bench_draws: 3; seed: 202; holdout: 1; holdout_min_bp: 5000
+    benchmark.0.mean: 3828898.501524236
+    benchmark.0.parent_wall_mean: 6248497.0
+    benchmark.0.ipc_calibration: 963861.0
+    benchmark.0.error: accuracy gate: 15836 correct of 20000, needs 17600 for the 12% band
+    check: fail
+### redteam/timer-patch.py
+exit=1
+    benchmark.0.spec: size: 9; train: 10000; test: 10000; error_bp: 1200; max_call_ms: 60000; draws: 2; bench_draws: 3; seed: 202; holdout: 1; holdout_min_bp: 5000
+    benchmark.0.error: timing implausible on call 0: device time 0.007 ms is under 0.25 of the 69.723 ms the parent measured for this call (round trip 70.471 ms minus 0.747 ms of calibrated IPC); the clocks inside the submission's process are not trusted
+    check: fail
+### redteam/timer-patch_evalglobals.py
+exit=1
+    benchmark.0.spec: size: 9; train: 10000; test: 10000; error_bp: 1200; max_call_ms: 60000; draws: 2; bench_draws: 3; seed: 202; holdout: 1; holdout_min_bp: 5000
+    benchmark.0.error: timing implausible on call 0: device time 0.008 ms is under 0.25 of the 78.753 ms the parent measured for this call (round trip 79.353 ms minus 0.600 ms of calibrated IPC); the clocks inside the submission's process are not trusted
+    check: fail
+### redteam/timer-patch_calibration.py
+exit=1
+    benchmark.0.spec: size: 9; train: 10000; test: 10000; error_bp: 1200; max_call_ms: 60000; draws: 2; bench_draws: 3; seed: 202; holdout: 1; holdout_min_bp: 5000
+
+[exited with code 0]

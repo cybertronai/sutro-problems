@@ -1,0 +1,64 @@
+{
+  "runs": {
+    "test": {
+      "mode": "test",
+      "exit_code": 0,
+      "duration_s": 13.21,
+      "passed": true,
+      "result": {
+        "test-count": "1",
+        "test.0.spec": "size: 9; train: 10000; test: 10000; error_bp: 1200; draw_slack_bp: 150; dispersion_x10: 20; max_call_ms: 60000; warmup_max_call_ms: 120000; max_source_bytes: 20480; max_literal_bytes: 4096; draws: 1; bench_draws: 1; seed: 101; holdout: 0",
+        "system.harness": "sutro-mnist-medium-time/1.1.0",
+        "system.torch": "2.12.0+cu130",
+        "system.cuda": "13.0",
+        "system.device": "NVIDIA A100-SXM4-40GB",
+        "system.device_count": "1",
+        "system.capability": "8.0",
+        "system.driver": "unknown",
+        "system.numpy": "2.5.3",
+        "system.python": "3.13.0",
+        "system.platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.39",
+        "test.0.status": "pass",
+        "test.0.message": "7984/10000 correct (79.84%), needs 7800 at the test-mode slack and 8800 on the leaderboard; 1.000 ms per call",
+        "check": "pass"
+      },
+      "stdout": "",
+      "stderr": "[recon] {\"pid\": 31, \"ppid\": 27, \"cwd\": \"/tmp/sutro-submission-qf7io8oz\", \"own_env_has_POPCORN_SEED\": false, \"own_env_has_POPCORN_FD\": false, \"own_env_has_MNIST_POOL_CACHE\": false, \"own_env_keys\": [\"BLIS_NUM_THREADS\", \"CFLAGS\", \"CUDA_VERSION\", \"HOME\", \"LC_CTYPE\", \"LD_LIBRARY_PATH\", \"LIBRARY_PATH\", \"MKL_NUM_THREADS\", \"MODAL_CLOUD_PROVIDER\", \"MODAL_CONTAINER_ARGUMENTS_PATH\", \"MODAL_ENVIRONMENT\", \"MODAL_IDENTITY_TOKEN\", \"MODAL_IMAGE_ID\", \"MODAL_IS_REMOTE\", \"MODAL_REGION\", \"MODAL_SERVER_URL\", \"MODAL_TASK_ID\", \"NVARCH\", \"NVIDIA_DRIVER_CAPABILITIES\", \"NVIDIA_PRODUCT_NAME\", \"NVIDIA_REQUIRE_CUDA\", \"NVIDIA_VISIBLE_DEVICES\", \"NV_CUDA_CUDART_DEV_VERSION\", \"NV_CUDA_CUDART_VERSION\", \"NV_CUDA_LIB_VERSION\", \"NV_CUDA_NSIGHT_COMPUTE_DEV_PACKAGE\", \"NV_CUDA_NSIGHT_COMPUTE_VERSION\", \"NV_LIBCUBLAS_DEV_PACKAGE\", \"NV_LIBCUBLAS_DEV_PACKAGE_NAME\", \"NV_LIBCUBLAS_DEV_VERSION\", \"NV_LIBCUBLAS_PACKAGE\", \"NV_LIBCUBLAS_PACKAGE_NAME\", \"NV_LIBCUBLAS_VERSION\", \"NV_LIBCUSPARSE_DEV_VERSION\", \"NV_LIBCUSPARSE_VERSION\", \"NV_LIBNPP_DEV_PACKAGE\", \"NV_LIBNPP_DEV_VERSION\", \"NV_LIBNPP_PACKAGE\", \"NV_LIBNPP_VERSION\", \"NV_NVML_DEV_VERSION\", \"NV_NVTX_VERSION\", \"OMP_NUM_THREADS\", \"OPENBLAS_NUM_THREADS\", \"ORT_INTER_OP_NUM_THREADS\", \"ORT_INTRA_OP_NUM_THREADS\", \"PATH\", \"PIP_DEFAULT_TIMEOUT\", \"PIP_NO_CACHE_DIR\", \"PIP_ROOT_USER_ACTION\", \"PWD\", \"PYTHONHASHSEED\", \"PYTHONPATH\", \"SHLVL\", \"SOURCE_DATE_EPOCH\", \"SSL_CERT_DIR\", \"TERM\", \"TERMINFO_DIRS\", \"UV_BREAK_SYSTEM_PACKAGES\"], \"proc_environ_readable\": true, \"parent_POPCORN_SEED\": null, \"parent_MNIST_POOL_CACHE\": null, \"parent_POPCORN_FD\": \"12\", \"cwd_listing\": [\"__pycache__\", \"submission.py\", \"task.py\"], \"cases_files\": {}, \"internals\": {\"eval_import_error\": \"ModuleNotFoundError(\\\"No module named 'eval'\\\")\", \"utils_import_error\": \"ModuleNotFoundError(\\\"No module named 'utils'\\\")\", \"mnist_data_error\": \"ModuleNotFoundError(\\\"No module named 'mnist_data'\\\")\"}, \"idx_gz_found\": []}\nsutro-mnist-medium-time/1.1.0 test on cuda finished in 7.1 s\n"
+    },
+    "benchmark": {
+      "mode": "benchmark",
+      "exit_code": 112,
+      "duration_s": 10.81,
+      "passed": false,
+      "result": {
+        "benchmark-count": "1",
+        "benchmark.0.spec": "size: 9; train: 10000; test: 10000; error_bp: 1200; draw_slack_bp: 150; dispersion_x10: 20; max_call_ms: 60000; warmup_max_call_ms: 120000; max_source_bytes: 20480; max_literal_bytes: 4096; draws: 11; bench_draws: 3; seed: 202; holdout: 1; holdout_draws: 2; holdout_min_bp: 3000",
+        "system.harness": "sutro-mnist-medium-time/1.1.0",
+        "system.torch": "2.12.0+cu130",
+        "system.cuda": "13.0",
+        "system.device": "NVIDIA A100-SXM4-40GB",
+        "system.device_count": "1",
+        "system.capability": "8.0",
+        "system.driver": "unknown",
+        "system.numpy": "2.5.3",
+        "system.python": "3.13.0",
+        "system.platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.39",
+        "benchmark.0.status": "fail",
+        "benchmark.0.error": "draw 0 scored 7965 of 10000, below the per-draw floor 8650; every ranked call must do the same work",
+        "check": "fail"
+      },
+      "stdout": "",
+      "stderr": "[recon] {\"pid\": 59, \"ppid\": 55, \"cwd\": \"/tmp/sutro-submission-jmh50v0a\", \"own_env_has_POPCORN_SEED\": false, \"own_env_has_POPCORN_FD\": false, \"own_env_has_MNIST_POOL_CACHE\": false, \"own_env_keys\": [\"BLIS_NUM_THREADS\", \"CFLAGS\", \"CUDA_VERSION\", \"HOME\", \"LC_CTYPE\", \"LD_LIBRARY_PATH\", \"LIBRARY_PATH\", \"MKL_NUM_THREADS\", \"MODAL_CLOUD_PROVIDER\", \"MODAL_CONTAINER_ARGUMENTS_PATH\", \"MODAL_ENVIRONMENT\", \"MODAL_IDENTITY_TOKEN\", \"MODAL_IMAGE_ID\", \"MODAL_IS_REMOTE\", \"MODAL_REGION\", \"MODAL_SERVER_URL\", \"MODAL_TASK_ID\", \"NVARCH\", \"NVIDIA_DRIVER_CAPABILITIES\", \"NVIDIA_PRODUCT_NAME\", \"NVIDIA_REQUIRE_CUDA\", \"NVIDIA_VISIBLE_DEVICES\", \"NV_CUDA_CUDART_DEV_VERSION\", \"NV_CUDA_CUDART_VERSION\", \"NV_CUDA_LIB_VERSION\", \"NV_CUDA_NSIGHT_COMPUTE_DEV_PACKAGE\", \"NV_CUDA_NSIGHT_COMPUTE_VERSION\", \"NV_LIBCUBLAS_DEV_PACKAGE\", \"NV_LIBCUBLAS_DEV_PACKAGE_NAME\", \"NV_LIBCUBLAS_DEV_VERSION\", \"NV_LIBCUBLAS_PACKAGE\", \"NV_LIBCUBLAS_PACKAGE_NAME\", \"NV_LIBCUBLAS_VERSION\", \"NV_LIBCUSPARSE_DEV_VERSION\", \"NV_LIBCUSPARSE_VERSION\", \"NV_LIBNPP_DEV_PACKAGE\", \"NV_LIBNPP_DEV_VERSION\", \"NV_LIBNPP_PACKAGE\", \"NV_LIBNPP_VERSION\", \"NV_NVML_DEV_VERSION\", \"NV_NVTX_VERSION\", \"OMP_NUM_THREADS\", \"OPENBLAS_NUM_THREADS\", \"ORT_INTER_OP_NUM_THREADS\", \"ORT_INTRA_OP_NUM_THREADS\", \"PATH\", \"PIP_DEFAULT_TIMEOUT\", \"PIP_NO_CACHE_DIR\", \"PIP_ROOT_USER_ACTION\", \"PWD\", \"PYTHONHASHSEED\", \"PYTHONPATH\", \"SHLVL\", \"SOURCE_DATE_EPOCH\", \"SSL_CERT_DIR\", \"TERM\", \"TERMINFO_DIRS\", \"UV_BREAK_SYSTEM_PACKAGES\"], \"proc_environ_readable\": true, \"parent_POPCORN_SEED\": null, \"parent_MNIST_POOL_CACHE\": null, \"parent_POPCORN_FD\": \"12\", \"cwd_listing\": [\"__pycache__\", \"submission.py\", \"task.py\"], \"cases_files\": {}, \"internals\": {\"eval_import_error\": \"ModuleNotFoundError(\\\"No module named 'eval'\\\")\", \"utils_import_error\": \"ModuleNotFoundError(\\\"No module named 'utils'\\\")\", \"mnist_data_error\": \"ModuleNotFoundError(\\\"No module named 'mnist_data'\\\")\"}, \"idx_gz_found\": []}\nsutro-mnist-medium-time/1.1.0 benchmark on cuda finished in 6.8 s\n"
+    }
+  },
+  "passed": false,
+  "gpu": "NVIDIA A100-SXM4-40GB",
+  "torch": "2.12.0+cu130",
+  "band": "mnist-medium-12pct",
+  "submission": "redteam/io-and-process_gpurecon.py",
+  "mode": "leaderboard",
+  "seed": 20260922,
+  "overrides": {},
+  "where": "modal",
+  "wall_s": 39.0
+}

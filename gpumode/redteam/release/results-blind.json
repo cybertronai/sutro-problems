@@ -1,0 +1,110 @@
+{
+ "attack": "blind",
+ "draw": {
+  "dataset": "mnist",
+  "case_seed": 101,
+  "draw_seed": 114,
+  "release_dims": 60,
+  "z_train_shape": [
+   10000,
+   60
+  ],
+  "z_test_shape": [
+   10000,
+   60
+  ],
+  "z_train_dtype": "float32",
+  "released_train_cov_offdiag_rms": 4.5505763929811865e-10,
+  "released_train_cov_diag_mean": 0.9999999999721199,
+  "oracle_map_fit_rel_rms": 2.512641692617491e-08,
+  "make_draw_seconds": 0.0888106579950545,
+  "secret_label_permutation_recovered_for_scoring": [
+   1,
+   5,
+   7,
+   9,
+   4,
+   2,
+   8,
+   0,
+   3,
+   6
+  ],
+  "construction_check": {
+   "checked": true,
+   "refit_whitener_orthogonality_error": 2.955845568308746e-09,
+   "offset_matches_minus_A_mu": 6.347241621185162e-10,
+   "smallest_kept_eigenvalue": 0.0002193770515280913,
+   "rotation_is_not_identity": 1.2787661222139555
+  }
+ },
+ "unmix_steps": 2000,
+ "qap_seconds": 120.0,
+ "methods": {
+  "sparse-nonneg": {
+   "seconds_unmix": 13.643926491989987,
+   "iterations": -1,
+   "mean_localisation_r1.5": 0.6503303057223123,
+   "median_localisation_r1.5": 0.8609650261554969,
+   "matched_energy_mean": 0.4768684699446516,
+   "n_sources_above_0.5": 24,
+   "n_sources_above_0.9": 17,
+   "lattice": {
+    "n_edges": 102,
+    "edge_precision_at_1.0": 0.11764705882352941,
+    "edge_precision_at_1.5": 0.2647058823529412,
+    "edge_mean_true_distance": 2.890755729593851,
+    "chance_precision_at_1.0": 0.048407643312101914,
+    "chance_precision_at_1.5": 0.10509554140127389,
+    "chance_mean_true_distance": 3.826069983447385,
+    "mean_localisation_r1.5": 0.6503303057223123,
+    "seconds": 19.984028940001735,
+    "qap_objective": 21.13898934602898
+   },
+   "edge_precision_ratio_to_chance": 2.518716577540107
+  },
+  "ica-logcosh": {
+   "seconds_unmix": 17.558691843994893,
+   "iterations": 158,
+   "mean_localisation_r1.5": 0.6481747493138121,
+   "median_localisation_r1.5": 0.8343931433074074,
+   "matched_energy_mean": 0.3971286483024926,
+   "n_sources_above_0.5": 21,
+   "n_sources_above_0.9": 9,
+   "lattice": {
+    "n_edges": 102,
+    "edge_precision_at_1.0": 0.23529411764705882,
+    "edge_precision_at_1.5": 0.45098039215686275,
+    "edge_mean_true_distance": 2.6368178692602924,
+    "chance_precision_at_1.0": 0.06050955414012739,
+    "chance_precision_at_1.5": 0.11273885350318472,
+    "chance_mean_true_distance": 3.8261965109857816,
+    "mean_localisation_r1.5": 0.6481747493138121,
+    "seconds": 21.59049224399496,
+    "qap_objective": 20.01418785684769
+   },
+   "edge_precision_ratio_to_chance": 4.000221557549573
+  }
+ },
+ "learners": {
+  "cnn_on_recovered_lattice[sparse-nonneg]": {
+   "test_acc": 95.69,
+   "seconds": 73.78621207902324
+  },
+  "cnn_on_recovered_lattice[ica-logcosh]": {
+   "test_acc": 95.66,
+   "seconds": 70.4108866089955
+  },
+  "cnn_on_random_layout": {
+   "test_acc": 95.67999999999999,
+   "seconds": 65.36787030898267
+  },
+  "mlp_on_released_features": {
+   "test_acc": 95.78999999999999,
+   "seconds": 13.612222065974493
+  }
+ },
+ "best_cnn_on_recovered_lattice": 95.69,
+ "cnn_gain_over_mlp_points": -0.09999999999999432,
+ "total_seconds": 296.9986418710032
+}

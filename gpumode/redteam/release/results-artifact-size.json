@@ -1,0 +1,214 @@
+{
+ "attack": "artifact-size",
+ "draw": {
+  "dataset": "mnist",
+  "case_seed": 101,
+  "draw_seed": 114,
+  "release_dims": 60,
+  "z_train_shape": [
+   10000,
+   60
+  ],
+  "z_test_shape": [
+   10000,
+   60
+  ],
+  "z_train_dtype": "float32",
+  "released_train_cov_offdiag_rms": 4.5505763929811865e-10,
+  "released_train_cov_diag_mean": 0.9999999999721199,
+  "oracle_map_fit_rel_rms": 2.512641692617491e-08,
+  "make_draw_seconds": 0.08056593799847178,
+  "secret_label_permutation_recovered_for_scoring": [
+   1,
+   5,
+   7,
+   9,
+   4,
+   2,
+   8,
+   0,
+   3,
+   6
+  ],
+  "construction_check": {
+   "checked": true,
+   "refit_whitener_orthogonality_error": 2.955845568308746e-09,
+   "offset_matches_minus_A_mu": 6.347241621185162e-10,
+   "smallest_kept_eigenvalue": 0.0002193770515280913,
+   "rotation_is_not_identity": 1.2787661222139555
+  }
+ },
+ "caps": {
+  "max_source_bytes": 20480,
+  "max_literal_bytes": 4096
+ },
+ "class_statistics": {
+  "k": 60,
+  "element_counts": {
+   "mu_pub": 81,
+   "eigenbasis": 4860,
+   "eigenvalues": 60,
+   "class_means": 600,
+   "class_covs_upper": 18300
+  },
+  "total_elements": 23901,
+  "int8": {
+   "name": "class-stats k=60 int8",
+   "raw_bytes": 24065,
+   "zlib_bytes": 16755,
+   "base64_bytes": 22340,
+   "literals_at_4096": 6,
+   "bytes_in_submission": 22364,
+   "fraction_of_20480_cap": 1.0919921875
+  },
+  "fp16": {
+   "name": "class-stats k=60 fp16",
+   "raw_bytes": 47802,
+   "zlib_bytes": 45326,
+   "base64_bytes": 60436,
+   "literals_at_4096": 15,
+   "bytes_in_submission": 60496,
+   "fraction_of_20480_cap": 2.95390625
+  }
+ },
+ "class_statistics_k_sweep": [
+  {
+   "k": 10,
+   "bytes_in_submission": 1932,
+   "fits_alone": true
+  },
+  {
+   "k": 15,
+   "bytes_in_submission": 3176,
+   "fits_alone": true
+  },
+  {
+   "k": 20,
+   "bytes_in_submission": 4692,
+   "fits_alone": true
+  },
+  {
+   "k": 25,
+   "bytes_in_submission": 6428,
+   "fits_alone": true
+  },
+  {
+   "k": 30,
+   "bytes_in_submission": 8416,
+   "fits_alone": true
+  },
+  {
+   "k": 40,
+   "bytes_in_submission": 12908,
+   "fits_alone": true
+  },
+  {
+   "k": 50,
+   "bytes_in_submission": 17708,
+   "fits_alone": true
+  },
+  {
+   "k": 60,
+   "bytes_in_submission": 22364,
+   "fits_alone": false
+  }
+ ],
+ "offline_models": {
+  "study_CNN_32_64_64": {
+   "name": "study_CNN_32_64_64",
+   "raw_bytes": 721652,
+   "zlib_bytes": 721411,
+   "base64_bytes": 961884,
+   "literals_at_4096": 235,
+   "bytes_in_submission": 962824,
+   "fraction_of_20480_cap": 47.012890625,
+   "parameters": 721034
+  },
+  "CNN_16_32_32": {
+   "name": "CNN_16_32_32",
+   "raw_bytes": 347860,
+   "zlib_bytes": 347662,
+   "base64_bytes": 463552,
+   "literals_at_4096": 114,
+   "bytes_in_submission": 464008,
+   "fraction_of_20480_cap": 22.656640625,
+   "parameters": 347402
+  },
+  "CNN_8_16_16": {
+   "name": "CNN_8_16_16",
+   "raw_bytes": 171332,
+   "zlib_bytes": 171220,
+   "base64_bytes": 228296,
+   "literals_at_4096": 56,
+   "bytes_in_submission": 228520,
+   "fraction_of_20480_cap": 11.158203125,
+   "parameters": 170954
+  },
+  "TinyCNN_8_16_16_pool": {
+   "name": "TinyCNN_8_16_16_pool",
+   "raw_bytes": 6338,
+   "zlib_bytes": 6316,
+   "base64_bytes": 8424,
+   "literals_at_4096": 3,
+   "bytes_in_submission": 8436,
+   "fraction_of_20480_cap": 0.4119140625,
+   "parameters": 6218
+  }
+ },
+ "attack_code_bytes": {
+  "per_function": {
+   "attacks.informed_attack": 10522,
+   "attacks._class_stats": 229,
+   "attacks._procrustes": 344,
+   "attacks._skew_along": 138,
+   "attacks.apply_linear": 122,
+   "harness.recover_label_permutation": 1869,
+   "harness.invariant_class_features": 633,
+   "models.CNN": 894
+  },
+  "total": 14751,
+  "note": "verbatim source of the functions the attack calls, comments and all; a minifier would cut this substantially, but it is the same order"
+ },
+ "verdict": {
+  "informed_attack_payload_bytes": 985188,
+  "over_cap_factor": 48.1048828125,
+  "fits": false,
+  "statement": "the informed attack needs 22364 bytes of class statistics plus 962824 bytes of int8 CNN weights, 48.1x the 20480-byte cap before a single line of code; no base64 packaging changes that, because base64 only inflates."
+ },
+ "cap_compliant_route": {
+  "artifact_bytes_in_submission": 8100,
+  "artifact_packaging": {
+   "name": "TinyCNN trained int8",
+   "raw_bytes": 6338,
+   "zlib_bytes": 6067,
+   "base64_bytes": 8092,
+   "literals_at_4096": 2,
+   "bytes_in_submission": 8100,
+   "fraction_of_20480_cap": 0.3955078125
+  },
+  "tiny_cnn_parameters": 6218,
+  "tiny_cnn_train_seconds": 55.440148287976626,
+  "tiny_cnn_on_true_test_pixels": 97.86,
+  "adapter_random_init_test_acc": 90.9,
+  "adapter_val_acc": 92.29999780654907,
+  "adapter_seconds": 45.91203351400327,
+  "honest_mlp_on_released_features": 95.94,
+  "honest_mlp_seconds": 16.89447649201611,
+  "gain_over_honest_mlp_points": -5.039999999999992
+ },
+ "minimal_payload_attack": {
+  "k_att": 30,
+  "class_statistics_bytes": 8416,
+  "tiny_cnn_bytes": 8100,
+  "payload_bytes": 16516,
+  "bytes_left_for_code": 3964,
+  "verbatim_attack_code_bytes": 14751,
+  "fits_with_verbatim_code": false,
+  "attacker_pick": "rlc",
+  "final_loss": 346.3545919410137,
+  "pixel_rel_rms": 0.7000170946121216,
+  "tiny_cnn_on_recovered_test_acc": 46.489999999999995,
+  "seconds": 71.62530219301698
+ },
+ "total_seconds": 192.966700621997
+}

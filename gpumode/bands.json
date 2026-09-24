@@ -1,0 +1,89 @@
+{
+  "comment": [
+    "Single source of truth for the accuracy bands. Edit this file and run",
+    "    python make_bands.py",
+    "to regenerate every mnist-medium-<band>/task.yml and sutro.yaml.",
+    "",
+    "error_bp is the maximum MEAN error in basis points over all draws of a",
+    "ranked run: the aggregate rule is",
+    "    sum(correct) >= ceil(draws * test * (10000 - error_bp) / 10000).",
+    "draw_slack_bp adds a per-draw floor on top of it, so a submission cannot",
+    "buy the mean by running a cheap learner on some of the draws.",
+    "A 15% entry band is { name: mnist-medium-15pct, error_bp: 1500 } and the",
+    "1.6% top band under discussion is { name: mnist-medium-1p6pct,",
+    "error_bp: 160 }; add either as one more object in bands[] and rerun.",
+    "",
+    "holdout_draws Fashion-MNIST calls are interleaved with the ranked ones at",
+    "secret positions; they are timed and ranked like any other call and must",
+    "clear holdout_min_bp in aggregate. 3000 bp (70%) was calibrated on the",
+    "harness 1.1.1 PIXEL release, on an A100: pca_qda 78.0%, the",
+    "conjugate-gradient pair 88.2%, mlp512 47.8% (which fails, and is an honest",
+    "learner; see the residual risks in README.md). Those three numbers are not",
+    "re-measured under release_dims 60 on a GPU; on CPU released Fashion draws",
+    "(10,000/10,000, two hold-out draws) pca_qda scores 75.4% and ncm_baseline",
+    "77.6%, so the margin over the floor is a few points and closing. Re-measure",
+    "before changing this number.",
+    "",
+    "release_dims is the width of the linear release z = Q W (x - mu) that a",
+    "draw hands over instead of pixels: exact PCA whitening onto that many",
+    "principal directions of the draw's own training rows, then a secret",
+    "per-draw Haar rotation. 60 of 81 keeps essentially all the signal (an",
+    "honest dense learner loses under a point) while deleting the pixel",
+    "lattice and the pixel covariance. 0 releases the raw 9x9 pixels, which is",
+    "what harness 1.1.1 did.",
+    "",
+    "Anything else a band may vary lives in defaults/ below and can be",
+    "overridden per band with the same keys."
+  ],
+  "deadline": "2026-12-31 23:59",
+  "gpu": "A100",
+  "defaults": {
+    "size": 9,
+    "release_dims": 60,
+    "train": 10000,
+    "test": 10000,
+    "draws": 11,
+    "bench_draws": 3,
+    "holdout": 1,
+    "holdout_min_bp": 3000,
+    "max_call_ms": 60000,
+    "test_seed": 101,
+    "benchmark_seed": 202,
+    "test_timeout": 300,
+    "benchmark_timeout": 600,
+    "ranked_timeout": 1200,
+    "holdout_draws": 2,
+    "draw_slack_bp": 150,
+    "dispersion_x10": 20,
+    "max_source_bytes": 20480,
+    "max_literal_bytes": 4096,
+    "warmup_max_call_ms": 120000
+  },
+  "bands": [
+    {
+      "name": "mnist-medium-2pct",
+      "error_bp": 200,
+      "label": "2%"
+    },
+    {
+      "name": "mnist-medium-3pct",
+      "error_bp": 300,
+      "label": "3%"
+    },
+    {
+      "name": "mnist-medium-5pct",
+      "error_bp": 500,
+      "label": "5%"
+    },
+    {
+      "name": "mnist-medium-8pct",
+      "error_bp": 800,
+      "label": "8%"
+    },
+    {
+      "name": "mnist-medium-12pct",
+      "error_bp": 1200,
+      "label": "12%"
+    }
+  ]
+}

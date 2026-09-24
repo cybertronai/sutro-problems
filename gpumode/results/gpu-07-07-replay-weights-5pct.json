@@ -1,0 +1,64 @@
+{
+  "runs": {
+    "test": {
+      "mode": "test",
+      "exit_code": 0,
+      "duration_s": 8.23,
+      "passed": true,
+      "result": {
+        "test-count": "1",
+        "test.0.spec": "size: 9; train: 10000; test: 10000; error_bp: 500; draw_slack_bp: 150; dispersion_x10: 20; max_call_ms: 60000; warmup_max_call_ms: 120000; max_source_bytes: 20480; max_literal_bytes: 4096; draws: 1; bench_draws: 1; seed: 101; holdout: 0",
+        "system.harness": "sutro-mnist-medium-time/1.1.0",
+        "system.torch": "2.12.0+cu130",
+        "system.cuda": "13.0",
+        "system.device": "NVIDIA A100-SXM4-40GB",
+        "system.device_count": "1",
+        "system.capability": "8.0",
+        "system.driver": "unknown",
+        "system.numpy": "2.5.3",
+        "system.python": "3.13.0",
+        "system.platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.39",
+        "test.0.status": "pass",
+        "test.0.message": "9689/10000 correct (96.89%), needs 8500 at the test-mode slack and 9500 on the leaderboard; 256.384 ms per call",
+        "check": "pass"
+      },
+      "stdout": "",
+      "stderr": "sutro-mnist-medium-time/1.1.0 test on cuda finished in 4.8 s\n"
+    },
+    "benchmark": {
+      "mode": "benchmark",
+      "exit_code": 112,
+      "duration_s": 7.26,
+      "passed": false,
+      "result": {
+        "benchmark-count": "1",
+        "benchmark.0.spec": "size: 9; train: 10000; test: 10000; error_bp: 500; draw_slack_bp: 150; dispersion_x10: 20; max_call_ms: 60000; warmup_max_call_ms: 120000; max_source_bytes: 20480; max_literal_bytes: 4096; draws: 11; bench_draws: 3; seed: 202; holdout: 1; holdout_draws: 2; holdout_min_bp: 3000",
+        "system.harness": "sutro-mnist-medium-time/1.1.0",
+        "system.torch": "2.12.0+cu130",
+        "system.cuda": "13.0",
+        "system.device": "NVIDIA A100-SXM4-40GB",
+        "system.device_count": "1",
+        "system.capability": "8.0",
+        "system.driver": "unknown",
+        "system.numpy": "2.5.3",
+        "system.python": "3.13.0",
+        "system.platform": "Linux-4.19.0-gvisor-x86_64-with-glibc2.39",
+        "benchmark.0.status": "fail",
+        "benchmark.0.error": "call durations differ by 20.7x (worst 247.557 ms, median 11.978 ms); the ranked calls are not doing the same work",
+        "check": "fail"
+      },
+      "stdout": "",
+      "stderr": "sutro-mnist-medium-time/1.1.0 benchmark on cuda finished in 4.8 s\n"
+    }
+  },
+  "passed": false,
+  "gpu": "NVIDIA A100-SXM4-40GB",
+  "torch": "2.12.0+cu130",
+  "band": "mnist-medium-5pct",
+  "submission": "redteam/replay-cache_weights.py",
+  "mode": "leaderboard",
+  "seed": 20260922,
+  "overrides": {},
+  "where": "modal",
+  "wall_s": 26.4
+}

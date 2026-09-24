@@ -1,0 +1,62 @@
+{
+  "runs": {
+    "test": {
+      "mode": "test",
+      "exit_code": 0,
+      "duration_s": 7.05,
+      "passed": true,
+      "result": {
+        "test-count": "1",
+        "test.0.spec": "size: 9; train: 10000; test: 10000; error_bp: 1200; draw_slack_bp: 150; dispersion_x10: 20; max_call_ms: 60000; warmup_max_call_ms: 120000; max_source_bytes: 20480; max_literal_bytes: 4096; draws: 2; bench_draws: 2; seed: 101; holdout: 0",
+        "system.harness": "sutro-mnist-medium-time/1.1.0",
+        "system.torch": "2.2.2",
+        "system.cuda": "none",
+        "system.device": "cpu",
+        "system.device_count": "0",
+        "system.numpy": "1.26.4",
+        "system.python": "3.11.13",
+        "system.platform": "macOS-26.6.2-x86_64-i386-64bit",
+        "test.0.status": "pass",
+        "test.0.message": "15962/20000 correct (79.81%), needs 15600 at the test-mode slack and 17600 on the leaderboard; 2.394 ms per call",
+        "check": "pass"
+      },
+      "stdout": "",
+      "stderr": "sutro-mnist-medium-time/1.1.0 test on cpu finished in 5.0 s\n"
+    },
+    "benchmark": {
+      "mode": "benchmark",
+      "exit_code": 112,
+      "duration_s": 7.02,
+      "passed": false,
+      "result": {
+        "benchmark-count": "1",
+        "benchmark.0.spec": "size: 9; train: 10000; test: 10000; error_bp: 1200; draw_slack_bp: 150; dispersion_x10: 20; max_call_ms: 60000; warmup_max_call_ms: 120000; max_source_bytes: 20480; max_literal_bytes: 4096; draws: 2; bench_draws: 2; seed: 202; holdout: 1; holdout_draws: 2; holdout_min_bp: 3000",
+        "system.harness": "sutro-mnist-medium-time/1.1.0",
+        "system.torch": "2.2.2",
+        "system.cuda": "none",
+        "system.device": "cpu",
+        "system.device_count": "0",
+        "system.numpy": "1.26.4",
+        "system.python": "3.11.13",
+        "system.platform": "macOS-26.6.2-x86_64-i386-64bit",
+        "benchmark.0.status": "fail",
+        "benchmark.0.error": "draw 0 scored 7965 of 10000, below the per-draw floor 8650; every ranked call must do the same work",
+        "check": "fail"
+      },
+      "stdout": "",
+      "stderr": "sutro-mnist-medium-time/1.1.0 benchmark on cpu finished in 5.0 s\n"
+    }
+  },
+  "passed": false,
+  "gpu": "cpu",
+  "band": "mnist-medium-12pct",
+  "submission": "redteam/io-and-process.py",
+  "mode": "leaderboard",
+  "seed": 20260922,
+  "overrides": {
+    "draws": 2,
+    "bench_draws": 2
+  },
+  "where": "local",
+  "wall_s": 14.1
+}
