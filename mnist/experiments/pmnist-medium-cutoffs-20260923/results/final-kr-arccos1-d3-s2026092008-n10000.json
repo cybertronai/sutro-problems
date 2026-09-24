@@ -1,0 +1,143 @@
+{
+  "completed_at": "2026-09-24T00:58:59Z",
+  "hardware": "macOS-26.6.2-x86_64-i386-64bit",
+  "job": {
+    "candidate_id": "kr-arccos1-d3",
+    "config": {
+      "cv_subsample": 4000,
+      "depth": 3,
+      "family": "kernel_ridge",
+      "kernel": "arccos1",
+      "kernel_block": 2000,
+      "lambda_grid": [
+        1e-07,
+        1e-06,
+        1e-05,
+        0.0001,
+        0.001
+      ],
+      "predict_block": 2000,
+      "uses_query_images_unlabeled": false
+    },
+    "id": "final-kr-arccos1-d3-s2026092008-n10000",
+    "input_sha256": {
+      "query_x": "4d501cc6e79622301ba0d70f54d2cc2dd2798eaf364e54f72e3569ea82557251",
+      "train_x": "4a0dc517a56f678078dd67e6aa875d63bfce6e58e6fd18d5c820e4ee00754e96",
+      "train_y": "a968b0bf90fb5b6a984fee465cd1af1261fb1b0c171c6a9fc0f8fe5d1b5ceff4"
+    },
+    "learner_seed": 11,
+    "n": 10000,
+    "query_indices_sha256": "6e586f720f4e675d2aaabef6e3ffb4b3ef4c20b48d4a9ce642f7def065e5effd",
+    "seed": 2026092008,
+    "stage": "final",
+    "time_budget_seconds": 1200,
+    "train_indices_sha256": "c8087033e93a5f6ec94c01e2b031aff4388ab2ba18da20a8b87cb573587539fc"
+  },
+  "metrics": {
+    "chosen_depth": 3,
+    "chosen_gamma": null,
+    "chosen_kernel": "arccos1",
+    "chosen_lambda": 1e-07,
+    "cv_accuracy": 0.9630092476880779,
+    "cv_all_unstable": false,
+    "cv_folds": 5,
+    "cv_rows": 4001,
+    "cv_seconds": 11.923238515853882,
+    "cv_table": [
+      {
+        "cv_accuracy": 0.9630092476880779,
+        "gamma": null,
+        "lambda": 1e-07,
+        "unstable": false
+      },
+      {
+        "cv_accuracy": 0.9622594351412147,
+        "gamma": null,
+        "lambda": 1e-06,
+        "unstable": false
+      },
+      {
+        "cv_accuracy": 0.9592601849537615,
+        "gamma": null,
+        "lambda": 1e-05,
+        "unstable": false
+      },
+      {
+        "cv_accuracy": 0.9457635591102225,
+        "gamma": null,
+        "lambda": 0.0001,
+        "unstable": false
+      },
+      {
+        "cv_accuracy": 0.9062734316420895,
+        "gamma": null,
+        "lambda": 0.001,
+        "unstable": false
+      }
+    ],
+    "cv_unstable_rows": 0,
+    "epochs_completed": null,
+    "family": "kernel_ridge",
+    "fit_wall_seconds": 53.26775097846985,
+    "inference_seconds": 20.07611584663391,
+    "kernel_diagonal_scale": 75.44739325991145,
+    "n_features": 81,
+    "n_query": 10000,
+    "n_train": 10000,
+    "normalization": "4*x - 0.5",
+    "platform": "macOS-26.6.2-x86_64-i386-64bit",
+    "predicted_label_histogram": [
+      974,
+      1115,
+      1012,
+      1046,
+      965,
+      916,
+      1024,
+      1016,
+      987,
+      945
+    ],
+    "query_labels_supplied": false,
+    "seed": 11,
+    "total_seconds": 53.25909614562988,
+    "train_label_histogram": [
+      985,
+      1134,
+      998,
+      1029,
+      971,
+      886,
+      1017,
+      1034,
+      959,
+      987
+    ],
+    "training_seconds": 21.25974178314209,
+    "truncated": false,
+    "uses_query_images_unlabeled": false,
+    "wall_seconds": 53.26775097846985
+  },
+  "output_sha256": {
+    "labels": "6b9d2888206bafafb7315993ec0f7486c85e90f7898c95c5d3858cd368e9315d",
+    "logits": "644ac4b3ba0cbb7a39259aa73ef9236850f8346e650278644208e8d51ce3c5c4"
+  },
+  "predictions_path": "predictions/final-kr-arccos1-d3-s2026092008-n10000.npz",
+  "predictions_sha256": "a76a746fe550268fb3054e89fb3dce1960e0bf64cbb15813cf64d4a7f45f5684",
+  "provenance": {
+    "runner": "run_classical.py",
+    "runner_sha256": "be84a6c65c38bc19161da9b9ec99f47545a990816f8c12d05608f2b459349fb5",
+    "source_sha256": {
+      "canonical_data.py": "982bedbc56d928760f47f78017102652fe5492c57e3160e410514ded445744fa",
+      "classical.py": "13c113e60ebb666777c0c668047bfc40426334c62aa77db80f94915e48e35f6e",
+      "study.py": "84afbe279f480bf330dbdb39f830f487cdf530482e82dfe3dc423bdb4dfe1ff4"
+    }
+  },
+  "query_labels_supplied": false,
+  "software": {
+    "numpy": "1.26.4",
+    "python": "3.11.13",
+    "scikit-learn": "1.4.2",
+    "scipy": "1.11.4"
+  }
+}

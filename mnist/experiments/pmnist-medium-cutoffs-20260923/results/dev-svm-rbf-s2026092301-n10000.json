@@ -1,0 +1,191 @@
+{
+  "completed_at": "2026-09-23T22:57:20Z",
+  "hardware": "macOS-26.6.2-x86_64-i386-64bit",
+  "job": {
+    "candidate_id": "svm-rbf",
+    "config": {
+      "C_grid": [
+        2,
+        5,
+        10,
+        20
+      ],
+      "cache_size": 1000,
+      "cv_subsample": 4000,
+      "family": "svm_rbf",
+      "gamma_grid": [
+        "scale",
+        0.01,
+        0.02,
+        0.05
+      ],
+      "uses_query_images_unlabeled": false
+    },
+    "id": "dev-svm-rbf-s2026092301-n10000",
+    "input_sha256": {
+      "query_x": "8d0d0b65c433e3fe5b6ea01e9356faace742c8e2fae2fa61c65e50e5b578f33c",
+      "train_x": "ffc814c9bb1fc0833772bcd72474cd1be5d6b1e6c8236c95b350050201848bf2",
+      "train_y": "675174b43cb71dde8dd1c1ef5a03fbd3e9df1278c3de0882ae88b7a5eba9b809"
+    },
+    "learner_seed": 11,
+    "n": 10000,
+    "query_indices_sha256": "d3923dbf09c5c87f4aabebd7c36da6e347c709a5f5ba5ac212adec235937fb31",
+    "seed": 2026092301,
+    "stage": "dev",
+    "time_budget_seconds": 1200,
+    "train_indices_sha256": "9e360be42795ac906fcaa5d420f32f63affb7085ad6ea53d1e2819d1fa44b0e5"
+  },
+  "metrics": {
+    "chosen_C": 2,
+    "chosen_gamma": 0.05,
+    "cv_accuracy": 0.9545113721569608,
+    "cv_folds": 5,
+    "cv_rows": 4001,
+    "cv_seconds": 57.207961559295654,
+    "cv_table": [
+      {
+        "C": 2,
+        "cv_accuracy": 0.9435141214696325,
+        "gamma": "scale"
+      },
+      {
+        "C": 2,
+        "cv_accuracy": 0.9400149962509373,
+        "gamma": 0.01
+      },
+      {
+        "C": 2,
+        "cv_accuracy": 0.9502624343914021,
+        "gamma": 0.02
+      },
+      {
+        "C": 2,
+        "cv_accuracy": 0.9545113721569608,
+        "gamma": 0.05
+      },
+      {
+        "C": 5,
+        "cv_accuracy": 0.9477630592351912,
+        "gamma": "scale"
+      },
+      {
+        "C": 5,
+        "cv_accuracy": 0.9455136215946014,
+        "gamma": 0.01
+      },
+      {
+        "C": 5,
+        "cv_accuracy": 0.9532616845788553,
+        "gamma": 0.02
+      },
+      {
+        "C": 5,
+        "cv_accuracy": 0.9542614346413396,
+        "gamma": 0.05
+      },
+      {
+        "C": 10,
+        "cv_accuracy": 0.9492626843289178,
+        "gamma": "scale"
+      },
+      {
+        "C": 10,
+        "cv_accuracy": 0.9467633091727068,
+        "gamma": 0.01
+      },
+      {
+        "C": 10,
+        "cv_accuracy": 0.9525118720319921,
+        "gamma": 0.02
+      },
+      {
+        "C": 10,
+        "cv_accuracy": 0.9542614346413396,
+        "gamma": 0.05
+      },
+      {
+        "C": 20,
+        "cv_accuracy": 0.9492626843289178,
+        "gamma": "scale"
+      },
+      {
+        "C": 20,
+        "cv_accuracy": 0.9480129967508123,
+        "gamma": 0.01
+      },
+      {
+        "C": 20,
+        "cv_accuracy": 0.9522619345163709,
+        "gamma": 0.02
+      },
+      {
+        "C": 20,
+        "cv_accuracy": 0.9542614346413396,
+        "gamma": 0.05
+      }
+    ],
+    "epochs_completed": null,
+    "family": "svm_rbf",
+    "fit_wall_seconds": 73.06263589859009,
+    "inference_seconds": 12.15975284576416,
+    "n_features": 81,
+    "n_query": 10000,
+    "n_support_vectors": 4166,
+    "n_train": 10000,
+    "normalization": "4*x - 0.5",
+    "platform": "macOS-26.6.2-x86_64-i386-64bit",
+    "predicted_label_histogram": [
+      1032,
+      1127,
+      942,
+      1082,
+      992,
+      905,
+      992,
+      1048,
+      924,
+      956
+    ],
+    "query_labels_supplied": false,
+    "seed": 11,
+    "total_seconds": 73.05691623687744,
+    "train_label_histogram": [
+      1015,
+      1103,
+      1047,
+      1047,
+      945,
+      899,
+      969,
+      1043,
+      973,
+      959
+    ],
+    "training_seconds": 3.689201831817627,
+    "truncated": false,
+    "uses_query_images_unlabeled": false,
+    "wall_seconds": 73.06263589859009
+  },
+  "output_sha256": {
+    "labels": "c19cb6048a108377036baeb0e8a04c8f5e025292fdf5b37709249fa30cc9395c",
+    "logits": "de9b1ffdafdd28e06ee52b8a8c168e44ebddbadaa13ed98470398a6a1918fd4f"
+  },
+  "predictions_path": "predictions/dev-svm-rbf-s2026092301-n10000.npz",
+  "predictions_sha256": "084d33dbd88ab698b8586efe3bc913a1d82142381434c539a6b99a7ca7ece72d",
+  "provenance": {
+    "runner": "run_classical.py",
+    "runner_sha256": "be84a6c65c38bc19161da9b9ec99f47545a990816f8c12d05608f2b459349fb5",
+    "source_sha256": {
+      "canonical_data.py": "982bedbc56d928760f47f78017102652fe5492c57e3160e410514ded445744fa",
+      "classical.py": "13c113e60ebb666777c0c668047bfc40426334c62aa77db80f94915e48e35f6e",
+      "study.py": "84afbe279f480bf330dbdb39f830f487cdf530482e82dfe3dc423bdb4dfe1ff4"
+    }
+  },
+  "query_labels_supplied": false,
+  "software": {
+    "numpy": "1.26.4",
+    "python": "3.11.13",
+    "scikit-learn": "1.4.2",
+    "scipy": "1.11.4"
+  }
+}

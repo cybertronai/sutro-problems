@@ -1,0 +1,191 @@
+{
+  "completed_at": "2026-09-23T22:55:49Z",
+  "hardware": "macOS-26.6.2-x86_64-i386-64bit",
+  "job": {
+    "candidate_id": "svm-rbf",
+    "config": {
+      "C_grid": [
+        2,
+        5,
+        10,
+        20
+      ],
+      "cache_size": 1000,
+      "cv_subsample": 4000,
+      "family": "svm_rbf",
+      "gamma_grid": [
+        "scale",
+        0.01,
+        0.02,
+        0.05
+      ],
+      "uses_query_images_unlabeled": false
+    },
+    "id": "dev-svm-rbf-s2026092301-n1000",
+    "input_sha256": {
+      "query_x": "8d0d0b65c433e3fe5b6ea01e9356faace742c8e2fae2fa61c65e50e5b578f33c",
+      "train_x": "6acf26db5de8912d2cfd7145ffe49fb89d4627cae6b54e79b3da1ef723a7e5dc",
+      "train_y": "61e7a5a787f45b2b6551da89af4b898fa39810dd6969691e174134403aa811a5"
+    },
+    "learner_seed": 11,
+    "n": 1000,
+    "query_indices_sha256": "d3923dbf09c5c87f4aabebd7c36da6e347c709a5f5ba5ac212adec235937fb31",
+    "seed": 2026092301,
+    "stage": "dev",
+    "time_budget_seconds": 1200,
+    "train_indices_sha256": "bef128cb634361a2605a2f0594548c5c955b82b907c15f89d3a65756a75d3b71"
+  },
+  "metrics": {
+    "chosen_C": 2,
+    "chosen_gamma": 0.02,
+    "cv_accuracy": 0.917,
+    "cv_folds": 5,
+    "cv_rows": 1000,
+    "cv_seconds": 6.51728367805481,
+    "cv_table": [
+      {
+        "C": 2,
+        "cv_accuracy": 0.911,
+        "gamma": "scale"
+      },
+      {
+        "C": 2,
+        "cv_accuracy": 0.906,
+        "gamma": 0.01
+      },
+      {
+        "C": 2,
+        "cv_accuracy": 0.917,
+        "gamma": 0.02
+      },
+      {
+        "C": 2,
+        "cv_accuracy": 0.905,
+        "gamma": 0.05
+      },
+      {
+        "C": 5,
+        "cv_accuracy": 0.905,
+        "gamma": "scale"
+      },
+      {
+        "C": 5,
+        "cv_accuracy": 0.905,
+        "gamma": 0.01
+      },
+      {
+        "C": 5,
+        "cv_accuracy": 0.914,
+        "gamma": 0.02
+      },
+      {
+        "C": 5,
+        "cv_accuracy": 0.905,
+        "gamma": 0.05
+      },
+      {
+        "C": 10,
+        "cv_accuracy": 0.907,
+        "gamma": "scale"
+      },
+      {
+        "C": 10,
+        "cv_accuracy": 0.897,
+        "gamma": 0.01
+      },
+      {
+        "C": 10,
+        "cv_accuracy": 0.913,
+        "gamma": 0.02
+      },
+      {
+        "C": 10,
+        "cv_accuracy": 0.905,
+        "gamma": 0.05
+      },
+      {
+        "C": 20,
+        "cv_accuracy": 0.9,
+        "gamma": "scale"
+      },
+      {
+        "C": 20,
+        "cv_accuracy": 0.895,
+        "gamma": 0.01
+      },
+      {
+        "C": 20,
+        "cv_accuracy": 0.913,
+        "gamma": 0.02
+      },
+      {
+        "C": 20,
+        "cv_accuracy": 0.905,
+        "gamma": 0.05
+      }
+    ],
+    "epochs_completed": null,
+    "family": "svm_rbf",
+    "fit_wall_seconds": 8.477750062942505,
+    "inference_seconds": 1.896378993988037,
+    "n_features": 81,
+    "n_query": 10000,
+    "n_support_vectors": 646,
+    "n_train": 1000,
+    "normalization": "4*x - 0.5",
+    "platform": "macOS-26.6.2-x86_64-i386-64bit",
+    "predicted_label_histogram": [
+      1035,
+      1173,
+      908,
+      1092,
+      951,
+      818,
+      1023,
+      1047,
+      921,
+      1032
+    ],
+    "query_labels_supplied": false,
+    "seed": 11,
+    "total_seconds": 8.471523761749268,
+    "train_label_histogram": [
+      103,
+      116,
+      102,
+      133,
+      86,
+      78,
+      86,
+      99,
+      100,
+      97
+    ],
+    "training_seconds": 0.0578610897064209,
+    "truncated": false,
+    "uses_query_images_unlabeled": false,
+    "wall_seconds": 8.477750062942505
+  },
+  "output_sha256": {
+    "labels": "6180cb836bbf9d1744f0b490dfd1a4f6e3c6718a94cd3c72f85056d007eb9ba1",
+    "logits": "32cee6ce06201216a7f4cbd3e7118f41706ed998fa5d4b3bc4d3d3c42fc01a1b"
+  },
+  "predictions_path": "predictions/dev-svm-rbf-s2026092301-n1000.npz",
+  "predictions_sha256": "0c6ecf1b82a971b406c0b2e83b0458f73b65026218fc955d59dab4d5110dd0bb",
+  "provenance": {
+    "runner": "run_classical.py",
+    "runner_sha256": "be84a6c65c38bc19161da9b9ec99f47545a990816f8c12d05608f2b459349fb5",
+    "source_sha256": {
+      "canonical_data.py": "982bedbc56d928760f47f78017102652fe5492c57e3160e410514ded445744fa",
+      "classical.py": "13c113e60ebb666777c0c668047bfc40426334c62aa77db80f94915e48e35f6e",
+      "study.py": "84afbe279f480bf330dbdb39f830f487cdf530482e82dfe3dc423bdb4dfe1ff4"
+    }
+  },
+  "query_labels_supplied": false,
+  "software": {
+    "numpy": "1.26.4",
+    "python": "3.11.13",
+    "scikit-learn": "1.4.2",
+    "scipy": "1.11.4"
+  }
+}

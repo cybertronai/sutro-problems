@@ -1,0 +1,138 @@
+{
+  "status": "frozen",
+  "frozen_at_utc": "2026-09-24T00:19:35.609834+00:00",
+  "rule": "protocol.draft.json selection_rule (frozen 2026-09-23T23:20Z before any GPU dev result)",
+  "learner_seed": 11,
+  "dev_evidence": {
+    "n10000": {
+      "kr-arccos1-d3": {
+        "mean_error_pct": 2.315,
+        "dev_seeds": 2
+      },
+      "ladder-tq-bs250": {
+        "mean_error_pct": 2.54,
+        "dev_seeds": 1
+      },
+      "ladder-retuned-tq": {
+        "mean_error_pct": 2.55,
+        "dev_seeds": 1
+      },
+      "mlp-std-dn-e16": {
+        "mean_error_pct": 2.75,
+        "dev_seeds": 1
+      },
+      "topo-cnn09-x3": {
+        "mean_error_pct": 1.53,
+        "dev_seeds": 1
+      }
+    },
+    "n1000": {
+      "ladder-retuned-tq": {
+        "mean_error_pct": 5.5,
+        "dev_seeds": 1
+      },
+      "ladder-tq-bs250": {
+        "mean_error_pct": 5.56,
+        "dev_seeds": 1
+      },
+      "kr-arccos1-d3": {
+        "mean_error_pct": 5.705,
+        "dev_seeds": 2
+      },
+      "mlp-std-dnml-1024x3": {
+        "mean_error_pct": 7.87,
+        "dev_seeds": 1
+      },
+      "topo-cnn09-x3": {
+        "mean_error_pct": 4.16,
+        "dev_seeds": 1
+      }
+    },
+    "eligibility_note": "ladder-retuned-tq and ladder-retuned were truncated at the 1200 s guard at N=10000 and are ineligible there; all listed N=1000 fits were untruncated."
+  },
+  "candidates": [
+    {
+      "id": "kr-arccos1-d3",
+      "runner": "classical",
+      "role": "top of ladder: lowest eligible dev error at N=10000 (2.315%, two dev seeds)",
+      "config": {
+        "family": "kernel_ridge",
+        "kernel": "arccos1",
+        "depth": 3,
+        "lambda_grid": [
+          1e-07,
+          1e-06,
+          1e-05,
+          0.0001,
+          0.001
+        ],
+        "cv_subsample": 4000,
+        "predict_block": 2000,
+        "uses_query_images_unlabeled": false,
+        "kernel_block": 2000
+      },
+      "levels": [
+        1000,
+        1778,
+        3162,
+        5623,
+        10000
+      ]
+    },
+    {
+      "id": "ladder-retuned-tq",
+      "runner": "gpu",
+      "role": "bottom of ladder: lowest eligible dev error at N=1000 (5.50%; ladder-tq-bs250 5.56% is outside the 0.05 pp tie window)",
+      "config": {
+        "batch_size": 100,
+        "decay_start_epoch": 200,
+        "epochs": 300,
+        "family": "ladder",
+        "hidden_dims": [
+          1000,
+          500,
+          250,
+          250,
+          250
+        ],
+        "input_reconstruction_weight": 300.0,
+        "lr": 0.002,
+        "members": 2,
+        "noise_std": 0.2,
+        "notes": "same retuned point, denoising cost driven by train_x + 10000 query_x",
+        "unlabeled": "train+query"
+      },
+      "levels": [
+        1000
+      ]
+    },
+    {
+      "id": "topo-cnn09-x3",
+      "runner": "gpu",
+      "role": "ladder B (unrestricted permutation-invariant: data-driven topology recovery + cnn-09 x3)",
+      "config": {
+        "family": "topo_cnn",
+        "layout_max_seconds": 300.0,
+        "member_seeds": [
+          101,
+          102,
+          103
+        ],
+        "notes": "recover a 9x9 layout from train_x alone, then the frozen cnn-09 recipe x3"
+      },
+      "levels": [
+        1000,
+        1778,
+        3162,
+        5623,
+        10000
+      ]
+    }
+  ],
+  "ladder_definition": {
+    "A_dense": "per level, the minimum over dense candidates measured at that level on the eleven final seeds (kr-arccos1-d3 at all levels; ladder-retuned-tq at N=1000)",
+    "B_unrestricted": "topo-cnn09-x3 at all levels"
+  },
+  "budget_fallback_applied": "The frozen rule asks for the N=1000 winner at all five levels. ladder-retuned-tq costs ~180 s at N=1000 but is truncated (>1200 s) at N=10000 and ~320-900 s at the middle levels; with $7.36 of the $20 upper-envelope ledger left after two development rounds, it is measured at N=1000 only. This is the fallback clause of the frozen rule and is disclosed in the report.",
+  "not_changed_after_final_labels": true
+}

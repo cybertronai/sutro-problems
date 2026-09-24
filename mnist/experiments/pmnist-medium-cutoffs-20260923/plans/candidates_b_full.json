@@ -1,0 +1,367 @@
+{
+  "candidates": [
+    {
+      "id": "mlp-std-dn",
+      "config": {
+        "family": "mlp",
+        "widths": [
+          1024,
+          1024
+        ],
+        "activation": "relu",
+        "dropout": 0.3,
+        "input_noise_std": 0.3,
+        "mixup_alpha": 0.0,
+        "label_smoothing": 0.0,
+        "lr": 0.002,
+        "weight_decay": 0.01,
+        "epochs": 300,
+        "batch_size": 128,
+        "warmup_fraction": 0.1,
+        "schedule": "cosine",
+        "members": 1,
+        "normalization": "standardize"
+      },
+      "rationale": "pilot recipe that measured 2.70% at 10k: standardized inputs, dropout 0.3, noise 0.3 SD"
+    },
+    {
+      "id": "mlp-std-dn-e16",
+      "config": {
+        "family": "mlp",
+        "widths": [
+          1024,
+          1024
+        ],
+        "activation": "relu",
+        "dropout": 0.3,
+        "input_noise_std": 0.3,
+        "mixup_alpha": 0.0,
+        "label_smoothing": 0.0,
+        "lr": 0.002,
+        "weight_decay": 0.01,
+        "epochs": 300,
+        "batch_size": 128,
+        "warmup_fraction": 0.1,
+        "schedule": "cosine",
+        "members": 16,
+        "normalization": "standardize"
+      },
+      "rationale": "same, 16 batched members (mean softmax)"
+    },
+    {
+      "id": "mlp-std-dn-e64",
+      "config": {
+        "family": "mlp",
+        "widths": [
+          1024,
+          1024
+        ],
+        "activation": "relu",
+        "dropout": 0.3,
+        "input_noise_std": 0.3,
+        "mixup_alpha": 0.0,
+        "label_smoothing": 0.0,
+        "lr": 0.002,
+        "weight_decay": 0.01,
+        "epochs": 300,
+        "batch_size": 128,
+        "warmup_fraction": 0.1,
+        "schedule": "cosine",
+        "members": 64,
+        "normalization": "standardize"
+      },
+      "rationale": "same, 64 members: the compute-heavy arm (~500 s at 10k)"
+    },
+    {
+      "id": "mlp-std-dnml-1024x3",
+      "config": {
+        "family": "mlp",
+        "widths": [
+          1024,
+          1024,
+          1024
+        ],
+        "activation": "relu",
+        "dropout": 0.3,
+        "input_noise_std": 0.3,
+        "mixup_alpha": 0.4,
+        "label_smoothing": 0.05,
+        "lr": 0.003,
+        "weight_decay": 0.01,
+        "epochs": 200,
+        "batch_size": 256,
+        "warmup_fraction": 0.1,
+        "schedule": "cosine",
+        "members": 3,
+        "normalization": "standardize"
+      },
+      "rationale": "pilot 10k recipe: 3x1024, mixup 0.4, label smoothing 0.05, lr 3e-3, bs 256, 200 epochs"
+    },
+    {
+      "id": "mlp-std-noise0p15",
+      "config": {
+        "family": "mlp",
+        "widths": [
+          1024,
+          1024
+        ],
+        "activation": "relu",
+        "dropout": 0.3,
+        "input_noise_std": 0.15,
+        "mixup_alpha": 0.0,
+        "label_smoothing": 0.0,
+        "lr": 0.002,
+        "weight_decay": 0.01,
+        "epochs": 300,
+        "batch_size": 128,
+        "warmup_fraction": 0.1,
+        "schedule": "cosine",
+        "members": 1,
+        "normalization": "standardize"
+      },
+      "rationale": "noise sensitivity: 0.15 SD"
+    },
+    {
+      "id": "mlp-std-noise0p5",
+      "config": {
+        "family": "mlp",
+        "widths": [
+          1024,
+          1024
+        ],
+        "activation": "relu",
+        "dropout": 0.3,
+        "input_noise_std": 0.5,
+        "mixup_alpha": 0.0,
+        "label_smoothing": 0.0,
+        "lr": 0.002,
+        "weight_decay": 0.01,
+        "epochs": 300,
+        "batch_size": 128,
+        "warmup_fraction": 0.1,
+        "schedule": "cosine",
+        "members": 1,
+        "normalization": "standardize"
+      },
+      "rationale": "noise sensitivity: 0.5 SD"
+    },
+    {
+      "id": "mlp-std-drop0p1",
+      "config": {
+        "family": "mlp",
+        "widths": [
+          1024,
+          1024
+        ],
+        "activation": "relu",
+        "dropout": 0.1,
+        "input_noise_std": 0.3,
+        "mixup_alpha": 0.0,
+        "label_smoothing": 0.0,
+        "lr": 0.002,
+        "weight_decay": 0.01,
+        "epochs": 300,
+        "batch_size": 128,
+        "warmup_fraction": 0.1,
+        "schedule": "cosine",
+        "members": 1,
+        "normalization": "standardize"
+      },
+      "rationale": "dropout sensitivity: 0.1"
+    },
+    {
+      "id": "mlp-std-2048x2",
+      "config": {
+        "family": "mlp",
+        "widths": [
+          2048,
+          2048
+        ],
+        "activation": "relu",
+        "dropout": 0.3,
+        "input_noise_std": 0.3,
+        "mixup_alpha": 0.0,
+        "label_smoothing": 0.0,
+        "lr": 0.002,
+        "weight_decay": 0.01,
+        "epochs": 300,
+        "batch_size": 128,
+        "warmup_fraction": 0.1,
+        "schedule": "cosine",
+        "members": 1,
+        "normalization": "standardize"
+      },
+      "rationale": "width sensitivity"
+    },
+    {
+      "id": "mlp-std-dn-long-e4",
+      "config": {
+        "family": "mlp",
+        "widths": [
+          1024,
+          1024
+        ],
+        "activation": "relu",
+        "dropout": 0.3,
+        "input_noise_std": 0.3,
+        "mixup_alpha": 0.0,
+        "label_smoothing": 0.0,
+        "lr": 0.002,
+        "weight_decay": 0.01,
+        "epochs": 900,
+        "batch_size": 128,
+        "warmup_fraction": 0.1,
+        "schedule": "cosine",
+        "members": 4,
+        "normalization": "standardize"
+      },
+      "rationale": "900 epochs, 4 members"
+    },
+    {
+      "id": "mlp-std-dn-ema-e4",
+      "config": {
+        "family": "mlp",
+        "widths": [
+          1024,
+          1024
+        ],
+        "activation": "relu",
+        "dropout": 0.3,
+        "input_noise_std": 0.3,
+        "mixup_alpha": 0.0,
+        "label_smoothing": 0.0,
+        "lr": 0.002,
+        "weight_decay": 0.01,
+        "epochs": 300,
+        "batch_size": 128,
+        "warmup_fraction": 0.1,
+        "schedule": "cosine",
+        "members": 4,
+        "normalization": "standardize",
+        "ema_decay": 0.999
+      },
+      "rationale": "EMA 0.999, 4 members"
+    },
+    {
+      "id": "mlp-4x-dn0p3",
+      "config": {
+        "family": "mlp",
+        "widths": [
+          1024,
+          1024
+        ],
+        "activation": "relu",
+        "dropout": 0.3,
+        "input_noise_std": 0.3,
+        "mixup_alpha": 0.0,
+        "label_smoothing": 0.0,
+        "lr": 0.002,
+        "weight_decay": 0.01,
+        "epochs": 300,
+        "batch_size": 128,
+        "warmup_fraction": 0.1,
+        "schedule": "cosine",
+        "members": 1,
+        "normalization": "4x-0.5"
+      },
+      "rationale": "control: scalar 4x-0.5 normalization with noise 0.3"
+    },
+    {
+      "id": "mlp-std-dn-vat-tq-eps1",
+      "config": {
+        "family": "mlp",
+        "widths": [
+          1024,
+          1024
+        ],
+        "activation": "relu",
+        "dropout": 0.3,
+        "input_noise_std": 0.3,
+        "mixup_alpha": 0.0,
+        "label_smoothing": 0.0,
+        "lr": 0.002,
+        "weight_decay": 0.01,
+        "epochs": 300,
+        "batch_size": 128,
+        "warmup_fraction": 0.1,
+        "schedule": "cosine",
+        "members": 3,
+        "normalization": "standardize",
+        "vat": {
+          "eps": 1.0,
+          "xi": 1e-06,
+          "weight": 1.0,
+          "power_iterations": 1,
+          "unlabeled": "train+query",
+          "batch_size": 256
+        }
+      },
+      "rationale": "VAT eps 1.0 (standardized units), transductive, 3 members"
+    },
+    {
+      "id": "mlp-std-dn-vat-train-eps1",
+      "config": {
+        "family": "mlp",
+        "widths": [
+          1024,
+          1024
+        ],
+        "activation": "relu",
+        "dropout": 0.3,
+        "input_noise_std": 0.3,
+        "mixup_alpha": 0.0,
+        "label_smoothing": 0.0,
+        "lr": 0.002,
+        "weight_decay": 0.01,
+        "epochs": 300,
+        "batch_size": 128,
+        "warmup_fraction": 0.1,
+        "schedule": "cosine",
+        "members": 3,
+        "normalization": "standardize",
+        "vat": {
+          "eps": 1.0,
+          "xi": 1e-06,
+          "weight": 1.0,
+          "power_iterations": 1,
+          "unlabeled": "train",
+          "batch_size": 256
+        }
+      },
+      "rationale": "VAT eps 1.0 on training inputs only (control), 3 members"
+    },
+    {
+      "id": "mlp-std-dn-vat-tq-eps0p5",
+      "config": {
+        "family": "mlp",
+        "widths": [
+          1024,
+          1024
+        ],
+        "activation": "relu",
+        "dropout": 0.3,
+        "input_noise_std": 0.3,
+        "mixup_alpha": 0.0,
+        "label_smoothing": 0.0,
+        "lr": 0.002,
+        "weight_decay": 0.01,
+        "epochs": 300,
+        "batch_size": 128,
+        "warmup_fraction": 0.1,
+        "schedule": "cosine",
+        "members": 3,
+        "normalization": "standardize",
+        "vat": {
+          "eps": 0.5,
+          "xi": 1e-06,
+          "weight": 1.0,
+          "power_iterations": 1,
+          "unlabeled": "train+query",
+          "batch_size": 256
+        }
+      },
+      "rationale": "VAT eps 0.5 transductive, 3 members"
+    }
+  ],
+  "notes": "Full second-round candidate list as drafted before the budget trim (record only; plans/candidates_b.json is the executed subset)."
+}

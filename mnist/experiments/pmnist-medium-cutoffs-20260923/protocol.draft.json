@@ -1,0 +1,172 @@
+{
+  "classical_dev_results_note": "CPU classical baselines were scored on dev seeds before any GPU dev result existed; they do not alter the frozen selection rule.",
+  "compute": {
+    "budget_note": "wall clock on one GPU including inference; learners stop gracefully",
+    "container_image": "ghcr.io/ab-10/wikitext-bench@sha256:95de89319ba89c53a91d5440a5db4ff46f68b05031062c0a760ec3caa48dc42f",
+    "gpu": "A100-40GB",
+    "per_fit_time_budget_seconds": 1200,
+    "required_metrics": [
+      "epochs_completed",
+      "truncated",
+      "fit_wall_seconds"
+    ]
+  },
+  "data_manifest": {
+    "feature_permutation_sha256": "3ac42cff61c9726b7427663826790add46b993dad8e87ed213fafe877101c025",
+    "path": "raw/data_manifest.json",
+    "pool_images_sha256": "bbf3f293a60e6f94c68504eb4d8cb9f94cedb748e35d853092a180c85b1464a4",
+    "pool_labels_sha256": "1feba77c54802fa5339a11837ea4b2866434b83314ec45192930f1df69120c13",
+    "sha256": "a557e524f939b043c81513d7fd6dba84ddb3dd1156dd1dcc4e7442399f10791b"
+  },
+  "development_rounds": {
+    "classical": "plans/classical.json (28 CPU jobs, dev seeds 2026092301 and 2026092302).",
+    "round1": "plans/candidates.draft.json -> plans/dev1.json (36 jobs, seed 2026092301, levels 1000/10000); 4x-0.5 normalization; 3 jobs ran on 2 GPUs, the rest on 8.",
+    "round2": "plans/candidates_b.json (executed 4-candidate subset of plans/candidates_b_full.json) -> plans/dev1b.json (8 jobs, 4 GPUs); per-feature standardized MLPs and a batch-250 transductive Ladder.",
+    "second_dev_seed_note": "The frozen rule allowed a second dev seed for the top five GPU candidates if the budget permitted; after round 1 the upper-envelope ledger had $8.78 left, so GPU candidates have one dev seed and the CPU kernel candidates have two."
+  },
+  "disclosures": [
+    "The literature-research agent ran informal single-draw CPU pilots (kernel ridge, MLP variants, VAT, SVM, kNN) on dataset seed 2026092001, which is one of the eleven FINAL seeds, using its query labels through a throwaway local script. Those pilots informed the candidate list, not the selection rule; the formal selection uses only dev seeds. This is a mild contamination of one final draw at the level of recipe design and is disclosed here.",
+    "The classical-baseline builder scored its CPU baselines on dev seeds 2026092301/2026092302 with a throwaway script while developing; no final-seed labels were used.",
+    "The first two smoke apps failed inside the container because block_network=True prevented Modal blob-store transfers; no learner output was produced; the ledger charged an upper-envelope $0.13 for them.",
+    "Modal sometimes serves an NVIDIA A100 80GB PCIe when A100-40GB is requested (observed in the smoke stage, as in the earlier nine-a100-throughput study). The ledger charges the published A100-40GB rate ($0.00065316 per worker-second) for every second of app lifetime with both workers assumed busy; the report adds a separate note on the at most ~6% rate difference. The ledger is an upper-envelope estimate, not a provider invoice.",
+    "Development round 1 (2026-09-23/24, dev seed 2026092301): all four VAT arms (input_noise_std 1.2 in 4x-0.5 units, eps 2-4.5, 600 epochs) scored ~90% error (constant class). A CPU reproduction of the exact config (1200x1200, single member) reproduced the collapse by epoch 100: training loss on NOISED inputs fell to 0.47 while error on CLEAN training inputs was 89.7%, i.e. the network learned the noisy-input regime only. Short CPU runs (20 epochs) and configs without the 4x-scaled noise train normally. The cause is the noise-unit conversion error (the pilot used per-feature standardized inputs with noise 0.3 SD), amplified by VAT and long training; it is not a CUDA or VAT-implementation defect. VAT with standardized inputs was drafted for round 2 but dropped for budget; it is untested here."
+  ],
+  "drafted_at_utc": "2026-09-23T21:33:09Z",
+  "draws": {
+    "dev_seeds": [
+      2026092301,
+      2026092302,
+      2026092303
+    ],
+    "disjointness": "query rows are disjoint from every training prefix (n <= 10000)",
+    "final_seed_note": "the same eleven seeds as mnist/experiments/cutoff-calibration-20260920, enabling a paired comparison against its spatial CNN results",
+    "final_seeds": [
+      2026092001,
+      2026092002,
+      2026092003,
+      2026092004,
+      2026092005,
+      2026092006,
+      2026092007,
+      2026092008,
+      2026092009,
+      2026092010,
+      2026092011
+    ],
+    "nesting": "training prefixes are nested across levels within a dataset seed",
+    "query_count": 10000,
+    "query_slice": [
+      10000,
+      20000
+    ],
+    "rule": "order = Generator(PCG64(SeedSequence(seed).spawn(2)[0])).permutation(60000); train = order[:n] (nested prefixes across levels); query = order[10000:20000]",
+    "stage_seed_binding": "'smoke' and 'dev' jobs may only use dev seeds and 'final' jobs only final seeds; study.make_job refuses other combinations and score.py refuses to read query labels for a job whose stage and seed disagree"
+  },
+  "features": {
+    "dtype": "float32 in [0,1]",
+    "permutation_disclosure": "Learners never receive perm, its inverse, pixel coordinates, or any spatial metadata. Recovering topology from the data itself is allowed and must be declared by the candidate.",
+    "permutation_rule": "perm = np.random.Generator(np.random.PCG64(20260923)).permutation(81); every train and query image is presented as x[:, perm]",
+    "permutation_seed": 20260923,
+    "resize": "uint8 -> float32/255; canonical_data.area_resize exact separable box-area averaging 28->9; np.clip to [0,1]; flatten row-major to 81 features (f=row*9+col)",
+    "shape": [
+      81
+    ]
+  },
+  "learner_contract": {
+    "api": "learners.fit_predict(train_x, train_y, query_x, config, seed, deadline_unix, device)",
+    "forbidden": [
+      "query labels",
+      "the feature permutation",
+      "pixel coordinates",
+      "the official MNIST test split",
+      "any pretrained weights or external data"
+    ],
+    "input_allowlist": [
+      "train_x",
+      "train_y",
+      "query_x"
+    ],
+    "query_x": "float32 (10000,81) permuted pixels",
+    "train_x": "float32 (n,81) permuted pixels",
+    "train_y": "uint8 (n,) labels 0-9",
+    "transductive_rule": "unlabeled use of query_x is allowed and must be recorded per candidate as 'uses_query_images_unlabeled'"
+  },
+  "levels": [
+    {
+      "exact": 1000.0,
+      "index": 0,
+      "n": 1000
+    },
+    {
+      "exact": 1778.2794100389228,
+      "index": 1,
+      "n": 1778
+    },
+    {
+      "exact": 3162.2776601683795,
+      "index": 2,
+      "n": 3162
+    },
+    {
+      "exact": 5623.413251903491,
+      "index": 3,
+      "n": 5623
+    },
+    {
+      "exact": 10000.0,
+      "index": 4,
+      "n": 10000
+    }
+  ],
+  "outputs": {
+    "predictions": "predictions/<job_id>.npz with logits float32 (10000,10) and labels uint8 (10000,)",
+    "results": "results/<job_id>.json per the study-wide contract",
+    "tie_break": "labels = argmax over logits with ties resolved to the lowest class index"
+  },
+  "prediction_freeze": "final scoring requires predictions/final_freeze.json covering every planned final job id; score.py refuses to score an unfrozen or altered final run, requires every planned job to have a result even for a --job-id spot check (which writes results/scores_final_filtered.json, never the canonical table), marks the freeze 'scored' once final labels have been read and then refuses any re-freeze; superseding an unscored freeze needs --refreeze and archives the previous file",
+  "question": "Best achievable permutation-invariant accuracy under 1200 s on one A100-40GB per fit, and a five-level ladder from 1,000 to 10,000 training examples.",
+  "schema_version": 1,
+  "selection_rule": {
+    "bottom_of_ladder": "The same rule applied at N=1000. If the N=1000 winner differs from the N=10000 winner, both recipes are measured on the final draws at all five levels and the ladder reports the per-level minimum with the recipe identified.",
+    "budget_fallback": "If the projected final cost of a winner exceeds the remaining authorized allowance, the next-best eligible candidate whose projected cost fits is used instead, and the substitution is disclosed in the report.",
+    "dev_evidence": "Query error on dev seed 2026092301 at N=1000 and N=10000 for every candidate in plans/candidates.draft.json (GPU) and plans/classical_candidates.json (CPU); a second dev seed (2026092302) is run for the top five candidates at each N if the budget permits, and the mean over available dev seeds is used.",
+    "eligibility": "A candidate is eligible at a level only if every dev fit at that level finished untruncated within the 1200 s per-fit budget on one A100-40GB (classical CPU fits: within 1200 s wall on the controller CPU).",
+    "final_measurement": "Selected recipe(s) are retrained from scratch on every final seed 2026092001..2026092011 at every level 1000, 1778, 3162, 5623, 10000 with learner seed 11; all predictions are frozen (predictions/final_freeze.json) before score.py reads any final query label.",
+    "frozen_at_utc": "2026-09-23T23:20:00Z",
+    "frozen_before_any_gpu_dev_result": true,
+    "no_test_guided_changes": "No recipe hyperparameter, epoch count, member count or checkpoint is changed after final query labels are read.",
+    "top_of_ladder": "The recipe with the lowest mean dev error at N=10000 among eligible candidates; ties within 0.05 percentage points go to the recipe with lower mean fit wall time.",
+    "two_ladders": "Results are reported separately for (A) dense-only permutation-invariant recipes (families mlp, ladder, classical) and (B) unrestricted permutation-invariant recipes, which additionally admit data-driven pixel-topology recovery followed by a convolutional learner (family topo_cnn). The choice between A and B is a competition-rules decision for the user, not a result of this study."
+  },
+  "software": {
+    "local_python": "/tmp/pmnist-env/bin/python (3.11, numpy 1.26.4, torch 2.2.2 CPU)",
+    "preparation": {
+      "numpy": "1.26.4",
+      "python": "3.11.13"
+    },
+    "remote": "PyTorch 2.5.1+cu124, numpy 2.2.6"
+  },
+  "source": {
+    "files": {
+      "train_images": {
+        "bytes": 9912422,
+        "md5": "f68b3c2dcbeaaa9fbdd348bbdeb94873",
+        "path": "raw/source/train-images-idx3-ubyte.gz",
+        "sha256": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609"
+      },
+      "train_labels": {
+        "bytes": 28881,
+        "md5": "d53e105ee54ea40749a09fcbcd1e9432",
+        "path": "raw/source/train-labels-idx1-ubyte.gz",
+        "sha256": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c"
+      }
+    },
+    "generator": "canonical_data.py (verbatim copy of mnist/code/data.py)",
+    "generator_sha256": "982bedbc56d928760f47f78017102652fe5492c57e3160e410514ded445744fa",
+    "pool": "official MNIST 60,000-example training split (no official test split is used)"
+  },
+  "status": "draft",
+  "study": "pmnist-medium-cutoffs-20260923",
+  "task": "MNIST-medium, permutation-invariant (9x9, 10,000 queries)",
+  "test_labels_created": false
+}

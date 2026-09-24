@@ -1,0 +1,152 @@
+{
+  "completed_at": "2026-09-23T23:03:01.517757+00:00",
+  "hardware": "NVIDIA A100-SXM4-40GB",
+  "job": {
+    "candidate_id": "smoke-mlp",
+    "config": {
+      "batch_size": 128,
+      "epochs": 3,
+      "family": "mlp",
+      "lr": 0.001,
+      "members": 2,
+      "widths": [
+        256
+      ]
+    },
+    "id": "smoke-smoke-mlp-s2026092301-n1000",
+    "input_sha256": {
+      "query_x": "8d0d0b65c433e3fe5b6ea01e9356faace742c8e2fae2fa61c65e50e5b578f33c",
+      "train_x": "6acf26db5de8912d2cfd7145ffe49fb89d4627cae6b54e79b3da1ef723a7e5dc",
+      "train_y": "61e7a5a787f45b2b6551da89af4b898fa39810dd6969691e174134403aa811a5"
+    },
+    "learner_seed": 11,
+    "n": 1000,
+    "query_indices_sha256": "d3923dbf09c5c87f4aabebd7c36da6e347c709a5f5ba5ac212adec235937fb31",
+    "seed": 2026092301,
+    "stage": "smoke",
+    "time_budget_seconds": 300,
+    "train_indices_sha256": "bef128cb634361a2605a2f0594548c5c955b82b907c15f89d3a65756a75d3b71"
+  },
+  "job_wall_seconds": 6.966282233000001,
+  "metrics": {
+    "config": {
+      "activation": "relu",
+      "autocast_bf16": false,
+      "batch_size": 128,
+      "dropout": 0.0,
+      "ema_decay": 0.0,
+      "epochs": 3,
+      "eval_batch_size": 2000,
+      "family": "mlp",
+      "inference_margin_seconds": 20.0,
+      "init_input_permutation": null,
+      "input_noise_std": 0.0,
+      "label_smoothing": 0.0,
+      "lr": 0.001,
+      "members": 2,
+      "mixup_alpha": 0.0,
+      "notes": "",
+      "schedule": "cosine",
+      "tf32": false,
+      "vat": null,
+      "warmup_fraction": 0.0,
+      "weight_decay": 0.0,
+      "widths": [
+        256
+      ]
+    },
+    "deadline_unix": 1790204878.0138493,
+    "device_name": "NVIDIA A100-SXM4-40GB",
+    "ema_bias_correction": null,
+    "ema_used": false,
+    "epochs_completed": 3,
+    "epochs_planned": 3,
+    "family": "mlp",
+    "fit_wall_seconds": 3.473640231,
+    "history": [
+      {
+        "elapsed_training_seconds": 0.6381021809999989,
+        "epoch": 1,
+        "learning_rate": 0.0008043807145043603,
+        "mean_member_loss": 2.1722960472106934
+      },
+      {
+        "elapsed_training_seconds": 0.6778955599999996,
+        "epoch": 3,
+        "learning_rate": 4.277569313094809e-06,
+        "mean_member_loss": 1.7566757202148438
+      }
+    ],
+    "inference_seconds": 0.004967140999999842,
+    "logit_kind": "log_mean_prob",
+    "mean_epoch_seconds": 0.22519550366666685,
+    "members": 2,
+    "normalization": "4*x-0.5 (permutation-invariant scalar map)",
+    "parameters": 47124,
+    "query_count": 10000,
+    "query_labels_supplied": false,
+    "seed": 11,
+    "steps_completed": 24,
+    "steps_per_epoch": 8,
+    "train_count": 1000,
+    "training_seconds": 0.6779258590000001,
+    "truncated": false,
+    "uses_query_images_unlabeled": false,
+    "vat": null
+  },
+  "output_sha256": {
+    "labels": "956e424e00f82cf274972b0ef42a31c3138793d378a49fb3d4340805e93d565c",
+    "logits": "68af671d25fdb9c309f9b42288e45850378155a615abf8840b5a0f6bd2ad2ee6"
+  },
+  "output_specs": {
+    "labels": {
+      "dtype": "uint8",
+      "shape": [
+        10000
+      ]
+    },
+    "logits": {
+      "dtype": "float32",
+      "shape": [
+        10000,
+        10
+      ]
+    }
+  },
+  "predictions_path": "predictions/smoke-smoke-mlp-s2026092301-n1000.npz",
+  "predictions_sha256": "2bca827eea0523b1022d87d4c6a569ee062cb6726178bfc6afb2a16920d7fb43",
+  "provenance": {
+    "app_id": "ap-NrxOtgNVKSiiMtHTuEI5fq",
+    "authorization_sha256": "acc7c73df27ccfe773cfda5eed049a7df91513faf40e502fca8478badccd0547",
+    "budget_reservation": "smoke-20260923-230245",
+    "controller_python": "3.11.13",
+    "data_manifest_sha256": "a557e524f939b043c81513d7fd6dba84ddb3dd1156dd1dcc4e7442399f10791b",
+    "dispatched_at": "2026-09-23T23:02:47.864372+00:00",
+    "global_deadline_unix": 1790219520.0,
+    "image": "ghcr.io/ab-10/wikitext-bench@sha256:95de89319ba89c53a91d5440a5db4ff46f68b05031062c0a760ec3caa48dc42f",
+    "image_source_sha256": {
+      "ladder_model.py": "a6647310c30e20fe558a951a336bf0816c3b337447328abc345a4349900d0cc3",
+      "learners.py": "a78a66b2f75029f5293da916f4e9548b0a5e3e2917d7c0b9fe90aff86eaa48b5",
+      "spatial_learner.py": "b3e3cda033543d70090b78ca3681da6907152464b75541eb5954047cdfd2e7bc",
+      "topology.py": "56ca34dd9646e76af34f6fbe2b285b168ef46cf3cdd0fb0d31d5640630264c93"
+    },
+    "plan_sha256": "0e008c22ead226415ac46e72f480bd4be42d9ab49bd2d276af41f406d3ac04cc",
+    "source_sha256": {
+      "budget.py": "1e2abf482f4835f08ad14c60cf4196c6b5ffed20458f9c6b8c3552880636e0a2",
+      "ladder_model.py": "a6647310c30e20fe558a951a336bf0816c3b337447328abc345a4349900d0cc3",
+      "learners.py": "a78a66b2f75029f5293da916f4e9548b0a5e3e2917d7c0b9fe90aff86eaa48b5",
+      "runner.py": "6ea598c060e26aa0940ed74f8daa990dc66c247f710029375f1c49127e497d49",
+      "spatial_learner.py": "b3e3cda033543d70090b78ca3681da6907152464b75541eb5954047cdfd2e7bc",
+      "topology.py": "56ca34dd9646e76af34f6fbe2b285b168ef46cf3cdd0fb0d31d5640630264c93"
+    }
+  },
+  "query_labels_supplied": false,
+  "software": {
+    "cuda": "12.4",
+    "cudnn": 90100,
+    "image": "ghcr.io/ab-10/wikitext-bench@sha256:95de89319ba89c53a91d5440a5db4ff46f68b05031062c0a760ec3caa48dc42f",
+    "numpy": "2.2.6",
+    "python": "3.11.15",
+    "torch": "2.5.1+cu124"
+  }
+}

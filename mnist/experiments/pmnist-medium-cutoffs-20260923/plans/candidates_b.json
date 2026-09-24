@@ -1,0 +1,100 @@
+{
+  "candidates": [
+    {
+      "id": "mlp-std-dn",
+      "config": {
+        "family": "mlp",
+        "widths": [
+          1024,
+          1024
+        ],
+        "activation": "relu",
+        "dropout": 0.3,
+        "input_noise_std": 0.3,
+        "mixup_alpha": 0.0,
+        "label_smoothing": 0.0,
+        "lr": 0.002,
+        "weight_decay": 0.01,
+        "epochs": 300,
+        "batch_size": 128,
+        "warmup_fraction": 0.1,
+        "schedule": "cosine",
+        "members": 1,
+        "normalization": "standardize"
+      },
+      "rationale": "pilot recipe that measured 2.70% at 10k: standardized inputs, dropout 0.3, noise 0.3 SD"
+    },
+    {
+      "id": "mlp-std-dn-e16",
+      "config": {
+        "family": "mlp",
+        "widths": [
+          1024,
+          1024
+        ],
+        "activation": "relu",
+        "dropout": 0.3,
+        "input_noise_std": 0.3,
+        "mixup_alpha": 0.0,
+        "label_smoothing": 0.0,
+        "lr": 0.002,
+        "weight_decay": 0.01,
+        "epochs": 300,
+        "batch_size": 128,
+        "warmup_fraction": 0.1,
+        "schedule": "cosine",
+        "members": 16,
+        "normalization": "standardize"
+      },
+      "rationale": "same, 16 batched members (mean softmax)"
+    },
+    {
+      "id": "mlp-std-dnml-1024x3",
+      "config": {
+        "family": "mlp",
+        "widths": [
+          1024,
+          1024,
+          1024
+        ],
+        "activation": "relu",
+        "dropout": 0.3,
+        "input_noise_std": 0.3,
+        "mixup_alpha": 0.4,
+        "label_smoothing": 0.05,
+        "lr": 0.003,
+        "weight_decay": 0.01,
+        "epochs": 200,
+        "batch_size": 256,
+        "warmup_fraction": 0.1,
+        "schedule": "cosine",
+        "members": 3,
+        "normalization": "standardize"
+      },
+      "rationale": "pilot 10k recipe: 3x1024, mixup 0.4, label smoothing 0.05, lr 3e-3, bs 256, 200 epochs"
+    },
+    {
+      "id": "ladder-tq-bs250",
+      "config": {
+        "family": "ladder",
+        "hidden_dims": [
+          1000,
+          500,
+          250,
+          250,
+          250
+        ],
+        "noise_std": 0.2,
+        "input_reconstruction_weight": 300,
+        "epochs": 300,
+        "decay_start_epoch": 200,
+        "lr": 0.002,
+        "batch_size": 250,
+        "unlabeled": "train+query",
+        "members": 1
+      },
+      "rationale": "round-1 leader at 1k (ladder-retuned-tq, 5.50%) was truncated at 10k with batch 100 (3.9 s/epoch); batch 250 fits 300 epochs in the 20-minute budget"
+    }
+  ],
+  "notes": "Second development round (2026-09-23, after the first round showed the 4x-normalized noise 1.2 MLPs at ~7% error, i.e. over-regularised). The literature agent's pilot standardized each feature to unit variance with training-set statistics (std floor 1e-5) before adding noise 0.3; these candidates reproduce that convention via the new normalization=standardize option. Round-1 results remain in the dev table. TRIMMED 2026-09-24 to four candidates because the upper-envelope ledger had $8.78 left after round 1; the dropped variants (noise/width/EMA/long/VAT) are listed in plans/candidates_b_full.json. VAT was dropped because all four round-1 VAT arms collapsed to a constant class on the A100 while identical configs train normally on CPU at short horizons; see research notes."
+}

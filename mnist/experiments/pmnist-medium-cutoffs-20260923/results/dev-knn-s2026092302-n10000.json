@@ -1,0 +1,117 @@
+{
+  "completed_at": "2026-09-23T23:02:15Z",
+  "hardware": "macOS-26.6.2-x86_64-i386-64bit",
+  "job": {
+    "candidate_id": "knn",
+    "config": {
+      "family": "knn",
+      "k_grid": [
+        1,
+        3,
+        5,
+        7
+      ],
+      "uses_query_images_unlabeled": false
+    },
+    "id": "dev-knn-s2026092302-n10000",
+    "input_sha256": {
+      "query_x": "54f48291aced898672bc9d61067d0a86b522f7ed8d04c51150bdc22783ed25d5",
+      "train_x": "5616a8980aed7c1e077e7da3ae1c557aaa07c2242e451436b6361d3b8b23ed03",
+      "train_y": "89ff736facde73b0642b088f4aaa79ccd09aa76dc49d7d2cedf4085f8bd4a27b"
+    },
+    "learner_seed": 11,
+    "n": 10000,
+    "query_indices_sha256": "b416f7b9e71e75de1891dfea8f44d9a367009891e216afab441212676a8eba56",
+    "seed": 2026092302,
+    "stage": "dev",
+    "time_budget_seconds": 1200,
+    "train_indices_sha256": "2ec7a274c45a5fd2f71e12d54d61aed80be7666cbcc8ed4596a04356d03955e6"
+  },
+  "metrics": {
+    "chosen_k": 3,
+    "cv_accuracy": 0.9494,
+    "cv_folds": 5,
+    "cv_rows": 10000,
+    "cv_seconds": 1.0142173767089844,
+    "cv_table": [
+      {
+        "cv_accuracy": 0.9479,
+        "k": 1
+      },
+      {
+        "cv_accuracy": 0.9494,
+        "k": 3
+      },
+      {
+        "cv_accuracy": 0.9466,
+        "k": 5
+      },
+      {
+        "cv_accuracy": 0.9461,
+        "k": 7
+      }
+    ],
+    "epochs_completed": null,
+    "family": "knn",
+    "fit_wall_seconds": 1.209475040435791,
+    "inference_seconds": 0.1826789379119873,
+    "n_features": 81,
+    "n_query": 10000,
+    "n_train": 10000,
+    "normalization": "4*x - 0.5",
+    "platform": "macOS-26.6.2-x86_64-i386-64bit",
+    "predicted_label_histogram": [
+      1008,
+      1145,
+      982,
+      997,
+      976,
+      897,
+      1014,
+      1058,
+      873,
+      1050
+    ],
+    "query_labels_supplied": false,
+    "seed": 11,
+    "total_seconds": 1.2034721374511719,
+    "train_label_histogram": [
+      996,
+      1135,
+      972,
+      1002,
+      980,
+      878,
+      1056,
+      1040,
+      975,
+      966
+    ],
+    "training_seconds": 0.006575822830200195,
+    "truncated": false,
+    "uses_query_images_unlabeled": false,
+    "wall_seconds": 1.209475040435791
+  },
+  "output_sha256": {
+    "labels": "d1d4850ab407179d5f592a013dcc56f2aa8606a1ba4c326e3392e98441128a00",
+    "logits": "42ccb69240be00d6051d1d42bb9028e781f7ff64bc4721e1de2e8fef3819dbd6"
+  },
+  "predictions_path": "predictions/dev-knn-s2026092302-n10000.npz",
+  "predictions_sha256": "14d7e8ef3453fbee8f1127775704d3af62b847ebb9270d2f63b3a83b4553b2d3",
+  "provenance": {
+    "runner": "run_classical.py",
+    "runner_sha256": "be84a6c65c38bc19161da9b9ec99f47545a990816f8c12d05608f2b459349fb5",
+    "source_sha256": {
+      "canonical_data.py": "982bedbc56d928760f47f78017102652fe5492c57e3160e410514ded445744fa",
+      "classical.py": "13c113e60ebb666777c0c668047bfc40426334c62aa77db80f94915e48e35f6e",
+      "study.py": "84afbe279f480bf330dbdb39f830f487cdf530482e82dfe3dc423bdb4dfe1ff4"
+    }
+  },
+  "query_labels_supplied": false,
+  "software": {
+    "numpy": "1.26.4",
+    "python": "3.11.13",
+    "scikit-learn": "1.4.2",
+    "scipy": "1.11.4"
+  }
+}

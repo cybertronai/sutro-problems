@@ -1,0 +1,143 @@
+{
+  "completed_at": "2026-09-24T00:29:19Z",
+  "hardware": "macOS-26.6.2-x86_64-i386-64bit",
+  "job": {
+    "candidate_id": "kr-arccos1-d3",
+    "config": {
+      "cv_subsample": 4000,
+      "depth": 3,
+      "family": "kernel_ridge",
+      "kernel": "arccos1",
+      "kernel_block": 2000,
+      "lambda_grid": [
+        1e-07,
+        1e-06,
+        1e-05,
+        0.0001,
+        0.001
+      ],
+      "predict_block": 2000,
+      "uses_query_images_unlabeled": false
+    },
+    "id": "final-kr-arccos1-d3-s2026092002-n1000",
+    "input_sha256": {
+      "query_x": "f4c34275a773b9672d6bef95ca968e39dddc8ae1f35d0f23a60cae0e960409e0",
+      "train_x": "160586f83a6bd1dccd3ccdffc20fa0b9d30a9624f4f1b09331b5bf6fc20a31fb",
+      "train_y": "bda4fc35993adf3dcf205b3293e7240e9a54376f0872e0fbb448d38a7973ed8e"
+    },
+    "learner_seed": 11,
+    "n": 1000,
+    "query_indices_sha256": "e103bbabdd07b08b9050941966b63603b51744cfcbe18b5bfa9f827b156c0187",
+    "seed": 2026092002,
+    "stage": "final",
+    "time_budget_seconds": 1200,
+    "train_indices_sha256": "0c17d13d68407a7afeb209e6a549691ef0aa6ae5a1d292e812a64fab42e109bc"
+  },
+  "metrics": {
+    "chosen_depth": 3,
+    "chosen_gamma": null,
+    "chosen_kernel": "arccos1",
+    "chosen_lambda": 1e-05,
+    "cv_accuracy": 0.925,
+    "cv_all_unstable": false,
+    "cv_folds": 5,
+    "cv_rows": 1000,
+    "cv_seconds": 6.425875902175903,
+    "cv_table": [
+      {
+        "cv_accuracy": 0.922,
+        "gamma": null,
+        "lambda": 1e-07,
+        "unstable": false
+      },
+      {
+        "cv_accuracy": 0.922,
+        "gamma": null,
+        "lambda": 1e-06,
+        "unstable": false
+      },
+      {
+        "cv_accuracy": 0.925,
+        "gamma": null,
+        "lambda": 1e-05,
+        "unstable": false
+      },
+      {
+        "cv_accuracy": 0.919,
+        "gamma": null,
+        "lambda": 0.0001,
+        "unstable": false
+      },
+      {
+        "cv_accuracy": 0.879,
+        "gamma": null,
+        "lambda": 0.001,
+        "unstable": false
+      }
+    ],
+    "cv_unstable_rows": 0,
+    "epochs_completed": null,
+    "family": "kernel_ridge",
+    "fit_wall_seconds": 13.701869249343872,
+    "inference_seconds": 6.265571117401123,
+    "kernel_diagonal_scale": 74.0062089242864,
+    "n_features": 81,
+    "n_query": 10000,
+    "n_train": 1000,
+    "normalization": "4*x - 0.5",
+    "platform": "macOS-26.6.2-x86_64-i386-64bit",
+    "predicted_label_histogram": [
+      993,
+      1174,
+      960,
+      1014,
+      979,
+      846,
+      1035,
+      1039,
+      919,
+      1041
+    ],
+    "query_labels_supplied": false,
+    "seed": 11,
+    "total_seconds": 13.686764001846313,
+    "train_label_histogram": [
+      106,
+      110,
+      92,
+      99,
+      103,
+      85,
+      100,
+      106,
+      102,
+      97
+    ],
+    "training_seconds": 0.9953169822692871,
+    "truncated": false,
+    "uses_query_images_unlabeled": false,
+    "wall_seconds": 13.701869249343872
+  },
+  "output_sha256": {
+    "labels": "342f911c26baafdb2b1fc7afddad280ef912adb95ef4576d3b66619677ff81c8",
+    "logits": "0a8cf7fa531e4245184e53c2f011895606a98fb19d7a110390e7f65229614217"
+  },
+  "predictions_path": "predictions/final-kr-arccos1-d3-s2026092002-n1000.npz",
+  "predictions_sha256": "b600bd507ccd5f3045d50d41e7fc03ec38f293d8936aebe91f6ea0d744dbac08",
+  "provenance": {
+    "runner": "run_classical.py",
+    "runner_sha256": "be84a6c65c38bc19161da9b9ec99f47545a990816f8c12d05608f2b459349fb5",
+    "source_sha256": {
+      "canonical_data.py": "982bedbc56d928760f47f78017102652fe5492c57e3160e410514ded445744fa",
+      "classical.py": "13c113e60ebb666777c0c668047bfc40426334c62aa77db80f94915e48e35f6e",
+      "study.py": "84afbe279f480bf330dbdb39f830f487cdf530482e82dfe3dc423bdb4dfe1ff4"
+    }
+  },
+  "query_labels_supplied": false,
+  "software": {
+    "numpy": "1.26.4",
+    "python": "3.11.13",
+    "scikit-learn": "1.4.2",
+    "scipy": "1.11.4"
+  }
+}

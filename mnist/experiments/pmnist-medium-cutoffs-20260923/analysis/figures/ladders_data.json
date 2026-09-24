@@ -1,0 +1,272 @@
+{
+  "figure": "analysis/figures/ladders.png",
+  "description": "Test error (%) vs labelled training examples for the two permutation-invariant ladders on 9x9 MNIST-medium, with the spatial cnn-09 x3 true-grid reference. Eleven disjoint 10k/10k draws from the official MNIST training split.",
+  "draws": 11,
+  "ladder_levels": [
+    1000,
+    1778,
+    3162,
+    5623,
+    10000
+  ],
+  "sources": {
+    "ladders_json": "/Users/yaroslavvb/git/sutro-problems/mnist/experiments/pmnist-medium-cutoffs-20260923/analysis/ladders.json",
+    "reference_csv": "/Users/yaroslavvb/git/sutro-problems/mnist/experiments/cutoff-calibration-20260920/analysis_outputs/learning_curves.csv (series=ensemble_final)"
+  },
+  "series": {
+    "A_dense": {
+      "label": "Ladder A - dense permutation-invariant",
+      "color": "#2a78d6",
+      "points": [
+        {
+          "n": 1000,
+          "candidate": "ladder-retuned-tq",
+          "mean_error_pct": 5.462727272727272,
+          "sd_pp": 0.3367221676424322,
+          "per_draw_error_pct": [
+            5.74,
+            5.42,
+            5.43,
+            5.17,
+            5.38,
+            5.36,
+            4.8,
+            5.5,
+            6.02,
+            5.9,
+            5.37
+          ]
+        },
+        {
+          "n": 1778,
+          "candidate": "kr-arccos1-d3",
+          "mean_error_pct": 4.946363636363637,
+          "sd_pp": 0.30611346678226126,
+          "per_draw_error_pct": [
+            4.82,
+            5.11,
+            5.17,
+            4.81,
+            4.96,
+            4.93,
+            4.44,
+            4.43,
+            5.38,
+            5.13,
+            5.23
+          ]
+        },
+        {
+          "n": 3162,
+          "candidate": "kr-arccos1-d3",
+          "mean_error_pct": 3.817272727272727,
+          "sd_pp": 0.20746522161995765,
+          "per_draw_error_pct": [
+            3.98,
+            4.03,
+            3.84,
+            3.7,
+            3.65,
+            3.64,
+            3.74,
+            3.43,
+            4.09,
+            3.84,
+            4.05
+          ]
+        },
+        {
+          "n": 5623,
+          "candidate": "kr-arccos1-d3",
+          "mean_error_pct": 3.075454545454546,
+          "sd_pp": 0.1253286588425517,
+          "per_draw_error_pct": [
+            3.1,
+            3.26,
+            3.17,
+            3.01,
+            2.99,
+            3.13,
+            3.01,
+            2.96,
+            3.28,
+            2.88,
+            3.04
+          ]
+        },
+        {
+          "n": 10000,
+          "candidate": "kr-arccos1-d3",
+          "mean_error_pct": 2.4681818181818183,
+          "sd_pp": 0.159425103532548,
+          "per_draw_error_pct": [
+            2.42,
+            2.44,
+            2.62,
+            2.36,
+            2.41,
+            2.53,
+            2.61,
+            2.07,
+            2.54,
+            2.54,
+            2.61
+          ]
+        }
+      ]
+    },
+    "B_unrestricted": {
+      "label": "Ladder B - topology recovery + CNN",
+      "color": "#eb6834",
+      "points": [
+        {
+          "n": 1000,
+          "candidate": "topo-cnn09-x3",
+          "mean_error_pct": 3.9990909090909095,
+          "sd_pp": 0.33128400340054287,
+          "per_draw_error_pct": [
+            3.98,
+            3.94,
+            3.96,
+            3.82,
+            4.59,
+            3.9,
+            3.5,
+            3.78,
+            4.63,
+            3.94,
+            3.95
+          ]
+        },
+        {
+          "n": 1778,
+          "candidate": "topo-cnn09-x3",
+          "mean_error_pct": 3.144545454545455,
+          "sd_pp": 0.1961307541597511,
+          "per_draw_error_pct": [
+            3.25,
+            2.96,
+            3.3,
+            3.09,
+            2.84,
+            3.1,
+            2.89,
+            3.1,
+            3.45,
+            3.25,
+            3.36
+          ]
+        },
+        {
+          "n": 3162,
+          "candidate": "topo-cnn09-x3",
+          "mean_error_pct": 2.4127272727272726,
+          "sd_pp": 0.169238938137233,
+          "per_draw_error_pct": [
+            2.66,
+            2.52,
+            2.39,
+            2.3,
+            2.38,
+            2.16,
+            2.19,
+            2.31,
+            2.65,
+            2.43,
+            2.55
+          ]
+        },
+        {
+          "n": 5623,
+          "candidate": "topo-cnn09-x3",
+          "mean_error_pct": 1.8963636363636367,
+          "sd_pp": 0.09157212755775934,
+          "per_draw_error_pct": [
+            1.92,
+            1.91,
+            1.89,
+            1.88,
+            1.88,
+            1.84,
+            1.8,
+            1.75,
+            1.98,
+            1.91,
+            2.1
+          ]
+        },
+        {
+          "n": 10000,
+          "candidate": "topo-cnn09-x3",
+          "mean_error_pct": 1.5454545454545454,
+          "sd_pp": 0.11228211223197004,
+          "per_draw_error_pct": [
+            1.51,
+            1.48,
+            1.64,
+            1.54,
+            1.63,
+            1.41,
+            1.37,
+            1.43,
+            1.65,
+            1.67,
+            1.67
+          ]
+        }
+      ]
+    },
+    "spatial_cnn09_reference": {
+      "label": "spatial cnn-09 x3 (true grid)",
+      "color": "#1baf7a",
+      "style": "dashed",
+      "per_draw_available": false,
+      "points": [
+        {
+          "n": 800,
+          "mean_error_pct": 4.352727272727273,
+          "sd_pp": 0.3249643337072828
+        },
+        {
+          "n": 1600,
+          "mean_error_pct": 3.287272727272727,
+          "sd_pp": 0.24674241261246155
+        },
+        {
+          "n": 3200,
+          "mean_error_pct": 2.400909090909091,
+          "sd_pp": 0.21431073447004684
+        },
+        {
+          "n": 6400,
+          "mean_error_pct": 1.799090909090909,
+          "sd_pp": 0.11579762911688178
+        },
+        {
+          "n": 10000,
+          "mean_error_pct": 1.51,
+          "sd_pp": 0.09380831519646864
+        }
+      ]
+    }
+  },
+  "hollow_marker": {
+    "note": "kernel ridge (kr-arccos1-d3) measured at n=1000; not the Ladder A rung-1 recipe",
+    "n": 1000,
+    "mean_error_pct": 6.324545454545454,
+    "sd_pp": 0.28942576375864104,
+    "per_draw_error_pct": [
+      6.31,
+      6.19,
+      6.29,
+      6.07,
+      6.43,
+      6.4,
+      5.72,
+      6.55,
+      6.66,
+      6.76,
+      6.19
+    ]
+  }
+}

@@ -1,0 +1,113 @@
+[
+  {
+    "candidate_id": "svm-rbf",
+    "family": "svm_rbf",
+    "C_grid": [
+      2,
+      5,
+      10,
+      20
+    ],
+    "gamma_grid": [
+      "scale",
+      0.01,
+      0.02,
+      0.05
+    ],
+    "cv_subsample": 4000,
+    "cache_size": 1000,
+    "uses_query_images_unlabeled": false
+  },
+  {
+    "candidate_id": "knn",
+    "family": "knn",
+    "k_grid": [
+      1,
+      3,
+      5,
+      7
+    ],
+    "uses_query_images_unlabeled": false
+  },
+  {
+    "candidate_id": "kr-rbf",
+    "family": "kernel_ridge",
+    "kernel": "rbf",
+    "gamma_grid": [
+      0.005,
+      0.01,
+      0.02,
+      0.05
+    ],
+    "lambda_grid": [
+      1e-07,
+      1e-06,
+      1e-05,
+      0.0001,
+      0.001
+    ],
+    "cv_subsample": 4000,
+    "predict_block": 2000,
+    "uses_query_images_unlabeled": false,
+    "kernel_block": 2000
+  },
+  {
+    "candidate_id": "kr-arccos1-d2",
+    "family": "kernel_ridge",
+    "kernel": "arccos1",
+    "depth": 2,
+    "lambda_grid": [
+      1e-07,
+      1e-06,
+      1e-05,
+      0.0001,
+      0.001
+    ],
+    "cv_subsample": 4000,
+    "predict_block": 2000,
+    "uses_query_images_unlabeled": false,
+    "kernel_block": 2000
+  },
+  {
+    "candidate_id": "kr-arccos1-d3",
+    "family": "kernel_ridge",
+    "kernel": "arccos1",
+    "depth": 3,
+    "lambda_grid": [
+      1e-07,
+      1e-06,
+      1e-05,
+      0.0001,
+      0.001
+    ],
+    "cv_subsample": 4000,
+    "predict_block": 2000,
+    "uses_query_images_unlabeled": false,
+    "kernel_block": 2000
+  },
+  {
+    "candidate_id": "kr-ntk-d3",
+    "family": "kernel_ridge",
+    "kernel": "ntk_relu",
+    "depth": 3,
+    "lambda_grid": [
+      1e-07,
+      1e-06,
+      1e-05,
+      0.0001,
+      0.001
+    ],
+    "cv_subsample": 4000,
+    "predict_block": 2000,
+    "uses_query_images_unlabeled": false,
+    "kernel_block": 2000
+  },
+  {
+    "candidate_id": "hgb",
+    "family": "hgb",
+    "max_iter": 500,
+    "learning_rate": 0.1,
+    "max_leaf_nodes": 31,
+    "uses_query_images_unlabeled": false
+  }
+]

@@ -1,0 +1,556 @@
+"""Bounded Modal controller for the permutation-invariant MNIST-medium study.
+
+Run as a plain script (the geometric-cutoffs pattern: the controller owns
+``with app.run()``, so there is no ``@app.local_entrypoint``)::
+
+    /tmp/pmnist-env/bin/python runner.py --plan plans/smoke.json --validate-only
+    /tmp/pmnist-env/bin/python runner.py --plan plans/dev.json --minutes 25
+
+``--validate-only`` never creates a Modal app and never touches the ledger:
+``main()`` writes the preflight receipt and returns *before* the ``with app.run()``
+block is ever reached, so no app object is registered with the provider.
+
+Do NOT invoke this file through ``modal run``.  There is no
+``@app.local_entrypoint`` on purpose: ``modal run`` wraps whatever it resolves in
+``run_app(app, ...)``, i.e. it creates an (ephemeral) app *before* the entrypoint
+body executes, which is exactly what ``--validate-only`` must avoid.  With no
+local entrypoint, ``modal run runner.py`` would resolve to the only runnable in
+the file -- the A100 worker ``fit_job`` -- and build a click command out of its
+signature, so ``--plan/--minutes/--validate-only`` are rejected by click as
+unknown options (exit 2, before any app is created).  Validation therefore only
+ever runs through the plain-script form above.
+A real run reserves app lifetime in budget.py BEFORE any app exists, attaches
+the app id, dispatches at most ``MAX_GPUS`` concurrent A100 fits, stops the app
+at the reserved work deadline and settles the reservation only against
+``modal app list --json`` evidence that the app is stopped with zero tasks.
+
+No accuracy is ever computed or printed here: query labels never leave the
+scorer.  Concurrency is ``--gpus N`` (default 8, at most ``budget.MAX_CONTAINERS``
+and ``authorization.json``'s ``max_concurrent_gpus``); the ledger reserves and
+charges exactly N fully occupied workers per second of app lifetime, so the
+upper-envelope accounting matches the pool actually allowed to run.
+"""
+from __future__ import annotations
+
+import argparse
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from datetime import datetime, timezone
+import hashlib
+import json
+import math
+import os
+from pathlib import Path
+import platform
+import subprocess
+import sys
+from threading import Event, Lock, Timer
+import time
+import zlib
+
+import numpy as np
+import modal
+
+ROOT = Path(__file__).resolve().parent
+APP_NAME = 'pmnist-medium-cutoffs-20260923'
+IMAGE = ('ghcr.io/ab-10/wikitext-bench@'
+         'sha256:95de89319ba89c53a91d5440a5db4ff46f68b05031062c0a760ec3caa48dc42f')
+# study.py is deliberately NOT mounted: fit_job never imports it and it carries
+# FEATURE_PERMUTATION_SEED plus the draw rule, i.e. the recipe for the hidden
+# permutation and for the query rows.
+SOURCE_FILES = ['learners.py', 'ladder_model.py', 'spatial_learner.py',
+                'topology.py']
+# Hard ceiling on the Modal container pool; must not exceed budget.MAX_CONTAINERS.
+# The per-run concurrency actually used is ``--gpus`` (<= MAX_GPUS).
+MAX_GPUS = 8
+SHUTDOWN_GRACE_SECONDS = 90
+
+# scipy is required by topology.py (linear_sum_assignment / csgraph) and is not
+# in the base image; pinning it here also rebuilds it against numpy 2.2.6.
+image = modal.Image.from_registry(IMAGE).pip_install('numpy==2.2.6', 'scipy==1.15.3')
+# Only files that exist at import time can be added; main() refuses to dispatch
+# when any required source is absent, so a container never runs a partial tree.
+ADDED_FILES = [name for name in SOURCE_FILES if (ROOT / name).exists()]
+for _name in ADDED_FILES:
+    image = image.add_local_file(str(ROOT / _name), remote_path='/root/' + _name)
+app = modal.App(APP_NAME)
+
+
+def utc():
+    return datetime.now(timezone.utc).isoformat()
+
+
+def sha(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def ahash(array):
+    array = np.ascontiguousarray(array.astype(array.dtype.newbyteorder('<'), copy=False))
+    return hashlib.sha256(array.tobytes()).hexdigest()
+
+
+def write_json(path, value):
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_suffix(path.suffix + '.part')
+    temporary.write_text(json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + '\n')
+    temporary.replace(path)
+
+
+# --------------------------------------------------------------------------
+# remote worker
+# --------------------------------------------------------------------------
+@app.function(image=image, gpu='A100-40GB', cpu=(4, 4), memory=(8192, 8192),
+              timeout=1500, startup_timeout=300, retries=0, min_containers=0,
+              max_containers=MAX_GPUS, buffer_containers=0, scaledown_window=60)
+def fit_job(payload, job, provenance, deadline_unix):
+    """One learner fit on one A100. Receives no query labels, ever.
+
+    ``job`` arrives with 'seed' redacted, so the draw cannot be reproduced from
+    inside the learner.  Network access is NOT blocked: Modal moves inputs and
+    outputs above 2 MiB through its blob store, which the container must reach
+    (the compressed 10k-query payload is ~3 MiB), so blocking the container
+    network breaks every fit (observed 2026-09-23: DNS failure to r2.cloudflarestorage).
+    The no-leakage guarantee rests on the payload containing no query labels,
+    the seed redaction, and the reviewed learner source hashes.  The controller
+    re-attaches the full job before writing results/<id>.json.
+    """
+    started = time.monotonic()
+    if time.time() > deadline_unix:
+        raise TimeoutError('Expired study deadline before startup')
+    os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
+    import torch
+    sys.path.insert(0, '/root')
+    torch.set_num_threads(4)
+    torch.use_deterministic_algorithms(True)
+    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cuda.matmul.allow_tf32 = False
+    torch.backends.cudnn.allow_tf32 = False
+    for name, digest in provenance['image_source_sha256'].items():
+        assert hashlib.sha256(Path('/root', name).read_bytes()).hexdigest() == digest, (
+            'Source changed in flight: ' + name)
+    import learners
+
+    assert 'seed' not in job, 'The dataset seed must not reach the learner container'
+    assert set(payload) == {'train_x', 'train_y', 'query_x'}, 'Unexpected payload keys'
+    arrays = {key: np.frombuffer(zlib.decompress(value['bytes']),
+                                 dtype=value['dtype']).reshape(value['shape']).copy()
+              for key, value in payload.items()}
+    for key, array in arrays.items():
+        assert ahash(array) == job['input_sha256'][key], 'Input hash mismatch: ' + key
+    n, q = int(job['n']), arrays['query_x'].shape[0]
+    assert arrays['train_x'].shape == (n, 81) and arrays['train_x'].dtype == np.float32
+    assert arrays['train_y'].shape == (n,) and arrays['train_y'].dtype == np.uint8
+    assert arrays['query_x'].shape == (q, 81) and arrays['query_x'].dtype == np.float32
+    assert int(arrays['train_y'].max()) < 10
+    for key in ('train_x', 'query_x'):
+        array = arrays[key]
+        assert np.isfinite(array).all() and array.min() >= 0.0 and array.max() <= 1.0
+
+    deadline = min(float(deadline_unix),
+                   time.time() + float(job['time_budget_seconds']))
+    output = learners.fit_predict(arrays['train_x'], arrays['train_y'],
+                                  arrays['query_x'], job['config'],
+                                  int(job['learner_seed']), deadline, 'cuda')
+    logits = np.ascontiguousarray(output['logits'], dtype=np.float32)
+    labels = np.ascontiguousarray(output['labels'], dtype=np.uint8)
+    assert logits.shape == (q, 10) and labels.shape == (q,)
+    assert np.array_equal(labels, np.argmax(logits, axis=1).astype(np.uint8))
+    record = {
+        'job': job, 'metrics': output['metrics'], 'provenance': provenance,
+        'completed_at': utc(), 'job_wall_seconds': time.monotonic() - started,
+        'hardware': torch.cuda.get_device_name(0),
+        'software': {'python': platform.python_version(), 'numpy': np.__version__,
+                     'torch': str(torch.__version__), 'cuda': torch.version.cuda,
+                     'cudnn': torch.backends.cudnn.version(), 'image': IMAGE},
+        'output_sha256': {'logits': ahash(logits), 'labels': ahash(labels)},
+        'output_specs': {'logits': {'shape': list(logits.shape), 'dtype': 'float32'},
+                         'labels': {'shape': list(labels.shape), 'dtype': 'uint8'}},
+        'query_labels_supplied': False,
+    }
+    return record, logits.tobytes(), labels.tobytes()
+
+
+# --------------------------------------------------------------------------
+# provider evidence helpers
+# --------------------------------------------------------------------------
+def list_apps():
+    completed = subprocess.run([sys.executable, '-m', 'modal', 'app', 'list', '--json'],
+                               capture_output=True, text=True, timeout=60, check=True)
+    return json.loads(completed.stdout)
+
+
+def stopped_row(app_id):
+    for row in list_apps():
+        normalized = {str(k).lower().replace(' ', '_'): v for k, v in row.items()}
+        if normalized.get('app_id') == app_id:
+            state = str(normalized.get('state', '')).lower()
+            tasks = normalized.get('tasks', -1)
+            try:
+                tasks = int(tasks)
+            except (TypeError, ValueError):
+                tasks = -1
+            if state.endswith('stopped') and tasks == 0:
+                return row
+    return None
+
+
+# --------------------------------------------------------------------------
+# local controller
+# --------------------------------------------------------------------------
+def load_plan(plan_path):
+    jobs = json.loads(Path(plan_path).read_text())
+    assert isinstance(jobs, list) and jobs, 'Plan must be a nonempty list of jobs'
+    assert len({job['id'] for job in jobs}) == len(jobs), 'Duplicate job ids'
+    for job in jobs:
+        required = {'id', 'stage', 'seed', 'n', 'candidate_id', 'config', 'learner_seed',
+                    'time_budget_seconds', 'train_indices_sha256', 'query_indices_sha256',
+                    'input_sha256'}
+        missing = required - set(job)
+        assert not missing, f"Job {job['id']} missing keys {sorted(missing)}"
+        assert set(job['input_sha256']) == {'train_x', 'train_y', 'query_x'}
+        assert 0 < int(job['time_budget_seconds']) <= 1200
+    return jobs
+
+
+def verify_existing(job, sources):
+    """True when a complete, hash-verified result for this exact job exists."""
+    path = ROOT / 'results' / f"{job['id']}.json"
+    if not path.exists():
+        return False
+    record = json.loads(path.read_text())
+    if record['job'] != job:
+        print(json.dumps({'id': job['id'], 'status': 'rerun',
+                          'reason': 'existing result used a different job definition'}), flush=True)
+        return False
+    for name in ('learners.py', 'ladder_model.py', 'spatial_learner.py', 'topology.py'):
+        recorded = record['provenance']['source_sha256'].get(name)
+        if recorded != sources.get(name):
+            # Never reuse a result produced by different learner source: treat it
+            # as pending so it is recomputed (the old record is replaced on success).
+            print(json.dumps({'id': job['id'], 'status': 'rerun',
+                              'reason': f'{name} changed since this result was produced'}),
+                  flush=True)
+            return False
+    predictions = ROOT / record['predictions_path']
+    assert sha(predictions) == record['predictions_sha256'], 'Prediction file changed'
+    with np.load(predictions, allow_pickle=False) as bundle:
+        assert ahash(bundle['logits']) == record['output_sha256']['logits']
+        assert ahash(bundle['labels']) == record['output_sha256']['labels']
+    return True
+
+
+def build_payload(job, study):
+    arrays = study.job_arrays(job['seed'], job['n'])
+    assert set(arrays) == {'train_x', 'train_y', 'query_x'}
+    for key, array in arrays.items():
+        assert ahash(array) == job['input_sha256'][key], (
+            f"Regenerated {key} does not match job {job['id']}")
+    assert ahash(study.train_indices(job['seed'], job['n'])) == job['train_indices_sha256']
+    assert ahash(study.query_indices(job['seed'])) == job['query_indices_sha256']
+    payload = {key: {'bytes': zlib.compress(array.tobytes(), 1),
+                     'dtype': str(array.dtype), 'shape': list(array.shape)}
+               for key, array in arrays.items()}
+    return payload
+
+
+def required_sources(jobs):
+    """topology.py is only needed when the plan contains a topo_cnn job."""
+    names = ['learners.py', 'ladder_model.py', 'spatial_learner.py']
+    if any(job['config'].get('family') == 'topo_cnn' for job in jobs):
+        names.append('topology.py')
+    return names
+
+
+def preflight(jobs, pending, sources, plan_path, authorization, work_seconds, study,
+              missing, gpus=MAX_GPUS):
+    import budget
+    from budget import read_ledger
+    ledger_path = ROOT / 'budget-ledger.json'
+    summary = {'charged_upper_usd': 0.0, 'available_worker_usd':
+               float(authorization['total_modal_cap_usd'] - authorization['contingency_usd']),
+               'active_ids': [], 'blocked_reason': None}
+    if ledger_path.exists():
+        before = sha(ledger_path)
+        summary = read_ledger(ledger_path)['summary']
+        assert sha(ledger_path) == before, 'Reading the ledger changed it'
+    assert not summary['active_ids'] and not summary['blocked_reason'], (
+        'A prior app is unresolved or the ledger is blocked')
+    projected = ((work_seconds + SHUTDOWN_GRACE_SECONDS)
+                 * gpus * float(budget.WORKER_USD_PER_SECOND))
+    assert projected <= summary['available_worker_usd'] + 1e-9, (
+        'Reservation exceeds the remaining authorized allowance')
+    manifest = json.loads((ROOT / 'raw/data_manifest.json').read_text())
+    # Resolve every config here so a typo, members=0 or an illegal key fails
+    # locally instead of on a paid A100.
+    sys.path.insert(0, str(ROOT))
+    import learners
+    for job in jobs:
+        learners.resolve_config(job['config'])
+    for job in pending:
+        build_payload(job, study)
+    return {
+        'passed': not missing, 'missing_sources': missing,
+        'checked_at': utc(), 'plan': str(Path(plan_path).name),
+        'plan_sha256': sha(plan_path), 'jobs': len(jobs), 'pending': len(pending),
+        'pending_ids': [job['id'] for job in pending],
+        'source_sha256': sources, 'data_manifest_sha256': sha(ROOT / 'raw/data_manifest.json'),
+        'data_manifest_created_at': manifest.get('created_at_utc'),
+        'work_seconds': work_seconds, 'shutdown_grace_seconds': SHUTDOWN_GRACE_SECONDS,
+        'max_concurrent_gpus': gpus, 'reservation_upper_usd': projected,
+        'available_worker_usd': summary['available_worker_usd'],
+        'new_reservation_created': False, 'paid_compute_started': False,
+        'query_labels_opened': False,
+    }
+
+
+def main(argv=None):
+    import budget
+    from budget import reserve_app, attach_app, finish_app
+
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--plan', required=True)
+    parser.add_argument('--minutes', type=float, default=20.0)
+    parser.add_argument('--validate-only', action='store_true')
+    parser.add_argument('--gpus', type=int, default=MAX_GPUS,
+                        help='concurrent A100 fits to dispatch and to charge for (1..MAX_GPUS)')
+    args = parser.parse_args(argv)
+    assert 1 <= int(args.gpus) <= MAX_GPUS, f'--gpus must be in 1..{MAX_GPUS}'
+    gpus = int(args.gpus)
+
+    assert MAX_GPUS <= budget.MAX_CONTAINERS, (
+        'Concurrency must not exceed the ledger worker model')
+    sys.path.insert(0, str(ROOT))
+    import study
+
+    authorization = json.loads((ROOT / 'authorization.json').read_text())
+    assert authorization['status'] == 'frozen'
+    assert authorization['gpu'] == 'A100-40GB'
+    assert gpus <= int(authorization['max_concurrent_gpus'])
+    global_deadline = datetime.fromisoformat(
+        authorization['deadline_utc'].replace('Z', '+00:00')).timestamp()
+    work_seconds = min(int(math.ceil(args.minutes * 60)),
+                       int(global_deadline - time.time()) - SHUTDOWN_GRACE_SECONDS)
+    assert work_seconds > 0, 'Authorization deadline reached; no further launches'
+
+    plan_path = Path(args.plan).resolve()
+    assert plan_path.is_relative_to(ROOT), 'Plan must belong to this study'
+    jobs = load_plan(plan_path)
+    required = required_sources(jobs)
+    missing = [name for name in required
+               if not (ROOT / name).exists() or name not in ADDED_FILES]
+    if not args.validate_only:
+        assert not missing, f'Missing/unmounted required sources: {missing}'
+    sources = {name: sha(ROOT / name)
+               for name in [*ADDED_FILES, 'runner.py', 'budget.py']}
+    for job in jobs:
+        assert int(job['time_budget_seconds']) <= int(
+            authorization['per_fit_time_budget_seconds'])
+
+    for name in ('results', 'predictions', 'plans', 'logs'):
+        (ROOT / name).mkdir(exist_ok=True)
+    pending = [job for job in jobs if not verify_existing(job, sources)]
+    receipt = preflight(jobs, pending, sources, plan_path, authorization,
+                        work_seconds, study, missing, gpus)
+    if args.validate_only:
+        write_json(ROOT / 'logs' / f'{plan_path.stem}-preflight.json', receipt)
+        print(json.dumps({k: v for k, v in receipt.items() if k != 'source_sha256'}))
+        return 0
+    if not pending:
+        print('All planned jobs already complete.')
+        return 0
+
+    ledger = ROOT / 'budget-ledger.json'
+    reservation_id = plan_path.stem + '-' + time.strftime('%Y%m%d-%H%M%S', time.gmtime())
+    reservation = reserve_app(ledger, reservation_id,
+                              total_budget_usd=float(authorization['total_modal_cap_usd']),
+                              work_seconds=work_seconds,
+                              shutdown_grace_seconds=SHUTDOWN_GRACE_SECONDS,
+                              containers=gpus)
+    deadline = float(reservation['work_deadline_unix'])
+    write_json(ROOT / 'logs' / f'{reservation_id}-plan.json',
+               {'pending_ids': [job['id'] for job in pending], 'source_sha256': sources,
+                'reservation': {k: v for k, v in reservation.items()},
+                'plan_sha256': sha(plan_path), 'created_at': utc()})
+
+    calls, lock, aborted = [], Lock(), Event()
+    outcomes = []
+    app_id, failure, timer = None, None, None
+
+    def stop_own_app():
+        aborted.set()
+        active = app_id or getattr(app, 'app_id', None)
+        if active:
+            try:
+                subprocess.run([sys.executable, '-m', 'modal', 'app', 'stop', active, '--yes'],
+                               timeout=60, check=True)
+            except Exception as error:                        # pragma: no cover
+                print('STOP ERROR ' + str(error), flush=True)
+        with lock:
+            known = list(calls)
+        for call in known:
+            try:
+                call.cancel(terminate_containers=True)
+            except Exception as error:                        # pragma: no cover
+                print('CANCEL ERROR ' + str(error), flush=True)
+
+    def skip(job, reason):
+        print(json.dumps({'id': job['id'], 'status': 'skipped', 'reason': reason}),
+              flush=True)
+        return {'id': job['id'], 'status': 'skipped', 'reason': reason}
+
+    def run_one(job):
+        # Never raise for a job-level problem: an exception here would abort the
+        # pool and cancel the sibling container, destroying a nearly finished
+        # 20-minute fit.  Only KeyboardInterrupt/SystemExit abort the run.
+        try:
+            return _run_one(job)
+        except (KeyboardInterrupt, SystemExit):
+            aborted.set()
+            stop_own_app()
+            raise
+        except Exception as error:
+            record = {'id': job['id'], 'status': 'failed',
+                      'error': f'{type(error).__name__}: {error}',
+                      'job': job, 'failed_at': utc(),
+                      'budget_reservation': reservation_id, 'app_id': app_id}
+            write_json(ROOT / 'results' / f"{job['id']}-failed.json", record)
+            print(json.dumps({'id': job['id'], 'status': 'failed',
+                              'error': record['error']}), flush=True)
+            return record
+
+    def _run_one(job):
+        if aborted.is_set():
+            return skip(job, 'run aborted')
+        if time.time() > deadline:
+            return skip(job, 'work deadline reached before dispatch')
+        payload = build_payload(job, study)
+        provenance = {
+            'source_sha256': sources,
+            'image_source_sha256': {name: sources[name] for name in ADDED_FILES},
+            'plan_sha256': sha(plan_path),
+            'data_manifest_sha256': sha(ROOT / 'raw/data_manifest.json'),
+            'authorization_sha256': sha(ROOT / 'authorization.json'),
+            'budget_reservation': reservation_id, 'app_id': app_id,
+            'global_deadline_unix': global_deadline, 'image': IMAGE,
+            'controller_python': platform.python_version(),
+            'dispatched_at': utc(),
+        }
+        if aborted.is_set():
+            return skip(job, 'run aborted')
+        if time.time() > deadline - 30:
+            return skip(job, 'no time left to dispatch after payload preparation')
+        # The dataset seed never enters the container: with it (plus the public
+        # draw rule) the query labels would be recoverable remotely.
+        remote_job = {key: value for key, value in job.items() if key != 'seed'}
+        call = fit_job.spawn(payload, remote_job, provenance, deadline - 10)
+        with lock:
+            calls.append(call)
+        try:
+            record, logits_bytes, labels_bytes = call.get(
+                timeout=max(1, int(deadline - time.time())))
+            record['job'] = job          # re-attach the locally held seed
+            logits = np.frombuffer(logits_bytes, dtype=np.float32).reshape(
+                record['output_specs']['logits']['shape'])
+            labels = np.frombuffer(labels_bytes, dtype=np.uint8).reshape(
+                record['output_specs']['labels']['shape'])
+            assert ahash(logits) == record['output_sha256']['logits']
+            assert ahash(labels) == record['output_sha256']['labels']
+            predictions = ROOT / 'predictions' / f"{job['id']}.npz"
+            temporary = predictions.with_suffix('.npz.part')
+            with temporary.open('wb') as handle:
+                np.savez(handle, logits=logits, labels=labels)
+            temporary.replace(predictions)
+            record['predictions_path'] = str(predictions.relative_to(ROOT))
+            record['predictions_sha256'] = sha(predictions)
+            write_json(ROOT / 'results' / f"{job['id']}.json", record)
+            metrics = record['metrics']
+            print(json.dumps({'id': job['id'],
+                              'epochs_completed': metrics.get('epochs_completed'),
+                              'truncated': metrics.get('truncated'),
+                              'training_seconds': round(float(metrics.get('training_seconds', 0)), 2),
+                              'fit_wall_seconds': round(float(metrics.get('fit_wall_seconds', 0)), 2)}),
+                  flush=True)
+            return {'id': job['id'], 'status': 'completed'}
+        except BaseException:
+            # Free this job's container without touching its siblings.
+            try:
+                call.cancel(terminate_containers=True)
+            except Exception as error:                        # pragma: no cover
+                print('CANCEL ERROR ' + str(error), flush=True)
+            raise
+        finally:
+            with lock:
+                if call in calls:
+                    calls.remove(call)
+
+    try:
+        timer = Timer(max(0.0, deadline - time.time()), stop_own_app)
+        timer.daemon = True
+        timer.start()
+        with modal.enable_output(), app.run():
+            app_id = app.app_id
+            attach_app(ledger, reservation_id, app_id)
+            if aborted.is_set() or time.time() > deadline:
+                raise TimeoutError('App startup exceeded the work deadline')
+            print(json.dumps({'app_id': app_id, 'pending': len(pending),
+                              'deadline_unix': deadline, 'max_gpus': gpus}), flush=True)
+            with ThreadPoolExecutor(max_workers=gpus) as pool:
+                futures = [pool.submit(run_one, job) for job in pending]
+                try:
+                    for future in as_completed(futures):
+                        outcomes.append(future.result())
+                except BaseException:
+                    aborted.set()
+                    for future in futures:
+                        future.cancel()
+                    stop_own_app()
+                    raise
+    except BaseException as error:
+        failure = error
+    finally:
+        if timer is not None:
+            timer.cancel()
+        if app_id:
+            if failure is not None:
+                stop_own_app()
+            row = None
+            for attempt in range(8):
+                try:
+                    row = stopped_row(app_id)
+                except Exception as error:                    # pragma: no cover
+                    print('LIST ERROR ' + str(error), flush=True)
+                if row:
+                    break
+                if attempt == 0:
+                    stop_own_app()
+                time.sleep(15 if attempt else 2)
+            unfinished_jobs = [o for o in outcomes if o.get('status') != 'completed']
+            if failure is not None:
+                outcome = 'failed'
+            elif unfinished_jobs or len(outcomes) < len(pending):
+                outcome = 'partial'
+            else:
+                outcome = 'completed'
+            evidence = ROOT / 'logs' / f'{reservation_id}-stopped.json'
+            write_json(evidence, {'app_id': app_id, 'provider_row': row,
+                                  'checked_at': utc(), 'job_outcomes': outcomes,
+                                  'outcome': outcome})
+            if row:
+                settled = finish_app(ledger, reservation_id, verified_stopped=True,
+                                     remaining_tasks=0, app_state='stopped',
+                                     evidence=str(evidence), outcome=outcome)
+                print(json.dumps({'budget': settled['summary']}), flush=True)
+            else:
+                print('UNVERIFIED SHUTDOWN: reservation retained', flush=True)
+        if failure is not None:
+            raise failure
+    unfinished = [o for o in outcomes if o.get('status') != 'completed']
+    if unfinished:
+        print(json.dumps({'unfinished': unfinished}), flush=True)
+        return 1
+    return 0
+
+
+if __name__ == '__main__':
+    raise SystemExit(main())

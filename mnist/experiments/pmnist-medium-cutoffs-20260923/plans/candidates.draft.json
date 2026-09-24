@@ -1,0 +1,488 @@
+{
+  "candidates": [
+    {
+      "config": {
+        "activation": "relu",
+        "batch_size": 128,
+        "epochs": 300,
+        "family": "mlp",
+        "lr": 0.001,
+        "members": 1,
+        "notes": "unregularised control; AdamW wd=0, cosine, no noise/mixup/dropout",
+        "widths": [
+          1024,
+          1024
+        ]
+      },
+      "estimated_seconds_at_10k": 36.6,
+      "id": "mlp-plain-control",
+      "rationale": "Zero-regularisation reference so every other candidate has a measured delta on THIS pool. Pilot anchor: plain 1024x2 MLP ~3.45% at N=10000 and ~9.4% at N=1000 (researcher CPU pilot); the independent 9x9 transfer table gives mlp256-sgd 3.85% and MLP512-SGD 3.59% at N=10000, so this candidate should land near 3.4-3.9% and calibrate the whole sweep against published references.",
+      "uses_query_images_unlabeled": false
+    },
+    {
+      "config": {
+        "activation": "gelu",
+        "batch_size": 256,
+        "dropout": 0.3,
+        "epochs": 600,
+        "family": "mlp",
+        "input_noise_std": 1.2,
+        "label_smoothing": 0.05,
+        "lr": 0.003,
+        "members": 3,
+        "mixup_alpha": 0.4,
+        "notes": "reference regularised recipe; input_noise_std is in 4x-0.5 units (raw 0.3)",
+        "schedule": "cosine",
+        "warmup_fraction": 0.1,
+        "weight_decay": 0.01,
+        "widths": [
+          1024,
+          1024,
+          1024
+        ]
+      },
+      "estimated_seconds_at_10k": 55.6,
+      "id": "mlp-reg-1024x3",
+      "rationale": "The workhorse. Dropout 0.3 + additive input Gaussian noise + mixup 0.4 + label smoothing 0.05, the exact ingredient set the researcher ablated on 9x9 (plain 3.45% -> 2.70% at N=10000; 9.4% -> 7.56% at N=1000). CRITICAL UNIT NOTE: learners.normalize is 4*x-0.5 and the noise is added AFTER normalisation, so the pilot-optimal raw sigma=0.3 is input_noise_std=1.2 here. members=3 keeps it cheap enough to run at every dev level.",
+      "uses_query_images_unlabeled": false
+    },
+    {
+      "config": {
+        "activation": "gelu",
+        "batch_size": 256,
+        "dropout": 0.3,
+        "epochs": 600,
+        "family": "mlp",
+        "input_noise_std": 1.2,
+        "label_smoothing": 0.05,
+        "lr": 0.003,
+        "members": 3,
+        "mixup_alpha": 0.4,
+        "notes": "narrow twin of mlp-reg-1024x3; capacity probe for the N=1000 rung",
+        "schedule": "cosine",
+        "warmup_fraction": 0.1,
+        "weight_decay": 0.01,
+        "widths": [
+          512,
+          512,
+          512
+        ]
+      },
+      "estimated_seconds_at_10k": 44.0,
+      "id": "mlp-reg-512x3",
+      "rationale": "Second width point, placed where the researcher measured the crossover: at N=1000 the 512x3 net was 7.61% vs 7.56% for 1024x3 and 7.88% for 2048x3, i.e. width is nearly flat but trending the other way from N=10000. With 2.19M -> 0.57M parameters this also tells us whether the bottom rung is capacity-limited or label-limited (the literature says label-limited).",
+      "uses_query_images_unlabeled": false
+    },
+    {
+      "config": {
+        "activation": "gelu",
+        "batch_size": 256,
+        "dropout": 0.3,
+        "epochs": 600,
+        "family": "mlp",
+        "input_noise_std": 1.2,
+        "label_smoothing": 0.0,
+        "lr": 0.003,
+        "members": 3,
+        "mixup_alpha": 0.0,
+        "notes": "dropout+input-noise only; isolates the size-dependent value of mixup/label smoothing",
+        "schedule": "cosine",
+        "warmup_fraction": 0.1,
+        "weight_decay": 0.01,
+        "widths": [
+          1024,
+          1024,
+          1024
+        ]
+      },
+      "estimated_seconds_at_10k": 51.7,
+      "id": "mlp-reg-nomixup",
+      "rationale": "The one ablation the pilots say is size-dependent and therefore cannot be frozen across the ladder: mixup 0.4 + label smoothing 0.05 HELPED at N=1000 (7.97% -> 7.76%) and HURT at N=10000 (2.70% -> 2.85%). Running both arms at both levels lets selection pick per-level instead of guessing, and it costs nothing (mixup is also the main Python-loop overhead, so this arm is faster).",
+      "uses_query_images_unlabeled": false
+    },
+    {
+      "config": {
+        "activation": "gelu",
+        "batch_size": 256,
+        "dropout": 0.3,
+        "epochs": 600,
+        "family": "mlp",
+        "input_noise_std": 0.8,
+        "label_smoothing": 0.05,
+        "lr": 0.003,
+        "members": 3,
+        "mixup_alpha": 0.4,
+        "notes": "noise probe: 0.8 in 4x-0.5 units == raw sigma 0.2, the Ladder small-N setting",
+        "schedule": "cosine",
+        "warmup_fraction": 0.1,
+        "weight_decay": 0.01,
+        "widths": [
+          1024,
+          1024,
+          1024
+        ]
+      },
+      "estimated_seconds_at_10k": 55.6,
+      "id": "mlp-noise-0p8",
+      "rationale": "Single-knob probe on the regulariser the researcher identified as dominant at 81 dimensions. 0.8 normalised == raw 0.2, which is exactly the corruption std Rasmus et al. found better than 0.3 at 1000 labels; 1.2 normalised == raw 0.3 is the all-labels setting and the pilot optimum at N=10000. Raw 0.6 (=2.4 here) was clearly worse (8.23% vs 7.97%), so the bracket is deliberately one-sided toward less noise.",
+      "uses_query_images_unlabeled": false
+    },
+    {
+      "config": {
+        "activation": "gelu",
+        "batch_size": 256,
+        "dropout": 0.3,
+        "epochs": 600,
+        "family": "mlp",
+        "input_noise_std": 1.2,
+        "label_smoothing": 0.05,
+        "lr": 0.003,
+        "members": 16,
+        "mixup_alpha": 0.4,
+        "notes": "K=16 batched ensemble of mlp-reg-1024x3; members share one bmm, no extra wall time per member beyond FLOPs",
+        "schedule": "cosine",
+        "warmup_fraction": 0.1,
+        "weight_decay": 0.01,
+        "widths": [
+          1024,
+          1024,
+          1024
+        ]
+      },
+      "estimated_seconds_at_10k": 142.5,
+      "id": "mlp-reg-e16",
+      "rationale": "BatchedMLP trains K independent nets as (K,in,out) stacks, so ensembling is nearly free in launch overhead and the study can buy variance reduction the pilots could not afford. Caveat from the pilots: neural ensembling saturates fast (1 member 2.70% vs 5 members 2.77% at N=10000 -- inside noise), so K=16 is here to MEASURE the saturation point on 10k queries rather than to assume it.",
+      "uses_query_images_unlabeled": false
+    },
+    {
+      "config": {
+        "activation": "gelu",
+        "batch_size": 256,
+        "dropout": 0.3,
+        "epochs": 600,
+        "family": "mlp",
+        "input_noise_std": 1.2,
+        "label_smoothing": 0.05,
+        "lr": 0.003,
+        "members": 64,
+        "mixup_alpha": 0.4,
+        "notes": "K=64 batched ensemble; the upper end of the ensembling curve",
+        "schedule": "cosine",
+        "warmup_fraction": 0.1,
+        "weight_decay": 0.01,
+        "widths": [
+          1024,
+          1024,
+          1024
+        ]
+      },
+      "estimated_seconds_at_10k": 463.3,
+      "id": "mlp-reg-e64",
+      "rationale": "Upper end of the K sweep. With 16 and 64 both measured against members=3 we get three points on the ensembling curve at each level and can state, with 10k queries per draw, whether the dense ceiling is an ensembling ceiling or a data ceiling. Cost is dominated by the mixup Python loop (one rng.beta + rng.permutation per member per step), not by the bmm.",
+      "uses_query_images_unlabeled": false
+    },
+    {
+      "config": {
+        "activation": "gelu",
+        "batch_size": 256,
+        "dropout": 0.3,
+        "epochs": 1800,
+        "family": "mlp",
+        "input_noise_std": 1.2,
+        "label_smoothing": 0.05,
+        "lr": 0.003,
+        "members": 8,
+        "mixup_alpha": 0.4,
+        "notes": "3x the reference schedule (600 -> 1800 epochs) at K=8",
+        "schedule": "cosine",
+        "warmup_fraction": 0.1,
+        "weight_decay": 0.01,
+        "widths": [
+          1024,
+          1024,
+          1024
+        ]
+      },
+      "estimated_seconds_at_10k": 263.1,
+      "id": "mlp-reg-long",
+      "rationale": "Schedule-length arm: the pilots ran 200-300 CPU epochs, so nobody has checked whether the recipe is under-trained. With input noise + mixup acting as strong regularisers, a 3x cosine schedule is the standard way to convert idle A100 time into accuracy. K=8 keeps the comparison against mlp-reg-e16 interpretable (ensembling vs schedule at roughly matched cost).",
+      "uses_query_images_unlabeled": false
+    },
+    {
+      "config": {
+        "activation": "gelu",
+        "batch_size": 256,
+        "dropout": 0.3,
+        "ema_decay": 0.999,
+        "epochs": 600,
+        "family": "mlp",
+        "input_noise_std": 1.2,
+        "label_smoothing": 0.05,
+        "lr": 0.003,
+        "members": 8,
+        "mixup_alpha": 0.4,
+        "notes": "EMA of weights with the implementation-provided init bias correction",
+        "schedule": "cosine",
+        "warmup_fraction": 0.1,
+        "weight_decay": 0.01,
+        "widths": [
+          1024,
+          1024,
+          1024
+        ]
+      },
+      "estimated_seconds_at_10k": 96.3,
+      "id": "mlp-reg-ema",
+      "rationale": "Weight averaging is the cheap stand-in for the SAM+SWA candidate the literature review ranked low on evidence (no MNIST-subset numbers for SAM). At N=10000 with batch 256 there are 24000 steps, so decay 0.999 has an effective window of ~1000 steps -- long enough to matter, short enough that the built-in bias correction against the random init stays well conditioned. At N=1000 there are only 2400 steps, so expect the correction to dominate; that is itself the measurement.",
+      "uses_query_images_unlabeled": false
+    },
+    {
+      "config": {
+        "activation": "relu",
+        "batch_size": 128,
+        "dropout": 0.2,
+        "epochs": 600,
+        "family": "mlp",
+        "input_noise_std": 1.2,
+        "lr": 0.002,
+        "members": 3,
+        "notes": "VAT on labelled rows only: the inductive control for the transductive arms",
+        "schedule": "cosine",
+        "vat": {
+          "batch_size": 256,
+          "eps": 3.0,
+          "power_iterations": 1,
+          "unlabeled": "train",
+          "weight": 1.0,
+          "xi": 1e-06
+        },
+        "warmup_fraction": 0.0,
+        "weight_decay": 0.0,
+        "widths": [
+          1200,
+          1200
+        ]
+      },
+      "estimated_seconds_at_10k": 181.4,
+      "id": "mlp-vat-train-eps3",
+      "rationale": "Control arm that isolates \"VAT as a supervised smoothness regulariser\" from \"VAT as a way to use the query images\". Without it any transductive gain is unattributable. Architecture is the published VAT MNIST net (1200-1200, labelled batch 100 / unlabelled 250 -> 128/256 here); note BatchedMLP has NO normalisation layers, so the BatchNorm-statistics-pollution failure the researcher hit (7.46% -> 13-15%) cannot occur in this implementation.",
+      "uses_query_images_unlabeled": false
+    },
+    {
+      "config": {
+        "activation": "relu",
+        "batch_size": 128,
+        "dropout": 0.2,
+        "epochs": 600,
+        "family": "mlp",
+        "input_noise_std": 1.2,
+        "lr": 0.002,
+        "members": 3,
+        "notes": "transductive VAT, eps=2.0 in 4x-0.5 units (raw 0.50); unlabeled pool = train_x + 10000 query_x",
+        "schedule": "cosine",
+        "vat": {
+          "batch_size": 256,
+          "eps": 2.0,
+          "power_iterations": 1,
+          "unlabeled": "train+query",
+          "weight": 1.0,
+          "xi": 1e-06
+        },
+        "warmup_fraction": 0.0,
+        "weight_decay": 0.0,
+        "widths": [
+          1200,
+          1200
+        ]
+      },
+      "estimated_seconds_at_10k": 181.4,
+      "id": "mlp-vat-tq-eps2",
+      "rationale": "Lower end of the rescaled published range. VAT eps is an L2 radius in the space the model sees; the paper searched 1.5-2.5 on 784-dim raw pixels, which rescales by sqrt(81/784)=0.321 to raw 0.48-0.80 and then by the 4x of learners.normalize to 1.9-3.2 here. 2.0 is the bottom of that band. Transductive: the unlabelled pool is train_x plus the 10000 query images, which is explicitly permitted by the protocol and recorded here. Expect a small effect -- the published 7.25% -> 1.36% gain rests on ~59000 unlabelled 784-dim images, and the researcher measured only 8.14% -> 7.99% on this pool.",
+      "uses_query_images_unlabeled": true
+    },
+    {
+      "config": {
+        "activation": "relu",
+        "batch_size": 128,
+        "dropout": 0.2,
+        "epochs": 600,
+        "family": "mlp",
+        "input_noise_std": 1.2,
+        "lr": 0.002,
+        "members": 3,
+        "notes": "transductive VAT, eps=3.0 in 4x-0.5 units (raw 0.75); unlabeled pool = train_x + 10000 query_x",
+        "schedule": "cosine",
+        "vat": {
+          "batch_size": 256,
+          "eps": 3.0,
+          "power_iterations": 1,
+          "unlabeled": "train+query",
+          "weight": 1.0,
+          "xi": 1e-06
+        },
+        "warmup_fraction": 0.0,
+        "weight_decay": 0.0,
+        "widths": [
+          1200,
+          1200
+        ]
+      },
+      "estimated_seconds_at_10k": 181.4,
+      "id": "mlp-vat-tq-eps3",
+      "rationale": "Centre of the rescaled published band (784-dim eps 2.0 -> raw 0.64 -> 2.6 here) and closest to the researcher pilot optimum (raw ~0.5-1.0, i.e. 2.0-4.0 here, where the grid bottomed out at 7.99% from an 8.14% baseline). This is the arm most likely to be selected if VAT helps at all. Transductive: the unlabelled pool is train_x plus the 10000 query images, which is explicitly permitted by the protocol and recorded here. Expect a small effect -- the published 7.25% -> 1.36% gain rests on ~59000 unlabelled 784-dim images, and the researcher measured only 8.14% -> 7.99% on this pool.",
+      "uses_query_images_unlabeled": true
+    },
+    {
+      "config": {
+        "activation": "relu",
+        "batch_size": 128,
+        "dropout": 0.2,
+        "epochs": 600,
+        "family": "mlp",
+        "input_noise_std": 1.2,
+        "lr": 0.002,
+        "members": 3,
+        "notes": "transductive VAT, eps=4.5 in 4x-0.5 units (raw 1.12); unlabeled pool = train_x + 10000 query_x",
+        "schedule": "cosine",
+        "vat": {
+          "batch_size": 256,
+          "eps": 4.5,
+          "power_iterations": 1,
+          "unlabeled": "train+query",
+          "weight": 1.0,
+          "xi": 1e-06
+        },
+        "warmup_fraction": 0.0,
+        "weight_decay": 0.0,
+        "widths": [
+          1200,
+          1200
+        ]
+      },
+      "estimated_seconds_at_10k": 181.4,
+      "id": "mlp-vat-tq-eps4p5",
+      "rationale": "Upper end, above the rescaled published band. Included because both the 81-dim geometry and the tiny 10k unlabelled pool argue the optimum could sit higher than the naive rescaling suggests, and because a too-large eps fails loudly (accuracy collapse) rather than silently. Transductive: the unlabelled pool is train_x plus the 10000 query images, which is explicitly permitted by the protocol and recorded here. Expect a small effect -- the published 7.25% -> 1.36% gain rests on ~59000 unlabelled 784-dim images, and the researcher measured only 8.14% -> 7.99% on this pool.",
+      "uses_query_images_unlabeled": true
+    },
+    {
+      "config": {
+        "batch_size": 100,
+        "decay_start_epoch": 100,
+        "epochs": 150,
+        "family": "ladder",
+        "hidden_dims": [
+          1000,
+          500,
+          250,
+          250,
+          250
+        ],
+        "input_reconstruction_weight": 2000.0,
+        "lr": 0.002,
+        "members": 3,
+        "noise_std": 0.3,
+        "notes": "Pezeshki et al. AMLP[2,2] as published; raw [0,1] pixels, no rescaling",
+        "unlabeled": "train"
+      },
+      "estimated_seconds_at_10k": 300.3,
+      "id": "ladder-paper",
+      "rationale": "The published recipe, unchanged, as the reproduction anchor. It is expected to LOSE here: on the 9x9 QMNIST-recovered task over 11 draws it scored 4.32% error against 3.85% for a plain 12-epoch MLP256 (pmnist-transfer-20260923). Running it is still required, because every retuned Ladder variant below is only interpretable as a delta from it.",
+      "uses_query_images_unlabeled": false
+    },
+    {
+      "config": {
+        "batch_size": 100,
+        "decay_start_epoch": 200,
+        "epochs": 300,
+        "family": "ladder",
+        "hidden_dims": [
+          1000,
+          500,
+          250,
+          250,
+          250
+        ],
+        "input_reconstruction_weight": 300.0,
+        "lr": 0.002,
+        "members": 2,
+        "noise_std": 0.2,
+        "notes": "noise 0.3->0.2 and input reconstruction 2000->300; 2x schedule",
+        "unlabeled": "train"
+      },
+      "estimated_seconds_at_10k": 392.3,
+      "id": "ladder-retuned",
+      "rationale": "The two knobs the literature says carry the Ladder: corruption std (0.3 all-labels, 0.2 at 1000 labels) and the input reconstruction weight. A weight of 2000 is calibrated for 784 inputs; with 81 near-saturated inputs the reconstruction term plausibly swamps the classification term by more than an order of magnitude, which is the leading hypothesis for why the paper recipe underperforms at 9x9. 300 is a single interior point of the [100,300,1000,2000] grid the researcher proposed, chosen to keep the dev sweep affordable; if it beats ladder-paper the final stage should widen it.",
+      "uses_query_images_unlabeled": false
+    },
+    {
+      "config": {
+        "batch_size": 100,
+        "decay_start_epoch": 200,
+        "epochs": 300,
+        "family": "ladder",
+        "hidden_dims": [
+          1000,
+          500,
+          250,
+          250,
+          250
+        ],
+        "input_reconstruction_weight": 300.0,
+        "lr": 0.002,
+        "members": 2,
+        "noise_std": 0.2,
+        "notes": "same retuned point, denoising cost driven by train_x + 10000 query_x",
+        "unlabeled": "train+query"
+      },
+      "estimated_seconds_at_10k": 392.3,
+      "id": "ladder-retuned-tq",
+      "rationale": "The only way the Ladder can express its actual selling point under this protocol: the denoising decoder gets an unlabelled pool of train_x plus the 10000 query images. Costs nothing extra (the unlabelled minibatch is the same size, just drawn from a larger pool), and paired against ladder-retuned it gives a clean measurement of what 10k extra unlabelled 81-dim images are worth. Published evidence says a lot (0.84% vs 5.70% at 1000 labels on 28x28) and both researchers say almost nothing at this scale; this arm settles it.",
+      "uses_query_images_unlabeled": true
+    },
+    {
+      "config": {
+        "family": "topo_cnn",
+        "layout_max_seconds": 300.0,
+        "member_seeds": [
+          101,
+          102,
+          103
+        ],
+        "notes": "recover a 9x9 layout from train_x alone, then the frozen cnn-09 recipe x3"
+      },
+      "estimated_seconds_at_10k": 450,
+      "id": "topo-cnn09-x3",
+      "rationale": "The highest-ceiling and highest-variance arm. If the lattice is recovered, the target is the measured spatial reference on this exact pool (1.51% at N=10000, ~4.0% at N=1000) versus ~2.65% for the best dense method -- a factor of ~1.75. Two independent investigations agree the signal is there (signed positive / partial correlation, top-2 neighbours are true 8-neighbours ~90% of the time) and that the risk is entirely the combinatorial optimiser (cheap 2-opt leaves a third of the gap; occasional total failures were observed on 2 of 18 dev configurations). Hence layout_max_seconds=300, well above the 120 s default: topology.recover_layout is pure numpy/scipy on the container CPU and its annealing budget is the binding constraint, not the CNN. NOTE the implementation recovers the layout from train_x ONLY, so uses_query_images_unlabeled is False even though the protocol would permit pooling the query images -- if the layout turns out to be the bottleneck at N=1000, that is the first thing to change.",
+      "uses_query_images_unlabeled": false
+    },
+    {
+      "config": {
+        "activation": "gelu",
+        "batch_size": 256,
+        "dropout": 0.3,
+        "ema_decay": 0.999,
+        "epochs": 1200,
+        "family": "mlp",
+        "input_noise_std": 1.2,
+        "label_smoothing": 0.05,
+        "lr": 0.003,
+        "members": 64,
+        "mixup_alpha": 0.4,
+        "notes": "deliberate ~900 s arm: K=64 x 2x schedule x EMA, the most promising family",
+        "schedule": "cosine",
+        "warmup_fraction": 0.1,
+        "weight_decay": 0.01,
+        "widths": [
+          1024,
+          1024,
+          1024
+        ]
+      },
+      "estimated_seconds_at_10k": 938.5,
+      "id": "mlp-maxcompute-e64-long",
+      "rationale": "The deliberate max-compute arm, targeting ~900 s of the 1200 s budget at N=10000. It stacks the three cheapest-evidence levers of the strongest measured family -- the largest ensemble (K=64), a 2x schedule (1200 epochs), and EMA -- onto the regularised 1024x3 recipe. Chosen over a max-compute Ladder or topo_cnn arm because those two are overhead-bound (tiny sequential layers, CPU-bound layout search) and cannot absorb A100 FLOPs, whereas BatchedMLP turns members directly into bmm width. Its real job is to answer \"is the dense 9x9 ceiling ~2.6% or can raw compute push it under 2.4%?\" If this arm ties mlp-reg-e16, the ceiling is a data ceiling and the ladder tiers should be set from the cheap configurations.",
+      "uses_query_images_unlabeled": false
+    }
+  ],
+  "notes": "DRAFT development-sweep candidate list for the permutation-invariant MNIST-medium study (9x9, 81 permuted features, 10000 disjoint queries). 18 GPU candidates; every config was validated through learners.resolve_config, so only implemented keys appear and every default is explicit where it differs from the family default.\n\nUNITS -- THE SINGLE MOST IMPORTANT THING IN THIS FILE. learners.normalize is 4*x - 0.5 and the 'mlp' family applies it BEFORE input_noise_std is added and before VAT perturbs the input. Every noise and eps number below is therefore in normalised units, 4x larger than the raw-[0,1] numbers quoted in the literature review: the pilot-optimal raw sigma=0.3 is input_noise_std=1.2; the Ladder small-N raw 0.2 is 0.8. For VAT, the published 784-dim eps of 1.5-2.5 rescales to raw 0.48-0.80 by sqrt(81/784)=0.321 and then to 1.9-3.2 here; the eps grid {2.0, 3.0, 4.5} brackets that band on the high side, matching where the researcher's raw-space grid (0.5-1.0) bottomed out. The 'ladder' and 'topo_cnn' families do NOT normalise (raw [0,1]), so their noise_std=0.2/0.3 are the published values unchanged. Getting this conversion wrong is the easiest way to silently ruin the whole sweep.\n\nMOST PROMISING PER THE LITERATURE, in order.\n(1) topo-cnn09-x3 has by far the highest ceiling: if the 9x9 lattice is recovered, the target is the measured spatial reference on this exact pool (1.51% at N=10000, ~4.0% at N=1000) instead of the ~2.65% dense ceiling -- a factor of ~1.75 in error. Both independent investigations confirm the signal exists (signed positive correlation or shrinkage partial correlation; true-8-neighbour top-2 hit rate ~90%) and both confirm the risk is the combinatorial optimiser, not the data. Expect an approximately correct grid (roughly one cell of mean Manhattan displacement), not exact recovery, plus an estimated ~10% rate of outright global failure that must be detected downstream. Resolve this arm FIRST on one dev seed: the two possible ladders it implies (~1.5-4.0% span vs ~2.4-6.4% span) differ by nearly a factor of two at both ends.\n(2) ladder-retuned-tq and the VAT transductive arms are the only candidates that can exploit the 10000 unlabelled query images. Published evidence says unlabelled data is worth far more than spatial structure (0.84% vs 5.70% at 1000 labels on 28x28, versus ~0.8 pp for convolution), but both researchers measured almost no transfer at this scale (VAT 8.14% -> 7.99%), because 59000 unlabelled 784-dim images become 10000 unlabelled 81-dim ones. These arms are cheap and the disagreement between literature and pilot is exactly what the dev sweep exists to settle.\n(3) mlp-reg-1024x3 and its ensemble/schedule variants are the reliable floor: measured 2.70% at N=10000 and 7.56% at N=1000 in CPU pilots, with additive input Gaussian noise -- not dropout -- as the dominant regulariser at 81 dimensions.\n\nKNOWN CAVEATS.\n- ladder-paper is expected to lose: on 9x9 QMNIST-recovered over 11 draws it scored 4.32% against 3.85% for a plain 12-epoch MLP256. It is included as the reproduction anchor that makes the retuned variants interpretable, not as a contender.\n- mixup and label smoothing are size-dependent (helped at N=1000, hurt at N=10000 in the pilots), which is why mlp-reg-nomixup runs at both levels; selection should be allowed to pick per-level.\n- Neural ensembling saturated fast in the pilots (1 member 2.70% vs 5 members 2.77% at N=10000, inside noise). K=16 and K=64 are here to measure that saturation on 10000 queries, not on the assumption that it will not happen.\n- topo_cnn as implemented recovers the layout from train_x ONLY, so uses_query_images_unlabeled is False for it even though the protocol permits pooling the query images. Both researchers recommend pooling (it makes recovery quality independent of the label level, >=11000 images at every rung). If the layout is the bottleneck at N=1000, changing learners._fit_topo_cnn to pass train_x+query_x into topology.recover_layout is the highest-value edit available -- but it is a code change, so it is out of scope for this draft and is recorded here as a decision for the study owner.\n- There is no reliable UNSUPERVISED criterion for the layout: one researcher measured that selecting by QAP energy actively picks bad layouts. topo_cnn must be selected by downstream dev accuracy only.\n- The BatchNorm/VAT hazard reported in the literature review (unlabelled forward passes polluting BN running statistics, 7.46% -> 13-15%) does NOT apply here: learners.BatchedMLP has no normalisation layers at all, and learners.vat_loss rewinds the generator so all passes share one dropout draw.\n- classical_candidates.json was reviewed and left unchanged. Its RBF gamma grid [0.005, 0.01, 0.02, 0.05] initially looks 10-100x too small against the researcher's raw-space optimum of gamma=0.6, but classical.fit_predict also applies normalize() for the scaled families, which multiplies squared distances by 16: raw gamma 0.6 == 0.0375 in the grid's units, comfortably inside [0.005, 0.05]. No edit needed.\n\nTIMING MODEL (all estimates are at N=10000 on one A100-40GB, per fit, inference included). compute = 6 * params * members * N * epochs * vat_multiplier / 15e12 FLOP/s (FP32 bmm, TF32 off per the study default tf32=False), plus a launch-overhead term that DOMINATES most candidates: 1.4 ms per optimizer step baseline, +0.055 ms per member per step when mixup_alpha>0 (learners._fit_mlp runs a Python loop over members drawing rng.beta and rng.permutation per member per step), +1.2 ms per step for VAT's three extra forwards and one extra backward, +0.30 ms per step for EMA, and 0.15 ms per member per epoch for the shuffle order. The Ladder is modelled at a flat 6 ms/step because LadderAMLP's ten narrow encoder/decoder layers plus nodewise AMLP combinators issue on the order of a hundred tiny kernels per step and cannot saturate an A100 -- that constant is the least-certain number in this file and should be re-estimated from the smoke plan's measured mean_epoch_seconds before the dev sweep is dispatched. topo_cnn is 300 s of CPU-bound layout search (topology.py is pure numpy/scipy) plus ~150 s for three cnn-09 members at 100 epochs.\n\nBUDGET. Estimated total dev work at N=10000 is ~4407 s per (seed, level) across all 18 candidates; the same list at N=1000 is roughly 10x cheaper for the FLOP-bound arms and roughly 1x for topo_cnn (the layout search is label-count independent). All 18 are estimated to finish inside the 1200 s per-fit cap. Candidates estimated above 600 s: mlp-maxcompute-e64-long. mlp-maxcompute-e64-long is the deliberate ~900 s arm; it stacks K=64, a 2x schedule and EMA on the strongest measured family, chosen over a max-compute Ladder or topo_cnn arm because those two are overhead-bound and cannot absorb A100 FLOPs. Its purpose is to decide whether the dense 9x9 ceiling is a compute ceiling or a data ceiling; if it ties mlp-reg-e16, the final ladder tiers should be set from the cheap configurations.\n\nSTATUS. Draft only. No Modal app was created, no GPU was opened, no paid compute was started, no query labels were touched, and nothing outside this study directory was modified."
+}
