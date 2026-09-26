@@ -36,7 +36,7 @@ in [`mnist.py`](mnist.py)'s docstring.
 | - | -: | -: | - | - | - |
 | 2026-09-25 | 29,662 | 700.1 | [py](example.py), [report](energy/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | `example.py` baseline: MLP 60-1024-1024-10, 400 steps |
 | 2026-09-26 | 2,648 | 191.3 | [py](energy/entries/mlp_k1_w1024_s100_b512.py), [report](energy/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | MLP 60-1024-1024-10, 100 steps |
-| 2026-09-26 | 2,429 | 61.6 | [py](energy/entries/fast_mlp.py), [report](energy/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | MLP 60-256-256-10, 200 steps in a CUDA graph ★ best |
+| 2026-09-26 | 2,131 | 61.7 | [py](submissions/graph-mlp-20260926/fast_mlp.py), [report](submissions/graph-mlp-20260926/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | MLP 60-256-256-10, 200 steps in a CUDA graph ★ best |
 
 ## Difficulty = 2 (error ≤ 3.40%)
 
