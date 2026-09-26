@@ -108,6 +108,7 @@ so records are read before they stand.
 | Difficulty | Date | ms per call | Method | Contributors |
 | :-: | - | -: | - | - |
 | 1 | 2026-09-25 | 700.1 (median of 3: 678.8, 700.1, 723.0) | [`example.py`](example.py), two-hidden-layer MLP, 96.7% | baseline |
+| 1 | 2026-09-26 | 61.388 (median of 3: 61.269, 61.388, 61.590) | [CUDA-graph MLP](submissions/graph-mlp-20260926/README.md), 60–256–256–10, 95.17% | yaroslavvb with Codex; port of the cutoff experiment |
 
 ## Tests
 
