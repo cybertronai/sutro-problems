@@ -1,10 +1,12 @@
 """Tests for mnist.py that run on a CPU without a network: the release, the draws, the
-source rules, the judge, and whole runs of the worker protocol on synthetic pools.
+source rules, the judge, whole runs of the worker protocol on synthetic pools, and the
+energy column against a simulated board.
 
     python -m pytest -q test_mnist.py
 """
 
 import textwrap
+import time
 
 import numpy as np
 import pytest
@@ -262,9 +264,10 @@ def short_runs(monkeypatch):
     monkeypatch.setattr(mnist, "HOLDOUT_CALLS", 1)
 
 
-def run(tmp_path, pools, body, function, band=500, verbose=False):
+def run(tmp_path, pools, body, function, band=500, verbose=False, energy=False, record=None):
     path = write(tmp_path, "entry.py", body)
-    return mnist.evaluate(path, function, band, verbose=verbose, sandbox="off", pools=pools)
+    return mnist.evaluate(path, function, band, verbose=verbose, sandbox="off", pools=pools, energy=energy,
+                          record=record)
 
 
 @pytest.mark.usefixtures("short_runs")
@@ -325,3 +328,162 @@ def test_locate_finds_the_function_and_its_file():
     assert mnist.locate(str(path) + ":mlp") == (path, "mlp")
     with pytest.raises(TypeError):
         mnist.locate(lambda a, b, c: c)
+
+
+# ---- the energy column ---------------------------------------------------------------------
+
+
+def idle_window(name, watts, seconds=5.0, busy=0, contexts=1):
+    return {"name": name, "seconds": seconds, "joules": watts * seconds, "utilization_max": busy, "contexts": contexts}
+
+
+def energy_windows(ref_j_per_tflop=8.5, method_ms=None, correct=None, busy=0, exact=True):
+    """A board idling at 60 W: 8.5 J/TFLOP on the reference, 50 mJ per empty call, 10 J per method call."""
+    matmuls = 1400
+    tflop = 2 * 4096 ** 3 * matmuls / 1e12
+    return [idle_window("idle 1", 60.0, 10.0),
+            {"name": "reference", "seconds": 10.0, "joules": 600.0 + ref_j_per_tflop * tflop, "matmuls": matmuls,
+             "dim": 4096, "exact": exact},
+            idle_window("idle 2", 60.0, 10.0),
+            {"name": "control", "seconds": 5.0, "joules": 300.0 + 50.0, "calls": 1000},
+            idle_window("idle 3", 60.0, busy=busy),
+            {"name": "method", "seconds": 20.0, "joules": 1200.0 + 1000.0, "calls": 100,
+             "ms": method_ms or [150.0] * 100, "correct": correct or [9700] * 100},
+            idle_window("idle 4", 60.0)]
+
+
+A100 = {"name": "NVIDIA A100-SXM4-80GB"}
+
+
+def test_energy_is_the_windows_energy_above_idle_less_the_round_trip():
+    report = mnist.energy_summary(energy_windows(), A100, 300, 150.0)
+    assert report["problems"] == []
+    assert report["mj_per_call"] == pytest.approx(10000.0 - 50.0)
+    assert report["control_mj_per_call"] == pytest.approx(50.0)
+    assert report["gross_mj_per_call"] == pytest.approx(22000.0)
+    assert report["idle_w"] == pytest.approx(60.0)
+    assert report["reference"]["j_per_tflop"] == pytest.approx(8.5)
+    assert report["reference"]["tflops_per_s"] == pytest.approx(2 * 4096 ** 3 * 1400 / 1e13)
+
+
+@pytest.mark.parametrize("change, message", [
+    (dict(ref_j_per_tflop=0.07), "implausible"),                        # the broken sensor behind a 3.8 mJ claim
+    (dict(exact=False), "wrong product"),
+    (dict(busy=35), "busy in an idle window"),                          # work left running while the method was frozen
+    (dict(correct=[9700] * 99 + [9000]), "energy window scored"),       # a draw far below the band
+    (dict(method_ms=[20.0] * 100), "every call must do the same work"),  # calls much faster than the timed ones
+])
+def test_energy_is_left_empty_when_it_cannot_be_trusted(change, message):
+    report = mnist.energy_summary(energy_windows(**change), A100, 300, 150.0)
+    assert report["mj_per_call"] is None and any(message in p for p in report["problems"])
+
+
+def test_the_reference_band_applies_to_an_a100_only():
+    report = mnist.energy_summary(energy_windows(ref_j_per_tflop=30.0), {"name": "NVIDIA GeForce RTX 4090"}, 300, 150.0)
+    assert report["problems"] == [] and report["reference"]["band"] is None
+
+
+def test_rerelease_is_a_fresh_release_of_the_same_images(pools):
+    rng = np.random.default_rng(5)
+    d = mnist.Pool("mnist", *pools["mnist"], rng).draw(rng)
+    e = mnist.rerelease(d, rng)
+    assert e["train_x"].dtype == np.float32 and e["train_x"].shape == d["train_x"].shape
+    assert np.abs(np.cov(e["train_x"], rowvar=False) - np.eye(60)).max() < 1e-3  # still whitened
+    assert np.allclose(np.linalg.norm(e["train_x"], axis=1), np.linalg.norm(d["train_x"], axis=1), rtol=1e-4)
+    assert not np.allclose(e["train_x"], d["train_x"], atol=0.1)
+    pairs = set(zip(d["train_y"].tolist(), e["train_y"].tolist())) | set(zip(d["test_y"].tolist(), e["test_y"].tolist()))
+    assert len(pairs) == 10  # one consistent relabelling of the ten classes
+
+
+def test_freeze_stops_every_process_of_the_method():
+    import subprocess
+    import types
+
+    proc = subprocess.Popen(["sleep", "30"], start_new_session=True)
+    worker = types.SimpleNamespace(proc=proc, sandboxed=False)
+
+    def state():
+        return subprocess.run(["ps", "-o", "stat=", "-p", str(proc.pid)], capture_output=True, text=True).stdout.strip()
+
+    try:
+        mnist.freeze(worker)
+        assert state().startswith("T")
+        mnist.freeze(worker, stop=False)
+        assert not state().startswith("T")
+    finally:
+        proc.kill()
+        proc.wait()
+
+
+class FakeBoard:
+    """A board that draws 150 W while the method's processes may run and 50 W while they are frozen."""
+
+    def __init__(self):
+        self.t, self.mj, self.watts = time.perf_counter(), 0.0, 150.0
+
+    def advance(self, watts=None):
+        now = time.perf_counter()
+        self.mj += (now - self.t) * self.watts * 1e3
+        self.t, self.watts = now, self.watts if watts is None else watts
+
+    def select(self, uuid):
+        pass
+
+    def energy_mj(self):
+        self.advance()
+        return int(self.mj)
+
+    def utilization(self):
+        return 0
+
+    def contexts(self):
+        return 1
+
+    def describe(self):
+        return {"name": "fake board"}
+
+    def close(self):
+        pass
+
+
+@pytest.mark.usefixtures("short_runs")
+def test_energy_column_runs_through_a_fresh_worker(tmp_path, pools, monkeypatch, capfd):
+    board, freeze = FakeBoard(), mnist.freeze
+
+    def frozen(worker, stop=True):
+        freeze(worker, stop)
+        board.advance(50.0 if stop else 150.0)
+
+    for name, value in dict(SETTLE_S=0.0, IDLE_S=0.2, CONTROL_WINDOW_S=0.2, ENERGY_WINDOW_S=0.5, REFERENCE_S=0.05,
+                            REFERENCE_DIM=64, ENERGY_DRAWS=2).items():
+        monkeypatch.setattr(mnist, name, value)
+    monkeypatch.setattr(mnist, "Nvml", lambda: board)
+    monkeypatch.setattr(mnist, "freeze", frozen)
+    record = {}
+    assert run(tmp_path, pools, NCM, "ncm", verbose=True, energy=None, record=record) > 0
+    energy = record["energy"]
+    assert [w["name"] for w in energy["windows"]] == ["idle 1", "reference", "idle 2", "control", "idle 3", "method",
+                                                      "idle 4"]
+    assert energy["problems"] == [] and energy["reference"]["exact"]
+    assert energy["calls"] > mnist.ENERGY_DRAWS  # later calls re-release the draws made before the window
+    assert energy["correct"] / energy["total"] > 0.9
+    assert energy["idle_w"] == pytest.approx(50.0, abs=0.5)
+    windows = {w["name"]: w for w in energy["windows"]}
+    expected = 100.0 * (windows["method"]["seconds"] / energy["calls"]
+                        - windows["control"]["seconds"] / energy["control_calls"]) * 1e3
+    assert energy["mj_per_call"] == pytest.approx(expected, rel=0.02, abs=2.0)
+    out, _ = capfd.readouterr()
+    assert f"energy {energy['mj_per_call']:.3f} mJ per call above idle" in out
+    assert record["ranked_ms"] > 0 and len(record["calls"]) == 4
+
+
+@pytest.mark.usefixtures("short_runs")
+def test_energy_is_skipped_without_nvml(tmp_path, pools, monkeypatch, capfd):
+    def missing():
+        raise mnist.NvmlError("no NVML here")
+
+    monkeypatch.setattr(mnist, "Nvml", missing)
+    record = {}
+    assert run(tmp_path, pools, NCM, "ncm", verbose=True, energy=None, record=record) > 0
+    assert record["energy"] == {"mj_per_call": None, "reason": "no NVML here"}
+    assert "energy not measured: no NVML here" in capfd.readouterr()[0]

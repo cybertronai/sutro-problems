@@ -62,6 +62,16 @@ KernelBot harness, tightened after a red-team review of this port):
   0.1 ms + 0.5%, so hiding work from the events cannot lower a score.
 * No MNIST draw may be more than 1.5 points worse than the band. Each timed
   call is limited to 60 s, each warm-up to 180 s.
+* Energy is a column beside the score, not the score. After a passing run, one
+  more fresh worker runs the method back to back on fresh MNIST draws for 20 s,
+  and this process reads the board's NVML energy counter at the edges of that
+  window and of idle windows in which every process of the method is frozen
+  (SIGSTOP). The column is the board's energy per call above idle, less what
+  the same round trip costs with an empty method. One call cannot be read on
+  its own: the A100's counter moves every 100 ms. Before the method is
+  imported, the same worker runs an FP32 matmul whose energy shows whether the
+  board's power telemetry is plausible; if it is not, or the method behaves
+  differently in the window, the column is left empty and the score stands.
 * Your file is at most 20,480 bytes, so it cannot carry the pool or a large
   trained model. At import it may only import, define functions and classes,
   assign constants and set torch flags; the names the allow-lists trust
@@ -97,7 +107,7 @@ import urllib.request
 import warnings
 from pathlib import Path
 
-VERSION = "mnist-a100/1.1.0 (protections of sutro-mnist-medium/3.0.0, tightened)"
+VERSION = "mnist-a100/1.2.0 (protections of sutro-mnist-medium/3.0.0, tightened; energy column)"
 
 # difficulty: (band, as the most mean test error allowed in basis points;
 #              labelled images the Ladder network needs to reach it at 24,000 steps)
@@ -136,6 +146,20 @@ CALL_SLACK_MS, CALL_SLACK_FRACTION = 50.0, 0.5
 FLOOR_SLACK_MS, FLOOR_SLACK_FRACTION = 0.1, 0.005
 CALIBRATION_CALLS, CALIBRATION_DISCARD = 16, 6
 L2_FLUSH_BYTES = 256 << 20
+# Energy, the column beside the ranked time. The A100's energy counter moves every ~100 ms, so a
+# call of tens of ms cannot be read on its own (thirty isolated 74 ms matmul bursts read 8.1-15.4 J
+# against 16.5 J, energy/results/probe-a100-80gb.json). The method runs back to back instead, and
+# the window's energy above idle is split over its calls.
+ENERGY_WINDOW_S, ENERGY_MIN_CALLS = 20.0, 3  # the method's window: back-to-back calls on fresh MNIST draws
+ENERGY_DRAWS = 32          # draws made before the window; later calls get one again under a fresh Q and labels
+CONTROL_WINDOW_S = 5.0     # empty calls: what the round trip itself costs per call, subtracted
+SETTLE_S, IDLE_S = 3.0, 5.0  # each idle window, after the board settles, with the method frozen
+REFERENCE_S, REFERENCE_DIM = 5.0, 4096  # FP32 matmul of constant operands, TF32 off, before the import
+# What a healthy board reads on that reference, in J above idle per 10^12 FLOPs and TFLOP/s: six
+# A100s (four SXM4-80GB on Modal, two SXM4-40GB) read 8.1-8.8 J at 18.5-19.0 TFLOP/s, and fifteen
+# more on Modal (eleven 80GB PCIe, four SXM4-80GB) 7.2-9.2 J at 17.2-18.4 TFLOP/s (energy/); the
+# broken sensor behind a published 3.8 mJ claim read about 0.07 J. Other GPUs are reported unchecked.
+REFERENCE_BANDS = {"NVIDIA A100": ((6.0, 11.0), (15.0, 23.0))}
 WORKER_START_S, IMPORT_S, STAGE_S = 180, 180, 60
 MAX_HEADER = 1 << 16
 WORKER_FLAG = "--mnist-a100-worker"
@@ -154,16 +178,18 @@ class Disqualified(Exception):
 # ============================================================================
 
 
-def score(method, difficulty=1, *, verbose=True):
+def score(method, difficulty=1, *, verbose=True, energy=None):
     """Time ``method`` at a difficulty from 1 (loosest) to 5 (tightest).
 
     ``method(train_x, train_y, test_x) -> labels`` must be a function defined at
     the top level of a .py file (it is re-imported from that file in a worker
     process); ``"file.py:function"`` works too. Returns the ranked time in
     milliseconds per call. Raises ``Disqualified`` when a rule is broken.
+    A passing run then measures the energy column where the GPU's energy
+    counter can be read (about 80 s more); ``energy=False`` skips it.
     """
     path, function = locate(method)
-    return evaluate(path, function, band_bp(difficulty), verbose=verbose)
+    return evaluate(path, function, band_bp(difficulty), verbose=verbose, energy=energy)
 
 
 def band_bp(difficulty):
@@ -211,11 +237,13 @@ def locate(method):
     return Path(source).resolve(), name if name in names else names[0]
 
 
-def evaluate(path, function, band, verbose=True, sandbox=None, pools=None):
-    """Score ``function`` from the file ``path`` against a band in basis points."""
+def evaluate(path, function, band, verbose=True, sandbox=None, pools=None, energy=None, record=None):
+    """Score ``function`` from the file ``path`` against a band in basis points. ``energy=False``
+    skips the energy column; a dict passed as ``record`` receives every call and energy window."""
     import numpy as np
 
     say = print if verbose else (lambda *args, **kwargs: None)
+    keep = record.update if record is not None else (lambda **fields: None)
     name = Path(path).name
     source = Path(path).read_bytes()
     try:
@@ -242,7 +270,11 @@ def evaluate(path, function, band, verbose=True, sandbox=None, pools=None):
     for flag in review_flags(source):
         say(f"  review flag: {flag}", flush=True)
 
+    keep(version=VERSION, file=name, function=function, source_sha256=hashlib.sha256(source).hexdigest(),
+         band_bp=band, sandboxed=sandboxed, holdout=holdout)
+
     def announce(hello):
+        keep(device=hello.get("device"), torch=hello.get("torch"))
         say(f"  {hello.get('device')}, torch {hello.get('torch')}, sandbox "
             + ("on" if sandboxed else f"OFF ({reason or 'MNIST_SANDBOX=off'}): not an official time"), flush=True)
 
@@ -259,13 +291,19 @@ def evaluate(path, function, band, verbose=True, sandbox=None, pools=None):
             calls.append(call)
     except Failure as error:
         say(f"disqualified: {error}", flush=True)
+        keep(calls=[dataclasses.asdict(c) for c in calls], problems=[str(error)], ranked_ms=None)
         raise Disqualified("", [str(error)]) from None
     problems, ranked_ms, summary = judge(calls, band)
     say(summary + ("" if problems else f"; score {ranked_ms:.3f} ms"), flush=True)
     for problem in problems:
         say(f"disqualified: {problem}", flush=True)
+    keep(calls=[dataclasses.asdict(c) for c in calls], problems=problems, summary=summary,
+         ranked_ms=None if problems else ranked_ms)
     if problems:
         raise Disqualified(summary, problems)
+    if energy is not False:
+        mnist_ms = _median([c.ms for c in calls if c.dataset == "mnist"])
+        keep(energy=energy_column(source, function, sandboxed, pools, rng, warmup, band, mnist_ms, say))
     return ranked_ms
 
 
@@ -467,6 +505,18 @@ class Pool:
                "test_x": apply_release(self.pixels[test], mu, transform), "test_y": relabel[self.labels[test]]}
         del mu, whitener, transform
         return out
+
+
+def rerelease(d, rng):
+    """The same images under a fresh secret rotation and label permutation, in about a millisecond:
+    R z is again a release of the draw (R Q is Haar when R is). Energy windows use it once they
+    have used every draw made for them, so that no two calls ever see the same inputs."""
+    import numpy as np
+
+    turn = haar_rotation(DIMS, rng).T.astype(np.float32)
+    relabel = rng.permutation(10).astype(np.int64)
+    return {"dataset": d["dataset"], "train_x": d["train_x"] @ turn, "train_y": relabel[d["train_y"]],
+            "test_x": d["test_x"] @ turn, "test_y": relabel[d["test_y"]]}
 
 
 # ============================================================================
@@ -832,19 +882,40 @@ def sandbox_available():
     return None
 
 
+def sandbox_pids(uid=SANDBOX_UID):
+    """Every process running as ``uid``."""
+    pids = []
+    for entry in filter(str.isdigit, os.listdir("/proc")):
+        try:
+            with open(f"/proc/{entry}/status") as status:
+                uids = next(line for line in status if line.startswith("Uid:")).split()[1:]
+        except (OSError, StopIteration):
+            continue
+        if str(uid) in uids:
+            pids.append(int(entry))
+    return pids
+
+
+def freeze(worker, stop=True):
+    """Stop (SIGSTOP) or continue every process of the method: the worker's session and, sandboxed,
+    every process of the sandbox user, so none of its threads runs while idle power is measured."""
+    sig = signal.SIGSTOP if stop else signal.SIGCONT
+    try:
+        os.killpg(worker.proc.pid, sig)
+    except OSError:
+        pass
+    for pid in sandbox_pids() if worker.sandboxed else ():
+        try:
+            os.kill(pid, sig)
+        except OSError:
+            pass
+
+
 def reap_sandbox(uid=SANDBOX_UID):
     """Kill every process running as ``uid`` and delete every file it owns in the
     world-writable directories, so nothing a method leaves behind survives the run."""
     for _ in range(5):
-        pids = []
-        for entry in filter(str.isdigit, os.listdir("/proc")):
-            try:
-                with open(f"/proc/{entry}/status") as status:
-                    uids = next(line for line in status if line.startswith("Uid:")).split()[1:]
-            except (OSError, StopIteration):
-                continue
-            if str(uid) in uids:
-                pids.append(int(entry))
+        pids = sandbox_pids(uid)
         if not pids:
             break
         for pid in pids:
@@ -1015,14 +1086,16 @@ class Worker:
             raise Failure(f"the method's process sent a malformed reply while {what}")
         return reply, payload
 
-    def call(self, d, timeout_s, null=False, label="a"):
-        """One timed call: (CUDA-event ms, this process's ms, predicted labels as uint8)."""
+    def call(self, d, timeout_s, null=False, label="a", collect=True):
+        """One timed call: (CUDA-event ms, this process's ms, predicted labels as uint8). Energy
+        windows pass ``collect=False``: their calls run back to back, without collecting garbage."""
         import numpy as np
 
         arrays = (d["train_x"], d["train_y"].astype(np.int64), d["test_x"])
         what = f"running the method on {label} {d['dataset']} draw"
-        self.request({"cmd": "gc"}, STAGE_S, what="collecting garbage")
-        gc.collect()
+        if collect:
+            self.request({"cmd": "gc"}, STAGE_S, what="collecting garbage")
+            gc.collect()
         # The timed window opens before the draw exists anywhere the worker can see it and
         # closes when the predictions are back: copying the inputs in, the call, the reply.
         started = time.perf_counter()
@@ -1165,6 +1238,258 @@ def judge(calls, band):
 
 
 # ============================================================================
+# The energy column: this process reads the board's NVML counter, the method
+# never does
+# ============================================================================
+
+
+class NvmlError(Exception):
+    pass
+
+
+class EnergyUnavailable(Exception):
+    pass
+
+
+class Nvml:
+    """The board's cumulative energy counter and a few checks, through the driver's NVML library
+    (loaded with ctypes; the image has no pynvml). A read of the counter takes ~3 ms, and a tight
+    loop of them raised idle power by ~20 W on an A100, so it is read only at window edges."""
+
+    def __init__(self):
+        try:
+            self.lib = ctypes.CDLL("libnvidia-ml.so.1")
+        except OSError:
+            raise NvmlError("no NVML here (libnvidia-ml.so.1, from an NVIDIA driver on Linux)") from None
+        self.lib.nvmlErrorString.restype = ctypes.c_char_p
+        self._check(self.lib.nvmlInit_v2(), "nvmlInit_v2")
+        self.handle = None
+
+    def _check(self, code, name):
+        if code:
+            raise NvmlError(f"{name} failed: {self.lib.nvmlErrorString(code).decode()}")
+
+    def select(self, uuid):
+        """The board that is the worker's CUDA device, by UUID; without one, the only board there is."""
+        handle, count = ctypes.c_void_p(), ctypes.c_uint()
+        if uuid and self.lib.nvmlDeviceGetHandleByUUID(uuid.encode(), ctypes.byref(handle)) == 0:
+            self.handle = handle
+            return
+        self._check(self.lib.nvmlDeviceGetCount_v2(ctypes.byref(count)), "nvmlDeviceGetCount_v2")
+        if count.value != 1:
+            raise NvmlError(f"cannot tell which of {count.value} GPUs the method runs on")
+        self._check(self.lib.nvmlDeviceGetHandleByIndex_v2(0, ctypes.byref(handle)), "nvmlDeviceGetHandleByIndex_v2")
+        self.handle = handle
+
+    def energy_mj(self):
+        value = ctypes.c_ulonglong()
+        self._check(self.lib.nvmlDeviceGetTotalEnergyConsumption(self.handle, ctypes.byref(value)),
+                    "nvmlDeviceGetTotalEnergyConsumption")
+        return value.value
+
+    def utilization(self):
+        """Percent of the last sample period (1/6 s to 1 s) in which a kernel ran."""
+        rates = (ctypes.c_uint * 2)()
+        self._check(self.lib.nvmlDeviceGetUtilizationRates(self.handle, rates), "nvmlDeviceGetUtilizationRates")
+        return rates[0]
+
+    def contexts(self):
+        """How many processes hold a compute context on the board, or None when it cannot say."""
+        function = (getattr(self.lib, "nvmlDeviceGetComputeRunningProcesses_v3", None)
+                    or getattr(self.lib, "nvmlDeviceGetComputeRunningProcesses_v2", None))
+        if function is None:
+            return None
+        count = ctypes.c_uint(0)
+        code = function(self.handle, ctypes.byref(count), None)
+        return 0 if code == 0 else count.value if code == 7 else None  # 7: NVML_ERROR_INSUFFICIENT_SIZE
+
+    def describe(self):
+        def text(name, size, *args):
+            buffer = ctypes.create_string_buffer(size)
+            return buffer.value.decode() if getattr(self.lib, name)(*args, buffer, size) == 0 else None
+
+        limit = ctypes.c_uint()
+        known = self.lib.nvmlDeviceGetPowerManagementLimit(self.handle, ctypes.byref(limit)) == 0
+        return {"name": text("nvmlDeviceGetName", 96, self.handle), "uuid": text("nvmlDeviceGetUUID", 96, self.handle),
+                "vbios": text("nvmlDeviceGetVbiosVersion", 32, self.handle),
+                "driver": text("nvmlSystemGetDriverVersion", 80), "power_limit_w": limit.value / 1e3 if known else None}
+
+    def close(self):
+        self.lib.nvmlShutdown()
+
+
+def energy_column(source, function, sandboxed, pools, rng, warmup, band, mnist_ms, say):
+    """Measure the energy column after a passing run and print it. Returns energy_summary()'s record,
+    or one with ``mj_per_call`` None and the ``reason`` it could not be measured."""
+    say(f"energy: one more fresh process runs the method back to back on fresh MNIST draws for "
+        f"{ENERGY_WINDOW_S:g} s, between idle windows in which it is frozen", flush=True)
+    try:
+        windows, device = measure_energy(source, function, sandboxed, pools, rng, warmup, mnist_ms)
+    except (EnergyUnavailable, NvmlError, Failure, RuntimeError, OSError) as error:
+        say(f"energy not measured: {error}", flush=True)
+        return {"mj_per_call": None, "reason": str(error)}
+    report = energy_summary(windows, device, band, mnist_ms)
+    ref = report["reference"]
+    check = (f"a healthy {device.get('name')} reads {ref['band'][0][0]:g}-{ref['band'][0][1]:g}"
+             if ref["band"] else "unchecked on this GPU")
+    say(f"  {device.get('name')}: idle {report['idle_w']:.1f} W with the method frozen; telemetry reference "
+        f"{ref['tflops_per_s']:.1f} TFLOP/s at {ref['j_per_tflop']:.2f} J/TFLOP above idle ({check})", flush=True)
+    say(f"  the round trip alone: {report['control_mj_per_call']:,.1f} mJ per call over "
+        f"{report['control_calls']:,} empty calls, subtracted", flush=True)
+    say(f"  the method: {report['calls']:,} calls in {report['seconds']:.1f} s, MNIST "
+        f"{report['correct'] / report['total']:.2%}, {report['ms_median']:,.3f} ms per call, "
+        f"{report['active_w']:.1f} W on average", flush=True)
+    for problem in report["problems"]:
+        say(f"energy not measured: {problem}", flush=True)
+    if report["mj_per_call"] is not None:
+        say(f"energy {report['mj_per_call']:.3f} mJ per call above idle", flush=True)
+    return report
+
+
+def measure_energy(source, function, sandboxed, pools, rng, warmup, mnist_ms):
+    """One fresh worker and seven windows: idle, reference, idle, control, [import and warm-up],
+    idle, method, idle. Each window records its seconds and the joules the counter moved across it.
+    The reference and the control run before the method is imported."""
+    import numpy as np
+
+    board = Nvml()  # before any worker starts, so a machine without NVML says so at once
+    worker, windows = None, []
+    try:
+        if sandboxed:
+            reap_sandbox()
+        worker = Worker(sandboxed, source)
+        hello, _ = worker.request({"cmd": "hello", "buffer": str(worker.buffer_path),
+                                   "buffer_bytes": worker.buffer_bytes}, timeout_s=WORKER_START_S, what="starting")
+        if sandboxed and not hello.get("sandboxed"):
+            raise EnergyUnavailable(f"could not sandbox the method: {hello.get('sandbox_error')}")
+        board.select(hello.get("uuid"))
+        device = board.describe()
+
+        def measure(name, run):
+            t0, e0 = time.perf_counter(), board.energy_mj()
+            detail = run()
+            t1, e1 = time.perf_counter(), board.energy_mj()
+            windows.append({"name": name, "seconds": t1 - t0, "joules": (e1 - e0) / 1e3, **detail})
+
+        def idle(name):
+            freeze(worker)
+            try:
+                time.sleep(SETTLE_S)
+
+                def wait():
+                    busy, end = [], time.perf_counter() + IDLE_S
+                    while time.perf_counter() < end:
+                        time.sleep(max(0.0, min(0.25, end - time.perf_counter())))
+                        busy.append(board.utilization())
+                    return {"utilization_max": max(busy, default=0), "contexts": board.contexts()}
+
+                measure(name, wait)
+            finally:
+                freeze(worker, stop=False)
+
+        def reference():
+            reply, _ = worker.request({"cmd": "reference", "seconds": REFERENCE_S, "dim": REFERENCE_DIM},
+                                      timeout_s=REFERENCE_S + 120, what="running the telemetry reference")
+            if not reply.get("ok"):
+                raise EnergyUnavailable(f"the telemetry reference failed:\n{reply.get('error')}")
+            return {"matmuls": reply["count"], "dim": REFERENCE_DIM, "exact": reply["exact"]}
+
+        empty = {"dataset": "control", "train_x": np.zeros((TRAIN, DIMS), np.float32),
+                 "train_y": np.zeros(TRAIN, np.int64), "test_x": np.zeros((TEST, DIMS), np.float32)}
+
+        def control():
+            calls, end = 0, time.perf_counter() + CONTROL_WINDOW_S
+            while calls < ENERGY_MIN_CALLS or time.perf_counter() < end:
+                worker.call(empty, 60, null=True, collect=False)
+                calls += 1
+            return {"calls": calls}
+
+        idle("idle 1")
+        measure("reference", reference)
+        idle("idle 2")
+        measure("control", control)
+        reply, _ = worker.request({"cmd": "load", "function": function}, timeout_s=IMPORT_S,
+                                  what="importing the method file")
+        if not reply.get("ok"):
+            raise EnergyUnavailable(f"importing the method file failed:\n{reply.get('error')}")
+        worker.call(pools[warmup].draw(rng), LATER_WARMUP_MAX_CALL_MS / 1e3, label="the untimed warm-up on a")
+        # As many fresh draws as the window should need, up to ENERGY_DRAWS, made before it starts.
+        wanted = ENERGY_MIN_CALLS + math.ceil(ENERGY_WINDOW_S * 1e3 / max(mnist_ms, 1.0))
+        draws = [pools["mnist"].draw(rng) for _ in range(min(ENERGY_DRAWS, wanted))]
+
+        def method():
+            ms, correct = [], []
+            end = time.perf_counter() + ENERGY_WINDOW_S
+            while len(ms) < ENERGY_MIN_CALLS or time.perf_counter() < end:
+                index = len(ms)
+                d = draws[index] if index < len(draws) else rerelease(draws[index % len(draws)], rng)
+                call_ms, _, preds = worker.call(d, MAX_CALL_MS / 1e3 + 5, collect=False)
+                ms.append(call_ms)
+                correct.append(int(np.count_nonzero(preds.astype(np.int64) == d["test_y"])))
+            return {"calls": len(ms), "ms": ms, "correct": correct}
+
+        idle("idle 3")
+        measure("method", method)
+        idle("idle 4")
+        return windows, device
+    finally:
+        if worker is not None:
+            worker.close()
+        board.close()
+
+
+def energy_summary(windows, device, band, mnist_ms):
+    """The column from the windows: the method's energy per call above the idle power measured
+    around its window, less the empty round trip's, with every reason not to trust it in
+    ``problems`` (then ``mj_per_call`` is None)."""
+    w = {x["name"]: x for x in windows}
+
+    def watts(name):
+        return w[name]["joules"] / w[name]["seconds"]
+
+    def net_j(name, before, after):
+        return w[name]["joules"] - (watts(before) + watts(after)) / 2 * w[name]["seconds"]
+
+    ref, empty, run = w["reference"], w["control"], w["method"]
+    flops = 2 * ref["dim"] ** 3 * ref["matmuls"]
+    j_per_tflop, tflops = net_j("reference", "idle 1", "idle 2") / (flops / 1e12), flops / 1e12 / ref["seconds"]
+    control_mj = net_j("control", "idle 2", "idle 3") * 1e3 / empty["calls"]
+    net_mj = net_j("method", "idle 3", "idle 4") * 1e3 / run["calls"]
+    median_ms = _median(run["ms"])
+    bands = next((b for prefix, b in REFERENCE_BANDS.items() if str(device.get("name")).startswith(prefix)), None)
+    idles = [x for x in windows if x["name"].startswith("idle")]
+    floor = required_correct(TEST, band + DRAW_SLACK_BP)
+    problems = []
+    if any(x["seconds"] <= 0 or x["joules"] < 0 for x in windows):
+        problems.append("the board's energy counter went backwards")
+    if not ref["exact"]:
+        problems.append("the telemetry reference computed a wrong product")
+    if bands and not (bands[0][0] <= j_per_tflop <= bands[0][1] and bands[1][0] <= tflops <= bands[1][1]):
+        problems.append(f"the board's power telemetry is implausible: the reference read {j_per_tflop:.2f} J/TFLOP "
+                        f"above idle at {tflops:.1f} TFLOP/s, where a healthy {device.get('name')} reads "
+                        f"{bands[0][0]:g}-{bands[0][1]:g} J/TFLOP at {bands[1][0]:g}-{bands[1][1]:g} TFLOP/s")
+    if any(x["utilization_max"] for x in idles):
+        problems.append("the GPU was busy in an idle window, with the method's processes frozen")
+    if any((x["contexts"] or 0) > 1 for x in idles):
+        problems.append("another process held a CUDA context on the GPU")
+    if min(run["correct"]) < floor:
+        problems.append(f"a draw in the energy window scored {min(run['correct']):,}/{TEST:,}; "
+                        f"no timed MNIST draw may fall below {floor:,}")
+    if not mnist_ms / DISPERSION - 2.0 <= median_ms <= DISPERSION * mnist_ms + 2.0:
+        problems.append(f"calls in the energy window took {median_ms:,.3f} ms (median) against {mnist_ms:,.3f} ms "
+                        "in the timed calls; every call must do the same work")
+    if net_mj - control_mj <= 0:
+        problems.append("the method's window read no energy above idle")
+    return {"mj_per_call": None if problems else net_mj - control_mj, "problems": problems,
+            "net_mj_before_control": net_mj, "control_mj_per_call": control_mj, "control_calls": empty["calls"],
+            "gross_mj_per_call": run["joules"] * 1e3 / run["calls"], "idle_w": (watts("idle 3") + watts("idle 4")) / 2,
+            "active_w": watts("method"), "calls": run["calls"], "seconds": run["seconds"], "ms_median": median_ms,
+            "timed_mnist_ms_median": mnist_ms, "correct": sum(run["correct"]), "total": run["calls"] * TEST,
+            "reference": {"tflops_per_s": tflops, "j_per_tflop": j_per_tflop, "exact": ref["exact"], "band": bands},
+            "device": device, "windows": windows}
+
+
+# ============================================================================
 # The worker's side: runs as the sandbox user, imports the method on request
 # ============================================================================
 
@@ -1231,8 +1556,32 @@ def worker_main(read_fd, write_fd, sandboxed):
             if command == "hello":
                 with open(header["buffer"], "rb") as handle:
                     buffer = mmap.mmap(handle.fileno(), header["buffer_bytes"], prot=mmap.PROT_READ)
+                uuid = getattr(torch.cuda.get_device_properties(0), "uuid", None) if cuda else None
                 reply({"ok": True, "device": torch.cuda.get_device_name() if cuda else "cpu (not an A100 time)",
-                       "torch": torch.__version__, **status})
+                       "torch": torch.__version__, "uuid": f"GPU-{uuid}" if uuid is not None else None, **status})
+            elif command == "reference":
+                # The telemetry reference, only before the method is imported: FP32 matmuls of constant
+                # operands (every product entry is exactly 1), TF32 off, for about header["seconds"].
+                if method is not None:
+                    raise RuntimeError("the reference runs only before the method is imported")
+                dim = int(header["dim"])
+                value = 2.0 ** -((dim.bit_length() - 1) // 2)  # dim a power of 4
+                tf32, torch.backends.cuda.matmul.allow_tf32 = torch.backends.cuda.matmul.allow_tf32, False
+                a = torch.full((dim, dim), value, dtype=torch.float32, device=device)
+                c = torch.mm(a, a)
+                sync()
+                count, end = 0, perf_counter() + float(header["seconds"])
+                while count == 0 or perf_counter() < end:
+                    for _ in range(8):
+                        torch.mm(a, a, out=c)
+                    sync()
+                    count += 8
+                exact = bool((c == 1).all())
+                del a, c
+                torch.backends.cuda.matmul.allow_tf32 = tf32
+                if cuda:
+                    torch.cuda.empty_cache()
+                reply({"ok": True, "count": count, "exact": exact})
             elif command == "load":
                 import submission
 
@@ -1300,6 +1649,8 @@ def main(argv=None):
     parser.add_argument("--difficulty", type=int, default=1, choices=sorted(DIFFICULTY))
     parser.add_argument("--band", type=int, help="test a band in basis points instead of a difficulty (2000 = 20%%)")
     parser.add_argument("--download", action="store_true", help="fetch and verify the three datasets, then exit")
+    parser.add_argument("--no-energy", action="store_true", help="skip the energy column (about 80 s after a pass)")
+    parser.add_argument("--json", type=Path, metavar="PATH", help="also write every call and energy window to PATH")
     args = parser.parse_args(argv)
     if args.download:
         for name in DATASETS:
@@ -1309,16 +1660,21 @@ def main(argv=None):
     if not args.method:
         parser.error("name a method file")
     not_dumpable()
+    record = {}
     try:
         path, function = locate(args.method)
         if args.band is not None and not 0 < args.band < 10000:
             parser.error("--band must be between 1 and 9999 basis points")
-        evaluate(path, function, band_bp(args.difficulty) if args.band is None else args.band)
+        evaluate(path, function, band_bp(args.difficulty) if args.band is None else args.band,
+                 energy=False if args.no_energy else None, record=record)
     except Disqualified:
         return 1
     except (OSError, ValueError, TypeError, RuntimeError, SyntaxError) as error:
         print(f"error: {error}", flush=True)
         return 2
+    finally:
+        if args.json and record:
+            args.json.write_text(json.dumps(record, indent=1) + "\n")
     return 0
 
 

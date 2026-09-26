@@ -1,0 +1,160 @@
+✓ Initialized. View run at 
+https://modal.com/apps/yaroslavvb/main/ap-fKTuazGqetDk7dPvJcNq4h
+✓ Created objects.
+├── 🔨 Created mount 
+│   /Users/yaroslavvb/git/sutro-problems-mnist-a100-energy/mnist-a100/run_modal.
+│   py
+├── 🔨 Created mount 
+│   /Users/yaroslavvb/git/sutro-problems-mnist-a100-energy/mnist-a100/mnist.py
+└── 🔨 Created function remote_score.
+
+==========
+== CUDA ==
+==========
+
+CUDA Version 13.3.0
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+
+
+==========
+== CUDA ==
+==========
+
+CUDA Version 13.3.0
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+
+
+==========
+== CUDA ==
+==========
+
+CUDA Version 13.3.0
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+
+--- run 1:
+mlpg_k4_w256_s800_b512.py:mlp at 3.40% error: 15 timed calls, each in a fresh process
+  NVIDIA A100 80GB PCIe, torch 2.12.0+cu130, sandbox on
+  call  1/15: 251.161 ms, scorer's clock 251.430 ms
+  call  2/15: 251.577 ms, scorer's clock 251.796 ms
+  call  3/15: 253.426 ms, scorer's clock 254.822 ms
+  call  4/15: 250.793 ms, scorer's clock 251.331 ms
+  call  5/15: 251.993 ms, scorer's clock 253.183 ms
+  call  6/15: 251.520 ms, scorer's clock 253.617 ms
+  call  7/15: 250.232 ms, scorer's clock 250.761 ms
+  call  8/15: 252.664 ms, scorer's clock 252.877 ms
+  call  9/15: 252.387 ms, scorer's clock 253.330 ms
+  call 10/15: 251.146 ms, scorer's clock 251.954 ms
+  call 11/15: 252.142 ms, scorer's clock 252.953 ms
+  call 12/15: 251.170 ms, scorer's clock 251.802 ms
+  call 13/15: 250.358 ms, scorer's clock 253.843 ms
+  call 14/15: 251.839 ms, scorer's clock 252.675 ms
+  call 15/15: 252.158 ms, scorer's clock 252.980 ms
+MNIST 96.83% (106,510/110,000), 251.820 ms/call; hold-out (kmnist) 94.88%, 251.135 ms/call; score 251.820 ms
+energy: one more fresh process runs the method back to back on fresh MNIST draws for 20 s, between idle windows in which it is frozen
+  NVIDIA A100 80GB PCIe: idle 72.9 W with the method frozen; telemetry reference 18.1 TFLOP/s at 7.40 J/TFLOP above idle (a healthy NVIDIA A100 80GB PCIe reads 6-11)
+  the round trip alone: 19.1 mJ per call over 2,040 empty calls, subtracted
+  the method: 77 calls in 20.2 s, MNIST 96.90%, 255.422 ms per call, 127.6 W on average
+energy 14332.878 mJ per call above idle
+--- run 2:
+mlpg_k4_w256_s800_b512.py:mlp at 3.40% error: 15 timed calls, each in a fresh process
+  NVIDIA A100 80GB PCIe, torch 2.12.0+cu130, sandbox on
+  call  1/15: 252.959 ms, scorer's clock 253.762 ms
+  call  2/15: 253.047 ms, scorer's clock 253.802 ms
+  call  3/15: 252.211 ms, scorer's clock 252.587 ms
+  call  4/15: 250.404 ms, scorer's clock 250.879 ms
+  call  5/15: 250.344 ms, scorer's clock 250.976 ms
+  call  6/15: 252.076 ms, scorer's clock 253.412 ms
+  call  7/15: 250.339 ms, scorer's clock 250.866 ms
+  call  8/15: 252.191 ms, scorer's clock 256.677 ms
+  call  9/15: 252.986 ms, scorer's clock 254.012 ms
+  call 10/15: 253.256 ms, scorer's clock 253.632 ms
+  call 11/15: 250.258 ms, scorer's clock 250.782 ms
+  call 12/15: 250.943 ms, scorer's clock 252.081 ms
+  call 13/15: 251.423 ms, scorer's clock 255.296 ms
+  call 14/15: 252.252 ms, scorer's clock 256.387 ms
+  call 15/15: 251.147 ms, scorer's clock 255.108 ms
+MNIST 96.80% (106,483/110,000), 252.119 ms/call; hold-out (kmnist) 94.80%, 251.644 ms/call (floored by the scorer's clock); score 252.119 ms
+energy: one more fresh process runs the method back to back on fresh MNIST draws for 20 s, between idle windows in which it is frozen
+  NVIDIA A100 80GB PCIe: idle 74.0 W with the method frozen; telemetry reference 17.9 TFLOP/s at 7.33 J/TFLOP above idle (a healthy NVIDIA A100 80GB PCIe reads 6-11)
+  the round trip alone: 20.1 mJ per call over 3,003 empty calls, subtracted
+  the method: 77 calls in 20.0 s, MNIST 96.79%, 255.152 ms per call, 129.9 W on average
+energy 14523.940 mJ per call above idle
+
+
+===========
+== CUDA ==
+==========
+
+CUDA Version 13.3.0
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+=========
+== CUDA ==
+==========
+
+CUDA Version 13.3.0
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+
+
+--- run 3:
+mlpg_k4_w256_s800_b512.py:mlp at 3.40% error: 15 timed calls, each in a fresh process
+  NVIDIA A100 80GB PCIe, torch 2.12.0+cu130, sandbox on
+  call  1/15: 250.772 ms, scorer's clock 251.466 ms
+  call  2/15: 252.649 ms, scorer's clock 253.518 ms
+  call  3/15: 252.580 ms, scorer's clock 253.878 ms
+  call  4/15: 252.647 ms, scorer's clock 253.663 ms
+  call  5/15: 253.122 ms, scorer's clock 257.237 ms
+  call  6/15: 252.688 ms, scorer's clock 253.067 ms
+  call  7/15: 252.118 ms, scorer's clock 253.293 ms
+  call  8/15: 252.131 ms, scorer's clock 256.067 ms
+  call  9/15: 252.263 ms, scorer's clock 256.101 ms
+  call 10/15: 251.210 ms, scorer's clock 251.933 ms
+  call 11/15: 251.369 ms, scorer's clock 251.633 ms
+  call 12/15: 253.703 ms, scorer's clock 257.658 ms
+  call 13/15: 253.998 ms, scorer's clock 258.261 ms
+  call 14/15: 251.046 ms, scorer's clock 254.780 ms
+  call 15/15: 250.797 ms, scorer's clock 251.457 ms
+MNIST 96.98% (106,680/110,000), 252.723 ms/call; hold-out (kmnist) 94.95%, 253.410 ms/call (floored by the scorer's clock); score 253.410 ms
+energy: one more fresh process runs the method back to back on fresh MNIST draws for 20 s, between idle windows in which it is frozen
+  NVIDIA A100 80GB PCIe: idle 80.0 W with the method frozen; telemetry reference 18.2 TFLOP/s at 7.69 J/TFLOP above idle (a healthy NVIDIA A100 80GB PCIe reads 6-11)
+  the round trip alone: 18.6 mJ per call over 2,766 empty calls, subtracted
+  the method: 79 calls in 20.2 s, MNIST 96.94%, 250.798 ms per call, 136.6 W on average
+energy 14435.615 mJ per call above idle
+Stopping app - local entrypoint completed.
+✓ App completed. View run at 
+https://modal.com/apps/yaroslavvb/main/ap-fKTuazGqetDk7dPvJcNq4h
+passed 3 of 3 runs; median 252.119 ms; energy median 14,435.6 mJ per call over 3 runs
