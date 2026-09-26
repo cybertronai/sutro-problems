@@ -3,7 +3,7 @@
 # MNIST on an A100
 
 - Learn to read digits from 10,000 labelled 9x9 MNIST images, then label 10,000 more, from scratch, on one A100.
-- Every call runs in a fresh, sandboxed process on a fresh draw, whitened and secretly rotated: the only way to be fast is to learn fast.
+- Every call runs in a fresh, sandboxed process on a fresh draw, whitened and secretly rotated.
 - Ranked by time per call. Energy per call above idle is reported beside it ([how](energy/README.md)).
 
 ## API
@@ -25,22 +25,34 @@ python example.py                                            # on your own GPU
 python run_modal.py example.py:mlp --difficulty 1 --runs 3   # official: three Modal A100-80GB runs, median
 ```
 
-Difficulty 1 to 5 caps the mean MNIST error at 5.40, 3.40, 2.70, 2.30 and 1.90%, what a
+Each difficulty caps the mean MNIST error at what a
 [Ladder network](../mnist/experiments/release-cutoffs-20260925/README.md#five-cutoffs-from-200-to-10000-labels-at-24000-steps)
-reaches from 200, 532, 1,414, 3,761 and 10,000 labels. Nothing under the
-60 s limit reaches 3 to 5 yet. The rules are in [`mnist.py`](mnist.py)'s docstring.
+reaches from 200, 532, 1,414, 3,761 and 10,000 labels; entries always get all 10,000. The rules are
+in [`mnist.py`](mnist.py)'s docstring.
 
-## 5.40%
+## Difficulty = 1 (error ≤ 5.40%)
 
-| Date | mJ | ms | Submission |
-| - | -: | -: | - |
-| 2026-09-25 | 29,662 | 700.1 | [example.py](example.py), [report](energy/README.md) |
-| 2026-09-26 | 2,648 | 191.3 | [mlp_k1_w1024_s100_b512.py](energy/entries/mlp_k1_w1024_s100_b512.py), [report](energy/README.md) |
-| 2026-09-26 | 2,429 | 61.6 | [fast_mlp.py](energy/entries/fast_mlp.py), [report](energy/README.md) |
+| Date | mJ | ms | Submission | Contributors | Description |
+| - | -: | -: | - | - | - |
+| 2026-09-25 | 29,662 | 700.1 | [py](example.py), [report](energy/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | `example.py` baseline: MLP 60-1024-1024-10, 400 steps |
+| 2026-09-26 | 2,648 | 191.3 | [py](energy/entries/mlp_k1_w1024_s100_b512.py), [report](energy/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | MLP 60-1024-1024-10, 100 steps |
+| 2026-09-26 | 2,429 | 61.6 | [py](energy/entries/fast_mlp.py), [report](energy/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | MLP 60-256-256-10, 200 steps in a CUDA graph ★ best |
 
-## 3.40%
+## Difficulty = 2 (error ≤ 3.40%)
 
-| Date | mJ | ms | Submission |
-| - | -: | -: | - |
-| 2026-09-26 | 200,870 | 927.3 | [mlp_k16_w1024_s400_b512.py](energy/entries/mlp_k16_w1024_s400_b512.py), [report](energy/README.md) |
-| 2026-09-26 | 14,436 | 252.1 | [mlpg_k4_w256_s800_b512.py](energy/entries/mlpg_k4_w256_s800_b512.py), [report](energy/README.md) |
+| Date | mJ | ms | Submission | Contributors | Description |
+| - | -: | -: | - | - | - |
+| 2026-09-26 | 200,870 | 927.3 | [py](energy/entries/mlp_k16_w1024_s400_b512.py), [report](energy/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | 16 MLPs 60-1024-1024-10, 400 steps |
+| 2026-09-26 | 14,436 | 252.1 | [py](energy/entries/mlpg_k4_w256_s800_b512.py), [report](energy/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | 4 MLPs 60-256-256-10, 800 steps in a CUDA graph ★ best |
+
+## Difficulty = 3 (error ≤ 2.70%)
+
+No entry yet. The Ladder network needs about 99 s per call; the limit is 60 s.
+
+## Difficulty = 4 (error ≤ 2.30%)
+
+No entry yet. The Ladder network needs about 171 s per call.
+
+## Difficulty = 5 (error ≤ 1.90%)
+
+No entry yet. The Ladder network needs about 8 minutes per call.
