@@ -18,7 +18,7 @@ if __name__ == "__main__":
     ms = mnist.score(my_method, difficulty=1)  # 1 (loosest) to 5; ms per call, or raises mnist.Disqualified
 ```
 
-[`example.py`](example.py) is a complete method, a two-layer MLP in 40 lines.
+[`example.py`](example.py) is a complete method, a two-hidden-layer MLP in 40 lines.
 Run everything from this directory; the repository root has another `mnist/`.
 
 ```bash
