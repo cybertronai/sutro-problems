@@ -25,10 +25,7 @@ python example.py                                            # on your own GPU
 python run_modal.py example.py:mlp --difficulty 1 --runs 3   # official: three Modal A100-80GB runs, median
 ```
 
-Each difficulty caps the mean MNIST error at what a
-[Ladder network](../mnist/experiments/release-cutoffs-20260925/README.md#five-cutoffs-from-200-to-10000-labels-at-24000-steps)
-reaches from 200, 532, 1,414, 3,761 and 10,000 labels; entries always get all 10,000. The rules are
-in [`mnist.py`](mnist.py)'s docstring.
+The rules are in [`mnist.py`](mnist.py)'s docstring.
 
 ## Difficulty = 1 (error ≤ 5.40%)
 
@@ -47,12 +44,12 @@ in [`mnist.py`](mnist.py)'s docstring.
 
 ## Difficulty = 3 (error ≤ 2.70%)
 
-No entry yet. The Ladder network needs about 99 s per call; the limit is 60 s.
+No entry yet.
 
 ## Difficulty = 4 (error ≤ 2.30%)
 
-No entry yet. The Ladder network needs about 171 s per call.
+No entry yet.
 
 ## Difficulty = 5 (error ≤ 1.90%)
 
-No entry yet. The Ladder network needs about 8 minutes per call.
+No entry yet.
