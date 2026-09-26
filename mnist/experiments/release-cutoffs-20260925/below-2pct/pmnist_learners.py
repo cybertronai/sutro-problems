@@ -1,0 +1,935 @@
+"""Permutation-invariant learners for MNIST-medium (9x9, 81 features).
+
+Contract (study-wide): ``fit_predict(train_x, train_y, query_x, config, seed,
+deadline_unix, device)`` returns ``{'logits': float32 (Q,10), 'labels': uint8
+(Q,), 'metrics': dict}``.  ``config['family']`` selects one of:
+
+  'mlp'      batched-K dense ensemble with dropout / input noise / mixup /
+             label smoothing / EMA / optional VAT (Miyato et al., 2018).
+  'ladder'   the vendored fully supervised AMLP[2,2] Ladder
+             (``ladder_model.LadderAMLP``, Pezeshki et al., ICML 2016).
+  'topo_cnn' topology recovery (``topology.recover_layout``) followed by the
+             frozen spatial 'cnn-09' recipe on the reconstructed 9x9 grid.
+
+Every family sees only the permuted feature vectors; no family reads feature
+positions except 'topo_cnn', which *recovers* a layout from the training rows
+alone (never from the permutation, never from coordinates).
+
+The 'mlp' family normalises inputs with the permutation-invariant scalar map
+``4*x - 0.5`` (x in [0,1]).  'ladder' and 'topo_cnn' reproduce the recipes they
+vendor and therefore see raw [0,1] pixels: the published Ladder hyperparameters
+(``noise_std=0.3``, ``input_reconstruction_weight=2000``) are calibrated on
+``/255`` pixels (Pezeshki et al. 2016, and mnist/experiments/
+pmnist-transfer-20260923/run_study.py), and the spatial cnn-09 recipe computes
+its own mean/std from the training images.
+
+Determinism / equivariance note
+-------------------------------
+A dense first layer draws one independent weight column per input feature, so
+two runs with the same ``seed`` on ``x`` and on ``x[:, perm]`` are equal in
+distribution but not bitwise: the seeded init assigns column j to *position* j,
+not to feature j.  For an exact check the 'mlp' family accepts the diagnostic
+key ``init_input_permutation`` (mirroring ``LadderAMLP.permute_inputs_``),
+which reindexes the input-facing weight columns after init; then fitting on
+``x[:, perm]`` with ``init_input_permutation=perm`` reproduces the run on ``x``
+up to float-summation reordering (see test_learners.py).
+
+Deviation from the task sketch: ``spatial_learner.train_member`` cannot be
+called directly -- it asserts ``arrays['train_images'].shape == (6000,1,9,9)``,
+``config == spatial_learner.CONFIG`` and a fixed ``EPOCHS = 71``.  The
+'topo_cnn' family therefore re-runs the *calibration* loop of
+mnist/experiments/cutoff-calibration-20260920/run_study.py verbatim (same
+architecture via ``spatial_learner.build_model``, same AdamW/cosine/mild-affine
+augmentation arithmetic, same ``epochs = max(100, ceil(1000/ceil(n/128)))``
+schedule and float64 logit averaging across member seeds), and asserts that the
+requested cnn config equals ``spatial_learner.CONFIG``.
+"""
+from __future__ import annotations
+
+import math
+import platform
+import time
+
+import numpy as np
+import torch
+import torch.nn.functional as F
+
+NUM_CLASSES = 10
+INPUT_DIM = 81
+
+# --------------------------------------------------------------------------
+# configuration defaults
+# --------------------------------------------------------------------------
+COMMON_DEFAULTS = {
+    'family': None,
+    'tf32': False,
+    'autocast_bf16': False,
+    'inference_margin_seconds': 20.0,
+    'notes': '',
+}
+
+MLP_DEFAULTS = {
+    'widths': [1024, 1024],
+    'activation': 'relu',
+    'dropout': 0.0,
+    'input_noise_std': 0.0,
+    'mixup_alpha': 0.0,
+    'label_smoothing': 0.0,
+    'lr': 0.001,
+    'weight_decay': 0.0,
+    'epochs': 100,
+    'batch_size': 128,
+    'warmup_fraction': 0.0,
+    'schedule': 'cosine',
+    'ema_decay': 0.0,
+    'members': 1,
+    'vat': None,
+    'eval_batch_size': 2000,
+    'init_input_permutation': None,
+    # '4x-0.5': scalar map shared by every family (default, unchanged behaviour).
+    # 'standardize': per-feature (x - mean) / (std + std_floor) with TRAINING-set
+    # statistics only; permutation-invariant because it is applied featurewise.
+    'normalization': '4x-0.5',
+    'std_floor': 1e-5,
+}
+
+VAT_DEFAULTS = {
+    'eps': 2.5,
+    'xi': 1e-6,
+    'weight': 1.0,
+    'power_iterations': 1,
+    'unlabeled': 'train',
+    'batch_size': None,          # None -> same as the labeled batch size
+}
+
+LADDER_DEFAULTS = {
+    'hidden_dims': [1000, 500, 250, 250, 250],
+    'noise_std': 0.3,
+    'input_reconstruction_weight': 2000.0,
+    'epochs': 150,
+    'decay_start_epoch': 100,
+    'lr': 0.002,
+    'batch_size': 100,
+    'unlabeled': 'train',
+    'members': 1,
+    'eval_batch_size': 2000,
+}
+
+TOPO_CNN_DEFAULTS = {
+    'member_seeds': [101, 102, 103],
+    'cnn_config': None,          # None -> the frozen cnn-09 dict
+    'epochs': None,              # None -> max(100, ceil(1000/ceil(n/128)))
+    'eval_batch_size': 512,
+    'layout_max_seconds': 120.0,  # cap on topology.recover_layout's QAP search
+}
+
+CNN09_CONFIG = {
+    'id': 'cnn-09', 'architecture': 'cnn', 'width': 64, 'depth': 3,
+    'activation': 'gelu', 'pooling': 'none', 'dropout': 0.2,
+    'learning_rate': 0.001, 'weight_decay': 0.001,
+    'augmentation': 'mild_affine', 'batch_size': 128, 'epochs': 100,
+    'head_width': 256, 'image_size': 9,
+}
+
+FAMILY_DEFAULTS = {'mlp': MLP_DEFAULTS, 'ladder': LADDER_DEFAULTS,
+                   'topo_cnn': TOPO_CNN_DEFAULTS}
+
+
+def resolve_config(config):
+    """Merge a candidate config with its family defaults; reject unknown keys."""
+    family = config.get('family')
+    if family not in FAMILY_DEFAULTS:
+        raise ValueError(f"config['family'] must be one of {sorted(FAMILY_DEFAULTS)}")
+    merged = {**COMMON_DEFAULTS, **FAMILY_DEFAULTS[family], **config}
+    unknown = set(config) - set(COMMON_DEFAULTS) - set(FAMILY_DEFAULTS[family])
+    if unknown:
+        raise ValueError(f'Unknown config keys for {family}: {sorted(unknown)}')
+    merged['family'] = family
+    if family == 'mlp' and merged['vat'] is not None:
+        vat_unknown = set(merged['vat']) - set(VAT_DEFAULTS)
+        if vat_unknown:
+            raise ValueError(f'Unknown vat keys: {sorted(vat_unknown)}')
+        merged['vat'] = {**VAT_DEFAULTS, **merged['vat']}
+    return merged
+
+
+# --------------------------------------------------------------------------
+# shared helpers
+# --------------------------------------------------------------------------
+def normalize(x):
+    """Permutation-invariant scalar normalisation shared by every family."""
+    return 4.0 * x - 0.5
+
+
+def first_max_labels(logits):
+    """argmax with ties resolved to the lowest class (numpy returns first max)."""
+    return np.argmax(np.asarray(logits, dtype=np.float32), axis=1).astype(np.uint8)
+
+
+class TimeGuard:
+    """Stop before ``deadline_unix`` using a running mean epoch duration."""
+
+    def __init__(self, deadline_unix, inference_margin, safety=1.5):
+        self.deadline = float(deadline_unix)
+        self.margin = float(inference_margin)
+        self.safety = float(safety)
+        self.total = 0.0
+        self.count = 0
+        self._started = None
+
+    @property
+    def mean_epoch(self):
+        return self.total / self.count if self.count else 0.0
+
+    def should_stop(self):
+        projected = time.time() + self.safety * self.mean_epoch + self.margin
+        return projected > self.deadline
+
+    def start_epoch(self):
+        self._started = time.perf_counter()
+
+    def end_epoch(self):
+        self.total += time.perf_counter() - self._started
+        self.count += 1
+        self._started = None
+
+
+def _sync(device):
+    if torch.device(device).type == 'cuda':
+        torch.cuda.synchronize()
+
+
+def _device_name(device):
+    if torch.device(device).type == 'cuda':
+        try:
+            return torch.cuda.get_device_name(0)
+        except Exception:                                   # pragma: no cover
+            return 'cuda'
+    return f'cpu ({platform.machine()})'
+
+
+def _autocast(device, enabled):
+    """bf16 autocast context; a no-op when 'autocast_bf16' is false."""
+    return torch.autocast(device_type=torch.device(device).type,
+                          dtype=torch.bfloat16, enabled=bool(enabled))
+
+
+def _apply_precision_flags(config):
+    tf32 = bool(config['tf32'])
+    torch.backends.cuda.matmul.allow_tf32 = tf32
+    torch.backends.cudnn.allow_tf32 = tf32
+
+
+def _log_mean_prob(prob_sum, members):
+    mean = np.asarray(prob_sum, dtype=np.float64) / float(members)
+    return np.log(np.clip(mean, 1e-30, None)).astype(np.float32)
+
+
+def _soft_cross_entropy(logits, targets):
+    """Mean soft-target cross entropy; equals F.cross_entropy on one-hot rows."""
+    return -(targets * F.log_softmax(logits, dim=-1)).sum(-1).mean()
+
+
+def _one_hot(y, label_smoothing):
+    t = F.one_hot(y.long(), NUM_CLASSES).to(torch.float32)
+    if label_smoothing:
+        t = t * (1.0 - label_smoothing) + label_smoothing / NUM_CLASSES
+    return t
+
+
+def _make_generator(device, seed):
+    generator = torch.Generator(device=torch.device(device))
+    generator.manual_seed(int(seed))
+    return generator
+
+
+# --------------------------------------------------------------------------
+# family 'mlp': one batched model holding K independent members
+# --------------------------------------------------------------------------
+class BatchedMLP:
+    """K independent MLPs as (K, in, out) parameter stacks; bmm/baddbmm forward.
+
+    Member ``k`` is initialised from ``seed + 1000*k`` alone, so running the
+    same recipe with ``members=1`` and ``seed = seed + 1000*k`` reproduces it.
+    """
+
+    def __init__(self, widths, members, seed, device, activation='relu',
+                 dropout=0.0, init_input_permutation=None):
+        self.members = int(members)
+        self.device = torch.device(device)
+        self.dropout = float(dropout)
+        self.activation = activation
+        dims = [INPUT_DIM, *[int(w) for w in widths], NUM_CLASSES]
+        self.dims = dims
+        self.weights, self.biases = [], []
+        for layer, (n_in, n_out) in enumerate(zip(dims[:-1], dims[1:])):
+            bound = 1.0 / math.sqrt(n_in)
+            stack_w, stack_b = [], []
+            for k in range(self.members):
+                # One independent CPU stream per (member, layer): member k of a
+                # K-member run therefore matches a members=1 run at seed+1000*k.
+                generator = torch.Generator(device='cpu')
+                generator.manual_seed(int(seed) + 1000 * k + 7919 * layer)
+                stack_w.append(torch.empty(n_in, n_out).uniform_(-bound, bound,
+                                                                 generator=generator))
+                stack_b.append(torch.empty(n_out).uniform_(-bound, bound,
+                                                           generator=generator))
+            self.weights.append(torch.stack(stack_w).to(self.device).requires_grad_(True))
+            self.biases.append(torch.stack(stack_b)[:, None, :].to(self.device)
+                               .requires_grad_(True))
+        if init_input_permutation is not None:
+            permutation = torch.as_tensor(np.asarray(init_input_permutation,
+                                                     dtype=np.int64))
+            if permutation.numel() != INPUT_DIM:
+                raise ValueError('init_input_permutation must have 81 entries')
+            with torch.no_grad():
+                self.weights[0].copy_(self.weights[0][:, permutation.to(self.device), :])
+
+    # -- parameters ---------------------------------------------------------
+    def parameters(self):
+        return [*self.weights, *self.biases]
+
+    def parameter_count(self):
+        return int(sum(p.numel() for p in self.parameters()))
+
+    # -- forward ------------------------------------------------------------
+    def _activate(self, h):
+        if self.activation == 'relu':
+            return F.relu(h)
+        if self.activation == 'gelu':
+            return F.gelu(h, approximate='none')
+        raise ValueError(f'Unsupported activation {self.activation!r}')
+
+    def forward(self, h, training, generator=None):
+        """h: (K, B, 81) -> (K, B, 10)."""
+        last = len(self.weights) - 1
+        for index, (weight, bias) in enumerate(zip(self.weights, self.biases)):
+            h = torch.baddbmm(bias, h, weight)
+            if index < last:
+                h = self._activate(h)
+                if training and self.dropout > 0.0:
+                    keep = 1.0 - self.dropout
+                    mask = (torch.rand(h.shape, device=h.device, generator=generator)
+                            < keep).to(h.dtype)
+                    h = h * mask / keep
+        return h
+
+    def state(self):
+        return [p.detach().clone() for p in self.parameters()]
+
+    def load_state(self, state):
+        with torch.no_grad():
+            for p, value in zip(self.parameters(), state):
+                p.copy_(value)
+
+
+def _l2_normalize(d):
+    """Unit-L2 per example along the feature axis (last dim)."""
+    norm = d.pow(2).sum(dim=-1, keepdim=True).sqrt()
+    return d / (norm + 1e-12)
+
+
+def _kl(p, log_p, log_q):
+    """KL(p || q) with p (and log p) detached; exactly 0 when log_q == log_p."""
+    return (p * (log_p - log_q)).sum(-1).mean()
+
+
+def vat_loss(model, xu, vat, generator):
+    """KL-based virtual adversarial loss; >= 0, exactly 0 when eps == 0.
+
+    Every pass runs the model in training mode, as in the reference
+    implementation (Miyato et al., 2018).  All passes share ONE dropout draw:
+    the generator state is rewound before each forward, so the three calls see
+    the same mask and the KL measures adversarial smoothness rather than
+    dropout disagreement (with independent masks the mask-disagreement floor at
+    dropout=0.2 is several times the whole eps=2.5 signal, and the
+    power-iteration direction degenerates to noise).  With dropout and input
+    noise disabled the passes are deterministic either way, so ``log_q`` equals
+    ``log_p`` bitwise at eps == 0 and the loss is exactly zero.
+    """
+    state = generator.get_state() if generator is not None else None
+
+    def forward(inputs):
+        if state is not None:
+            generator.set_state(state)
+        return F.log_softmax(model.forward(inputs, training=True,
+                                           generator=generator).float(), dim=-1)
+
+    with torch.no_grad():
+        log_p = forward(xu)
+        p = log_p.exp()
+    if state is not None:
+        generator.set_state(state)
+    d = _l2_normalize(torch.randn(xu.shape, device=xu.device, generator=generator))
+    for _ in range(max(1, int(vat['power_iterations']))):
+        r = (float(vat['xi']) * d).requires_grad_(True)
+        log_q = forward(xu + r)
+        adversarial = _kl(p, log_p, log_q)
+        grad = torch.autograd.grad(adversarial, r, retain_graph=False)[0]
+        d = _l2_normalize(grad.detach())
+    r_adv = float(vat['eps']) * d
+    return _kl(p, log_p, forward(xu + r_adv))
+
+
+def _lr_factor(step, total_steps, warmup_fraction, schedule):
+    warmup = int(round(warmup_fraction * total_steps))
+    if warmup > 0 and step < warmup:
+        return (step + 1) / warmup
+    if schedule == 'constant':
+        return 1.0
+    if schedule != 'cosine':
+        raise ValueError(f'Unsupported schedule {schedule!r}')
+    progress = (step - warmup) / max(1, total_steps - warmup)
+    return 0.5 * (1.0 + math.cos(math.pi * min(1.0, max(0.0, progress))))
+
+
+def _fit_mlp(train_x, train_y, query_x, config, seed, deadline_unix, device):
+    started = time.perf_counter()
+    members = int(config['members'])
+    if members < 1:
+        raise ValueError('members must be >= 1')
+    device_t = torch.device(device)
+    guard = TimeGuard(deadline_unix, config['inference_margin_seconds'])
+
+    x = torch.as_tensor(np.ascontiguousarray(train_x), dtype=torch.float32,
+                        device=device_t)
+    y = torch.as_tensor(np.ascontiguousarray(train_y), dtype=torch.long,
+                        device=device_t)
+    q = torch.as_tensor(np.ascontiguousarray(query_x), dtype=torch.float32,
+                        device=device_t)
+    normalization = str(config['normalization'])
+    if normalization == '4x-0.5':
+        x = normalize(x)
+        q = normalize(q)
+        normalization_note = '4*x-0.5 (permutation-invariant scalar map)'
+    elif normalization == 'standardize':
+        std_floor = float(config['std_floor'])
+        if std_floor <= 0:
+            raise ValueError('std_floor must be positive')
+        mu = x.mean(dim=0, keepdim=True)
+        sd = x.std(dim=0, unbiased=True, keepdim=True) + std_floor
+        x = (x - mu) / sd
+        q = (q - mu) / sd
+        normalization_note = ('per-feature (x-mean)/(std+%g) with training-set statistics '
+                              '(permutation-invariant featurewise map)' % std_floor)
+    else:
+        raise ValueError(f"Unknown normalization {normalization!r}")
+    n = x.shape[0]
+
+    model = BatchedMLP(config['widths'], members, seed, device_t,
+                       activation=config['activation'], dropout=config['dropout'],
+                       init_input_permutation=config['init_input_permutation'])
+    optimizer = torch.optim.AdamW(model.parameters(), lr=float(config['lr']),
+                                  weight_decay=float(config['weight_decay']),
+                                  betas=(0.9, 0.999), eps=1e-8)
+    torch_gen = _make_generator(device_t, int(seed) + 999983)
+    member_rngs = [np.random.Generator(np.random.PCG64(int(seed) + 1000 * k))
+                   for k in range(members)]
+
+    vat = config['vat']
+    uses_query = bool(vat and vat['unlabeled'] == 'train+query')
+    if vat is not None:
+        unlabeled_pool = torch.cat([x, q], dim=0) if uses_query else x
+        vat_batch = int(vat['batch_size'] or config['batch_size'])
+    else:
+        unlabeled_pool, vat_batch = None, 0
+
+    batch_size = int(config['batch_size'])
+    steps_per_epoch = max(1, math.ceil(n / batch_size))
+    epochs_planned = int(config['epochs'])
+    total_steps = steps_per_epoch * epochs_planned
+    ema_decay = float(config['ema_decay'])
+    # The shadow starts at the random init, so without bias correction a high
+    # decay evaluates mostly-random weights at the small study levels
+    # (0.9999**800 = 0.92 of the shadow is still the init at n=1000).  Keep the
+    # init and divide it out at evaluation time, exactly as Adam does.
+    ema = model.state() if ema_decay > 0.0 else None
+    ema_init = model.state() if ema_decay > 0.0 else None
+
+    smoothing = float(config['label_smoothing'])
+    mixup_alpha = float(config['mixup_alpha'])
+    noise_std = float(config['input_noise_std'])
+
+    history, epochs_completed, step, truncated = [], 0, 0, False
+    _sync(device_t)
+    train_started = time.perf_counter()
+    for epoch in range(epochs_planned):
+        if guard.should_stop():
+            truncated = True
+            break
+        guard.start_epoch()
+        orders = torch.stack([
+            torch.as_tensor(rng.permutation(n), dtype=torch.long, device=device_t)
+            for rng in member_rngs])                                   # (K, n)
+        epoch_loss = torch.zeros((), device=device_t)
+        for start in range(0, n, batch_size):
+            index = orders[:, start:start + batch_size]                # (K, b)
+            xb = x[index]                                              # (K, b, 81)
+            yb = y[index]                                              # (K, b)
+            targets = _one_hot(yb, smoothing)
+            if mixup_alpha > 0.0:
+                mixed_x, mixed_t = [], []
+                for k, rng in enumerate(member_rngs):
+                    lam = float(rng.beta(mixup_alpha, mixup_alpha))
+                    shuffle = torch.as_tensor(rng.permutation(xb.shape[1]),
+                                              dtype=torch.long, device=device_t)
+                    mixed_x.append(lam * xb[k] + (1.0 - lam) * xb[k][shuffle])
+                    mixed_t.append(lam * targets[k] + (1.0 - lam) * targets[k][shuffle])
+                xb = torch.stack(mixed_x)
+                targets = torch.stack(mixed_t)
+            if noise_std > 0.0:
+                xb = xb + noise_std * torch.randn(xb.shape, device=device_t,
+                                                  generator=torch_gen)
+            factor = _lr_factor(step, total_steps, float(config['warmup_fraction']),
+                                config['schedule'])
+            for group in optimizer.param_groups:
+                group['lr'] = float(config['lr']) * factor
+            optimizer.zero_grad(set_to_none=True)
+            with _autocast(device_t, config['autocast_bf16']):
+                logits = model.forward(xb, training=True, generator=torch_gen)
+                loss = _soft_cross_entropy(logits.float(), targets) * members
+                if vat is not None and float(vat['weight']) > 0.0:
+                    pool = unlabeled_pool.shape[0]
+                    u_index = torch.stack([
+                        torch.as_tensor(rng.integers(0, pool, size=vat_batch),
+                                        dtype=torch.long, device=device_t)
+                        for rng in member_rngs])
+                    loss = loss + float(vat['weight']) * members * vat_loss(
+                        model, unlabeled_pool[u_index], vat, torch_gen)
+            loss.backward()
+            optimizer.step()
+            if ema is not None:
+                with torch.no_grad():
+                    for shadow, p in zip(ema, model.parameters()):
+                        shadow.mul_(ema_decay).add_(p.detach(), alpha=1.0 - ema_decay)
+            epoch_loss = epoch_loss + loss.detach()
+            step += 1
+        _sync(device_t)
+        guard.end_epoch()
+        epochs_completed += 1
+        value = float(epoch_loss) / (steps_per_epoch * members)
+        if not np.isfinite(value):
+            raise FloatingPointError('Nonfinite training objective')
+        if epoch == 0 or (epoch + 1) % 10 == 0 or epoch + 1 == epochs_planned:
+            history.append({'epoch': epoch + 1, 'mean_member_loss': value,
+                            'learning_rate': optimizer.param_groups[0]['lr'],
+                            'elapsed_training_seconds': time.perf_counter() - train_started})
+    if epochs_completed < epochs_planned:
+        truncated = True
+    _sync(device_t)
+    training_seconds = time.perf_counter() - train_started
+
+    # Bias-correct the shadow against the initialisation it started from; with
+    # fewer than ~1/(1-decay) steps the raw shadow is mostly the random init.
+    ema_effective_decay = None if ema is None else 1.0 - ema_decay ** step
+    if ema is not None and ema_effective_decay > 1e-3:
+        bias = ema_decay ** step
+        corrected = [(shadow - bias * init) / (1.0 - bias)
+                     for shadow, init in zip(ema, ema_init)]
+        live = model.state()
+        model.load_state(corrected)
+    else:
+        # Too few steps for a meaningful (or numerically stable) correction:
+        # evaluate the live weights instead of a mostly-random average.
+        ema = None
+
+    _sync(device_t)
+    inference_started = time.perf_counter()
+    probabilities = np.zeros((q.shape[0], NUM_CLASSES), dtype=np.float64)
+    eval_batch = int(config['eval_batch_size'])
+    with torch.no_grad():
+        for start in range(0, q.shape[0], eval_batch):
+            chunk = q[start:start + eval_batch].unsqueeze(0).expand(members, -1, -1)
+            with _autocast(device_t, config['autocast_bf16']):
+                out = model.forward(chunk.contiguous(), training=False)
+            probabilities[start:start + eval_batch] = (
+                F.softmax(out.float(), dim=-1).sum(0).double().cpu().numpy())
+    _sync(device_t)
+    inference_seconds = time.perf_counter() - inference_started
+    if ema is not None:
+        model.load_state(live)
+
+    logits = _log_mean_prob(probabilities, members)
+    metrics = {
+        'family': 'mlp', 'epochs_planned': epochs_planned,
+        'epochs_completed': epochs_completed, 'truncated': bool(truncated),
+        'training_seconds': training_seconds, 'inference_seconds': inference_seconds,
+        'fit_wall_seconds': time.perf_counter() - started,
+        'parameters': model.parameter_count(), 'members': members,
+        'uses_query_images_unlabeled': uses_query, 'device_name': _device_name(device_t),
+        'logit_kind': 'log_mean_prob', 'steps_completed': step,
+        'steps_per_epoch': steps_per_epoch, 'mean_epoch_seconds': guard.mean_epoch,
+        'history': history, 'ema_used': ema is not None,
+        'ema_bias_correction': ema_effective_decay,
+        'normalization': normalization_note,
+        'vat': None if vat is None else dict(vat),
+    }
+    return logits, metrics
+
+
+# --------------------------------------------------------------------------
+# family 'ladder'
+# --------------------------------------------------------------------------
+def ladder_lr_factor(epoch, epochs, decay_start_epoch):
+    """ladder_model.learning_rate_at_epoch, safe when epochs == decay_start.
+
+    The vendored helper divides by ``epochs - decay_start_epoch``; short
+    schedules (smoke jobs, truncated runs) can make that zero, in which case
+    the whole run is the constant-LR phase.
+    """
+    denominator = epochs - decay_start_epoch
+    if denominator <= 0:
+        return 1.0
+    return max(0.0, min(1.0, (epochs - epoch) / denominator))
+
+
+def _fit_ladder(train_x, train_y, query_x, config, seed, deadline_unix, device):
+    from ladder_model import LadderAMLP, LadderConfig
+
+    started = time.perf_counter()
+    assert not config['autocast_bf16'], (
+        'bf16 autocast is unsupported for the ladder: its BN uses eps=1e-10')
+    device_t = torch.device(device)
+    guard = TimeGuard(deadline_unix, config['inference_margin_seconds'])
+    members = int(config['members'])
+    # Raw [0,1] pixels: the vendored LadderAMLP's published noise_std and
+    # input_reconstruction_weight are calibrated on /255 inputs, and rescaling
+    # them here would silently change the loss balance by more than 10x.
+    x = torch.as_tensor(np.ascontiguousarray(train_x), dtype=torch.float32,
+                        device=device_t)
+    y = torch.as_tensor(np.ascontiguousarray(train_y), dtype=torch.long, device=device_t)
+    q = torch.as_tensor(np.ascontiguousarray(query_x), dtype=torch.float32,
+                        device=device_t)
+    n = x.shape[0]
+    uses_query = config['unlabeled'] == 'train+query'
+    pool = torch.cat([x, q], dim=0) if uses_query else x
+    pool_n = pool.shape[0]
+
+    batch_size = int(config['batch_size'])
+    epochs_planned = int(config['epochs'])
+    ladder_config = LadderConfig(
+        hidden_dims=tuple(int(h) for h in config['hidden_dims']),
+        noise_std=float(config['noise_std']),
+        input_reconstruction_weight=float(config['input_reconstruction_weight']),
+        batch_size=batch_size, learning_rate=float(config['lr']),
+        epochs=epochs_planned, decay_start_epoch=int(config['decay_start_epoch']))
+
+    probabilities = np.zeros((q.shape[0], NUM_CLASSES), dtype=np.float64)
+    total_epochs, members_completed, parameters = 0, 0, 0
+    training_seconds, inference_seconds = 0.0, 0.0
+    member_epochs, history = [], []
+    for k in range(members):
+        torch.manual_seed(int(seed) + 1000 * k)
+        if device_t.type == 'cuda':
+            torch.cuda.manual_seed_all(int(seed) + 1000 * k)
+        model = LadderAMLP(input_dim=INPUT_DIM, num_classes=NUM_CLASSES,
+                           config=ladder_config).to(device_t)
+        parameters += int(sum(p.numel() for p in model.parameters()))
+        optimizer = torch.optim.Adam(model.parameters(), lr=float(config['lr']),
+                                     betas=(0.9, 0.999), eps=1e-8)
+        rng = np.random.Generator(np.random.PCG64(int(seed) + 1000 * k))
+        model.train()
+        _sync(device_t)
+        member_started = time.perf_counter()
+        completed = 0
+        for epoch in range(epochs_planned):
+            if guard.should_stop():
+                break
+            guard.start_epoch()
+            learning_rate = float(config['lr']) * ladder_lr_factor(
+                epoch, epochs_planned, int(config['decay_start_epoch']))
+            for group in optimizer.param_groups:
+                group['lr'] = learning_rate
+            order = torch.as_tensor(rng.permutation(n), dtype=torch.long, device=device_t)
+            recon = torch.as_tensor(rng.permutation(pool_n), dtype=torch.long,
+                                    device=device_t)
+            loss_value = float('nan')
+            for position, start in enumerate(range(0, n, batch_size)):
+                index = order[start:start + batch_size]
+                if index.numel() < 2:
+                    continue          # LadderAMLP requires >= 2 rows per batch
+                offset = (position * batch_size) % pool_n
+                u_index = recon[offset:offset + index.numel()]
+                if u_index.numel() < 2:
+                    u_index = recon[:index.numel()]
+                optimizer.zero_grad(set_to_none=True)
+                loss = model.loss(x[index], y[index], x_unlabeled=pool[u_index])
+                loss.backward()
+                optimizer.step()
+                loss_value = float(loss.detach())
+            _sync(device_t)
+            guard.end_epoch()
+            completed += 1
+            if not np.isfinite(loss_value):
+                raise FloatingPointError('Nonfinite ladder objective')
+            if epoch == 0 or (epoch + 1) % 25 == 0 or epoch + 1 == epochs_planned:
+                history.append({'member': k, 'epoch': epoch + 1,
+                                'last_minibatch_loss': loss_value,
+                                'learning_rate': learning_rate})
+        _sync(device_t)
+        training_seconds += time.perf_counter() - member_started
+        member_epochs.append(completed)
+        total_epochs += completed
+        if completed == 0 and members_completed > 0:
+            # Out of time before this member trained at all: averaging an
+            # untrained net's confident-but-arbitrary softmax would corrupt the
+            # ensemble, so drop it and keep the members that did train.
+            del model, optimizer
+            if device_t.type == 'cuda':
+                torch.cuda.empty_cache()
+            break
+
+        _sync(device_t)
+        inference_started = time.perf_counter()
+        model.calibrate_bn(x, batch_size=min(batch_size, max(2, n)))
+        model.eval()
+        eval_batch = int(config['eval_batch_size'])
+        with torch.inference_mode():
+            for start in range(0, q.shape[0], eval_batch):
+                out = model(q[start:start + eval_batch])
+                probabilities[start:start + eval_batch] += (
+                    F.softmax(out, dim=-1).double().cpu().numpy())
+        _sync(device_t)
+        inference_seconds += time.perf_counter() - inference_started
+        members_completed += 1
+        del model, optimizer
+        if device_t.type == 'cuda':
+            torch.cuda.empty_cache()
+        if completed < epochs_planned:
+            break                      # out of time: keep the members we have
+
+    logits = _log_mean_prob(probabilities, members_completed)
+    truncated = (members_completed < members
+                 or any(e < epochs_planned for e in member_epochs))
+    metrics = {
+        'family': 'ladder', 'epochs_planned': epochs_planned * members,
+        'epochs_completed': total_epochs, 'truncated': bool(truncated),
+        'training_seconds': training_seconds, 'inference_seconds': inference_seconds,
+        'fit_wall_seconds': time.perf_counter() - started, 'parameters': parameters,
+        'members': members, 'members_completed': members_completed,
+        'member_epochs_completed': member_epochs,
+        'uses_query_images_unlabeled': uses_query,
+        'device_name': _device_name(device_t), 'logit_kind': 'log_mean_prob',
+        'normalization': 'raw [0,1] pixels (published ladder recipe)',
+        'mean_epoch_seconds': guard.mean_epoch, 'history': history,
+    }
+    return logits, metrics
+
+
+# --------------------------------------------------------------------------
+# family 'topo_cnn'
+# --------------------------------------------------------------------------
+def _cnn_schedule_epochs(n):
+    return max(100, math.ceil(1000 / math.ceil(n / 128)))
+
+
+def _mild_affine(batch, generator):
+    """Byte-for-byte the augmentation arithmetic of the calibration study."""
+    device = batch.device
+    with torch.no_grad():
+        count = len(batch)
+        angle = (torch.rand(count, device=device, generator=generator) * 16 - 8) * (np.pi / 180)
+        scale = torch.rand(count, device=device, generator=generator) * .12 + .94
+        translation = (torch.rand((count, 2), device=device, generator=generator) * .7 - .35) * (2 / 9)
+        theta = torch.zeros((count, 2, 3), dtype=torch.float32, device=device)
+        theta[:, 0, 0] = scale * angle.cos()
+        theta[:, 0, 1] = -scale * angle.sin()
+        theta[:, 1, 0] = scale * angle.sin()
+        theta[:, 1, 1] = scale * angle.cos()
+        theta[:, :, 2] = translation
+        grid = F.affine_grid(theta, batch.shape, align_corners=False)
+        changed = F.grid_sample(batch, grid, mode='bilinear', padding_mode='zeros',
+                                align_corners=False)
+        mask = (torch.rand(count, device=device, generator=generator) < .5)[:, None, None, None]
+        return torch.where(mask, changed, batch)
+
+
+def _fit_topo_cnn(train_x, train_y, query_x, config, seed, deadline_unix, device):
+    import spatial_learner
+    try:
+        import topology
+    except ImportError as error:                              # pragma: no cover
+        # Keep the original message: topology.py imports scipy at module level,
+        # so a missing third-party dependency must not be reported as a missing
+        # topology.py.
+        raise RuntimeError('family topo_cnn requires topology.py '
+                           '(recover_layout/unpermute) and its dependencies; '
+                           f'import failed with {type(error).__name__}: {error}'
+                           ) from error
+
+    started = time.perf_counter()
+    assert not config['autocast_bf16'], (
+        'topo_cnn reproduces the frozen float32 cnn-09 recipe')
+    device_t = torch.device(device)
+    guard = TimeGuard(deadline_unix, config['inference_margin_seconds'])
+    cnn_config = config['cnn_config'] or dict(CNN09_CONFIG)
+    assert cnn_config == CNN09_CONFIG == spatial_learner.CONFIG, (
+        'topo_cnn only runs the frozen cnn-09 spatial recipe')
+
+    layout_started = time.perf_counter()
+    # The layout is recovered from the TRAINING rows only: no coordinates, no
+    # permutation, no query images.
+    try:
+        layout, diagnostics = topology.recover_layout(
+            np.ascontiguousarray(train_x),
+            max_seconds=float(config['layout_max_seconds']), return_details=True)
+    except TypeError:                                         # pragma: no cover
+        layout, diagnostics = topology.recover_layout(np.ascontiguousarray(train_x)), {}
+    layout = np.asarray(layout, dtype=np.int64)
+    assert layout.shape == (INPUT_DIM,) and sorted(layout.tolist()) == list(range(INPUT_DIM))
+    train_images = np.ascontiguousarray(topology.unpermute(train_x, layout),
+                                        dtype=np.float32)
+    query_images = np.ascontiguousarray(topology.unpermute(query_x, layout),
+                                        dtype=np.float32)
+    layout_seconds = time.perf_counter() - layout_started
+    assert train_images.shape == (train_x.shape[0], 1, 9, 9)
+    assert query_images.shape == (query_x.shape[0], 1, 9, 9)
+
+    n = train_images.shape[0]
+    epochs_planned = int(config['epochs'] or _cnn_schedule_epochs(n))
+    member_seeds = list(config['member_seeds'])
+    batch_size = int(cnn_config['batch_size'])
+
+    raw = torch.as_tensor(train_images, dtype=torch.float32, device=device_t)
+    truth = torch.as_tensor(np.ascontiguousarray(train_y), dtype=torch.long,
+                            device=device_t)
+    query = torch.as_tensor(query_images, dtype=torch.float32, device=device_t)
+
+    # float64 logit averaging, byte-for-byte the combination rule of
+    # cutoff-calibration-20260920/analyze.py (`lf.mean(axis=0, dtype=float64)`),
+    # so the paired comparison against the spatial CNN differs only by the
+    # permutation and not by the ensembling rule.
+    logit_sum = np.zeros((query_x.shape[0], NUM_CLASSES), dtype=np.float64)
+    total_epochs, members_completed, parameters = 0, 0, 0
+    training_seconds, inference_seconds = 0.0, 0.0
+    member_epochs, history = [], []
+    for member_seed in member_seeds:
+        torch.manual_seed(int(member_seed))
+        np.random.seed(int(member_seed) % (2 ** 31))
+        if device_t.type == 'cuda':
+            torch.cuda.manual_seed_all(int(member_seed))
+        generator = _make_generator(device_t, int(member_seed))
+        model = spatial_learner.build_model(cnn_config).to(device_t)
+        parameters += int(sum(p.numel() for p in model.parameters()))
+        mean = raw.mean().item()
+        std = max(raw.std(unbiased=False).item(), 1e-6)
+        optimizer = torch.optim.AdamW(model.parameters(),
+                                      lr=float(cnn_config['learning_rate']),
+                                      weight_decay=float(cnn_config['weight_decay']),
+                                      betas=(.9, .999), eps=1e-8)
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer, T_max=epochs_planned, eta_min=.00002)
+        _sync(device_t)
+        member_started = time.perf_counter()
+        completed = 0
+        for epoch in range(epochs_planned):
+            if guard.should_stop():
+                break
+            guard.start_epoch()
+            model.train()
+            order = torch.randperm(n, device=device_t, generator=generator)
+            learning_rate = optimizer.param_groups[0]['lr']
+            loss_sum = torch.zeros((), device=device_t)
+            for positions in order.split(batch_size):
+                optimizer.zero_grad(set_to_none=True)
+                batch = (_mild_affine(raw[positions], generator) - mean) / std
+                loss = F.cross_entropy(model(batch), truth[positions])
+                loss.backward()
+                optimizer.step()
+                loss_sum += loss.detach() * len(positions)
+            scheduler.step()
+            _sync(device_t)
+            guard.end_epoch()
+            completed += 1
+            value = float(loss_sum) / n
+            if not np.isfinite(value):
+                raise FloatingPointError('Nonfinite cnn objective')
+            if epoch == 0 or (epoch + 1) % 25 == 0 or epoch + 1 == epochs_planned:
+                history.append({'member_seed': int(member_seed), 'epoch': epoch + 1,
+                                'augmented_training_loss': value,
+                                'learning_rate': learning_rate})
+        _sync(device_t)
+        training_seconds += time.perf_counter() - member_started
+        member_epochs.append(completed)
+        total_epochs += completed
+        if completed == 0 and members_completed > 0:
+            # Out of time before this member trained: an untrained CNN's votes
+            # would corrupt the average, so drop it and keep the trained ones.
+            del model, optimizer, scheduler
+            if device_t.type == 'cuda':
+                torch.cuda.empty_cache()
+            break
+
+        _sync(device_t)
+        inference_started = time.perf_counter()
+        model.eval()
+        eval_batch = int(config['eval_batch_size'])
+        with torch.inference_mode():
+            for start in range(0, query.shape[0], eval_batch):
+                out = model((query[start:start + eval_batch] - mean) / std)
+                logit_sum[start:start + eval_batch] += out.double().cpu().numpy()
+        _sync(device_t)
+        inference_seconds += time.perf_counter() - inference_started
+        members_completed += 1
+        del model, optimizer, scheduler
+        if device_t.type == 'cuda':
+            torch.cuda.empty_cache()
+        if completed < epochs_planned:
+            break
+
+    logits = (logit_sum / float(members_completed)).astype(np.float32)
+    truncated = (members_completed < len(member_seeds)
+                 or any(e < epochs_planned for e in member_epochs))
+    metrics = {
+        'family': 'topo_cnn', 'epochs_planned': epochs_planned * len(member_seeds),
+        'epochs_completed': total_epochs, 'truncated': bool(truncated),
+        'training_seconds': training_seconds, 'inference_seconds': inference_seconds,
+        'fit_wall_seconds': time.perf_counter() - started, 'parameters': parameters,
+        'members': len(member_seeds), 'members_completed': members_completed,
+        'member_epochs_completed': member_epochs,
+        'uses_query_images_unlabeled': False,
+        'device_name': _device_name(device_t),
+        'logit_kind': 'mean_logit_float64',
+        'normalization': 'raw [0,1] pixels, then cnn-09 train mean/std',
+        'mean_epoch_seconds': guard.mean_epoch, 'history': history,
+        'cnn_epochs_per_member': epochs_planned,
+        'layout_recovery_seconds': layout_seconds,
+        'layout': layout.tolist(), 'layout_diagnostics': dict(diagnostics),
+    }
+    return logits, metrics
+
+
+# --------------------------------------------------------------------------
+# public entry point
+# --------------------------------------------------------------------------
+_FAMILIES = {'mlp': _fit_mlp, 'ladder': _fit_ladder, 'topo_cnn': _fit_topo_cnn}
+
+
+def fit_predict(train_x, train_y, query_x, config, seed, deadline_unix, device):
+    """Train one candidate and predict the query rows. Never sees query labels."""
+    resolved = resolve_config(config)
+    train_x = np.ascontiguousarray(train_x, dtype=np.float32)
+    query_x = np.ascontiguousarray(query_x, dtype=np.float32)
+    train_y = np.ascontiguousarray(train_y).astype(np.uint8, copy=False)
+    if train_x.ndim != 2 or train_x.shape[1] != INPUT_DIM:
+        raise ValueError('train_x must be (N, 81)')
+    if query_x.ndim != 2 or query_x.shape[1] != INPUT_DIM:
+        raise ValueError('query_x must be (Q, 81)')
+    if train_y.shape != (train_x.shape[0],):
+        raise ValueError('train_y must be (N,)')
+    torch.manual_seed(int(seed))
+    np.random.seed(int(seed) % (2 ** 31))
+    _apply_precision_flags(resolved)
+    logits, metrics = _FAMILIES[resolved['family']](
+        train_x, train_y, query_x, resolved, int(seed), float(deadline_unix), device)
+    logits = np.ascontiguousarray(logits, dtype=np.float32)
+    if logits.shape != (query_x.shape[0], NUM_CLASSES) or not np.isfinite(logits).all():
+        raise RuntimeError('Learner produced malformed logits')
+    labels = first_max_labels(logits)
+    metrics = {'normalization': 'unrecorded', **metrics,
+               'config': resolved, 'seed': int(seed),
+               'deadline_unix': float(deadline_unix),
+               'train_count': int(train_x.shape[0]),
+               'query_count': int(query_x.shape[0]),
+               'query_labels_supplied': False}
+    return {'logits': logits, 'labels': labels, 'metrics': metrics}

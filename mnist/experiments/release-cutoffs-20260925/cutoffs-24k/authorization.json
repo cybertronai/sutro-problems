@@ -1,0 +1,30 @@
+{
+  "status": "frozen",
+  "frozen_at_utc": "2026-09-25T22:55:38Z",
+  "deadline_utc": "2026-09-26T12:00:00Z",
+  "total_modal_cap_usd": 14,
+  "contingency_usd": 2,
+  "allowed_gpus": [
+    "A100-40GB",
+    "T4"
+  ],
+  "max_concurrent_gpus": 8,
+  "per_fit_time_budget_seconds": 1800,
+  "budget_ledger": "budget-ledger.json",
+  "only_root_session_may_launch_paid_compute": true,
+  "user_request": "Can you update https://spacesheep.dev/@yaroslavvb/mnist-medium-five-cutoffs With cutoffs after rerunning for 24k steps | Follow-up before any fit: \"ok, maybe 100 is too little, make the bottom cutoff at 200 examples and top cutoff at 'achievable by sota at 10k examples'\"",
+  "user_authorization": "This request states no budget. Assumed: the $10 of the user's two previous requests for Modal work, as expected real spend (about $9 for 44 T4 fits). The ledger cap is $13 ($11 usable) because the ledger reserves every worker for the whole window, an upper envelope above the expected bill.",
+  "notes": "Fresh ledger for the 24,000-step cutoff rerun; upper-envelope accounting as in the parent study.",
+  "amendments": [
+    {
+      "at_utc": "2026-09-25T22:54:42Z",
+      "change": "total_modal_cap_usd 13 -> 14, before any reservation or fit",
+      "reason": "six rounds of ~13-minute fits need a ~92-minute window; its upper-envelope reservation is $11.61; the expected bill stays about $9"
+    },
+    {
+      "at_utc": "2026-09-25T22:55:38Z",
+      "change": "levels 100/316/1,000/3,162 -> 200/532/1,414/3,761, before any fit",
+      "reason": "the user moved the bottom cutoff to 200 labels; five geometric levels 200 * 50**(i/4)"
+    }
+  ]
+}

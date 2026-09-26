@@ -1,0 +1,183 @@
+{
+ "compute": {
+  "budget_note": "wall clock on one A100-40GB including inference; learners stop gracefully at the deadline. CPU-only kernel candidates run on the local controller (free) and must still finish inside 1200 s to be eligible.",
+  "container_image": "ghcr.io/ab-10/wikitext-bench@sha256:95de89319ba89c53a91d5440a5db4ff46f68b05031062c0a760ec3caa48dc42f",
+  "gpu": [
+   "A100-40GB",
+   "T4"
+  ],
+  "modal_cap_usd": 20,
+  "per_fit_time_budget_seconds": 1200,
+  "required_metrics": [
+   "fit_wall_seconds",
+   "truncated",
+   "uses_query_features_unlabeled"
+  ]
+ },
+ "data_manifest": {
+  "path": "raw/data_manifest.json",
+  "pool_labels_sha256": "e474323ac02fc156161b0bbb1f8c9cfeb327a74bcd9f9680a8385269a24f566c",
+  "pool_pixels_sha256": "bbf3f293a60e6f94c68504eb4d8cb9f94cedb748e35d853092a180c85b1464a4",
+  "sha256": "bba273432b0edd5482da23e0cb0165938c121c235080d4590aca9633e4245e0d"
+ },
+ "drafted_at_utc": "2026-09-25T13:42:25Z",
+ "draws": {
+  "dev_seeds": [
+   2026092491,
+   2026092492
+  ],
+  "disjointness": "train and query rows come from the two halves of split_universes, so query rows are disjoint from every training prefix at every level",
+  "final_seeds": [
+   2026092401,
+   2026092402,
+   2026092403,
+   2026092404,
+   2026092405,
+   2026092406,
+   2026092407,
+   2026092408,
+   2026092409,
+   2026092410,
+   2026092411
+  ],
+  "label_permutation": "not applied; the harness's per-draw relabelling is a bijection of the ten classes applied to both halves, so query accuracy is invariant to it",
+  "nesting": "training prefixes are nested across levels within a dataset seed",
+  "query_count": 10000,
+  "rule": "train_universe,test_universe = split_universes(60000, seed, UNIVERSE_SALT); train_order = default_rng([seed, DRAW_SALT]).permutation(train_universe); train_rows = train_order[:n] (nested prefixes across levels); query_rows = default_rng([seed, DRAW_SALT+1]).choice(test_universe, 10000, replace=False)",
+  "stage_seed_binding": "'smoke'/'dev' jobs may only use dev seeds and 'final' jobs only final seeds; study.make_job refuses other combinations and score.py refuses to read query labels for a job whose stage and seed disagree"
+ },
+ "frozen_at_utc": "2026-09-25T15:07:01Z",
+ "learner_contract": {
+  "api": "fit_predict(train_z, train_y, query_z, config, seed, device, deadline_unix)",
+  "forbidden": [
+   "query labels",
+   "the release map (mu, W, Q)",
+   "the dataset pixels",
+   "external data",
+   "pretrained weights",
+   "MNIST-specific constants"
+  ],
+  "from_scratch": "every draw is trained from scratch; nothing carries across draws",
+  "input_allowlist": [
+   "train_z",
+   "train_y",
+   "query_z"
+  ],
+  "modules": {
+   "kernels.py": "kernel learners",
+   "neural.py": "families mlp/ladder/vat"
+  },
+  "query_z": "float32 (10000,60) released features",
+  "train_y": "uint8 (n,) labels 0-9",
+  "train_z": "float32 (n,60) released features",
+  "transductive_rule": "unlabeled use of query_z is allowed (the harness hands the query features to the learner) and must be recorded per candidate as 'uses_query_features_unlabeled'"
+ },
+ "levels": [
+  {
+   "exact": 100.0,
+   "index": 0,
+   "n": 100
+  },
+  {
+   "exact": 177.82794100389228,
+   "index": 1,
+   "n": 178
+  },
+  {
+   "exact": 316.22776601683796,
+   "index": 2,
+   "n": 316
+  },
+  {
+   "exact": 562.3413251903492,
+   "index": 3,
+   "n": 562
+  },
+  {
+   "exact": 1000.0,
+   "index": 4,
+   "n": 1000
+  },
+  {
+   "exact": 1778.2794100389228,
+   "index": 5,
+   "n": 1778
+  },
+  {
+   "exact": 3162.277660168379,
+   "index": 6,
+   "n": 3162
+  },
+  {
+   "exact": 5623.413251903491,
+   "index": 7,
+   "n": 5623
+  },
+  {
+   "exact": 10000.0,
+   "index": 8,
+   "n": 10000
+  }
+ ],
+ "outputs": {
+  "predictions": "predictions/<job_id>.npz with logits float32 (10000,10) and labels uint8 (10000,)",
+  "results": "results/<job_id>.json per the study-wide contract",
+  "tie_break": "labels = argmax over logits with ties resolved to the lowest class index"
+ },
+ "prediction_freeze": "final scoring requires predictions/final_freeze.json covering every planned final job id; score.py refuses to score an unfrozen or altered final run, requires every planned job to have a result even for a --job-id spot check (which writes results/scores_final_filtered.json, never the canonical table), marks the freeze 'scored' once final labels have been read and then refuses any re-freeze; superseding an unscored freeze needs --refreeze and archives the previous file. A 'final-ensemble' recipe is built only from constituent final jobs that appear unchanged in that freeze, only while the freeze is still unscored, and only with the members, weights and temperatures declared in selection.json; scoring the derived 'final-ensemble' stage requires the same freeze.",
+ "query_labels_materialised": false,
+ "question": "The frozen recipe's error at levels whose last minibatch per epoch is small (316: 66 rows, 562: 62, 1778: 28), with every minibatch full instead.",
+ "release": {
+  "delivery": "the release is computed once on the controller and the three released arrays are shipped to the learner process; the pixel pool, the dataset labels and the map (mu, W, Q) are never present in a container, so the map cannot be refitted and z cannot be inverted back to pixels. No numerical agreement between controller and container is assumed: release_map is an eigendecomposition and LAPACK is not bit-reproducible across BLAS builds or CPU targets",
+  "dims": 60,
+  "harness": "gpumode harness 1.2.0",
+  "harness_eval_sha256": "0279a99ae94990f4d2828576440874cee2592ea728f6fb625687e44f86801c36",
+  "map_refitted_per_level": [
+   "mu",
+   "W"
+  ],
+  "module": "release.py (verbatim copy of the harness release map)",
+  "q_shared_across_levels": true,
+  "release_sha256": "d0b8a63660be277c3bac4db455638199f9ce44237260cd1c92bf1b169d8ea493",
+  "rule": "mu,W,Q = release_map(pixels[train_rows(n)], seed, 60); A = Q @ W; z = apply_release(x, mu, A) in float64, returned float32; Q is shared by all levels of a seed, mu and W are refitted per level",
+  "spatial_structure": "unavailable by design; no pixel lattice is recoverable from z"
+ },
+ "schema_version": 1,
+ "selection_rule": {
+  "cutoff": "as in the parent protocol: pooled error over the eleven final seeds",
+  "fix": "full_batches=True (see neural.py LADDER_DEFAULTS); nothing else changes, and nothing is tuned",
+  "levels_rerun": "316, 562, 1,778: the grid levels whose last minibatch is under 30% of a batch. Unchanged by construction and not rerun: 100, 178 (one batch per epoch), 1,000 and 10,000 (multiples of 250). Changed by the fix but not rerun, for budget: 3,162 and 5,623 (last batches of 162 and 123 rows); their frozen-recipe values stand in the table, flagged.",
+  "motivation": "POST HOC, disclosed: after the parent study's final scoring, the frozen recipe's error was not monotone in N. 1,778 labels scored worse than 1,000 on 11 of 11 final seeds (3.276% vs 2.971%), and every level whose last minibatch was 66 rows or fewer (316, 562, 1,057, 1,778, across both studies) sat above the trend of its neighbours, while levels with full or nearly full last batches (500, 1,000, 2,236, 4,729, 10,000) did not. The Ladder normalises with batch statistics, so a 28-row step is a much noisier step."
+ },
+ "software": {
+  "local_python": "/tmp/penv/bin/python (3.11, numpy 1.26.4, torch 2.2.2 CPU, scipy 1.11.4)",
+  "preparation": {
+   "numpy": "1.26.4",
+   "python": "3.11.13"
+  },
+  "remote": "PyTorch 2.5.1+cu124, numpy 2.2.6, scipy 1.15.3"
+ },
+ "source": {
+  "files": {
+   "train_images": {
+    "bytes": 9912422,
+    "md5": "f68b3c2dcbeaaa9fbdd348bbdeb94873",
+    "path": "/tmp/gpumode-pool/train-images-idx3-ubyte.gz",
+    "sha256": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609"
+   },
+   "train_labels": {
+    "bytes": 28881,
+    "md5": "d53e105ee54ea40749a09fcbcd1e9432",
+    "path": "/tmp/gpumode-pool/train-labels-idx1-ubyte.gz",
+    "sha256": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c"
+   }
+  },
+  "loader": "harness_mnist_data.py (verbatim copy of gpumode/mnist_data.py)",
+  "loader_sha256": "0f42b92b7d4dda3fe808758916931338ace86b05f10bb0c6da142c52066d659d",
+  "pixels": "harness_mnist_data.load_pool(cache,'mnist',9): uint8 -> float32/255; exact separable box-area averaging 28->9; np.clip to [0,1]; stored flattened row-major to 81 pixels (p = row*9 + col)",
+  "pool": "official MNIST 60,000-example training split (the official test split is never used)"
+ },
+ "status": "frozen",
+ "study": "release-cutoffs-20260925-full-batches",
+ "task": "gpumode harness 1.2.0 competition-candidate release of MNIST-medium: z = Q W (x - mu) in 60 dims, 10,000 queries per draw"
+}

@@ -1,0 +1,123 @@
+{
+  "arrays": {
+    "pool_labels": {
+      "bytes": 480128,
+      "dtype": "int64",
+      "file_sha256": "10226b938104d9231ead4e9a0627f17e66cd18baf31a28784f1b72147057decf",
+      "path": "raw/pool_labels.npy",
+      "sha256": "e474323ac02fc156161b0bbb1f8c9cfeb327a74bcd9f9680a8385269a24f566c",
+      "shape": [
+        60000
+      ]
+    },
+    "pool_pixels": {
+      "bytes": 19440128,
+      "dtype": "float32",
+      "file_sha256": "feba093d6ee4aedeab2c9a2386e1fd0d1b93ecba7b1eca01cd1bab076948dee2",
+      "path": "raw/pool_pixels.npy",
+      "sha256": "bbf3f293a60e6f94c68504eb4d8cb9f94cedb748e35d853092a180c85b1464a4",
+      "shape": [
+        60000,
+        81
+      ]
+    }
+  },
+  "class_histogram": [
+    5923,
+    6742,
+    5958,
+    6131,
+    5842,
+    5421,
+    5918,
+    6265,
+    5851,
+    5949
+  ],
+  "created_at_utc": "2026-09-25T16:46:41Z",
+  "generator_sha256": "0f42b92b7d4dda3fe808758916931338ace86b05f10bb0c6da142c52066d659d",
+  "notes": "pool_pixels holds the canonical 9x9 pixels flattened to 81 features and is the only data array shipped to a container; pool_labels never leaves this host except as the per-job train_y slice. The release map is applied inside job_arrays(), never stored.",
+  "pool_cache": "/tmp/gpumode-pool",
+  "protocol": {
+    "dev_seeds": [
+      2026092491,
+      2026092492
+    ],
+    "draw_rule": "train_universe,test_universe = split_universes(60000, seed, UNIVERSE_SALT); train_order = default_rng([seed, DRAW_SALT]).permutation(train_universe); train_rows = train_order[:n] (nested prefixes across levels); query_rows = default_rng([seed, DRAW_SALT+1]).choice(test_universe, 10000, replace=False)",
+    "final_seeds": [
+      2026092401,
+      2026092402,
+      2026092403,
+      2026092404,
+      2026092405,
+      2026092406,
+      2026092407,
+      2026092408,
+      2026092409,
+      2026092410,
+      2026092411
+    ],
+    "harness": "gpumode harness 1.2.0",
+    "harness_eval_sha256": "0279a99ae94990f4d2828576440874cee2592ea728f6fb625687e44f86801c36",
+    "image_size": 9,
+    "label_permutation": "not applied; the harness's per-draw relabelling is a bijection of the ten classes applied to both halves, so query accuracy is invariant to it",
+    "levels": [
+      100,
+      178,
+      316,
+      562,
+      1000,
+      1778,
+      3162,
+      5623,
+      10000
+    ],
+    "levels_exact": [
+      100.0,
+      177.82794100389228,
+      316.22776601683796,
+      562.3413251903492,
+      1000.0,
+      1778.2794100389228,
+      3162.277660168379,
+      5623.413251903491,
+      10000.0
+    ],
+    "per_fit_time_budget_seconds": 1200,
+    "pixel_count": 81,
+    "pixels": "harness_mnist_data.load_pool(cache,'mnist',9): uint8 -> float32/255; exact separable box-area averaging 28->9; np.clip to [0,1]; stored flattened row-major to 81 pixels (p = row*9 + col)",
+    "pool_count": 60000,
+    "query_count": 10000,
+    "release_dims": 60,
+    "release_rule": "mu,W,Q = release_map(pixels[train_rows(n)], seed, 60); A = Q @ W; z = apply_release(x, mu, A) in float64, returned float32; Q is shared by all levels of a seed, mu and W are refitted per level",
+    "salts": {
+      "DRAW_SALT": 54439,
+      "RELEASE_SALT": 19479,
+      "UNIVERSE_SALT": 22289
+    },
+    "source_pool": "official MNIST 60,000-example training split",
+    "task": "MNIST-medium release (gpumode harness 1.2.0), 9x9 pixels, 60 released dims"
+  },
+  "query_labels_materialised": false,
+  "release_sha256": "d0b8a63660be277c3bac4db455638199f9ce44237260cd1c92bf1b169d8ea493",
+  "schema_version": 1,
+  "software": {
+    "numpy": "1.26.4",
+    "python": "3.11.13"
+  },
+  "sources": {
+    "train_images": {
+      "bytes": 9912422,
+      "md5": "f68b3c2dcbeaaa9fbdd348bbdeb94873",
+      "path": "/tmp/gpumode-pool/train-images-idx3-ubyte.gz",
+      "sha256": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609"
+    },
+    "train_labels": {
+      "bytes": 28881,
+      "md5": "d53e105ee54ea40749a09fcbcd1e9432",
+      "path": "/tmp/gpumode-pool/train-labels-idx1-ubyte.gz",
+      "sha256": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c"
+    }
+  },
+  "study": "release-cutoffs-20260925-full-batches-3162"
+}

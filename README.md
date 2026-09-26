@@ -7,6 +7,7 @@ A collection of small, self-contained problems used as benchmarks for the [Sutro
 - [`matmul/`](matmul/) — 4x4 and 16x16 matmul
 - [`sparse-parity/`](sparse-parity/) — approximate sparse parity: recover the k secret bit positions at the lowest energy
 - [`mnist/`](mnist/) — learn from labeled images and predict test digits
+- [`mnist-a100/`](mnist-a100/) — learn MNIST from 10,000 labels as fast as possible on an A100: `mnist.score(my_method, difficulty=1)`, five difficulties
 
 ## Contributing
 

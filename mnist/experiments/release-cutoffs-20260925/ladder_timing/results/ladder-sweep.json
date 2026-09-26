@@ -1,0 +1,348 @@
+{
+ "config": {
+  "family": "ladder",
+  "hidden_dims": [
+   1000,
+   500,
+   250,
+   250,
+   250
+  ],
+  "noise_std": 0.3,
+  "input_scale": 0.6,
+  "input_reconstruction_weight": 2000.0,
+  "lr": 0.002,
+  "members": 1,
+  "unlabeled": "train+query",
+  "eval_batch_size": 2000,
+  "tf32": false,
+  "batch_size": 250,
+  "target_steps": 12000,
+  "decay_start_epoch": 100,
+  "epochs": 150,
+  "full_batches": true
+ },
+ "steps": [
+  100,
+  250,
+  500,
+  1000,
+  2000,
+  4000,
+  8000,
+  12000
+ ],
+ "dev_seed": 20260925,
+ "containers": [
+  {
+   "draw_index": 0,
+   "rows": [
+    {
+     "steps": 100,
+     "seconds": 1.3991956390000002,
+     "correct": 9079,
+     "error_pct": 9.209999999999996
+    },
+    {
+     "steps": 250,
+     "seconds": 3.1463171909999996,
+     "correct": 9176,
+     "error_pct": 8.240000000000002
+    },
+    {
+     "steps": 500,
+     "seconds": 5.485220828000001,
+     "correct": 9289,
+     "error_pct": 7.110000000000005
+    },
+    {
+     "steps": 1000,
+     "seconds": 10.297998553000003,
+     "correct": 9465,
+     "error_pct": 5.35
+    },
+    {
+     "steps": 2000,
+     "seconds": 19.81995232,
+     "correct": 9593,
+     "error_pct": 4.069999999999996
+    },
+    {
+     "steps": 4000,
+     "seconds": 41.01062648,
+     "correct": 9690,
+     "error_pct": 3.1000000000000028
+    },
+    {
+     "steps": 8000,
+     "seconds": 81.57354132500001,
+     "correct": 9774,
+     "error_pct": 2.2599999999999953
+    },
+    {
+     "steps": 12000,
+     "seconds": 124.69346003500002,
+     "correct": 9794,
+     "error_pct": 2.059999999999995
+    }
+   ],
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.12.0+cu130",
+   "host": "GenuineIntel family 6 model 143 at 2100 MHz, 17 CPUs; GPU max SM clock 1410 MHz, application clock 1140 MHz, power limit 500.00 W",
+   "gpu_clock": "SM clock median 1410 MHz (range 1410-1410), power median 117 W, up to 36 C, 290 busy one-second samples",
+   "reference_mlp": {
+    "name": "mlp-k16-w256-s3200-b512",
+    "ms": 2757.9081969999493,
+    "error_pct": 2.829999999999999
+   }
+  },
+  {
+   "draw_index": 1,
+   "rows": [
+    {
+     "steps": 100,
+     "seconds": 2.486676222,
+     "correct": 8842,
+     "error_pct": 11.580000000000002
+    },
+    {
+     "steps": 250,
+     "seconds": 5.717111991000001,
+     "correct": 9234,
+     "error_pct": 7.66
+    },
+    {
+     "steps": 500,
+     "seconds": 10.372659677999998,
+     "correct": 9360,
+     "error_pct": 6.399999999999995
+    },
+    {
+     "steps": 1000,
+     "seconds": 19.394414024,
+     "correct": 9516,
+     "error_pct": 4.84
+    },
+    {
+     "steps": 2000,
+     "seconds": 40.576241646999996,
+     "correct": 9635,
+     "error_pct": 3.6499999999999977
+    },
+    {
+     "steps": 4000,
+     "seconds": 81.08968020500001,
+     "correct": 9738,
+     "error_pct": 2.62
+    },
+    {
+     "steps": 8000,
+     "seconds": 159.81349476,
+     "correct": 9789,
+     "error_pct": 2.1100000000000008
+    },
+    {
+     "steps": 12000,
+     "seconds": 241.04962216900003,
+     "correct": 9803,
+     "error_pct": 1.970000000000005
+    }
+   ],
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.12.0+cu130",
+   "host": "GenuineIntel family 6 model 85 at 3601 MHz, 17 CPUs; GPU max SM clock 1410 MHz, application clock 1155 MHz, power limit 400.00 W",
+   "gpu_clock": "SM clock median 1155 MHz (range 1155-1410), power median 74 W, up to 36 C, 566 busy one-second samples",
+   "reference_mlp": {
+    "name": "mlp-k16-w256-s3200-b512",
+    "ms": 4795.045635999941,
+    "error_pct": 2.429999999999999
+   }
+  },
+  {
+   "draw_index": 2,
+   "rows": [
+    {
+     "steps": 100,
+     "seconds": 2.7495088349999985,
+     "correct": 9108,
+     "error_pct": 8.919999999999995
+    },
+    {
+     "steps": 250,
+     "seconds": 5.7523221939999996,
+     "correct": 9287,
+     "error_pct": 7.130000000000003
+    },
+    {
+     "steps": 500,
+     "seconds": 10.595760629,
+     "correct": 9348,
+     "error_pct": 6.520000000000003
+    },
+    {
+     "steps": 1000,
+     "seconds": 19.262552138999997,
+     "correct": 9470,
+     "error_pct": 5.300000000000004
+    },
+    {
+     "steps": 2000,
+     "seconds": 40.386167229,
+     "correct": 9635,
+     "error_pct": 3.6499999999999977
+    },
+    {
+     "steps": 4000,
+     "seconds": 79.650799188,
+     "correct": 9691,
+     "error_pct": 3.090000000000004
+    },
+    {
+     "steps": 8000,
+     "seconds": 166.318839237,
+     "correct": 9752,
+     "error_pct": 2.4800000000000044
+    },
+    {
+     "steps": 12000,
+     "seconds": 284.876952107,
+     "correct": 9768,
+     "error_pct": 2.32
+    }
+   ],
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.12.0+cu130",
+   "host": "GenuineIntel family 6 model 85 at 3599 MHz, 17 CPUs; GPU max SM clock 1410 MHz, application clock 1155 MHz, power limit 400.00 W",
+   "gpu_clock": "SM clock median 1155 MHz (range 1155-1410), power median 81 W, up to 35 C, 607 busy one-second samples",
+   "reference_mlp": {
+    "name": "mlp-k16-w256-s3200-b512",
+    "ms": 4889.209681000011,
+    "error_pct": 3.0299999999999994
+   }
+  },
+  {
+   "draw_index": 3,
+   "rows": [
+    {
+     "steps": 100,
+     "seconds": 3.094567860999998,
+     "correct": 9042,
+     "error_pct": 9.58
+    },
+    {
+     "steps": 250,
+     "seconds": 7.022144642000001,
+     "correct": 9232,
+     "error_pct": 7.679999999999998
+    },
+    {
+     "steps": 500,
+     "seconds": 13.143356800999996,
+     "correct": 9351,
+     "error_pct": 6.489999999999996
+    },
+    {
+     "steps": 1000,
+     "seconds": 25.120379315,
+     "correct": 9515,
+     "error_pct": 4.849999999999999
+    },
+    {
+     "steps": 2000,
+     "seconds": 50.631575784,
+     "correct": 9664,
+     "error_pct": 3.3599999999999963
+    },
+    {
+     "steps": 4000,
+     "seconds": 115.92803644600001,
+     "correct": 9748,
+     "error_pct": 2.52
+    },
+    {
+     "steps": 8000,
+     "seconds": 209.126794239,
+     "correct": 9780,
+     "error_pct": 2.200000000000002
+    },
+    {
+     "steps": 12000,
+     "seconds": 319.284741002,
+     "correct": 9793,
+     "error_pct": 2.070000000000005
+    }
+   ],
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.12.0+cu130",
+   "host": "GenuineIntel family 6 model 85 at 2200 MHz, 17 CPUs; GPU max SM clock 1410 MHz, application clock 1155 MHz, power limit 400.00 W",
+   "gpu_clock": "SM clock median 1155 MHz (range 1155-1155), power median 81 W, up to 37 C, 746 busy one-second samples",
+   "reference_mlp": {
+    "name": "mlp-k16-w256-s3200-b512",
+    "ms": 6477.859465000051,
+    "error_pct": 2.6000000000000023
+   }
+  },
+  {
+   "draw_index": 4,
+   "rows": [
+    {
+     "steps": 100,
+     "seconds": 1.3153451430000018,
+     "correct": 9107,
+     "error_pct": 8.930000000000005
+    },
+    {
+     "steps": 250,
+     "seconds": 2.9412852940000107,
+     "correct": 9160,
+     "error_pct": 8.399999999999997
+    },
+    {
+     "steps": 500,
+     "seconds": 5.304308683999977,
+     "correct": 9349,
+     "error_pct": 6.510000000000005
+    },
+    {
+     "steps": 1000,
+     "seconds": 10.162070634999964,
+     "correct": 9491,
+     "error_pct": 5.0899999999999945
+    },
+    {
+     "steps": 2000,
+     "seconds": 21.60929960300001,
+     "correct": 9632,
+     "error_pct": 3.6800000000000055
+    },
+    {
+     "steps": 4000,
+     "seconds": 42.99636297699999,
+     "correct": 9717,
+     "error_pct": 2.829999999999999
+    },
+    {
+     "steps": 8000,
+     "seconds": 83.57494516000003,
+     "correct": 9760,
+     "error_pct": 2.400000000000002
+    },
+    {
+     "steps": 12000,
+     "seconds": 129.18154457900005,
+     "correct": 9805,
+     "error_pct": 1.9499999999999962
+    }
+   ],
+   "device": "NVIDIA A100-SXM4-80GB",
+   "torch": "2.12.0+cu130",
+   "host": "GenuineIntel family 6 model 143 at 2100 MHz, 17 CPUs; GPU max SM clock 1410 MHz, application clock 1140 MHz, power limit 500.00 W",
+   "gpu_clock": "SM clock median 1410 MHz (range 1410-1410), power median 116 W, up to 36 C, 300 busy one-second samples",
+   "reference_mlp": {
+    "name": "mlp-k16-w256-s3200-b512",
+    "ms": 3063.2578439999634,
+    "error_pct": 2.8900000000000037
+   }
+  }
+ ]
+}

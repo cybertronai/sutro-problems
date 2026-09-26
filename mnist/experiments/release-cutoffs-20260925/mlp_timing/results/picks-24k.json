@@ -1,0 +1,347 @@
+{
+  "margin_pp": 0.15,
+  "limit_ms": 60000.0,
+  "picks": [
+    {
+      "level": 1,
+      "n": 200,
+      "cutoff_pct": 5.393636363636364,
+      "band_bp": 540,
+      "eager": {
+        "choice": "mlp-k1-w1024-s100-b512",
+        "dev_error_pct": 5.218,
+        "dev_mean_ms": 154.3611122000243,
+        "runner_up": "mlp-k4-w1024-s100-b512"
+      },
+      "graphed": {
+        "choice": "mlpg-k1-w256-s200-b512",
+        "dev_error_pct": 4.964000000000002,
+        "dev_mean_ms": 49.756427399999836,
+        "runner_up": "mlpg-k4-w256-s200-b512"
+      }
+    },
+    {
+      "level": 2,
+      "n": 532,
+      "cutoff_pct": 3.360909090909091,
+      "band_bp": 337,
+      "eager": {
+        "choice": "mlp-k16-w1024-s400-b512",
+        "dev_error_pct": 3.2059999999999977,
+        "dev_mean_ms": 885.6671453999752,
+        "runner_up": "mlp-k16-w256-s800-b512"
+      },
+      "graphed": {
+        "choice": "mlpg-k4-w256-s800-b512",
+        "dev_error_pct": 3.202000000000005,
+        "dev_mean_ms": 249.53477820000103,
+        "runner_up": "mlpg-k1-w1024-s800-b512"
+      }
+    },
+    {
+      "level": 3,
+      "n": 1414,
+      "cutoff_pct": 2.6663636363636365,
+      "band_bp": 267,
+      "eager": null,
+      "graphed": null
+    },
+    {
+      "level": 4,
+      "n": 3761,
+      "cutoff_pct": 2.2536363636363634,
+      "band_bp": 226,
+      "eager": null,
+      "graphed": null
+    },
+    {
+      "level": 5,
+      "n": 10000,
+      "cutoff_pct": 1.87,
+      "band_bp": 187,
+      "eager": null,
+      "graphed": null
+    }
+  ],
+  "host_ratio_graphed_container_over_eager_container": 0.9345418879496808,
+  "host_ratio_samples": [
+    0.9894274744123983,
+    0.9331713584180754,
+    0.9345418879496808
+  ],
+  "containers": {
+    "eager": {
+      "device": "NVIDIA A100-SXM4-80GB",
+      "host": "GenuineIntel family 6 model 106 at 2000 MHz, 17 CPUs; GPU max SM clock 1410 MHz, application clock 1155 MHz, power limit 400.00 W",
+      "gpu_clock": "SM clock median 1410 MHz (range 1155-1410), power median 344 W, up to 56 C, 2836 busy one-second samples",
+      "draws": 5,
+      "dev_seed": 20260925
+    },
+    "graphed": {
+      "device": "NVIDIA A100 80GB PCIe",
+      "host": "AuthenticAMD family 175 model 1 at 3094 MHz, 17 CPUs; GPU max SM clock 1410 MHz, application clock 1410 MHz, power limit 300.00 W",
+      "gpu_clock": "SM clock median 1335 MHz (range 1185-1410), power median 298 W, up to 79 C, 2503 busy one-second samples",
+      "draws": 5,
+      "dev_seed": 20260925
+    }
+  },
+  "best_under_limit": {
+    "eager": {
+      "name": "mlp-k16-w256-s3200-b512",
+      "error_pct": 2.756000000000003,
+      "mean_ms": 4711.417902800008
+    },
+    "graphed": {
+      "name": "mlpg-k16-w256-s3200-b512",
+      "error_pct": 2.749999999999997,
+      "mean_ms": 1641.2969005999912
+    }
+  },
+  "frontier": {
+    "eager": [
+      {
+        "name": "mlp-k1-w256-s25-b128",
+        "error_pct": 19.838,
+        "mean_ms": 38.504930199999876
+      },
+      {
+        "name": "mlp-k1-w1024-s25-b512",
+        "error_pct": 9.360000000000001,
+        "mean_ms": 39.893957399999636
+      },
+      {
+        "name": "mlp-k4-w1024-s25-b512",
+        "error_pct": 8.545999999999998,
+        "mean_ms": 41.58174059996327
+      },
+      {
+        "name": "mlp-k16-w1024-s25-b512",
+        "error_pct": 8.414,
+        "mean_ms": 64.20929040004921
+      },
+      {
+        "name": "mlp-k16-w256-s50-b512",
+        "error_pct": 8.194,
+        "mean_ms": 70.68106600002011
+      },
+      {
+        "name": "mlp-k4-w1024-s50-b512",
+        "error_pct": 6.943999999999995,
+        "mean_ms": 79.72157199999401
+      },
+      {
+        "name": "mlp-k16-w1024-s50-b512",
+        "error_pct": 6.877999999999995,
+        "mean_ms": 118.99463899999319
+      },
+      {
+        "name": "mlp-k16-w256-s100-b512",
+        "error_pct": 6.399999999999995,
+        "mean_ms": 143.34653080002226
+      },
+      {
+        "name": "mlp-k1-w1024-s100-b512",
+        "error_pct": 5.218,
+        "mean_ms": 154.3611122000243
+      },
+      {
+        "name": "mlp-k4-w1024-s100-b512",
+        "error_pct": 4.988000000000003,
+        "mean_ms": 158.85958040000787
+      },
+      {
+        "name": "mlp-k16-w1024-s100-b512",
+        "error_pct": 4.957999999999996,
+        "mean_ms": 228.11738059999698
+      },
+      {
+        "name": "mlp-k4-w256-s200-b512",
+        "error_pct": 4.615999999999998,
+        "mean_ms": 290.5465972000002
+      },
+      {
+        "name": "mlp-k16-w256-s200-b512",
+        "error_pct": 4.545999999999994,
+        "mean_ms": 296.93932800000766
+      },
+      {
+        "name": "mlp-k1-w1024-s200-b512",
+        "error_pct": 3.964000000000001,
+        "mean_ms": 308.86894480001956
+      },
+      {
+        "name": "mlp-k4-w1024-s200-b512",
+        "error_pct": 3.722000000000003,
+        "mean_ms": 315.3291555999431
+      },
+      {
+        "name": "mlp-k16-w1024-s200-b512",
+        "error_pct": 3.6980000000000013,
+        "mean_ms": 447.3576786000194
+      },
+      {
+        "name": "mlp-k16-w256-s400-b512",
+        "error_pct": 3.5739999999999994,
+        "mean_ms": 579.4645224000078
+      },
+      {
+        "name": "mlp-k1-w1024-s400-b512",
+        "error_pct": 3.3599999999999963,
+        "mean_ms": 601.220111199973
+      },
+      {
+        "name": "mlp-k4-w1024-s400-b512",
+        "error_pct": 3.2519999999999993,
+        "mean_ms": 628.4808721999752
+      },
+      {
+        "name": "mlp-k16-w1024-s400-b512",
+        "error_pct": 3.2059999999999977,
+        "mean_ms": 885.6671453999752
+      },
+      {
+        "name": "mlp-k16-w256-s800-b512",
+        "error_pct": 3.1340000000000034,
+        "mean_ms": 1151.0164511999847
+      },
+      {
+        "name": "mlp-k4-w1024-s800-b512",
+        "error_pct": 3.0460000000000043,
+        "mean_ms": 1271.3954483999942
+      },
+      {
+        "name": "mlp-k16-w1024-s800-b512",
+        "error_pct": 2.9919999999999947,
+        "mean_ms": 1768.7425214000086
+      },
+      {
+        "name": "mlp-k16-w256-s1600-b512",
+        "error_pct": 2.8880000000000017,
+        "mean_ms": 2330.8315954000136
+      },
+      {
+        "name": "mlp-k4-w256-s3200-b512",
+        "error_pct": 2.846000000000004,
+        "mean_ms": 4613.119999600053
+      },
+      {
+        "name": "mlp-k16-w256-s3200-b512",
+        "error_pct": 2.756000000000003,
+        "mean_ms": 4711.417902800008
+      }
+    ],
+    "graphed": [
+      {
+        "name": "mlpg-k1-w256-s25-b128",
+        "error_pct": 20.089999999999996,
+        "mean_ms": 6.858199800000264
+      },
+      {
+        "name": "mlpg-k1-w256-s25-b512",
+        "error_pct": 11.858000000000002,
+        "mean_ms": 7.3453520000008155
+      },
+      {
+        "name": "mlpg-k4-w256-s25-b512",
+        "error_pct": 10.919999999999996,
+        "mean_ms": 9.416948400001957
+      },
+      {
+        "name": "mlpg-k1-w1024-s25-b512",
+        "error_pct": 9.57,
+        "mean_ms": 10.222201999997083
+      },
+      {
+        "name": "mlpg-k1-w256-s50-b512",
+        "error_pct": 9.164000000000005,
+        "mean_ms": 13.398806000000008
+      },
+      {
+        "name": "mlpg-k4-w256-s50-b512",
+        "error_pct": 8.343999999999996,
+        "mean_ms": 17.04215380000278
+      },
+      {
+        "name": "mlpg-k1-w1024-s50-b512",
+        "error_pct": 7.333999999999996,
+        "mean_ms": 18.76685859999725
+      },
+      {
+        "name": "mlpg-k1-w256-s100-b512",
+        "error_pct": 6.889999999999996,
+        "mean_ms": 25.568051999999852
+      },
+      {
+        "name": "mlpg-k4-w256-s100-b512",
+        "error_pct": 6.477999999999994,
+        "mean_ms": 32.394526799996015
+      },
+      {
+        "name": "mlpg-k1-w1024-s100-b512",
+        "error_pct": 5.344000000000005,
+        "mean_ms": 35.95629080000435
+      },
+      {
+        "name": "mlpg-k1-w256-s200-b512",
+        "error_pct": 4.964000000000002,
+        "mean_ms": 49.756427399999836
+      },
+      {
+        "name": "mlpg-k4-w256-s200-b512",
+        "error_pct": 4.666000000000004,
+        "mean_ms": 64.23016920000464
+      },
+      {
+        "name": "mlpg-k1-w1024-s200-b512",
+        "error_pct": 3.966000000000003,
+        "mean_ms": 69.98309920000167
+      },
+      {
+        "name": "mlpg-k1-w256-s400-b512",
+        "error_pct": 3.8860000000000006,
+        "mean_ms": 98.20999099999881
+      },
+      {
+        "name": "mlpg-k4-w256-s400-b512",
+        "error_pct": 3.639999999999999,
+        "mean_ms": 126.9168250000007
+      },
+      {
+        "name": "mlpg-k1-w1024-s400-b512",
+        "error_pct": 3.3660000000000023,
+        "mean_ms": 139.4421971999975
+      },
+      {
+        "name": "mlpg-k4-w256-s800-b512",
+        "error_pct": 3.202000000000005,
+        "mean_ms": 249.53477820000103
+      },
+      {
+        "name": "mlpg-k1-w1024-s800-b512",
+        "error_pct": 3.1120000000000037,
+        "mean_ms": 285.68886239999927
+      },
+      {
+        "name": "mlpg-k4-w256-s1600-b512",
+        "error_pct": 2.951999999999999,
+        "mean_ms": 500.80277440000026
+      },
+      {
+        "name": "mlpg-k16-w256-s1600-b512",
+        "error_pct": 2.9059999999999975,
+        "mean_ms": 822.177149800001
+      },
+      {
+        "name": "mlpg-k4-w256-s3200-b512",
+        "error_pct": 2.8200000000000003,
+        "mean_ms": 1000.5322309999968
+      },
+      {
+        "name": "mlpg-k16-w256-s3200-b512",
+        "error_pct": 2.749999999999997,
+        "mean_ms": 1641.2969005999912
+      }
+    ]
+  },
+  "cutoffs_file": "../analysis/cutoffs-24k.json"
+}

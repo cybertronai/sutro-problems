@@ -1,0 +1,25 @@
+{
+  "status": "frozen",
+  "frozen_at_utc": "2026-09-25T17:24:29Z",
+  "deadline_utc": "2026-09-26T12:00:00Z",
+  "total_modal_cap_usd": 9,
+  "contingency_usd": 2,
+  "allowed_gpus": [
+    "A100-40GB",
+    "T4"
+  ],
+  "max_concurrent_gpus": 8,
+  "per_fit_time_budget_seconds": 1800,
+  "budget_ledger": "budget-ledger.json",
+  "only_root_session_may_launch_paid_compute": true,
+  "user_request": "Is there any method which can reach 2% error? Also, I want a detailed report describing the operations done to reduce possibility of \"feature smuggling\", The math behind them and how effective they are",
+  "user_authorization": "This request states no budget. Assumed: the $10 cap of the user's previous request ('Use no more than $10 on these experiments'). This ledger's $8 cap ($6 usable after the $2 contingency) covers the Ladder fits; anything else is counted from Modal's billing report.",
+  "notes": "Fresh ledger for the below-2% candidates; upper-envelope accounting as in the parent study.",
+  "amendments": [
+    {
+      "at_utc": "2026-09-25T17:25:34Z",
+      "change": "total_modal_cap_usd 8 -> 9, before any reservation or fit",
+      "reason": "the validated plan's makespan (42 min) left no slack in a 42-minute window; 9 lets a 48-minute window reserve $6.29, still under the assumed $10 for the request"
+    }
+  ]
+}

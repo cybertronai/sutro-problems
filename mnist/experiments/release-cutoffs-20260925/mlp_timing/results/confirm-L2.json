@@ -1,0 +1,247 @@
+{
+ "where": "modal",
+ "mode": "leaderboard",
+ "overrides": {
+  "error_bp": 625
+ },
+ "reviews": {
+  "/Users/yaroslavvb/git/sutro-problems/mnist/experiments/release-cutoffs-20260925/mlp_timing/submissions/mlp-k1-w1024-s100-b512.py": {
+   "bytes": 4297,
+   "source_rule": null,
+   "flags": []
+  },
+  "/Users/yaroslavvb/git/sutro-problems/mnist/experiments/release-cutoffs-20260925/mlp_timing/submissions/mlpg-k1-w1024-s100-b512.py": {
+   "bytes": 6056,
+   "source_rule": null,
+   "flags": []
+  }
+ },
+ "rows": [
+  {
+   "submission": "/Users/yaroslavvb/git/sutro-problems/mnist/experiments/release-cutoffs-20260925/mlp_timing/submissions/mlp-k1-w1024-s100-b512.py",
+   "board": "mnist-medium-3p40pct",
+   "reached": "leaderboard",
+   "passed": true,
+   "ranked_ms": 148.7124481201172,
+   "mnist": "94.69% (104,160/110,000)",
+   "holdout": "85.8%",
+   "detail": "MNIST 94.69% (104,160/110,000), 148.712 ms/call; hold-out (fashion) 85.82%, 146.989 ms/call",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "sandbox": "on (unprivileged user, seccomp: no network)",
+   "release": "linear, 60 dims: exact PCA whitening of each draw's training rows + a secret per-draw Haar rotation",
+   "harness": "sutro-mnist-medium/3.0.0",
+   "host": "GenuineIntel family 6 model 85 at 3633 MHz, 17 CPUs; GPU max SM clock 1410 MHz, application clock 1155 MHz, power limit 400.00 W",
+   "gpu_clock": "SM clock median 1155 MHz (range 1155-1155), power median 83 W, up to 29 C, 4 busy one-second samples"
+  },
+  {
+   "submission": "/Users/yaroslavvb/git/sutro-problems/mnist/experiments/release-cutoffs-20260925/mlp_timing/submissions/mlpg-k1-w1024-s100-b512.py",
+   "board": "mnist-medium-3p40pct",
+   "reached": "leaderboard",
+   "passed": true,
+   "ranked_ms": 43.55660820007324,
+   "mnist": "94.96% (104,453/110,000)",
+   "holdout": "91.8%",
+   "detail": "MNIST 94.96% (104,453/110,000), 43.514 ms/call; hold-out (kmnist) 91.81%, 43.557 ms/call",
+   "device": "NVIDIA A100-SXM4-80GB",
+   "sandbox": "on (unprivileged user, seccomp: no network)",
+   "release": "linear, 60 dims: exact PCA whitening of each draw's training rows + a secret per-draw Haar rotation",
+   "harness": "sutro-mnist-medium/3.0.0",
+   "host": "GenuineIntel family 6 model 85 at 3633 MHz, 17 CPUs; GPU max SM clock 1410 MHz, application clock 1155 MHz, power limit 400.00 W",
+   "gpu_clock": "SM clock median 1155 MHz (range 1155-1155), power median 70 W, up to 28 C, 3 busy one-second samples"
+  }
+ ],
+ "reruns": [],
+ "raw": [
+  {
+   "submission": "/Users/yaroslavvb/git/sutro-problems/mnist/experiments/release-cutoffs-20260925/mlp_timing/submissions/mlp-k1-w1024-s100-b512.py",
+   "board": "mnist-medium-3p40pct",
+   "steps": {
+    "test": {
+     "exit_code": 0,
+     "passed": true,
+     "duration": 47.347072864,
+     "result": {
+      "sutro.harness": "sutro-mnist-medium/3.0.0",
+      "test-count": "1",
+      "sutro.device": "NVIDIA A100-SXM4-80GB",
+      "sutro.torch": "2.12.0+cu130",
+      "sutro.host": "GenuineIntel family 6 model 85 at 3633 MHz, 17 CPUs; GPU max SM clock 1410 MHz, application clock 1155 MHz, power limit 400.00 W",
+      "sutro.sandbox": "on (unprivileged user, seccomp: no network)",
+      "sutro.release": "linear, 60 dims: exact PCA whitening of each draw's training rows + a secret per-draw Haar rotation",
+      "test.0.spec": "seed: 101; error_bp: 625; holdout_error_bp: 8500; release_dims: 60",
+      "test.0.status": "pass",
+      "test.0.message": "MNIST 94.67% (9,467/10,000), 155.577 ms/call; hold-out (fashion) 85.33%, 152.749 ms/call",
+      "sutro.gpu_clock": "SM clock median 1155 MHz (range 1155-1155), power median 67 W, up to 31 C, 1 busy one-second samples",
+      "check": "pass"
+     },
+     "stdout": "",
+     "stderr": "",
+     "compile_exit_code": 0
+    },
+    "benchmark": {
+     "exit_code": 0,
+     "passed": true,
+     "duration": 9.767314821,
+     "result": {
+      "sutro.harness": "sutro-mnist-medium/3.0.0",
+      "benchmark-count": "1",
+      "sutro.device": "NVIDIA A100-SXM4-80GB",
+      "sutro.torch": "2.12.0+cu130",
+      "sutro.host": "GenuineIntel family 6 model 85 at 3633 MHz, 17 CPUs; GPU max SM clock 1410 MHz, application clock 1155 MHz, power limit 400.00 W",
+      "sutro.sandbox": "on (unprivileged user, seccomp: no network)",
+      "sutro.release": "linear, 60 dims: exact PCA whitening of each draw's training rows + a secret per-draw Haar rotation",
+      "benchmark.0.spec": "seed: 202; error_bp: 625; holdout_error_bp: 8500; release_dims: 60; draws: 11; holdouts: 4 | MNIST 94.70% (28,411/30,000), 146.818 ms/call; hold-out (fashion) 86.08%, 154.939 ms/call",
+      "sutro.0.mnist_correct": "28411",
+      "sutro.0.mnist_total": "30000",
+      "sutro.0.mnist_mean_ms": "146.818049",
+      "sutro.0.holdout_correct": "8608",
+      "sutro.0.holdout_total": "10000",
+      "sutro.0.holdout_mean_ms": "154.939392",
+      "sutro.0.calls": "[[\"mnist\", 143.313919, 146.691, 9487], [\"fashion\", 154.939392, 158.543, 8608], [\"mnist\", 152.961029, 156.704, 9440], [\"mnist\", 144.179199, 147.605, 9484]]",
+      "sutro.0.overhead_ms": "3.565",
+      "benchmark.0.runs": "4",
+      "benchmark.0.mean": "154939392.08984375",
+      "benchmark.0.std": "5956671.81940121",
+      "benchmark.0.err": "2978335.909700605",
+      "benchmark.0.best": "143313919.0673828",
+      "benchmark.0.worst": "154939392.08984375",
+      "check": "pass"
+     },
+     "stdout": "",
+     "stderr": "",
+     "compile_exit_code": 0
+    },
+    "leaderboard": {
+     "exit_code": 0,
+     "passed": true,
+     "duration": 13.703408824999997,
+     "result": {
+      "sutro.harness": "sutro-mnist-medium/3.0.0",
+      "benchmark-count": "1",
+      "sutro.device": "NVIDIA A100-SXM4-80GB",
+      "sutro.torch": "2.12.0+cu130",
+      "sutro.host": "GenuineIntel family 6 model 85 at 3633 MHz, 17 CPUs; GPU max SM clock 1410 MHz, application clock 1155 MHz, power limit 400.00 W",
+      "sutro.sandbox": "on (unprivileged user, seccomp: no network)",
+      "sutro.release": "linear, 60 dims: exact PCA whitening of each draw's training rows + a secret per-draw Haar rotation",
+      "benchmark.0.spec": "seed: 202; error_bp: 625; holdout_error_bp: 8500; release_dims: 60; draws: 11; holdouts: 4 | MNIST 94.69% (104,160/110,000), 148.712 ms/call; hold-out (fashion) 85.82%, 146.989 ms/call",
+      "sutro.0.mnist_correct": "104160",
+      "sutro.0.mnist_total": "110000",
+      "sutro.0.mnist_mean_ms": "148.712448",
+      "sutro.0.holdout_correct": "34330",
+      "sutro.0.holdout_total": "40000",
+      "sutro.0.holdout_mean_ms": "146.988800",
+      "sutro.0.calls": "[[\"mnist\", 153.931778, 159.924, 9455], [\"mnist\", 150.900742, 154.355, 9479], [\"mnist\", 153.784317, 157.345, 9460], [\"mnist\", 145.193985, 148.415, 9453], [\"fashion\", 144.596985, 147.886, 8630], [\"mnist\", 145.917953, 149.109, 9472], [\"mnist\", 152.461319, 155.804, 9504], [\"fashion\", 151.670792, 154.86, 8566], [\"mnist\", 146.957306, 150.402, 9454], [\"mnist\", 149.513214, 153.975, 9464], [\"fashion\", 145.951736, 150.295, 8538], [\"fashion\", 145.735687, 149.907, 8596], [\"mnist\", 144.771072, 149.298, 9436], [\"mnist\", 146.27533, 150.759, 9486], [\"mnist\", 146.129913, 150.532, 9497]]",
+      "sutro.0.overhead_ms": "3.908",
+      "benchmark.0.runs": "15",
+      "benchmark.0.mean": "148712448.1201172",
+      "benchmark.0.std": "3410743.206688742",
+      "benchmark.0.err": "880650.1091797053",
+      "benchmark.0.best": "144596984.86328125",
+      "benchmark.0.worst": "153931777.95410156",
+      "sutro.gpu_clock": "SM clock median 1155 MHz (range 1155-1155), power median 83 W, up to 29 C, 4 busy one-second samples",
+      "check": "pass"
+     },
+     "stdout": "",
+     "stderr": "",
+     "compile_exit_code": 0
+    }
+   }
+  },
+  {
+   "submission": "/Users/yaroslavvb/git/sutro-problems/mnist/experiments/release-cutoffs-20260925/mlp_timing/submissions/mlpg-k1-w1024-s100-b512.py",
+   "board": "mnist-medium-3p40pct",
+   "steps": {
+    "test": {
+     "exit_code": 0,
+     "passed": true,
+     "duration": 8.527539175000001,
+     "result": {
+      "sutro.harness": "sutro-mnist-medium/3.0.0",
+      "test-count": "1",
+      "sutro.device": "NVIDIA A100-SXM4-80GB",
+      "sutro.torch": "2.12.0+cu130",
+      "sutro.host": "GenuineIntel family 6 model 85 at 3633 MHz, 17 CPUs; GPU max SM clock 1410 MHz, application clock 1155 MHz, power limit 400.00 W",
+      "sutro.sandbox": "on (unprivileged user, seccomp: no network)",
+      "sutro.release": "linear, 60 dims: exact PCA whitening of each draw's training rows + a secret per-draw Haar rotation",
+      "test.0.spec": "seed: 101; error_bp: 625; holdout_error_bp: 8500; release_dims: 60",
+      "test.0.status": "pass",
+      "test.0.message": "MNIST 94.43% (9,443/10,000), 43.588 ms/call; hold-out (fashion) 85.49%, 43.545 ms/call",
+      "check": "pass"
+     },
+     "stdout": "",
+     "stderr": "",
+     "compile_exit_code": 0
+    },
+    "benchmark": {
+     "exit_code": 0,
+     "passed": true,
+     "duration": 9.770633001999997,
+     "result": {
+      "sutro.harness": "sutro-mnist-medium/3.0.0",
+      "benchmark-count": "1",
+      "sutro.device": "NVIDIA A100-SXM4-80GB",
+      "sutro.torch": "2.12.0+cu130",
+      "sutro.host": "GenuineIntel family 6 model 85 at 3633 MHz, 17 CPUs; GPU max SM clock 1410 MHz, application clock 1155 MHz, power limit 400.00 W",
+      "sutro.sandbox": "on (unprivileged user, seccomp: no network)",
+      "sutro.release": "linear, 60 dims: exact PCA whitening of each draw's training rows + a secret per-draw Haar rotation",
+      "benchmark.0.spec": "seed: 202; error_bp: 625; holdout_error_bp: 8500; release_dims: 60; draws: 11; holdouts: 4 | MNIST 95.05% (28,515/30,000), 43.470 ms/call; hold-out (fashion) 85.01%, 43.540 ms/call",
+      "sutro.0.mnist_correct": "28515",
+      "sutro.0.mnist_total": "30000",
+      "sutro.0.mnist_mean_ms": "43.470165",
+      "sutro.0.holdout_correct": "8501",
+      "sutro.0.holdout_total": "10000",
+      "sutro.0.holdout_mean_ms": "43.540482",
+      "sutro.0.calls": "[[\"fashion\", 43.540482, 47.405, 8501], [\"mnist\", 43.461632, 47.114, 9484], [\"mnist\", 43.470848, 47.224, 9475], [\"mnist\", 43.478016, 47.227, 9556]]",
+      "sutro.0.overhead_ms": "3.392",
+      "benchmark.0.runs": "4",
+      "benchmark.0.mean": "43540481.56738281",
+      "benchmark.0.std": "35792.02538431897",
+      "benchmark.0.err": "17896.012692159486",
+      "benchmark.0.best": "43461631.774902344",
+      "benchmark.0.worst": "43540481.56738281",
+      "sutro.gpu_clock": "SM clock median 1155 MHz (range 1155-1155), power median 68 W, up to 27 C, 1 busy one-second samples",
+      "check": "pass"
+     },
+     "stdout": "",
+     "stderr": "",
+     "compile_exit_code": 0
+    },
+    "leaderboard": {
+     "exit_code": 0,
+     "passed": true,
+     "duration": 11.448775498000003,
+     "result": {
+      "sutro.harness": "sutro-mnist-medium/3.0.0",
+      "benchmark-count": "1",
+      "sutro.device": "NVIDIA A100-SXM4-80GB",
+      "sutro.torch": "2.12.0+cu130",
+      "sutro.host": "GenuineIntel family 6 model 85 at 3633 MHz, 17 CPUs; GPU max SM clock 1410 MHz, application clock 1155 MHz, power limit 400.00 W",
+      "sutro.sandbox": "on (unprivileged user, seccomp: no network)",
+      "sutro.release": "linear, 60 dims: exact PCA whitening of each draw's training rows + a secret per-draw Haar rotation",
+      "benchmark.0.spec": "seed: 202; error_bp: 625; holdout_error_bp: 8500; release_dims: 60; draws: 11; holdouts: 4 | MNIST 94.96% (104,453/110,000), 43.514 ms/call; hold-out (kmnist) 91.81%, 43.557 ms/call",
+      "sutro.0.mnist_correct": "104453",
+      "sutro.0.mnist_total": "110000",
+      "sutro.0.mnist_mean_ms": "43.514136",
+      "sutro.0.holdout_correct": "36725",
+      "sutro.0.holdout_total": "40000",
+      "sutro.0.holdout_mean_ms": "43.556608",
+      "sutro.0.calls": "[[\"mnist\", 43.515903, 49.651, 9498], [\"mnist\", 43.472897, 47.241, 9468], [\"kmnist\", 43.601921, 47.402, 9220], [\"mnist\", 43.510784, 47.327, 9505], [\"mnist\", 43.618305, 47.294, 9466], [\"kmnist\", 43.522049, 47.393, 9156], [\"mnist\", 43.491329, 47.543, 9492], [\"mnist\", 43.483135, 47.295, 9502], [\"mnist\", 43.52, 47.395, 9510], [\"mnist\", 43.4944, 47.003, 9499], [\"kmnist\", 43.575294, 47.285, 9185], [\"kmnist\", 43.527168, 47.445, 9164], [\"mnist\", 43.565056, 47.183, 9491], [\"mnist\", 43.482113, 47.341, 9530], [\"mnist\", 43.501568, 47.213, 9492]]",
+      "sutro.0.overhead_ms": "3.539",
+      "benchmark.0.runs": "15",
+      "benchmark.0.mean": "43556608.20007324",
+      "benchmark.0.std": "44723.47350531988",
+      "benchmark.0.err": "11547.55120471017",
+      "benchmark.0.best": "43472896.575927734",
+      "benchmark.0.worst": "43618305.20629883",
+      "sutro.gpu_clock": "SM clock median 1155 MHz (range 1155-1155), power median 70 W, up to 28 C, 3 busy one-second samples",
+      "check": "pass"
+     },
+     "stdout": "",
+     "stderr": "",
+     "compile_exit_code": 0
+    }
+   }
+  }
+ ],
+ "rerun_raw": []
+}
