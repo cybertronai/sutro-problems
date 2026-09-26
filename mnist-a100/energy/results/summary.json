@@ -1,0 +1,137 @@
+[
+ {
+  "entry": "fast_mlp",
+  "label": "CUDA-graph MLP, 60-256-256-10, 200 steps (PR #96)",
+  "difficulty": 1,
+  "source": "entries/fast_mlp.py",
+  "runs": 3,
+  "passed": 3,
+  "ranked_ms": [
+   51.16537707181075,
+   61.55342447473438,
+   61.95710860143077
+  ],
+  "ranked_ms_median": 61.55342447473438,
+  "mj_per_call": [
+   1392.5973261731172,
+   2636.5272070076203,
+   2428.811711708194
+  ],
+  "mj_per_call_median": 2428.811711708194,
+  "above_idle_w_median": 48.24241082587793,
+  "mnist_accuracy": 0.9502939393939394,
+  "gpus": [
+   "NVIDIA A100 80GB PCIe",
+   "NVIDIA A100-SXM4-80GB",
+   "NVIDIA A100-SXM4-80GB"
+  ]
+ },
+ {
+  "entry": "mlp_k1_w1024_s100_b512",
+  "label": "eager MLP, 60-1024-1024-10, 100 steps",
+  "difficulty": 1,
+  "source": "entries/mlp_k1_w1024_s100_b512.py",
+  "runs": 3,
+  "passed": 3,
+  "ranked_ms": [
+   168.21391248366106,
+   191.29967706853694,
+   196.22474392977628
+  ],
+  "ranked_ms_median": 191.29967706853694,
+  "mj_per_call": [
+   3257.552768541477,
+   2370.2247900035945,
+   2648.365564992378
+  ],
+  "mj_per_call_median": 2648.365564992378,
+  "above_idle_w_median": 13.434668286031684,
+  "mnist_accuracy": 0.9498181818181818,
+  "gpus": [
+   "NVIDIA A100 80GB PCIe",
+   "NVIDIA A100-SXM4-80GB",
+   "NVIDIA A100-SXM4-80GB"
+  ]
+ },
+ {
+  "entry": "example",
+  "label": "`example.py`: eager MLP, 60-1024-1024-10, 400 steps",
+  "difficulty": 1,
+  "source": "../example.py",
+  "runs": 3,
+  "passed": 3,
+  "ranked_ms": [
+   793.0350230823864,
+   762.3571166992188,
+   486.49983978271484
+  ],
+  "ranked_ms_median": 762.3571166992188,
+  "mj_per_call": [
+   29661.574249361147,
+   28809.802053225572,
+   37930.18461265866
+  ],
+  "mj_per_call_median": 29661.574249361147,
+  "above_idle_w_median": 42.20683449470573,
+  "mnist_accuracy": 0.967730303030303,
+  "gpus": [
+   "NVIDIA A100 80GB PCIe",
+   "NVIDIA A100 80GB PCIe",
+   "NVIDIA A100-SXM4-80GB"
+  ]
+ },
+ {
+  "entry": "mlpg_k4_w256_s800_b512",
+  "label": "CUDA-graph ensemble, 4 x 60-256-256-10, 800 steps",
+  "difficulty": 2,
+  "source": "entries/mlpg_k4_w256_s800_b512.py",
+  "runs": 3,
+  "passed": 3,
+  "ranked_ms": [
+   251.82040543989703,
+   252.11870236058567,
+   253.4104221278577
+  ],
+  "ranked_ms_median": 252.11870236058567,
+  "mj_per_call": [
+   14332.877932224157,
+   14523.940398582381,
+   14435.614530573084
+  ],
+  "mj_per_call_median": 14435.614530573084,
+  "above_idle_w_median": 56.922669590709944,
+  "mnist_accuracy": 0.9687060606060606,
+  "gpus": [
+   "NVIDIA A100 80GB PCIe",
+   "NVIDIA A100 80GB PCIe",
+   "NVIDIA A100 80GB PCIe"
+  ]
+ },
+ {
+  "entry": "mlp_k16_w1024_s400_b512",
+  "label": "eager ensemble, 16 x 60-1024-1024-10, 400 steps",
+  "difficulty": 2,
+  "source": "entries/mlp_k16_w1024_s400_b512.py",
+  "runs": 3,
+  "passed": 3,
+  "ranked_ms": [
+   927.2641102183949,
+   943.8199573863636,
+   922.0474853515625
+  ],
+  "ranked_ms_median": 927.2641102183949,
+  "mj_per_call": [
+   202072.2147889527,
+   198164.6515687078,
+   200869.59616452802
+  ],
+  "mj_per_call_median": 200869.59616452802,
+  "above_idle_w_median": 216.96208762904612,
+  "mnist_accuracy": 0.9677636363636364,
+  "gpus": [
+   "NVIDIA A100 80GB PCIe",
+   "NVIDIA A100 80GB PCIe",
+   "NVIDIA A100 80GB PCIe"
+  ]
+ }
+]

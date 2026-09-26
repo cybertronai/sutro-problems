@@ -1,0 +1,74 @@
+✓ Initialized. View run at 
+https://modal.com/apps/yaroslavvb/main/ap-TkjzYAACO5ko4LDmMumE1P
+Building image im-AfOQqSJ92bk5Gf0t7fnqHV
+
+=> Step 0: FROM base
+
+=> Step 1: COPY . /
+Saving image...
+Image saved, took 1.19s
+
+Built image im-AfOQqSJ92bk5Gf0t7fnqHV in 2.42s
+
+
+Building image im-X0qNpYPcD6cKrOEa2aRwVb
+
+=> Step 0: FROM base
+
+=> Step 1: RUN python /root/mnist.py --download
+datasets ready in /root/.cache/sutro-mnist
+Saving image...
+Image saved, took 557.10ms
+
+Built image im-X0qNpYPcD6cKrOEa2aRwVb in 20.34s
+
+
+✓ Created objects.
+├── 🔨 Created mount 
+│   /Users/yaroslavvb/git/sutro-problems-mnist-a100-energy/mnist-a100/run_modal.
+│   py
+├── 🔨 Created mount 
+│   /Users/yaroslavvb/git/sutro-problems-mnist-a100-energy/mnist-a100/mnist.py
+└── 🔨 Created function remote_score.
+
+==========
+== CUDA ==
+==========
+
+CUDA Version 13.3.0
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+
+--- run 1:
+fast_mlp.py:fast_mlp at 5.40% error: 15 timed calls, each in a fresh process
+  NVIDIA A100 80GB PCIe, torch 2.12.0+cu130, sandbox on
+  call  1/15: 50.113 ms, scorer's clock 50.551 ms
+  call  2/15: 50.135 ms, scorer's clock 49.880 ms
+  call  3/15: 49.684 ms, scorer's clock 49.840 ms
+  call  4/15: 50.105 ms, scorer's clock 49.928 ms
+  call  5/15: 49.666 ms, scorer's clock 52.633 ms
+  call  6/15: 49.674 ms, scorer's clock 49.502 ms
+  call  7/15: 49.967 ms, scorer's clock 50.134 ms
+  call  8/15: 49.797 ms, scorer's clock 49.383 ms
+  call  9/15: 49.708 ms, scorer's clock 49.471 ms
+  call 10/15: 50.130 ms, scorer's clock 50.419 ms
+  call 11/15: 50.212 ms, scorer's clock 52.012 ms
+  call 12/15: 49.768 ms, scorer's clock 53.755 ms
+  call 13/15: 49.928 ms, scorer's clock 52.753 ms
+  call 14/15: 50.068 ms, scorer's clock 50.237 ms
+  call 15/15: 50.012 ms, scorer's clock 49.902 ms
+MNIST 95.07% (104,581/110,000), 50.116 ms/call; hold-out (fashion) 86.05%, 50.970 ms/call (floored by the scorer's clock); score 50.970 ms
+energy: one more fresh process runs the method back to back on fresh MNIST draws for 20 s, between idle windows in which it is frozen
+  NVIDIA A100 80GB PCIe: idle 78.2 W with the method frozen; telemetry reference 18.2 TFLOP/s at 7.21 J/TFLOP above idle (a healthy NVIDIA A100 80GB PCIe reads 6-11)
+  the round trip alone: 17.2 mJ per call over 2,655 empty calls, subtracted
+  the method: 364 calls in 20.0 s, MNIST 94.86%, 49.595 ms per call, 104.7 W on average
+energy 1440.684 mJ per call above idle
+Stopping app - local entrypoint completed.
+✓ App completed. View run at 
+https://modal.com/apps/yaroslavvb/main/ap-TkjzYAACO5ko4LDmMumE1P
