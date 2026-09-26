@@ -1,0 +1,222 @@
+✓ Initialized. View run at 
+https://modal.com/apps/yaroslavvb/main/ap-y7SmKyEuWxHYkM7z8Yqqki
+Building image im-FwrE3ldNSpLSh11J1vYWXe
+
+=> Step 0: FROM base
+
+=> Step 1: COPY . /
+Saving image...
+Image saved, took 1.74s
+
+Built image im-FwrE3ldNSpLSh11J1vYWXe in 3.22s
+
+
+Building image im-Ax2CA1OdWMqG7BPzmrZXWt
+
+=> Step 0: FROM base
+
+=> Step 1: RUN python /root/mnist.py --download
+datasets ready in /root/.cache/sutro-mnist
+Saving image...
+Image saved, took 1.37s
+
+Built image im-Ax2CA1OdWMqG7BPzmrZXWt in 22.09s
+
+
+✓ Created objects.
+├── 🔨 Created mount 
+│   /Users/yaroslavvb/git/sutro-problems-mnist-a100-energy/mnist-a100/run_modal.
+│   py
+├── 🔨 Created mount 
+│   /Users/yaroslavvb/git/sutro-problems-mnist-a100-energy/mnist-a100/mnist.py
+└── 🔨 Created function remote_score.
+
+==========
+== CUDA ==
+==========
+
+CUDA Version 13.3.0
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+
+
+==========
+== CUDA ==
+==========
+
+CUDA Version 13.3.0
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+
+
+==========
+== CUDA ==
+==========
+
+CUDA Version 13.3.0
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/pkg/modal/_container_entrypoint.py", line 492, in <module>
+    main(container_args, client)
+    ~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_container_entrypoint.py", line 474, in main
+    run_function(container_args, client)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_container_entrypoint.py", line 467, in run_function
+    call_function(event_loop, container_io_manager, finalized_functions, batch_max_size, batch_wait_ms)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_container_entrypoint.py", line 241, in call_function
+    for io_context in container_io_manager.run_inputs_outputs(finalized_functions, batch_max_size, batch_wait_ms):
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/pkg/modal/_runtime/container_io_manager.py", line 946, in run_inputs_outputs
+    async for inputs in self._generate_inputs(batch_max_size, batch_wait_ms):
+    ...<13 lines>...
+        self.current_input_id, self.current_input_started_at = (None, None)
+  File "/pkg/modal/_runtime/container_io_manager.py", line 875, in _generate_inputs
+    response: api_pb2.FunctionGetInputsResponse = await self._client.stub.FunctionGetInputs(request)
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+modal.exception.InternalError: failed to get new inputs
+Runner failed with exit code: 1
+
+==========
+== CUDA ==
+==========
+
+CUDA Version 13.3.0
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+
+--- run 1:
+fast_mlp.py:fast_mlp at 5.40% error: 15 timed calls, each in a fresh process
+  NVIDIA A100-SXM4-80GB, torch 2.12.0+cu130, sandbox on
+  call  1/15: 60.857 ms, scorer's clock 61.135 ms
+  call  2/15: 60.720 ms, scorer's clock 59.996 ms
+  call  3/15: 60.695 ms, scorer's clock 60.893 ms
+  call  4/15: 60.700 ms, scorer's clock 60.814 ms
+  call  5/15: 60.733 ms, scorer's clock 60.390 ms
+  call  6/15: 60.844 ms, scorer's clock 59.977 ms
+  call  7/15: 60.928 ms, scorer's clock 63.341 ms
+  call  8/15: 60.836 ms, scorer's clock 61.114 ms
+  call  9/15: 60.850 ms, scorer's clock 61.441 ms
+  call 10/15: 60.761 ms, scorer's clock 61.121 ms
+  call 11/15: 60.781 ms, scorer's clock 60.937 ms
+  call 12/15: 60.634 ms, scorer's clock 62.930 ms
+  call 13/15: 60.780 ms, scorer's clock 61.284 ms
+  call 14/15: 60.725 ms, scorer's clock 63.011 ms
+  call 15/15: 60.653 ms, scorer's clock 60.797 ms
+MNIST 95.00% (104,502/110,000), 60.797 ms/call; hold-out (kmnist) 91.62%, 61.280 ms/call (floored by the scorer's clock); score 61.280 ms
+energy: one more fresh process runs the method back to back on fresh MNIST draws for 20 s, between idle windows in which it is frozen
+  NVIDIA A100-SXM4-80GB: idle 61.4 W with the method frozen; telemetry reference 18.3 TFLOP/s at 8.23 J/TFLOP above idle (a healthy NVIDIA A100-SXM4-80GB reads 6-11)
+  the round trip alone: 11.2 mJ per call over 1,867 empty calls, subtracted
+  the method: 356 calls in 20.1 s, MNIST 94.99%, 49.887 ms per call, 99.4 W on average
+energy 2131.405 mJ per call above idle
+--- run 2:
+fast_mlp.py:fast_mlp at 5.40% error: 15 timed calls, each in a fresh process
+  NVIDIA A100-SXM4-80GB, torch 2.12.0+cu130, sandbox on
+  call  1/15: 60.606 ms, scorer's clock 61.507 ms
+  call  2/15: 60.697 ms, scorer's clock 60.841 ms
+  call  3/15: 60.714 ms, scorer's clock 61.274 ms
+  call  4/15: 60.600 ms, scorer's clock 61.160 ms
+  call  5/15: 60.555 ms, scorer's clock 60.569 ms
+  call  6/15: 60.554 ms, scorer's clock 62.101 ms
+  call  7/15: 60.872 ms, scorer's clock 60.642 ms
+  call  8/15: 60.662 ms, scorer's clock 62.899 ms
+  call  9/15: 60.513 ms, scorer's clock 61.704 ms
+  call 10/15: 60.621 ms, scorer's clock 63.665 ms
+  call 11/15: 60.558 ms, scorer's clock 62.994 ms
+  call 12/15: 60.658 ms, scorer's clock 61.918 ms
+  call 13/15: 60.670 ms, scorer's clock 64.140 ms
+  call 14/15: 60.658 ms, scorer's clock 60.786 ms
+  call 15/15: 60.701 ms, scorer's clock 63.179 ms
+MNIST 95.01% (104,513/110,000), 61.701 ms/call; hold-out (fashion) 85.75%, 61.154 ms/call (floored by the scorer's clock); score 61.701 ms
+energy: one more fresh process runs the method back to back on fresh MNIST draws for 20 s, between idle windows in which it is frozen
+  NVIDIA A100-SXM4-80GB: idle 61.4 W with the method frozen; telemetry reference 18.2 TFLOP/s at 7.82 J/TFLOP above idle (a healthy NVIDIA A100-SXM4-80GB reads 6-11)
+  the round trip alone: 16.3 mJ per call over 1,754 empty calls, subtracted
+  the method: 352 calls in 20.0 s, MNIST 95.05%, 49.819 ms per call, 100.0 W on average
+energy 2185.070 mJ per call above idle
+
+==========
+== CUDA ==
+==========
+
+CUDA Version 13.3.0
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+
+
+==========
+== CUDA ==
+==========
+
+CUDA Version 13.3.0
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+
+--- run 3:
+fast_mlp.py:fast_mlp at 5.40% error: 15 timed calls, each in a fresh process
+  NVIDIA A100-SXM4-80GB, torch 2.12.0+cu130, sandbox on
+  call  1/15: 61.810 ms, scorer's clock 62.965 ms
+  call  2/15: 61.851 ms, scorer's clock 63.004 ms
+  call  3/15: 61.793 ms, scorer's clock 62.539 ms
+  call  4/15: 61.478 ms, scorer's clock 62.015 ms
+  call  5/15: 61.714 ms, scorer's clock 62.336 ms
+  call  6/15: 61.789 ms, scorer's clock 62.525 ms
+  call  7/15: 61.703 ms, scorer's clock 62.857 ms
+  call  8/15: 61.744 ms, scorer's clock 62.844 ms
+  call  9/15: 58.110 ms, scorer's clock 58.650 ms
+  call 10/15: 58.680 ms, scorer's clock 59.310 ms
+  call 11/15: 61.683 ms, scorer's clock 62.689 ms
+  call 12/15: 61.786 ms, scorer's clock 62.879 ms
+  call 13/15: 60.447 ms, scorer's clock 61.429 ms
+  call 14/15: 61.747 ms, scorer's clock 62.698 ms
+  call 15/15: 61.765 ms, scorer's clock 63.024 ms
+MNIST 95.26% (104,783/110,000), 61.942 ms/call; hold-out (fashion) 85.85%, 61.078 ms/call (floored by the scorer's clock); score 61.942 ms
+energy: one more fresh process runs the method back to back on fresh MNIST draws for 20 s, between idle windows in which it is frozen
+  NVIDIA A100-SXM4-80GB: idle 73.6 W with the method frozen; telemetry reference 18.5 TFLOP/s at 7.51 J/TFLOP above idle (a healthy NVIDIA A100-SXM4-80GB reads 6-11)
+  the round trip alone: 14.1 mJ per call over 3,380 empty calls, subtracted
+  the method: 370 calls in 20.0 s, MNIST 95.12%, 49.800 ms per call, 112.9 W on average
+energy 2112.862 mJ per call above idle
+Stopping app - local entrypoint completed.
+✓ App completed. View run at 
+https://modal.com/apps/yaroslavvb/main/ap-y7SmKyEuWxHYkM7z8Yqqki
+passed 3 of 3 runs; median 61.701 ms; energy median 2,131.4 mJ per call over 3 runs

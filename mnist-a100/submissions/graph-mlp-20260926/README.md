@@ -10,6 +10,18 @@ A 60→256→256→10 MLP trained from scratch passes difficulty 1 in **61.388 m
 
 Scores are the scorer's final ranked times: the slower of the MNIST and hold-out means, including its wall-clock floor where applicable. Passing also checks the worst MNIST draw, hold-out accuracy, timing dispersion, and per-call limits. Only difficulty 1 was tested.
 
+## Re-evaluation with scorer 1.2.0
+
+On 2026-09-26, after main gained the energy column, the same file passed difficulty 1 again in three sandboxed Modal A100-80GB runs of `mnist.py` 1.2.0. Their medians are the ones in the records table: **61.701 ms** and **2,131 mJ per call above idle**.
+
+| Run | GPU | Score, ms/call | Energy, mJ/call | MNIST accuracy | Hold-out |
+| --- | --- | ---: | ---: | ---: | --- |
+| 1 | A100-SXM4-80GB | 61.280 | 2,131 | 95.00% (104,502/110,000) | KMNIST 91.62% |
+| 2 | A100-SXM4-80GB | 61.701 | 2,185 | 95.01% (104,513/110,000) | Fashion-MNIST 85.75% |
+| 3 | A100-SXM4-80GB | 61.942 | 2,113 | 95.26% (104,783/110,000) | Fashion-MNIST 85.85% |
+
+Each run landed on a different board and passed every energy check. One container failed inside Modal before it received its input (`modal.exception.InternalError: failed to get new inputs`, in [`runs.log`](evidence/scorer-1.2.0/runs.log)); Modal ran that input again. Records: [run 1](evidence/scorer-1.2.0/run-1.json), [run 2](evidence/scorer-1.2.0/run-2.json), [run 3](evidence/scorer-1.2.0/run-3.json).
+
 ## Method and attribution
 
 This submission ports the repository's `mlpg-k1-w256-s200-b512` cutoff experiment (credited below) to the three-argument `mnist-a100` API. Its algorithm is unchanged: 200 minibatches of 512, AdamW, a cosine learning-rate schedule with warmup, input noise, dropout, label smoothing, and EMA inference. One training step is captured in a CUDA graph during the untimed warmup.
@@ -44,6 +56,7 @@ SHA-256:
 
 - Submission: `44cb0c03d4ac869e99186c584d234c8743c12565e0a3b49cf3172bd5c8a82325`
 - Official scorer: `2833ba470776314eabd00f8315561f31da16f839740f5776b58fb8b132248022`
+- Scorer 1.2.0, for the re-evaluation: `1bc6d8d96a776565bc70f3ccdb91be7de57187d4495b2b0437fac98f5e120064`
 
 ## Files
 
