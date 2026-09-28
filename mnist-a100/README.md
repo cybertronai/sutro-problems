@@ -44,7 +44,9 @@ The rules are in [`mnist.py`](mnist.py)'s docstring.
 
 ## Difficulty = 3 (error ≤ 2.70%)
 
-No entry yet.
+| Date | mJ | ms | Submission | Contributors | Description |
+| - | -: | -: | - | - | - |
+| 2026-09-28 | 1,159,909 | 15,818.8 | [py](submissions/ladder-graph-20260928/ladder.py), [report](submissions/ladder-graph-20260928/README.md) | [@SethTS](https://github.com/SethTS) | Ladder 60-1000-500-250-250-250-10, 5,000 steps in a CUDA graph ★ best |
 
 ## Difficulty = 4 (error ≤ 2.30%)
 
