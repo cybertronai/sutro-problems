@@ -1,5 +1,7 @@
 # CUDA-graph Ladder submission — 2026-09-28
 
+> **Superseded the same day** by [`../ladder-triton-20260928`](../ladder-triton-20260928/README.md): the same recipe with its step fused into Triton kernels, at difficulty 3 in 6,556.9 ms and first entries at difficulties 4 and 5. This entry stays as the plain-PyTorch port and the faithfulness check the Triton entries rest on.
+
 The Ladder network that sets the difficulty bands passes difficulty 3 in **15,818.770 ms per call**, the median of three sandboxed Modal A100-80GB runs of the unchanged scorer 1.2.0, at **1,159,909 mJ per call above idle**. It is the first entry at difficulty 3. The recipe is unchanged from `ladder-xlong-s11` of [`release-cutoffs-20260925`](../../../mnist/experiments/release-cutoffs-20260925/README.md), trained for 5,000 steps instead of 24,000; what changed is how a step runs: it is captured once in a CUDA graph and replayed.
 
 | Run | GPU | Score, ms/call | Energy, mJ/call | MNIST accuracy | Hold-out |
@@ -8,7 +10,7 @@ The Ladder network that sets the difficulty bands passes difficulty 3 in **15,81
 | 2 | A100-SXM4-80GB | 15,774.046 | 1,142,580 | 97.34% (107,070/110,000) | KMNIST 96.24% |
 | 3 | A100-SXM4-80GB | 15,818.770 | 1,162,986 | 97.50% (107,250/110,000) | KMNIST 96.00% |
 
-Mean MNIST error over the 330,000 predictions is 2.56% (8,447 wrong), against the 2.70% band. Each run landed on a different board (GPU UUIDs in the records) and passed every energy check: telemetry references of 8.02-8.43 J/TFLOP. Within a run the 15 calls are within 0.3% of each other. Records: [run 1](evidence/run-1.json), [run 2](evidence/run-2.json), [run 3](evidence/run-3.json), [output](evidence/runs.log).
+Mean MNIST error over the 330,000 predictions is 2.56% (8,447 wrong), against the 2.70% band. The margin is thin: across seven scored runs at 5,000 steps (these three, an earlier one, and three with the Triton kernels) the 11-call mean ranged over 2.50-2.72%, and one Triton run was disqualified by 24 predictions, which is why the Triton entry uses 6,500 steps. Each run landed on a different board (GPU UUIDs in the records) and passed every energy check: telemetry references of 8.02-8.43 J/TFLOP. Within a run the 15 calls are within 0.3% of each other. Records: [run 1](evidence/run-1.json), [run 2](evidence/run-2.json), [run 3](evidence/run-3.json), [output](evidence/runs.log).
 
 ## The Ladder fits the 60 s limit once its step is graph-captured
 
@@ -19,7 +21,7 @@ The cutoffs study timed this recipe at 10-27 ms per step on Modal A100s and conc
 | Captured in a CUDA graph (this file) | 3.14 | 2.58%, 15.7 s | 1.98%, 28.2 s | 2.02%, 75.2 s |
 | Graph + `torch.compile` on the loss | 1.54 | — | — | 1.91%, 37.0 s |
 
-So difficulty 4 looks reachable with this file at about 9,000 steps, and difficulty 5 with the compiled variant, but neither has been scored. See the snags below.
+Both were later scored with the Triton kernels instead of `torch.compile`; see [`../ladder-triton-20260928`](../ladder-triton-20260928/README.md).
 
 ## Method and attribution
 
