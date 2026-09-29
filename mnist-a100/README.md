@@ -40,7 +40,8 @@ The rules are in [`mnist.py`](mnist.py)'s docstring.
 | Date | mJ | ms | Submission | Contributors | Description |
 | - | -: | -: | - | - | - |
 | 2026-09-26 | 200,870 | 927.3 | [py](energy/entries/mlp_k16_w1024_s400_b512.py), [report](energy/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | 16 MLPs 60-1024-1024-10, 400 steps |
-| 2026-09-26 | 14,436 | 252.1 | [py](energy/entries/mlpg_k4_w256_s800_b512.py), [report](energy/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | 4 MLPs 60-256-256-10, 800 steps in a CUDA graph ★ best |
+| 2026-09-26 | 14,436 | 252.1 | [py](energy/entries/mlpg_k4_w256_s800_b512.py), [report](energy/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | 4 MLPs 60-256-256-10, 800 steps in a CUDA graph |
+| 2026-09-29 | 8,071 | 38.3 | [py](submissions/kernel-pcg-20260929/kernel_pcg.py), [report](submissions/kernel-pcg-20260929/README.md) | [@islamborghini](https://github.com/islamborghini) | Non-neural RBF kernel ridge, one learned metric update, 16-step Nyström-preconditioned CG ★ best |
 
 ## Difficulty = 3 (error ≤ 2.70%)
 
