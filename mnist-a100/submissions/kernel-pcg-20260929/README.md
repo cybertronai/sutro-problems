@@ -1,10 +1,12 @@
-# Non-neural metric kernel classifier — difficulty 2
+# Non-neural metric kernel submission — difficulty 2, 2026-09-29
 
 Contributor: [@islamborghini](https://github.com/islamborghini).
 
 The unchanged [classifier](kernel_pcg.py) passed three sandboxed Modal
 A100-SXM4-80GB runs of scorer 1.2.0. Median ranked time: **38.319672 ms**;
 median energy above idle: **8,070.955853 mJ per call**.
+
+## Runs
 
 | Run | Ranked ms | MNIST correct / 110,000 | MNIST error | Hold-out accuracy | Energy, mJ |
 | --- | ---: | ---: | ---: | --- | ---: |
@@ -23,6 +25,18 @@ Compared with the previous difficulty-2 entry (252.1 ms / 14,436 mJ), this is
 measurements, **not a controlled same-board experiment**: the previous entry used
 PCIe A100-80GB boards; these runs used SXM4-80GB boards with recorded 500 W limits.
 Both are covered by the official A100-80GB workflow.
+
+## Same-board comparison
+
+Both unchanged methods were also scored three times each on one PCIe A100-80GB
+at an unchanged 300 W limit. All six runs passed. Median ranked time was
+253.356 ms for the previous ensemble and 35.589 ms for this method; median
+energy was 14,897 mJ and 7,664 mJ respectively: **7.12x faster and 48.55% less
+energy on the same board**. The run order was fixed before outcomes, and the
+scorer supplied independent fresh draws. These are supplementary results, not
+replacements for the three-board medians above.
+
+[Comparison report and all six records](same-board.md).
 
 ## Method and attribution
 
@@ -79,7 +93,7 @@ Use a new output directory to preserve prior evidence. The stock runner creates
 an ephemeral app; no personal account or experiment helper is required. Confirm
 that its app has stopped after completion or cancellation. A fresh run is needed
 to reproduce GPU measurements; the following inexpensive check only verifies
-source identity and reconstructs the saved results, without launching Modal:
+source identity and reconstructs all nine saved results, without launching Modal:
 
 ```sh
 python submissions/kernel-pcg-20260929/verify_evidence.py
@@ -113,3 +127,13 @@ authentication of the historical remote scorer. The app reference above is
 operator-reported, not independently embedded run metadata. No independent
 maintainer GPU rerun or upstream acceptance is claimed. A separate skeptical
 source/evidence review found no disqualifying exploit; it did not rerun GPU jobs.
+
+The subsequent same-board comparison does record the scorer hash inside the
+remote container, along with timestamps, source snapshots and hardware metadata.
+
+## Files
+
+- [Standalone classifier](kernel_pcg.py)
+- [Evidence verifier](verify_evidence.py)
+- Original scored runs: [1](evidence/run-1.json), [2](evidence/run-2.json), [3](evidence/run-3.json)
+- [Same-board report](same-board.md) and [source/run manifest](evidence/same-board/manifest.json)
