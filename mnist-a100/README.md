@@ -1,10 +1,13 @@
 [View this project on GitHub ↗](https://github.com/cybertronai/sutro-problems/tree/main/mnist-a100)
 
-# MNIST on an A100
+# MNIST end-to-end on an A100
 
 - Learn to read digits from 10,000 labelled 9x9 MNIST images, then label 10,000 more, from scratch, on one A100.
 - Every call runs in a fresh, sandboxed process on a fresh draw, whitened and secretly rotated.
 - Ranked by time per call. Energy per call above idle is reported beside it ([how](energy/README.md)).
+
+<img width="1084" height="392" alt="Screenshot 2026-09-29 at 5 14 36 PM" src="https://github.com/user-attachments/assets/51940abe-372c-4434-8003-d61cc1b4733c" />
+
 
 ## API
 
