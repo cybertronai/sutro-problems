@@ -2,6 +2,8 @@
 
 # MNIST end-to-end on an A100
 
+Architecture + optimizer + kernel codesign
+
 - Learn to read digits from 10,000 labelled 9x9 MNIST images, then label 10,000 more, from scratch, on one A100.
 - Every call runs in a fresh, sandboxed process on a fresh draw, whitened and secretly rotated.
 - Ranked by time per call. Energy per call above idle is reported beside it ([how](energy/README.md)).
