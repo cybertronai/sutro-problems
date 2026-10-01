@@ -1,0 +1,285 @@
+{
+ "returncode": 0,
+ "stdout": "baseline_d1.py:custom_kernel at 5.40% error: 15 timed calls, each in a fresh process\n  NVIDIA A100-SXM4-80GB, torch 2.12.0+cu130, sandbox on\n  call  1/15: 846.679 ms, scorer's clock 847.006 ms\n  call  2/15: 776.302 ms, scorer's clock 776.409 ms\n  call  3/15: 767.383 ms, scorer's clock 767.258 ms\n  call  4/15: 773.107 ms, scorer's clock 776.295 ms\n  call  5/15: 778.513 ms, scorer's clock 778.710 ms\n  call  6/15: 746.100 ms, scorer's clock 745.916 ms\n  call  7/15: 775.801 ms, scorer's clock 776.146 ms\n  call  8/15: 789.814 ms, scorer's clock 790.050 ms\n  call  9/15: 760.604 ms, scorer's clock 760.432 ms\n  call 10/15: 979.133 ms, scorer's clock 979.734 ms\n  call 11/15: 768.964 ms, scorer's clock 772.204 ms\n  call 12/15: 773.658 ms, scorer's clock 773.620 ms\n  call 13/15: 782.075 ms, scorer's clock 785.315 ms\n  call 14/15: 791.374 ms, scorer's clock 791.596 ms\n  call 15/15: 774.709 ms, scorer's clock 777.805 ms\nMNIST 96.64% (106,305/110,000), 799.760 ms/call; hold-out (kmnist) 94.85%, 771.714 ms/call; score 799.760 ms\nenergy: one more fresh process runs the method back to back on fresh MNIST draws for 20 s, between idle windows in which it is frozen\n  NVIDIA A100-SXM4-80GB: idle 61.7 W with the method frozen; telemetry reference 18.1 TFLOP/s at 8.08 J/TFLOP above idle (a healthy NVIDIA A100-SXM4-80GB reads 6-11)\n  the round trip alone: 13.8 mJ per call over 2,058 empty calls, subtracted\n  the method: 26 calls in 20.7 s, MNIST 96.62%, 794.651 ms per call, 90.4 W on average\nenergy 22890.094 mJ per call above idle\n",
+ "stderr": "",
+ "record": {
+  "version": "mnist-a100/1.2.0 (protections of sutro-mnist-medium/3.0.0, tightened; energy column)",
+  "file": "baseline_d1.py",
+  "function": "custom_kernel",
+  "source_sha256": "2e3b39c5b17564b3441efcf16ba4e058dda72eec033cf9156dd9965f76047550",
+  "band_bp": 540,
+  "sandboxed": true,
+  "holdout": "kmnist",
+  "device": "NVIDIA A100-SXM4-80GB",
+  "torch": "2.12.0+cu130",
+  "calls": [
+   {
+    "dataset": "mnist",
+    "ms": 846.6790161132812,
+    "parent_ms": 850.056361,
+    "correct": 9661,
+    "total": 10000,
+    "overhead_ms": 3.0508099987789876
+   },
+   {
+    "dataset": "mnist",
+    "ms": 776.3015747070312,
+    "parent_ms": 779.3259649999982,
+    "correct": 9696,
+    "total": 10000,
+    "overhead_ms": 2.916710499122317
+   },
+   {
+    "dataset": "kmnist",
+    "ms": 767.3825073242188,
+    "parent_ms": 770.400789,
+    "correct": 9497,
+    "total": 10000,
+    "overhead_ms": 3.1424445001681676
+   },
+   {
+    "dataset": "mnist",
+    "ms": 773.106689453125,
+    "parent_ms": 779.2334539999999,
+    "correct": 9679,
+    "total": 10000,
+    "overhead_ms": 2.9388445025836063
+   },
+   {
+    "dataset": "mnist",
+    "ms": 778.513427734375,
+    "parent_ms": 781.4494360000026,
+    "correct": 9649,
+    "total": 10000,
+    "overhead_ms": 2.7392569975642687
+   },
+   {
+    "dataset": "mnist",
+    "ms": 746.0997314453125,
+    "parent_ms": 749.0712650000048,
+    "correct": 9656,
+    "total": 10000,
+    "overhead_ms": 3.155365998779132
+   },
+   {
+    "dataset": "kmnist",
+    "ms": 775.8008422851562,
+    "parent_ms": 779.044956000007,
+    "correct": 9516,
+    "total": 10000,
+    "overhead_ms": 2.8988934989471318
+   },
+   {
+    "dataset": "mnist",
+    "ms": 789.8142700195312,
+    "parent_ms": 792.9005240000038,
+    "correct": 9649,
+    "total": 10000,
+    "overhead_ms": 2.850322002510552
+   },
+   {
+    "dataset": "mnist",
+    "ms": 760.6036376953125,
+    "parent_ms": 763.5651479999979,
+    "correct": 9643,
+    "total": 10000,
+    "overhead_ms": 3.1328094998213487
+   },
+   {
+    "dataset": "mnist",
+    "ms": 979.1334228515625,
+    "parent_ms": 982.7797389999944,
+    "correct": 9668,
+    "total": 10000,
+    "overhead_ms": 3.045635998773662
+   },
+   {
+    "dataset": "kmnist",
+    "ms": 768.9635620117188,
+    "parent_ms": 775.0759239999923,
+    "correct": 9462,
+    "total": 10000,
+    "overhead_ms": 2.871511496785274
+   },
+   {
+    "dataset": "mnist",
+    "ms": 773.6575927734375,
+    "parent_ms": 776.7290439999925,
+    "correct": 9659,
+    "total": 10000,
+    "overhead_ms": 3.109254499642134
+   },
+   {
+    "dataset": "mnist",
+    "ms": 782.0748901367188,
+    "parent_ms": 788.21738500001,
+    "correct": 9668,
+    "total": 10000,
+    "overhead_ms": 2.9021294965215816
+   },
+   {
+    "dataset": "mnist",
+    "ms": 791.3738403320312,
+    "parent_ms": 794.4787280000014,
+    "correct": 9677,
+    "total": 10000,
+    "overhead_ms": 2.882593002237968
+   },
+   {
+    "dataset": "kmnist",
+    "ms": 774.709228515625,
+    "parent_ms": 780.7992190000164,
+    "correct": 9464,
+    "total": 10000,
+    "overhead_ms": 2.9941935010284624
+   }
+  ],
+  "problems": [],
+  "summary": "MNIST 96.64% (106,305/110,000), 799.760 ms/call; hold-out (kmnist) 94.85%, 771.714 ms/call",
+  "ranked_ms": 799.7598266601562,
+  "energy": {
+   "mj_per_call": 22890.09400404606,
+   "problems": [],
+   "net_mj_before_control": 22903.88729684551,
+   "control_mj_per_call": 13.793292799452635,
+   "control_calls": 2058,
+   "gross_mj_per_call": 72064.07692307692,
+   "idle_w": 61.65908788302677,
+   "active_w": 90.38625127349472,
+   "calls": 26,
+   "seconds": 20.729546513999992,
+   "ms_median": 794.651123046875,
+   "timed_mnist_ms_median": 778.513427734375,
+   "correct": 251205,
+   "total": 260000,
+   "reference": {
+    "tflops_per_s": 18.121903275702973,
+    "j_per_tflop": 8.083899405709163,
+    "exact": true,
+    "band": [
+     [
+      6.0,
+      11.0
+     ],
+     [
+      15.0,
+      23.0
+     ]
+    ]
+   },
+   "device": {
+    "name": "NVIDIA A100-SXM4-80GB",
+    "uuid": "GPU-8eb23746-bea7-94cc-c1af-d65c45e74c3c",
+    "vbios": "92.00.9E.00.01",
+    "driver": "580.95.05",
+    "power_limit_w": 400.0
+   },
+   "windows": [
+    {
+     "name": "idle 1",
+     "seconds": 5.005701983000023,
+     "joules": 309.854,
+     "utilization_max": 0,
+     "contexts": 1
+    },
+    {
+     "name": "reference",
+     "seconds": 5.2178845979999835,
+     "joules": 1085.548,
+     "matmuls": 688,
+     "dim": 4096,
+     "exact": true
+    },
+    {
+     "name": "idle 2",
+     "seconds": 5.0045674899999995,
+     "joules": 306.259,
+     "utilization_max": 0,
+     "contexts": 1
+    },
+    {
+     "name": "control",
+     "seconds": 5.003548816000006,
+     "joules": 334.189,
+     "calls": 2058
+    },
+    {
+     "name": "idle 3",
+     "seconds": 5.004168992000018,
+     "joules": 305.446,
+     "utilization_max": 0,
+     "contexts": 1
+    },
+    {
+     "name": "method",
+     "seconds": 20.729546513999992,
+     "joules": 1873.666,
+     "calls": 26,
+     "ms": [
+      805.0421752929688,
+      769.5134887695312,
+      771.072021484375,
+      804.9213256835938,
+      775.783447265625,
+      784.0993041992188,
+      787.984375,
+      789.5572509765625,
+      798.23974609375,
+      801.3302001953125,
+      786.0152587890625,
+      780.7211303710938,
+      799.3845825195312,
+      799.1582641601562,
+      796.6095581054688,
+      792.8299560546875,
+      790.9498901367188,
+      797.7216186523438,
+      817.5595703125,
+      805.5613403320312,
+      797.6038208007812,
+      788.9152221679688,
+      796.4722900390625,
+      804.9786987304688,
+      790.5884399414062,
+      788.021240234375
+     ],
+     "correct": [
+      9665,
+      9673,
+      9667,
+      9636,
+      9664,
+      9645,
+      9641,
+      9651,
+      9650,
+      9656,
+      9667,
+      9666,
+      9676,
+      9668,
+      9677,
+      9670,
+      9682,
+      9674,
+      9674,
+      9657,
+      9676,
+      9654,
+      9656,
+      9649,
+      9645,
+      9666
+     ]
+    },
+    {
+     "name": "idle 4",
+     "seconds": 5.004506319000001,
+     "joules": 311.68,
+     "utilization_max": 0,
+     "contexts": 1
+    }
+   ]
+  }
+ }
+}
