@@ -39,6 +39,7 @@ The rules are in [`mnist.py`](mnist.py)'s docstring.
 | 2026-09-25 | 29,662 | 700.1 | [py](example.py), [report](energy/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | `example.py` baseline: MLP 60-1024-1024-10, 400 steps |
 | 2026-09-26 | 2,648 | 191.3 | [py](energy/entries/mlp_k1_w1024_s100_b512.py), [report](energy/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | MLP 60-1024-1024-10, 100 steps |
 | 2026-09-26 | 2,131 | 61.7 | [py](submissions/graph-mlp-20260926/fast_mlp.py), [report](submissions/graph-mlp-20260926/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | MLP 60-256-256-10, 200 steps in a CUDA graph ★ best |
+| 2026-09-30 | 22,890 | 799.8 | [py](submissions/baselines-20260930/baseline_d1.py), [report](submissions/baselines-20260930/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | Baseline reproduction: MLP, 400 steps; one sandboxed run |
 
 ## Difficulty = 2 (error ≤ 3.40%)
 
@@ -47,6 +48,7 @@ The rules are in [`mnist.py`](mnist.py)'s docstring.
 | 2026-09-26 | 200,870 | 927.3 | [py](energy/entries/mlp_k16_w1024_s400_b512.py), [report](energy/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | 16 MLPs 60-1024-1024-10, 400 steps |
 | 2026-09-26 | 14,436 | 252.1 | [py](energy/entries/mlpg_k4_w256_s800_b512.py), [report](energy/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | 4 MLPs 60-256-256-10, 800 steps in a CUDA graph |
 | 2026-09-29 | 8,071 | 38.3 | [py](submissions/kernel-pcg-20260929/kernel_pcg.py), [report](submissions/kernel-pcg-20260929/README.md) | [@islamborghini](https://github.com/islamborghini) | Non-neural RBF kernel ridge, one learned metric update, 16-step Nyström-preconditioned CG ★ best |
+| 2026-09-30 | 205,886 | 918.1 | [py](submissions/baselines-20260930/baseline_d2.py), [report](submissions/baselines-20260930/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | Baseline reproduction: 16 MLPs, 400 steps; one sandboxed run |
 
 ## Difficulty = 3 (error ≤ 2.70%)
 
@@ -56,6 +58,7 @@ The rules are in [`mnist.py`](mnist.py)'s docstring.
 | 2026-09-28 | 676,850 | 6,556.9 | [py](submissions/ladder-triton-20260928/ladder_d3.py), [report](submissions/ladder-triton-20260928/README.md) | [@SethTS](https://github.com/SethTS) | Ladder, 6,500 steps, fused Triton kernels in a CUDA graph |
 | 2026-09-29 | 259,847 | 1,895.4 | [py](submissions/ladder-fast-20260929/ladder_d3.py), [report](submissions/ladder-fast-20260929/README.md) | [@SethTS](https://github.com/SethTS) | Ladder, batch 1,000, 1,200 steps, TF32, fused Triton kernels in a CUDA graph |
 | 2026-09-29 | 201,792 | 1,443.3 | [py](submissions/ladder-sampled-20260929/ladder_d3.py), [report](submissions/ladder-sampled-20260929/README.md) | [@SethTS](https://github.com/SethTS) | Ladder, batch 1,000, 900 steps, labelled rows sampled by loss, TF32, fused Triton kernels in a CUDA graph ★ best |
+| 2026-09-30 | 241,778 | 1,865.4 | [py](submissions/baselines-20260930/baseline_d3.py), [report](submissions/baselines-20260930/README.md) | [@yaroslavvb](https://github.com/yaroslavvb); original [@SethTS](https://github.com/SethTS) | Baseline reproduction: Ladder, 1,200 steps; one sandboxed run |
 
 ## Difficulty = 4 (error ≤ 2.30%)
 
@@ -64,6 +67,7 @@ The rules are in [`mnist.py`](mnist.py)'s docstring.
 | 2026-09-28 | 1,143,255 | 11,094.6 | [py](submissions/ladder-triton-20260928/ladder_d4.py), [report](submissions/ladder-triton-20260928/README.md) | [@SethTS](https://github.com/SethTS) | Ladder, 11,000 steps, fused Triton kernels in a CUDA graph |
 | 2026-09-29 | 547,382 | 3,784.2 | [py](submissions/ladder-fast-20260929/ladder_d4.py), [report](submissions/ladder-fast-20260929/README.md) | [@SethTS](https://github.com/SethTS) | Ladder, batch 1,000, 2,400 steps, TF32, fused Triton kernels in a CUDA graph |
 | 2026-09-29 | 400,682 | 2,882.5 | [py](submissions/ladder-sampled-20260929/ladder_d4.py), [report](submissions/ladder-sampled-20260929/README.md) | [@SethTS](https://github.com/SethTS) | Ladder, batch 1,000, 1,800 steps, labelled rows sampled by loss, TF32, fused Triton kernels in a CUDA graph ★ best |
+| 2026-09-30 | 499,472 | 3,796.8 | [py](submissions/baselines-20260930/baseline_d4.py), [report](submissions/baselines-20260930/README.md) | [@yaroslavvb](https://github.com/yaroslavvb); original [@SethTS](https://github.com/SethTS) | Baseline reproduction: Ladder, 2,400 steps; one sandboxed run |
 
 ## Difficulty = 5 (error ≤ 1.90%)
 
@@ -71,3 +75,4 @@ The rules are in [`mnist.py`](mnist.py)'s docstring.
 | - | -: | -: | - | - | - |
 | 2026-09-28 | 4,410,730 | 36,201.2 | [py](submissions/ladder-triton-20260928/ladder_d5.py), [report](submissions/ladder-triton-20260928/README.md) | [@SethTS](https://github.com/SethTS) | Ladder, 36,000 steps, fused Triton kernels in a CUDA graph |
 | 2026-09-29 | 2,059,576 | 14,130.6 | [py](submissions/ladder-fast-20260929/ladder_d5.py), [report](submissions/ladder-fast-20260929/README.md) | [@SethTS](https://github.com/SethTS) | Ladder, batch 1,000, 9,000 steps, TF32, fused Triton kernels in a CUDA graph ★ best |
+| 2026-09-30 | 1,980,209 | 14,151.9 | [py](submissions/baselines-20260930/baseline_d5.py), [report](submissions/baselines-20260930/README.md) | [@yaroslavvb](https://github.com/yaroslavvb); original [@SethTS](https://github.com/SethTS) | Baseline reproduction: Ladder, 9,000 steps; one sandboxed run |
