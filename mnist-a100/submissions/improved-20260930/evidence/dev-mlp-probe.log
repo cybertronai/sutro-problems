@@ -1,0 +1,84 @@
+✓ Initialized. View run at
+https://modal.com/apps/yaroslavvb/main/ap-8JhbOrWkC3oQT8YvG7pmut
+✓ Created objects.
+├── 🔨 Created mount
+│   /Users/yaroslavvb/git/sutro-problems-baseline-a100/mnist-a100/submissions/im
+│   proved-20260930/evidence/dev-mlp-probe.py
+├── 🔨 Created mount
+│   /Users/yaroslavvb/git/sutro-problems-baseline-a100/mnist-a100/mnist.py
+└── 🔨 Created function probe.
+
+==========
+== CUDA ==
+==========
+
+CUDA Version 13.3.0
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+
+baseline_d1 {'seed': 9401, 'errors': 295, 'n_test': 10000, 'ms': 543.9324780000003}
+mlp_d1 {'seed': 9401, 'errors': 360, 'n_test': 10000, 'ms': 243.85045600000055}
+baseline_d2 {'seed': 9401, 'errors': 290, 'n_test': 10000, 'ms': 914.0318980000011}
+mlp_d2 {'seed': 9401, 'errors': 298, 'n_test': 10000, 'ms': 496.87377900000126}
+baseline_d1 {'seed': 9402, 'errors': 355, 'n_test': 10000, 'ms': 510.8137680000002}
+mlp_d1 {'seed': 9402, 'errors': 392, 'n_test': 10000, 'ms': 230.9903989999995}
+baseline_d2 {'seed': 9402, 'errors': 335, 'n_test': 10000, 'ms': 914.7312989999996}
+mlp_d2 {'seed': 9402, 'errors': 334, 'n_test': 10000, 'ms': 496.52107800000067}
+baseline_d1 {'seed': 9403, 'errors': 341, 'n_test': 10000, 'ms': 511.5636650000006}
+mlp_d1 {'seed': 9403, 'errors': 385, 'n_test': 10000, 'ms': 231.31549500000048}
+baseline_d2 {'seed': 9403, 'errors': 335, 'n_test': 10000, 'ms': 916.5493160000011}
+mlp_d2 {'seed': 9403, 'errors': 341, 'n_test': 10000, 'ms': 495.43683799999985}
+baseline_d1 {'seed': 9404, 'errors': 371, 'n_test': 10000, 'ms': 517.7525279999991}
+mlp_d1 {'seed': 9404, 'errors': 414, 'n_test': 10000, 'ms': 233.7328499999991}
+baseline_d2 {'seed': 9404, 'errors': 369, 'n_test': 10000, 'ms': 915.345331000001}
+mlp_d2 {'seed': 9404, 'errors': 359, 'n_test': 10000, 'ms': 495.1300799999991}
+baseline_d1 {'seed': 9405, 'errors': 319, 'n_test': 10000, 'ms': 518.9001980000007}
+mlp_d1 {'seed': 9405, 'errors': 365, 'n_test': 10000, 'ms': 238.063382}
+baseline_d2 {'seed': 9405, 'errors': 313, 'n_test': 10000, 'ms': 918.267526000001}
+mlp_d2 {'seed': 9405, 'errors': 308, 'n_test': 10000, 'ms': 497.57240400000313}
+baseline_d1 {'seed': 9406, 'errors': 359, 'n_test': 10000, 'ms': 520.6959029999964}
+mlp_d1 {'seed': 9406, 'errors': 382, 'n_test': 10000, 'ms': 234.5256859999978}
+baseline_d2 {'seed': 9406, 'errors': 355, 'n_test': 10000, 'ms': 916.7884509999986}
+mlp_d2 {'seed': 9406, 'errors': 363, 'n_test': 10000, 'ms': 635.7510260000013}
+Stopping app - uncaught exception raised locally: DeserializationError("Deserialization failed because the 'torch' module is not available in the local environment.").
+Traceback (most recent call last):
+  File "/Users/yaroslavvb/.venvs/sutro-leaderboard/lib/python3.12/site-packages/modal/_serialization.py", line 117, in deserialize
+    return Unpickler(client, io.BytesIO(s)).load()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ModuleNotFoundError: No module named 'torch'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/Users/yaroslavvb/git/sutro-problems-baseline-a100/mnist-a100/submissions/improved-20260930/evidence/dev-mlp-probe.py", line 90, in <module>
+    main()
+  File "/Users/yaroslavvb/git/sutro-problems-baseline-a100/mnist-a100/submissions/improved-20260930/evidence/dev-mlp-probe.py", line 83, in main
+    result = probe.remote(sources)
+             ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/yaroslavvb/.venvs/sutro-leaderboard/lib/python3.12/site-packages/modal/_object.py", line 46, in wrapped
+    return await method(self, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/yaroslavvb/.venvs/sutro-leaderboard/lib/python3.12/site-packages/modal/_functions.py", line 1893, in remote
+    return await self._call_function(args, kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/yaroslavvb/.venvs/sutro-leaderboard/lib/python3.12/site-packages/modal/_functions.py", line 1830, in _call_function
+    return await invocation.run_function()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/yaroslavvb/.venvs/sutro-leaderboard/lib/python3.12/site-packages/modal/_functions.py", line 484, in run_function
+    return await _process_result(
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/yaroslavvb/.venvs/sutro-leaderboard/lib/python3.12/site-packages/modal/_utils/function_utils.py", line 577, in _process_result
+    return deserialize_data_format(data, data_format, client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/yaroslavvb/.venvs/sutro-leaderboard/lib/python3.12/site-packages/modal/_serialization.py", line 397, in deserialize_data_format
+    return deserialize(s, client)
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/yaroslavvb/.venvs/sutro-leaderboard/lib/python3.12/site-packages/modal/_serialization.py", line 134, in deserialize
+    raise DeserializationError(
+modal.exception.DeserializationError: Deserialization failed because the 'torch' module is not available in the local environment.

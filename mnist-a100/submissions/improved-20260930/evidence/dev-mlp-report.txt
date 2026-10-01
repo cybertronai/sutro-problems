@@ -1,0 +1,85 @@
+Bounded MLP development probe — 2026-09-30
+
+Purpose: choose small, real changes to the two original MLP procedures for
+Yaroslav's separate submissions. This is development evidence, not an
+official sandboxed score and not a claim that every random run will pass.
+
+The first probe tested one candidate per difficulty on one requested A100-80GB
+Modal container. Both original sources and both candidates were evaluated
+on the same six public MNIST development draws, seeds 9401–9406, produced
+by the unchanged scorer's mnist.draw API. Each method received one untimed
+Fashion-MNIST warm-up, seed 9400. The methods initialize all trainable and
+optimizer state on every call. No weights, release transforms, or data from
+this probe are embedded in either submission.
+
+D1: 400 -> 200 training steps, TF32 matmuls enabled, fused AdamW on CUDA.
+Architecture, dropout, noise, label smoothing, batch size, peak learning
+rate, and one-cycle schedule shape are unchanged. The shorter schedule is
+computed over 200 steps. The fixed torch.manual_seed(0) remains inside the
+training function, so each call trains from scratch.
+
+D2 first candidate: ensemble members 16 -> 8. Width, steps, batch size, learning rate,
+regularization, AdamW, EMA, and prediction averaging are unchanged.
+Changing K also changes how many random values the existing generator
+consumes; this is a new eight-member ensemble, not cached predictions or a
+selection of members based on these test labels. The per-call generator is
+freshly seeded and all parameters, optimizer state, and EMA state are fresh.
+
+                 Mean time (ms)    Mean MNIST error
+D1 original          520.610             3.4000%
+D1 candidate         235.413             3.8300%
+D2 original          915.952             3.3283%
+D2 candidate         519.548             3.3383%
+
+Thus the D1 candidate took about 54.8% less time with increased error still
+below its 5.40% band. D2 took about 43.3% less time with 0.01 percentage
+points more error, below its 3.40% band on this sample. D2's remaining
+accuracy margin is narrow. An official fresh-draw run must independently
+qualify it. The last D2 candidate call took 635.751 ms, versus roughly
+495–498 ms for its other five calls; that value is retained in the mean.
+
+Timing used synchronized wall time within one unsandboxed process, with
+one CPU torch thread. TF32 was explicitly disabled for the original D1
+and enabled for the other methods so module imports could not contaminate
+that comparison. This probe does not include sandbox transport overhead,
+the official independent clock floor, randomized dataset ordering, the
+hold-out accuracy checks, or measured energy. Official results are separate.
+
+All 24 GPU calls completed and printed their per-draw results. Returning
+the final dictionary then failed locally because torch.__version__ is a
+TorchVersion object and the controller's environment has no torch package.
+dev-mlp-probe.json was reconstructed verbatim from the complete measured
+rows in dev-mlp-probe.log; its recovery_note records this. The controller
+now converts the version to str, but no extra GPU run was launched.
+
+The first GPU app was ap-8JhbOrWkC3oQT8YvG7pmut.
+
+Second and final D2 candidate
+
+Because the first D2 candidate's mean error was only 0.0617 percentage
+points below the band, a second bounded probe evaluated K=8 with 500 steps
+and EMA decay 1-4/500 = 0.992. All other settings remain unchanged. It was
+paired with the original K=16, 400-step source on the same six public seeds,
+again with one Fashion-MNIST warm-up per method. There were no other variants.
+
+                      Mean time (ms)    Mean MNIST error
+D2 original               922.961             3.3233%
+D2 final candidate        782.466             3.2567%
+
+The final D2 source is 15.2% faster than the original in this second paired
+probe, with 0.0667 percentage points less error. Its margin under the 3.40%
+band is 0.1433 points, which remains subject to fresh-draw variation. The
+final chosen sources are mlp_d1.py and mlp_d2.py. The discarded 400-step
+candidate is preserved as evidence/dev-mlp-d2-k8-s400.py. The first controller
+now reads that preserved file so its earlier experiment can be reproduced.
+
+dev-mlp-probe-500.json records the second probe, including final D2 source
+hash, actual device name, torch version, app id, and all twelve measured
+rows. This controller completed without the earlier deserialization error.
+The original D2's small accuracy difference between the two probes is
+consistent with nondeterministic GPU operations; deterministic algorithms
+were not forced. Timings should be compared within each paired probe.
+
+The unchanged scorer's source checks pass for both final standalone
+candidates, with no review flags. Source SHA-256 hashes are in
+dev-mlp-probe.json (D1) and dev-mlp-probe-500.json (final D2).

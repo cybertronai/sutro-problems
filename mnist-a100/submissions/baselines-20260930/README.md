@@ -1,5 +1,10 @@
 # Baseline reproductions for all five difficulties — 2026-09-30
 
+The leaderboard entries for these exact reproductions are superseded by
+[Yaroslav's improved variants](../improved-20260930/README.md). The source and
+measurements below are retained as historical evidence. Attribution to the
+upstream implementation is separate from the entrant's own measured score.
+
 Five standalone entries package existing learning procedures for the five
 MNIST A100 categories. These are reproductions: no hyperparameters were tuned,
 no new learning method is claimed, and this submission makes no speed-record
