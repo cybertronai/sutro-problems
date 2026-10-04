@@ -107,6 +107,29 @@
       "seconds": 0.957
     }
   ],
+  "dev_suite": {
+    "suite_key": "mask-dev",
+    "n_secrets": 128,
+    "repetitions": 8,
+    "n_instances": 1024,
+    "inputs_shape": [
+      1024,
+      594
+    ],
+    "inputs_dtype": "int16",
+    "inputs_sha256": "d76cda5095069f43162d44453c33d0d001bb7d9b03abbf7616b12d5f602a4e2d",
+    "targets_shape": [
+      1024,
+      32
+    ],
+    "targets_dtype": "int16",
+    "targets_sha256": "1c19f2b74f9f10e3cc257f6699c57707519fa6c362804dad4fc9f730b5b5a75b",
+    "meta_sha256": "293c289b84130222e1947278e045881334fcd8c452258ebac4f37de54629e724",
+    "successes": 1024,
+    "denominator": 1024,
+    "recovery": 1.0,
+    "cost": 382840
+  },
   "summary": {
     "total_successes": 8192,
     "total_instances": 8192,
@@ -118,6 +141,7 @@
   "notes": [
     "Fixed suite keys (not suite_key=None): every suite is the deterministic cached suite for the key given above.",
     "successes = round(recovery * denominator); evaluate_mask reports recovery as the exact-mean over the same 2048 instances.",
-    "Cost claim is a static read cost from the official compiler; no claim is made about global optimality."
+    "Cost claim is a static read cost from the official compiler; no claim is made about global optimality.",
+    "dev_suite is the leaderboard's deterministic 1,024-instance dev suite (DEV_SUITE_KEY=mask-dev, 128 secrets x 8 repetitions) -- the number the README band row is scored on."
   ]
 }
