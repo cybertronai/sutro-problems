@@ -75,16 +75,16 @@ class ScoringTests(unittest.TestCase):
 
 class AccuracyTargetTests(unittest.TestCase):
     def test_small_exact_boundary_and_rounded_false_positive(self):
-        below = accuracy_target_status(359, 600, "60")
-        at = accuracy_target_status(360, 600, "60")
-        self.assertEqual(f"{100 * 359 / 600:.2g}", "60")
-        self.assertEqual(below["required_correct"], 360)
+        below = accuracy_target_status(669, 1000, "67")
+        at = accuracy_target_status(670, 1000, "67")
+        self.assertEqual(f"{100 * 669 / 1000:.2g}", "67")
+        self.assertEqual(below["required_correct"], 670)
         self.assertFalse(below["meets_accuracy_target"])
         self.assertTrue(at["meets_accuracy_target"])
-        self.assertEqual(at["accuracy_target_percent"], 60.0)
-        self.assertFalse(accuracy_target_status(308, 600, "60")["meets_accuracy_target"])
-        for count in (374, 371, 377):
-            self.assertTrue(accuracy_target_status(count, 600, "60")["meets_accuracy_target"])
+        self.assertEqual(at["accuracy_target_percent"], 67.0)
+        self.assertFalse(accuracy_target_status(660, 1000, "67")["meets_accuracy_target"])
+        for count in (700, 671, 677):
+            self.assertTrue(accuracy_target_status(count, 1000, "67")["meets_accuracy_target"])
 
     def test_medium_exact_decimal_boundary(self):
         below = accuracy_target_status(5888, 6000, "98.14")
@@ -95,19 +95,19 @@ class AccuracyTargetTests(unittest.TestCase):
         self.assertEqual(at["accuracy_target_percent"], 98.14)
 
     def test_large_exact_boundary(self):
-        below = accuracy_target_status(9799, 10000, "98")
-        at = accuracy_target_status(9800, 10000, "98")
-        self.assertEqual(below["required_correct"], 9800)
+        below = accuracy_target_status(9899, 10000, "99")
+        at = accuracy_target_status(9900, 10000, "99")
+        self.assertEqual(below["required_correct"], 9900)
         self.assertFalse(below["meets_accuracy_target"])
         self.assertTrue(at["meets_accuracy_target"])
-        self.assertEqual(at["accuracy_target_percent"], 98.0)
+        self.assertEqual(at["accuracy_target_percent"], 99.0)
 
     def test_published_targets_and_canonical_required_counts(self):
-        expected = {"small": "60", "medium": "98", "large": "98"}
+        expected = {"small": "67", "medium": "98", "large": "99"}
         self.assertEqual(json.loads(ACCURACY_TARGETS_PATH.read_text()), expected)
-        for tier, total, required in (("small", 600, 360),
-                                      ("medium", 6000, 5880),
-                                      ("large", 10000, 9800)):
+        for tier, total, required in (("small", 1000, 670),
+                                      ("medium", 10000, 9800),
+                                      ("large", 10000, 9900)):
             with self.subTest(tier=tier):
                 target = load_accuracy_target(tier)
                 self.assertEqual(target, expected[tier])
@@ -147,6 +147,55 @@ class AccuracyTargetTests(unittest.TestCase):
                 path.write_text(json.dumps({"small": 60}))
                 with self.assertRaisesRegex(ValueError, "percentage string"):
                     load_accuracy_target("small")
+
+
+class PublishedThresholdRegressionTests(unittest.TestCase):
+    """Run the shipped target file through the CLI: published README thresholds."""
+
+    def _run(self, directory: Path, tier: str, total: int, correct: int) -> dict:
+        labels = np.zeros(total, dtype=np.int64)
+        predictions = np.ones(total, dtype=np.int64)
+        predictions[:correct] = 0
+        np.savez(directory / f"{tier}.npz", test_labels=labels)
+        np.save(directory / "predictions.npy", predictions)
+        stdout = io.StringIO()
+        with redirect_stdout(stdout):
+            main(["--predictions", str(directory / "predictions.npy"),
+                  "--tier", tier, "--data-dir", str(directory)])
+        return json.loads(stdout.getvalue())
+
+    def test_small_below_67_percent_does_not_pass(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result = self._run(Path(directory), "small", 1000, 669)
+            self.assertEqual(result["accuracy_target_percent"], 67.0)
+            self.assertEqual(result["required_correct"], 670)
+            self.assertAlmostEqual(result["accuracy"], 0.669)
+            self.assertFalse(result["meets_accuracy_target"])
+
+    def test_small_exactly_67_percent_passes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result = self._run(Path(directory), "small", 1000, 670)
+            self.assertEqual(result["accuracy_target_percent"], 67.0)
+            self.assertEqual(result["required_correct"], 670)
+            self.assertAlmostEqual(result["accuracy"], 0.67)
+            self.assertTrue(result["meets_accuracy_target"])
+
+    def test_large_98_point_9_percent_does_not_pass(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result = self._run(Path(directory), "large", 10000, 9899)
+            self.assertEqual(result["accuracy_target_percent"], 99.0)
+            self.assertEqual(result["required_correct"], 9900)
+            self.assertAlmostEqual(result["accuracy"], 0.9899)
+            self.assertFalse(result["meets_accuracy_target"])
+
+    def test_large_at_least_99_percent_passes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for correct in (9900, 9950):
+                with self.subTest(correct=correct):
+                    result = self._run(Path(directory), "large", 10000, correct)
+                    self.assertEqual(result["accuracy_target_percent"], 99.0)
+                    self.assertEqual(result["required_correct"], 9900)
+                    self.assertTrue(result["meets_accuracy_target"])
 
 
 class PredictionFileTests(unittest.TestCase):
