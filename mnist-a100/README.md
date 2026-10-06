@@ -61,8 +61,9 @@ provisional. ★ identifies an established record.
 | 2026-09-28 | 1,159,909 | 15,818.8 | [py](submissions/ladder-graph-20260928/ladder.py), [report](submissions/ladder-graph-20260928/README.md) | [@SethTS](https://github.com/SethTS) | Ladder 60-1000-500-250-250-250-10, 5,000 steps in a CUDA graph |
 | 2026-09-28 | 676,850 | 6,556.9 | [py](submissions/ladder-triton-20260928/ladder_d3.py), [report](submissions/ladder-triton-20260928/README.md) | [@SethTS](https://github.com/SethTS) | Ladder, 6,500 steps, fused Triton kernels in a CUDA graph |
 | 2026-09-29 | 259,847 | 1,895.4 | [py](submissions/ladder-fast-20260929/ladder_d3.py), [report](submissions/ladder-fast-20260929/README.md) | [@SethTS](https://github.com/SethTS) | Ladder, batch 1,000, 1,200 steps, TF32, fused Triton kernels in a CUDA graph |
-| 2026-09-29 | 201,792 | 1,443.3 | [py](submissions/ladder-sampled-20260929/ladder_d3.py), [report](submissions/ladder-sampled-20260929/README.md) | [@SethTS](https://github.com/SethTS) | Ladder, batch 1,000, 900 steps, labelled rows sampled by loss, TF32, fused Triton kernels in a CUDA graph ★ best |
+| 2026-09-29 | 201,792 | 1,443.3 | [py](submissions/ladder-sampled-20260929/ladder_d3.py), [report](submissions/ladder-sampled-20260929/README.md) | [@SethTS](https://github.com/SethTS) | Ladder, batch 1,000, 900 steps, labelled rows sampled by loss, TF32, fused Triton kernels in a CUDA graph |
 | 2026-09-30 | 253,761 | 1,732.2 | [py](submissions/improved-20260930/ladder_d3.py), [report](submissions/improved-20260930/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | Ladder, 1,100 steps; 8.3% fewer updates; one sandboxed run |
+| 2026-10-05 | 151,404 | 1,157.1 | [py](submissions/ladder-kernel-tuned-20261003/ladder_d3.py), [report](submissions/ladder-kernel-tuned-20261003/README.md) | [@islamborghini](https://github.com/islamborghini) | Sampled Ladder, batch 1,000, 800 steps, TF32; tuned forward and backward Triton kernels; median of three sandboxed runs ★ best |
 
 ## Difficulty = 4 (error ≤ 2.30%)
 
