@@ -40,12 +40,12 @@ values that become live at the same program point:
 | `walk_order_bias` | sort key |
 | - | - |
 | `None` | `(-reads, end - start, id)` |
-| `1.0` | `(end - start) / (reads + 1)` |
+| `1.0` | `((end - start) / (reads + 1), id)` |
 | other `b` | `(end - start) / (reads + b)`, then `-reads`, then `id` |
 
-Raising the denominator weight pushes the ordering toward favouring
-short-lived, read-dense values, which places them in the cheaper low-address
-slots more often.
+Raising the denominator bias reduces the relative influence of read count and
+puts more emphasis on short lifetimes. For this circuit, the resulting address
+assignment lowers the measured static read cost.
 
 **This is a layout change, not a circuit change.** The two IRs are provably the
 same function:
@@ -77,8 +77,9 @@ uses a free coordinate it never visited. Parity rows are consistent
 (`parity_rows_ok: true`), so this is not a malformed input.
 
 The 382,840 submission report estimated this event near `2^-14` and stated that
-the fixed suites "did not bound it". The measurement above bounds it directly:
-**1 miss in 8,192 final-tier instances ≈ 2^-13**, and it is reproduced
+the fixed suites "did not bound it". The observed frequency in these suites is
+**1 miss in 8,192 final-tier instances ≈ 2^-13**; this finite sample does not
+establish a bound on the population failure rate. The miss is reproduced
 identically by all three configurations tested (bias 15.0, bias 1.0, and the
 upstream baseline `generate_packed_scan(5)`), each failing on the same instance
 748. It is a property of the packed-scan family's 14-coordinate recording, not
@@ -94,9 +95,9 @@ The selection surface is exactly three upstream parameters:
 `compact_predicates` (bool), `compact_flow` (bool) and `walk_order_bias`
 (float). The first two were fixed to `True` by the 382,840 record and are not
 re-tuned here. `walk_order_bias` was selected **by static cost alone** —
-`mp._compile_ir(ir, OP_CAP)[1]` — swept over a finite grid and refined by
-hill-climbing on the walk-state order, with recovery never used as the
-objective. No held-out or adjudication suite was consulted during selection.
+`mp._compile_ir(ir, OP_CAP)[1]` — swept over a finite grid, with recovery never
+used as the objective. The submitted variant keeps the accepted walk-state
+order. No held-out or adjudication suite was consulted during selection.
 
 **There is no seed to tune.** `generate_packed_scan` takes no random state and
 no `seed` argument; `bounded_weight_gray_states` enumerates Gray codes
@@ -114,10 +115,12 @@ evaluator at commit
 (`mask_sparse_parity.evaluate_mask`, `engine="vector"`, `SUITE_VERSION =
 "mask-sparse-parity-v1"`). All recovery figures come from
 `mp.evaluate_mask`; all cost figures come from `mp._compile_ir`. No metric was
-computed by any other route. The generator is pure Python with no third-party
-dependency. Layout compaction and slot allocation are integer arithmetic on
-small integers, so the emitted IR and the cost do not depend on the NumPy
-version; only recovery timing is machine-dependent. The audit JSON records the
+computed by any other route. IR generation uses Python arithmetic; the
+generator's evaluator import stack requires NumPy. Layout compaction and slot
+allocation use Python integer and floating-point arithmetic, including the
+floating-point allocation bias.
+The emitted IR and the static cost do not depend on the NumPy version;
+recovery evaluation uses NumPy. The audit JSON records the
 evaluator commit so the numbers are pinned to code.
 
 Note: the previously reported evaluator commit for the 382,840 audit,
@@ -151,6 +154,6 @@ assert result.cost == 382794
 assert result.recovery == 1.0
 ```
 
-SHA-256 of the stored IR, LF-normalised (the committed file uses CRLF
-endings, so the raw-byte digest differs): `6bbebaa34ab25cc3edd1a73fc1fd9b655bce03dfccef6ac893c49f4cdf2bd675`.
-Raw-byte SHA-256 as committed: `92dc8aa49a72f73130028333b3ed7dbe594bb9ca364427a81c5c5207e915bc7d`.
+SHA-256 of the committed IR: `6bbebaa34ab25cc3edd1a73fc1fd9b655bce03dfccef6ac893c49f4cdf2bd675`.
+The committed file uses LF endings, so its raw-byte and LF-normalised digests
+are identical.
