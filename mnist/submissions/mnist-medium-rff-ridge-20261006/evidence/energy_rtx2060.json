@@ -1,0 +1,424 @@
+{
+ "WARNING": "Measured on NVIDIA GeForce RTX 2060 (12288 MiB, driver 617.14). THIS IS NOT AN A100. These numbers are a relative frontier for choosing between variants. They must NOT be entered in the A100 table of mnist/README.md and must NOT be compared with the A100 rows there.",
+ "method": "idle-adjusted NVML, cumulative counter stamped at interval edges plus trapezoid of 50 ms sampled power; every active window bracketed by idle-before/idle-after; sham idle-only controls published as the subtraction noise; see energy/README.md",
+ "scope": "one complete training-and-prediction cycle for draw 20261001, device resident, warm repeated execution; dataset loading, host<->device transfer, allocation and CUDA graph capture excluded; not cold end-to-end, not a wall-socket measurement; 11-draw protocol = 11x per draw because no state crosses draws",
+ "hardware": {
+  "gpu": "NVIDIA GeForce RTX 2060",
+  "uuid": "GPU-c8789301-a75a-c9eb-dd70-dde8d9718883",
+  "driver": "617.14",
+  "vbios": "90.06.6a.00.56",
+  "power_limit_w": 184.0,
+  "python": "3.10.11"
+ },
+ "software": {
+  "torch": "2.5.1+cu121",
+  "cuda": "12.1",
+  "numpy": "2.2.6",
+  "python": "3.10"
+ },
+ "idle_baseline_40_one_second_windows": {
+  "counter": {
+   "min": 45.76920202643681,
+   "median": 46.30104801096964,
+   "mean": 46.5661356481481,
+   "max": 50.9683692862151,
+   "stdev": 1.2688754733400578
+  },
+  "sampled_power_reading_median_w": 47.1055,
+  "util_median_percent": 1.0,
+  "temperature_c_median": 53.0,
+  "note": "no CUDA context open in the sampling process; NVML reported 31 compute processes on this device, so idle windows inside the runs read 38.0-41.7 W rather than 46.3 W, which is why each active window is bracketed and subtracted pairwise"
+ },
+ "caveats": [
+  "the counter and the sampled-power readouts share the same sensors and are not an independent check",
+  "idle noise 1.27 W against active power 60-150 W gives roughly +/-1.5 % error per task",
+  "for CPU-resident variants the GPU is idle by construction and the idle-adjusted value is below this method resolution: the sham is 372000-394000 mJ per nominal task against a spread of +/-6000 mJ across rounds. \"about 0 mJ\" means below resolution, not measured zero, and says nothing about host CPU, RAM or PCIe",
+  "GPU variants have shams 4-7x smaller than the result, so their idle-adjusted numbers are resolved",
+  "spread across 3 rounds is 5-20 % of the median for GPU variants",
+  "none of these numbers transfers numerically to an A100: on Ampere float64 runs at 1/2 of float32 rather than 1/64, and idle draw is higher"
+ ],
+ "variants": [
+  {
+   "label": "RFF-ridge D=2448, float32 products + float64 accumulation, chunk 2048",
+   "variant": "rff-cuda-f32p-chunk2048-D2448",
+   "idle_adjusted_mj_per_draw_counter": 47541.07815136759,
+   "idle_adjusted_mj_per_draw_sampled_power": 56217.72534641627,
+   "counter_all_rounds": [
+    47541.07815136759,
+    44939.70976978982,
+    54105.714166314036
+   ],
+   "device_ms_per_draw": 876.5412248883929,
+   "wall_ms_per_draw": 876.5330285698708,
+   "peak_device_bytes": 220134912,
+   "sham_noise_mj_per_nominal_draw_counter": [
+    56263.57142857143,
+    53775.0,
+    55792.857142857145
+   ],
+   "rounds": 3,
+   "idle_windows_bracketing_runs": {
+    "counter": 41.38669672924311,
+    "integrated_power": 49.523340819081895
+   },
+   "accuracy_total_correct": 106747,
+   "band3_margin": 47
+  },
+  {
+   "label": "RFF-ridge D=2448, float64 on device",
+   "variant": "rff-cuda-f64-D2448",
+   "idle_adjusted_mj_per_draw_counter": 187643.70168416883,
+   "idle_adjusted_mj_per_draw_sampled_power": 223984.67030285497,
+   "counter_all_rounds": [
+    184495.54962173142,
+    191103.34531202857,
+    187643.70168416883
+   ],
+   "device_ms_per_draw": 4016.440185546875,
+   "wall_ms_per_draw": 4016.410750016803,
+   "peak_device_bytes": 477570560,
+   "sham_noise_mj_per_nominal_draw_counter": [
+    194624.5,
+    193690.0,
+    191956.5
+   ],
+   "rounds": 3,
+   "idle_windows_bracketing_runs": {
+    "counter": 41.015804268527916,
+    "integrated_power": 49.64568652247702
+   },
+   "accuracy_total_correct": 106735,
+   "band3_margin": 35
+  },
+  {
+   "label": "RFF-ridge D=2448, blockwise Gram float64, chunk 2048",
+   "variant": "rff-cuda-f64-chunk2048-D2448",
+   "idle_adjusted_mj_per_draw_counter": 196251.4674192685,
+   "idle_adjusted_mj_per_draw_sampled_power": 219942.3778019449,
+   "counter_all_rounds": [
+    196251.4674192685,
+    199415.17609745922,
+    192026.51238524402
+   ],
+   "device_ms_per_draw": 4238.21875,
+   "wall_ms_per_draw": 4238.195999991149,
+   "peak_device_bytes": 428965376,
+   "sham_noise_mj_per_nominal_draw_counter": [
+    390099.0,
+    392996.0,
+    395591.0
+   ],
+   "rounds": 3,
+   "idle_windows_bracketing_runs": {
+    "counter": 41.56493359325354,
+    "integrated_power": 49.95593284189858
+   },
+   "accuracy_total_correct": 106735,
+   "band3_margin": 35
+  },
+  {
+   "label": "RFF-ridge D=4000, float64 on device",
+   "variant": "rff-cuda-f64-D4000",
+   "idle_adjusted_mj_per_draw_counter": 530357.8425099727,
+   "idle_adjusted_mj_per_draw_sampled_power": 616151.3810246006,
+   "counter_all_rounds": [
+    509110.36391147453,
+    530357.8425099727,
+    531322.909651697
+   ],
+   "device_ms_per_draw": 10790.84765625,
+   "wall_ms_per_draw": 10790.782600000966,
+   "peak_device_bytes": 808220672,
+   "sham_noise_mj_per_nominal_draw_counter": [
+    384232.0,
+    390876.0,
+    387749.0
+   ],
+   "rounds": 3,
+   "idle_windows_bracketing_runs": {
+    "counter": 41.48005447879753,
+    "integrated_power": 50.03594412461186
+   },
+   "accuracy_total_correct": 106900,
+   "band3_margin": 200
+  },
+  {
+   "label": "RFF-ridge D=2448, float32 rows + float64 Gram (float64 in products too)",
+   "variant": "rff-cuda-f32f64g-D2448",
+   "idle_adjusted_mj_per_draw_counter": 167813.78940055444,
+   "idle_adjusted_mj_per_draw_sampled_power": 197101.82195616397,
+   "counter_all_rounds": [
+    152484.3339198522,
+    167813.78940055444,
+    169663.98053467966
+   ],
+   "device_ms_per_draw": 3847.25341796875,
+   "wall_ms_per_draw": 3847.2320000000764,
+   "peak_device_bytes": 362055680,
+   "sham_noise_mj_per_nominal_draw_counter": [
+    197081.5,
+    197821.0,
+    194883.5
+   ],
+   "rounds": 3,
+   "idle_windows_bracketing_runs": {
+    "counter": 41.68016634203931,
+    "integrated_power": 49.518550331696595
+   },
+   "accuracy_total_correct": 106735,
+   "band3_margin": 35
+  },
+  {
+   "label": "RFF-ridge D=2448, 6000-row train subset (FAILS 3% band)",
+   "variant": "rff-cuda-f32p-chunk2048-sub6000-D2448",
+   "idle_adjusted_mj_per_draw_counter": 39821.804844226404,
+   "idle_adjusted_mj_per_draw_sampled_power": 48916.97713186514,
+   "counter_all_rounds": [
+    35011.07034755409,
+    39821.804844226404,
+    42326.75184298369
+   ],
+   "device_ms_per_draw": 827.4077845982143,
+   "wall_ms_per_draw": 827.4004571389274,
+   "peak_device_bytes": 217488384,
+   "sham_noise_mj_per_nominal_draw_counter": [
+    57178.0,
+    53676.57142857143,
+    55431.71428571428
+   ],
+   "rounds": 3,
+   "idle_windows_bracketing_runs": {
+    "counter": 40.715024937815464,
+    "integrated_power": 49.4465263633992
+   },
+   "accuracy_total_correct": 106054,
+   "band3_margin": -646
+  },
+  {
+   "label": "RFF-ridge D=2448, 6000-row train subset, float64 (FAILS 3% band)",
+   "variant": "rff-cuda-f64-sub6000-D2448",
+   "idle_adjusted_mj_per_draw_counter": 121876.4959424325,
+   "idle_adjusted_mj_per_draw_sampled_power": 146173.1204659496,
+   "counter_all_rounds": [
+    121876.4959424325,
+    115702.24773250408,
+    138011.8611289349
+   ],
+   "device_ms_per_draw": 2713.587646484375,
+   "wall_ms_per_draw": 2713.569150015246,
+   "peak_device_bytes": 423925248,
+   "sham_noise_mj_per_nominal_draw_counter": [
+    195307.0,
+    188316.0,
+    195141.5
+   ],
+   "rounds": 3,
+   "idle_windows_bracketing_runs": {
+    "counter": 39.72457951701634,
+    "integrated_power": 49.36514004046664
+   },
+   "accuracy_total_correct": 106054,
+   "band3_margin": -646
+  },
+  {
+   "label": "RFF-ridge D=2448, chunk 512",
+   "variant": "rff-cuda-f32p-chunk512-D2448",
+   "idle_adjusted_mj_per_draw_counter": 59226.28703874852,
+   "idle_adjusted_mj_per_draw_sampled_power": 65878.96643169026,
+   "counter_all_rounds": [
+    59226.28703874852,
+    59691.93395847317,
+    53782.88939957348
+   ],
+   "device_ms_per_draw": 1099.990234375,
+   "wall_ms_per_draw": 1099.9836400034837,
+   "peak_device_bytes": 220134912,
+   "sham_noise_mj_per_nominal_draw_counter": [
+    77614.8,
+    77635.8,
+    76013.8
+   ],
+   "rounds": 3,
+   "idle_windows_bracketing_runs": {
+    "counter": 39.61986951129297,
+    "integrated_power": 49.92708866101819
+   },
+   "accuracy_total_correct": 106733,
+   "band3_margin": 33
+  },
+  {
+   "label": "RFF-ridge D=2448, chunk 1024",
+   "variant": "rff-cuda-f32p-chunk1024-D2448",
+   "idle_adjusted_mj_per_draw_counter": 52336.93948481363,
+   "idle_adjusted_mj_per_draw_sampled_power": 60617.58392397378,
+   "counter_all_rounds": [
+    52336.93948481363,
+    44996.57889877496,
+    62397.35023566009
+   ],
+   "device_ms_per_draw": 970.0757649739584,
+   "wall_ms_per_draw": 970.0696333311498,
+   "peak_device_bytes": 220134912,
+   "sham_noise_mj_per_nominal_draw_counter": [
+    66623.0,
+    62802.166666666664,
+    62868.0
+   ],
+   "rounds": 3,
+   "idle_windows_bracketing_runs": {
+    "counter": 41.3371796126052,
+    "integrated_power": 50.265632706471735
+   },
+   "accuracy_total_correct": 106745,
+   "band3_margin": 45
+  },
+  {
+   "label": "RFF-ridge D=2448, chunk 4000",
+   "variant": "rff-cuda-f32p-chunk4000-D2448",
+   "idle_adjusted_mj_per_draw_counter": 47001.64798013932,
+   "idle_adjusted_mj_per_draw_sampled_power": 55621.95194450055,
+   "counter_all_rounds": [
+    47001.64798013932,
+    42091.645896080336,
+    50239.18972909936
+   ],
+   "device_ms_per_draw": 944.3511555989584,
+   "wall_ms_per_draw": 944.3343166688768,
+   "peak_device_bytes": 220134912,
+   "sham_noise_mj_per_nominal_draw_counter": [
+    62827.0,
+    71890.5,
+    66160.16666666667
+   ],
+   "rounds": 3,
+   "idle_windows_bracketing_runs": {
+    "counter": 41.113342179947786,
+    "integrated_power": 51.08192964116983
+   },
+   "accuracy_total_correct": 106732,
+   "band3_margin": 32
+  },
+  {
+   "label": "PCA-QDA reference (upstream), float32 on device",
+   "variant": "pcaqda-cuda-f32",
+   "idle_adjusted_mj_per_draw_counter": 140.94009472977984,
+   "idle_adjusted_mj_per_draw_sampled_power": 165.896388793929,
+   "counter_all_rounds": [
+    140.94009472977984,
+    183.3912454048702,
+    76.28127015219684
+   ],
+   "device_ms_per_draw": 129.66345932904412,
+   "wall_ms_per_draw": 129.66039803851504,
+   "peak_device_bytes": 137191936,
+   "sham_noise_mj_per_nominal_draw_counter": [
+    7775.019607843137,
+    7620.156862745098,
+    7762.431372549019
+   ],
+   "rounds": 3,
+   "idle_windows_bracketing_runs": {
+    "counter": 39.33953306956056,
+    "integrated_power": 46.465692998954765
+   },
+   "accuracy_total_correct": 105224,
+   "band3_margin": -1476
+  },
+  {
+   "label": "RFF-ridge D=2448, NumPy float32, CPU-resident",
+   "variant": "rff-cpu-f32-D2448",
+   "idle_adjusted_mj_per_draw_counter": -2181.5376754073554,
+   "idle_adjusted_mj_per_draw_sampled_power": -534.4826895710071,
+   "counter_all_rounds": [
+    -2181.5376754073554,
+    -2473.583364746844,
+    -2144.2828397572953
+   ],
+   "device_ms_per_draw": 6911.599609375,
+   "wall_ms_per_draw": 6911.263199988753,
+   "peak_device_bytes": null,
+   "sham_noise_mj_per_nominal_draw_counter": [
+    390989.0,
+    385406.0,
+    387226.0
+   ],
+   "rounds": 3,
+   "idle_windows_bracketing_runs": {
+    "counter": 38.83417880026528,
+    "integrated_power": 46.425471267861234
+   },
+   "accuracy_total_correct": 106746,
+   "band3_margin": 46
+  },
+  {
+   "label": "RFF-ridge D=2448, NumPy float64, CPU-resident",
+   "variant": "rff-cpu-f64-D2448",
+   "idle_adjusted_mj_per_draw_counter": 5471.795453929076,
+   "idle_adjusted_mj_per_draw_sampled_power": -826.0407473940177,
+   "counter_all_rounds": [
+    5724.820140193856,
+    5471.795453929076,
+    -6327.097420239568
+   ],
+   "device_ms_per_draw": 11865.798828125,
+   "wall_ms_per_draw": 11865.55899999803,
+   "peak_device_bytes": null,
+   "sham_noise_mj_per_nominal_draw_counter": [
+    393817.0,
+    385512.0,
+    388238.0
+   ],
+   "rounds": 3,
+   "idle_windows_bracketing_runs": {
+    "counter": 38.80659112101996,
+    "integrated_power": 46.434919315260984
+   },
+   "accuracy_total_correct": 106735,
+   "band3_margin": 35
+  },
+  {
+   "label": "RFF-ridge D=4000, NumPy float64, CPU-resident",
+   "variant": "rff-cpu-f64-D4000",
+   "idle_adjusted_mj_per_draw_counter": 30563.03944871786,
+   "idle_adjusted_mj_per_draw_sampled_power": -720.8486438212276,
+   "counter_all_rounds": [
+    42599.72306184659,
+    30563.03944871786,
+    9379.241515624359
+   ],
+   "device_ms_per_draw": 26605.609375,
+   "wall_ms_per_draw": 26605.32949998742,
+   "peak_device_bytes": null,
+   "sham_noise_mj_per_nominal_draw_counter": [
+    372246.0,
+    392923.0,
+    396157.0
+   ],
+   "rounds": 3,
+   "idle_windows_bracketing_runs": {
+    "counter": 37.97968542304149,
+    "integrated_power": 46.45516098528451
+   },
+   "accuracy_total_correct": 106900,
+   "band3_margin": 200
+  }
+ ],
+ "not_measured": [
+  {
+   "item": "A100 energy, time, peak memory",
+   "reason": "no A100 available; harness and commands supplied in energy/README.md"
+  },
+  {
+   "item": "MLP row of upstream medium96-grid-20260912 on our hardware",
+   "reason": "that submission is written against Triton; triton is not installable in our environment (no module named triton, no official Windows wheels for torch-cu121, no nvcc) and rewriting their frozen learner is outside a measurement exercise. That row is also a 96 % / 5 % band entry, so it would not be a like-for-like comparison"
+  },
+  {
+   "item": "grid-model (spatial computer) metrics",
+   "reason": "the affine IR has no cos/sin/exp opcode and no sqrt; cos(U W + b) is the defining feature of this method and a polynomial surrogate is a different numerical model with a different cost. Nested loops are not the obstacle: loop(...) nests and build_mlp nests five deep"
+  },
+  {
+   "item": "trainable CNN",
+   "reason": "out of budget; no claim is made"
+  }
+ ]
+}
