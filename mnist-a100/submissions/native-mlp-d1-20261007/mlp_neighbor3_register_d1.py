@@ -240,7 +240,7 @@ def classify(train_x,train_y,test_x):
   from torch.utils.cpp_extension import load
   os.environ.setdefault("TORCH_CUDA_ARCH_LIST","8.0")
   tag=hashlib.sha256((CPP+CUDA).encode()).hexdigest()[:12]
-  path=Path("/tmp")/("sutro-neighbor-"+tag);path.mkdir(exist_ok=True)
+  path=Path("/tmp")/("sutro-neighbor-"+tag+str(os.getuid()));path.mkdir(exist_ok=True)
   (path/"main.cpp").write_text(CPP);(path/"main.cu").write_text(CUDA)
   EXT=load(name="sutro_neighbor_"+tag,sources=[str(path/"main.cpp"),str(path/"main.cu")],extra_cuda_cflags=["-O3","-lineinfo","-DGC=0.03f"],extra_ldflags=["-lcublas"],verbose=False)
  return EXT.classify(train_x,train_y,test_x)
