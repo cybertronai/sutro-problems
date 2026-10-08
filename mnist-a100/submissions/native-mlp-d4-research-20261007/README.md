@@ -1,3 +1,5 @@
+> Historical research snapshot. The revised standalone candidate and three passing sandbox evaluations are in [native-mlp-d4-20261007](../native-mlp-d4-20261007/README.md). Results below describe this earlier snapshot.
+
 # Difficulty 4 research candidate — not qualified
 
 This draft preserves a reproducible multi-file research setup for review. It is not a valid standalone submission and does not claim a difficulty-4 pass or change the leaderboard.
