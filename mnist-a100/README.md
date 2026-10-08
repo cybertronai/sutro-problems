@@ -32,8 +32,8 @@ python run_modal.py example.py:mlp --difficulty 1 --runs 3   # official: three M
 
 The rules are in [`mnist.py`](mnist.py)'s docstring.
 
-Each row is a separate submission by the listed entrant; source attribution is
-in its report. The new variants below have one verification run each and are
+Each row is a separate submission by the listed entrant; source attribution and
+verification scope are in its report. Rows with one verification run are
 provisional. ★ identifies an established record.
 
 ## Difficulty = 1 (error ≤ 5.40%)
@@ -42,8 +42,9 @@ provisional. ★ identifies an established record.
 | - | -: | -: | - | - | - |
 | 2026-09-25 | 29,662 | 700.1 | [py](example.py), [report](energy/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | `example.py` baseline: MLP 60-1024-1024-10, 400 steps |
 | 2026-09-26 | 2,648 | 191.3 | [py](energy/entries/mlp_k1_w1024_s100_b512.py), [report](energy/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | MLP 60-1024-1024-10, 100 steps |
-| 2026-09-26 | 2,131 | 61.7 | [py](submissions/graph-mlp-20260926/fast_mlp.py), [report](submissions/graph-mlp-20260926/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | MLP 60-256-256-10, 200 steps in a CUDA graph ★ best |
+| 2026-09-26 | 2,131 | 61.7 | [py](submissions/graph-mlp-20260926/fast_mlp.py), [report](submissions/graph-mlp-20260926/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | MLP 60-256-256-10, 200 steps in a CUDA graph |
 | 2026-09-30 | 3,634 | 351.0 | [py](submissions/improved-20260930/mlp_d1.py), [report](submissions/improved-20260930/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | MLP, 200 steps, TF32 and fused AdamW; one sandboxed run |
+| 2026-10-08 | 530 | 6.7 | [py](submissions/native-mlp-d1-20261007/mlp_neighbor3_register_d1.py), [report](submissions/native-mlp-d1-20261007/README.md) | [@sjbaebae](https://github.com/sjbaebae) | Two 60-256-256-10 MLPs, 30 updates, three-neighbor voting; median of three sandboxed Modal runs ★ best |
 
 ## Difficulty = 2 (error ≤ 3.40%)
 
