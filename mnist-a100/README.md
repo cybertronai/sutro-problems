@@ -52,8 +52,9 @@ provisional. ★ identifies an established record.
 | - | -: | -: | - | - | - |
 | 2026-09-26 | 200,870 | 927.3 | [py](energy/entries/mlp_k16_w1024_s400_b512.py), [report](energy/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | 16 MLPs 60-1024-1024-10, 400 steps |
 | 2026-09-26 | 14,436 | 252.1 | [py](energy/entries/mlpg_k4_w256_s800_b512.py), [report](energy/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | 4 MLPs 60-256-256-10, 800 steps in a CUDA graph |
-| 2026-09-29 | 8,071 | 38.3 | [py](submissions/kernel-pcg-20260929/kernel_pcg.py), [report](submissions/kernel-pcg-20260929/README.md) | [@islamborghini](https://github.com/islamborghini) | Non-neural RBF kernel ridge, one learned metric update, 16-step Nyström-preconditioned CG ★ best |
+| 2026-09-29 | 8,071 | 38.3 | [py](submissions/kernel-pcg-20260929/kernel_pcg.py), [report](submissions/kernel-pcg-20260929/README.md) | [@islamborghini](https://github.com/islamborghini) | Non-neural RBF kernel ridge, one learned metric update, 16-step Nyström-preconditioned CG |
 | 2026-09-30 | 132,635 | 761.9 | [py](submissions/improved-20260930/mlp_d2.py), [report](submissions/improved-20260930/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | 8 MLPs, 500 steps, EMA 0.992; one sandboxed run |
+| 2026-10-08 | 1,333 | 14.6 | [py](submissions/native-mlp-d2-20261007/mlp_neighbor3_register_d2.py), [report](submissions/native-mlp-d2-20261007/README.md) | [@sjbaebae](https://github.com/sjbaebae) | Two 60-256-256-10 MLPs, 120 updates, three-neighbor voting; median of three sandboxed Modal runs ★ best |
 
 ## Difficulty = 3 (error ≤ 2.70%)
 
