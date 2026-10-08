@@ -32,6 +32,12 @@
     "k_sweep",
     "output_bound"
   ],
+  "timing_table_keys": {
+    "square": "squares",
+    "batch": "batch",
+    "k_sweep": "k_sweep",
+    "output_bound": "output_bound"
+  },
   "squares": [
     {
       "family": "square",
@@ -446,7 +452,13 @@
       "cases": [
         {
           "case": "int8_hot_static_weight",
-          "min_bytes_read": 69730304,
+          "weight_matrices_selected_per_call": 1,
+          "weight_bank_matrices": 1,
+          "weight_bank_working_set_bytes": 67108864,
+          "assumed_a_read_bytes_per_call": 524288,
+          "assumed_selected_weight_read_bytes_per_call": 67108864,
+          "assumed_output_write_bytes_per_call": 2097152,
+          "one_pass_transfer_bytes_per_call": 69730304,
           "hbm_floor_s_at_analysis_bandwidth": 3.419828543403629e-05,
           "measured_s": 5.714294636705751e-05,
           "measured_over_hbm_floor": 1.670930154591471,
@@ -454,7 +466,13 @@
         },
         {
           "case": "b1_hot_static_weight",
-          "min_bytes_read": 10551296,
+          "weight_matrices_selected_per_call": 1,
+          "weight_bank_matrices": 1,
+          "weight_bank_working_set_bytes": 8388608,
+          "assumed_a_read_bytes_per_call": 65536,
+          "assumed_selected_weight_read_bytes_per_call": 8388608,
+          "assumed_output_write_bytes_per_call": 2097152,
+          "one_pass_transfer_bytes_per_call": 10551296,
           "hbm_floor_s_at_analysis_bandwidth": 5.174740559097597e-06,
           "measured_s": 9.236570264472336e-06,
           "measured_over_hbm_floor": 1.784933980551687,
@@ -462,23 +480,35 @@
         },
         {
           "case": "int8_rotating8_weights",
-          "min_bytes_read": 539492352,
-          "hbm_floor_s_at_analysis_bandwidth": 0.00026458673467385976,
+          "weight_matrices_selected_per_call": 1,
+          "weight_bank_matrices": 8,
+          "weight_bank_working_set_bytes": 536870912,
+          "assumed_a_read_bytes_per_call": 524288,
+          "assumed_selected_weight_read_bytes_per_call": 67108864,
+          "assumed_output_write_bytes_per_call": 2097152,
+          "one_pass_transfer_bytes_per_call": 69730304,
+          "hbm_floor_s_at_analysis_bandwidth": 3.419828543403629e-05,
           "measured_s": 5.704080710631672e-05,
-          "measured_over_hbm_floor": 0.21558453101070055,
-          "consistent_with_streaming_from_hbm": false
+          "measured_over_hbm_floor": 1.6679434767669994,
+          "consistent_with_streaming_from_hbm": true
         },
         {
           "case": "b1_rotating8_weights",
-          "min_bytes_read": 69271552,
-          "hbm_floor_s_at_analysis_bandwidth": 3.3973296714075525e-05,
+          "weight_matrices_selected_per_call": 1,
+          "weight_bank_matrices": 8,
+          "weight_bank_working_set_bytes": 67108864,
+          "assumed_a_read_bytes_per_call": 65536,
+          "assumed_selected_weight_read_bytes_per_call": 8388608,
+          "assumed_output_write_bytes_per_call": 2097152,
+          "one_pass_transfer_bytes_per_call": 10551296,
+          "hbm_floor_s_at_analysis_bandwidth": 5.174740559097597e-06,
           "measured_s": 1.096453254347356e-05,
-          "measured_over_hbm_floor": 0.3227397280797547,
-          "consistent_with_streaming_from_hbm": false
+          "measured_over_hbm_floor": 2.1188564756540416,
+          "consistent_with_streaming_from_hbm": true
         }
       ],
-      "rotating8_int8_consistent_with_hbm_bound": false,
-      "note": "consistency flag is a floor check, not a roofline attribution: a measured call faster than its own HBM byte floor cannot be explained by HBM streaming alone."
+      "rotating8_int8_consistent_with_hbm_bound": true,
+      "note": "One weight matrix is selected per call; eight calls visit the rotating bank. Times assume A and the selected B are read from HBM and C is written once. A time above this estimate is compatible with that traffic, not proof of HBM attribution. Actual traffic can be reduced by cache reuse."
     }
   },
   "roofline": {
@@ -486,7 +516,7 @@
     "analysis_bandwidth_source": "selected from hardware.gpu_memory_bytes by canonical_hbm_bandwidth_GB_per_s",
     "raw_json_bandwidth_GB_per_s": 1555,
     "raw_json_bandwidth_matches_hardware": false,
-    "raw_json_bandwidth_warning": "Raw JSON carries 1555 GB/s, the A100-40GB part, while hardware.gpu_memory_bytes identifies the 80GB SXM4; this build therefore derives the roofline at 2039.0 GB/s and does not copy the raw constant.",
+    "raw_json_bandwidth_warning": "Raw JSON carries 1555 GB/s, while the supported SXM4 device capacity selects 2039.0 GB/s; derived rooflines use the hardware-selected value without changing the raw record.",
     "int8_peak_TOPS": 624.0,
     "b1_peak_TOPS": 4992.0,
     "peak_ratio": 8.0,

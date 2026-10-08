@@ -41,7 +41,8 @@ and energy measurements are unaffected.
 
 The bandwidth is no longer taken from the raw constant. It is selected from
 `hardware.gpu_memory_bytes` by `canonical_hbm_bandwidth_GB_per_s()`, which
-returns 2,039 GB/s at or above the 80GB part's capacity and 1,555 GB/s below it,
+uses a 60 GiB discriminator between the supported 40GB and 80GB SXM4 parts,
+returning 2,039 GB/s for the 80GB part and 1,555 GB/s for the 40GB part,
 so a future run on the requested 40GB part derives its own correct roofline.
 `derived.json` records both the derived and the raw constants under
 `roofline.raw_json_bandwidth_GB_per_s` and `roofline.raw_json_bandwidth_matches_hardware`.
@@ -78,12 +79,21 @@ requires a new A100 run, not an edit.
 
 ## Weight-residency caveat
 
-The eight-rotating-weights panel reports 5.45x less energy. Its original
-explanation ("neither bank fits L2, so both paths are bandwidth-bound") is not
-supported by the data and is left uncorrected rather than rewritten.
-`derived.json` `cache.hbm_floor_consistency` now emits each weight-residency
-call's HBM byte floor beside its measured time: `int8_rotating8_weights`
-measures 0.0572 ms against a 0.2646 ms floor for the 512 MiB bank, i.e. 4.6x
-faster than streaming that bank from HBM can allow, and essentially equal to
-its own single-weight hot time. Whatever produced that number, it is not an
-HBM-streaming measurement, so the bandwidth-bound reading does not follow.
+The eight-rotating-weights panel reports 5.45x less energy. The harness selects
+one weight matrix per timed GEMM call; eight successive calls visit the full
+bank. The 512 MiB INT8 bank and 64 MiB packed bank are cache working sets, while
+each call selects a 64 MiB INT8 matrix or an 8 MiB packed matrix.
+
+`derived.json` `cache.hbm_floor_consistency` distinguishes those working sets
+from per-call traffic. Assuming A and the selected B are read from HBM and the
+S32 output is written once, the traffic is 69,730,304 bytes for INT8 and
+10,551,296 bytes for B1. At 2,039 GB/s the one-pass estimates are 0.0342 ms and
+0.00517 ms, respectively. The measured CUDA-event medians are 0.0570 ms and
+0.0110 ms, both compatible with those transfers. Charging the entire bank to
+one call would incorrectly multiply its weight traffic by eight.
+
+Bank capacity exceeding L2 does not establish that the stage is bandwidth
+limited, and a measured time above a one-pass estimate does not prove HBM
+attribution. Cache reuse can reduce actual HBM traffic. The measured 5.45x
+energy result is preserved; identifying the limiting resource would require
+memory-traffic profiling or further measurements.

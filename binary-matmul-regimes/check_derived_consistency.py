@@ -13,9 +13,14 @@ Run with no arguments:
 
 from __future__ import annotations
 
+import ast
+import copy
 import csv
+import importlib.util
 import json
+import math
 import shutil
+import statistics
 import subprocess
 import sys
 import tempfile
@@ -28,6 +33,7 @@ DERIVED_PATH = HERE / "derived.json"
 CSV_PATH = HERE / "results.csv"
 HTML_PATH = HERE / "index.html"
 BUILDER = HERE / "build_report_data.py"
+HARNESS = HERE / "modal_b1_int8_sweep.py"
 
 failures: list[str] = []
 
@@ -56,6 +62,82 @@ def rebuilt_bytes() -> tuple[bytes, bytes]:
         )
 
 
+def harness_call_semantics() -> dict:
+    """Run the real rotating loops and timing normalization with harmless mocks."""
+    names = {"int8_rotating8", "b1_rotating8", "calibrated_timing"}
+    nodes = [
+        node for node in ast.walk(ast.parse(HARNESS.read_text()))
+        if isinstance(node, ast.FunctionDef) and node.name in names
+    ]
+    if len(nodes) != len(names):
+        raise ValueError("Expected rotating runners and timing normalization in harness")
+    seen = {"int8": [], "b1": []}
+
+    class MockTorch:
+        def _int_mm(self, a, b, out=None):
+            seen["int8"].append(b)
+
+    def launch(function, a, b, c, m, n, k):
+        seen["b1"].append(b)
+
+    def event_duration(runner, repetitions):
+        before = len(seen["int8"])
+        runner(repetitions)
+        if len(seen["int8"]) - before != repetitions:
+            raise ValueError("A timing repetition must launch exactly one GEMM")
+        return 2.0 * repetitions
+
+    namespace = {
+        "torch": MockTorch(), "launch": launch,
+        "a8": None, "c8": None, "a1": None, "c1": None,
+        "cache_function": None, "b8_views": list(range(8)),
+        "b1_banks": list(range(8)), "m": 64, "n": 8192, "k": 8192,
+        "event_duration": event_duration, "timing_target_s": 0.08,
+        "math": math, "statistics": statistics,
+    }
+    exec(compile(ast.Module(body=nodes, type_ignores=[]), str(HARNESS), "exec"), namespace)
+    namespace["int8_rotating8"](16)
+    namespace["b1_rotating8"](16)
+    selected = {label: values.copy() for label, values in seen.items()}
+    timing = namespace["calibrated_timing"](namespace["int8_rotating8"])
+    return {"selected_weights": selected, "seconds_per_call": timing["seconds_per_call_median"]}
+
+
+def synthetic_builder_checks(raw: dict) -> dict:
+    """Exercise new-family coverage and the supported matching 40GB hardware."""
+    spec = importlib.util.spec_from_file_location("report_builder", BUILDER)
+    builder = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(builder)
+    augmented = copy.deepcopy(raw)
+    extra = copy.deepcopy(raw["timing_results"][0])
+    extra["family"] = "synthetic_future_family"
+    augmented["timing_results"].append(extra)
+    with tempfile.TemporaryDirectory() as scratch:
+        target = Path(scratch)
+        builder.RAW_PATH = target / "raw.json"
+        builder.CSV_PATH = target / "results.csv"
+        builder.RAW_PATH.write_text(json.dumps(augmented))
+        result = builder.build()
+        builder.write_csv(result)
+        with builder.CSV_PATH.open() as handle:
+            rows = list(csv.DictReader(handle))
+    table_key = result["timing_table_keys"][extra["family"]]
+    forty_gb = copy.deepcopy(raw)
+    forty_gb["hardware"]["gpu_memory_bytes"] = 42_405_855_232
+    bandwidth = builder.canonical_hbm_bandwidth_GB_per_s(
+        forty_gb["hardware"]["gpu_memory_bytes"]
+    )
+    audit = builder.bandwidth_audit(forty_gb, bandwidth)
+    return {
+        "new_family_present": result[table_key][0]["family"] == extra["family"]
+        and any(row["family"] == extra["family"] for row in rows),
+        "all_csv_rows_present": len(rows) == len(augmented["timing_results"]),
+        "matching_40gb_bandwidth": bandwidth == 1555.0
+        and audit["raw_json_bandwidth_matches_hardware"] is True
+        and audit["raw_json_bandwidth_warning"] is None,
+    }
+
+
 def main() -> int:
     raw = json.loads(RAW_PATH.read_text())
     derived = json.loads(DERIVED_PATH.read_text())
@@ -82,7 +164,7 @@ def main() -> int:
     }
     check(
         "results.csv covers every raw timing shape",
-        raw_shapes == csv_shapes,
+        raw_shapes == csv_shapes and len(rows) == len(raw["timing_results"]),
         f"{len(raw_shapes)} raw shapes vs {len(csv_shapes)} csv rows",
     )
     check(
@@ -105,7 +187,11 @@ def main() -> int:
         pairs = (
             ("int8_ms", source["timings"]["int8"]["seconds_per_call_median"] * 1e3),
             ("b1_prepacked_ms", source["timings"]["b1_prepacked"]["seconds_per_call_median"] * 1e3),
+            ("b1_pack_a_ms", source["timings"]["b1_including_dynamic_a_pack"]["seconds_per_call_median"] * 1e3),
+            ("b1_pack_both_ms", source["timings"]["b1_including_both_packs"]["seconds_per_call_median"] * 1e3),
             ("speedup_prepacked", source["speedup_b1_prepacked_over_int8"]),
+            ("speedup_pack_a", source["speedup_b1_pack_a_over_int8"]),
+            ("speedup_pack_both", source["speedup_b1_pack_both_over_int8"]),
             ("int8_tops", source["effective_int8_TOPS"]),
             ("b1_tops", source["effective_b1_TOPS"]),
         )
@@ -174,26 +260,45 @@ def main() -> int:
         "2.944 ms" in html and "0.37083 ms" in html and "A100-SXM4-40GB" in html,
     )
     check(
-        "rotating-eight explanation marked unconfirmed by data",
-        "not confirmed by the data" in html,
+        "rotating-bank capacity distinguished from per-call traffic",
+        "one selected weight matrix" in html and "does not establish" in html,
     )
 
-    # 7. The rotating-eight floor check the caveat rests on.
-    consistency = derived["cache"]["hbm_floor_consistency"]
-    rotating = next(c for c in consistency["cases"] if c["case"] == "int8_rotating8_weights")
+    # 7. Use the actual harness's call semantics, not bank capacity per call.
+    semantics = harness_call_semantics()
     check(
-        "rotating-eight INT8 call is below its own HBM byte floor",
-        rotating["consistent_with_streaming_from_hbm"] is False
-        and rotating["measured_over_hbm_floor"] < 1.0,
-        f"{rotating['measured_over_hbm_floor']:.4f}x of its floor "
-        f"({rotating['measured_s'] * 1e3:.4f} ms vs {rotating['hbm_floor_s_at_analysis_bandwidth'] * 1e3:.4f} ms)",
+        "each rotating harness repetition launches one selected matrix",
+        all(values == list(range(8)) * 2 for values in semantics["selected_weights"].values()),
     )
+    check(
+        "harness timing normalizes by individual GEMM calls",
+        semantics["seconds_per_call"] == 2.0,
+    )
+    consistency = derived["cache"]["hbm_floor_consistency"]
+    cache = raw["weight_residency_result"]
+    m, n, k = cache["m"], cache["n"], cache["k"]
+    for label, value_bits in (("int8", 8), ("b1", 1)):
+        rotating = next(c for c in consistency["cases"] if c["case"] == f"{label}_rotating8_weights")
+        bytes_per_call = (m * k + n * k) * value_bits // 8 + 4 * m * n
+        expected_s = bytes_per_call / (expected_bandwidth * 1e9)
+        check(
+            f"{label} rotating timing uses one matrix per call and an eight-matrix working set",
+            rotating["weight_matrices_selected_per_call"] == 1
+            and rotating["weight_bank_working_set_bytes"] == cache["eight_weight_bank_bytes"][label]
+            and rotating["one_pass_transfer_bytes_per_call"] == bytes_per_call
+            and math.isclose(rotating["hbm_floor_s_at_analysis_bandwidth"], expected_s, rel_tol=1e-12)
+            and rotating["consistent_with_streaming_from_hbm"] is True,
+            f"{rotating['measured_s'] * 1e3:.4f} ms measured vs {expected_s * 1e3:.4f} ms assumed one-pass transfer",
+        )
     hot = next(c for c in consistency["cases"] if c["case"] == "int8_hot_static_weight")
     check(
-        "single-weight INT8 call is at or above its HBM floor",
+        "single-weight INT8 timing is compatible with the assumed one-pass transfer",
         hot["consistent_with_streaming_from_hbm"] is True,
         f"{hot['measured_over_hbm_floor']:.4f}x of its floor",
     )
+    synthetic = synthetic_builder_checks(raw)
+    check("a new raw timing family reaches its derived table and CSV", synthetic["new_family_present"] and synthetic["all_csv_rows_present"])
+    check("matching 40GB hardware has its own bandwidth and no mismatch warning", synthetic["matching_40gb_bandwidth"])
 
     print()
     if failures:

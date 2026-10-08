@@ -28,7 +28,7 @@ A100_L2_MIB = 40.0
 # Published HBM bandwidth per A100 SXM4 memory size.  Modal honoured the
 # A100-40GB request with an 80GB SXM4 (HBM2e), so the roofline constant has to
 # follow the card that actually ran rather than the card that was requested.
-# The threshold is the 80GB part's capacity; anything below it is the 40GB part.
+# A 60 GiB discriminator separates the supported 40GB and 80GB SXM4 parts.
 A100_80GB_MIN_BYTES = 60 * 1024**3
 A100_80GB_HBM_GB_S = 2_039.0
 A100_40GB_HBM_GB_S = 1_555.0
@@ -212,6 +212,7 @@ def timing_families(raw: dict) -> list[str]:
 def bandwidth_audit(raw: dict, bandwidth_GB_per_s: float) -> dict:
     """State which HBM constant was used, and which the raw JSON carried."""
     raw_bandwidth = raw["theory_constants"]["a100_hbm_bandwidth_GB_per_s"]
+    matches_hardware = raw_bandwidth == bandwidth_GB_per_s
     return {
         "analysis_bandwidth_GB_per_s": bandwidth_GB_per_s,
         "analysis_bandwidth_source": (
@@ -219,13 +220,16 @@ def bandwidth_audit(raw: dict, bandwidth_GB_per_s: float) -> dict:
             "canonical_hbm_bandwidth_GB_per_s"
         ),
         "raw_json_bandwidth_GB_per_s": raw_bandwidth,
-        "raw_json_bandwidth_matches_hardware": raw_bandwidth
-        == bandwidth_GB_per_s,
+        "raw_json_bandwidth_matches_hardware": matches_hardware,
         "raw_json_bandwidth_warning": (
-            f"Raw JSON carries {raw_bandwidth} GB/s, the A100-40GB part, "
-            "while hardware.gpu_memory_bytes identifies the 80GB SXM4; this "
-            f"build therefore derives the roofline at {bandwidth_GB_per_s} GB/s "
-            "and does not copy the raw constant."
+            None
+            if matches_hardware
+            else (
+                f"Raw JSON carries {raw_bandwidth} GB/s, while the supported "
+                "SXM4 device capacity selects "
+                f"{bandwidth_GB_per_s} GB/s; derived rooflines use the "
+                "hardware-selected value without changing the raw record."
+            )
         ),
     }
 
@@ -288,39 +292,40 @@ def per_shape_roofline(
 def cache_hbm_consistency(
     cache: dict, bandwidth_GB_per_s: float
 ) -> dict:
-    """Compare each weight-residency call against its own HBM read floor.
+    """Compare per-call timing with an assumed one-pass HBM transfer estimate.
 
-    The rotating-eight case is reported as a bandwidth-bound comparison
-    because neither bank fits in L2.  That claim is only supportable if the
-    measured call time is at or above the time needed to stream that bank's
-    bytes from HBM, so the floor is emitted next to the measurement instead of
-    being left to the prose.
+    Each harness repetition selects ONE matrix from its weight bank. Eight
+    repetitions visit the full rotating bank; bank capacity is a cache working
+    set, not the traffic of one GEMM. The estimate assumes A and the selected B
+    are read from HBM and C is written once. Cache reuse can reduce actual HBM
+    traffic, and time above this estimate does not establish an HBM bottleneck.
     """
     bandwidth = bandwidth_GB_per_s * 1e9
     m, n, k = cache["m"], cache["n"], cache["k"]
     output_bytes = 4 * m * n
-    variants = {
-        "hot": {
-            "int8": (m * k + n * k + output_bytes),
-            "b1": (m * k + n * k) // 8 + output_bytes,
-        },
-        "rotating8": {
-            "int8": (m * k + 8 * n * k + output_bytes),
-            "b1": ((m * k + 8 * n * k) // 8 + output_bytes),
-        },
-    }
     cases = []
-    for regime, banks in variants.items():
-        for label, bank_bytes in banks.items():
-            key = f"{'int8' if label == 'int8' else 'b1'}_{regime}_static_weight" if regime == "hot" else (
-                f"{'int8' if label == 'int8' else 'b1'}_rotating8_weights"
+    for regime, bank_count in (("hot", 1), ("rotating8", 8)):
+        for label, bits_per_value in (("int8", 8), ("b1", 1)):
+            key = (
+                f"{label}_hot_static_weight"
+                if regime == "hot"
+                else f"{label}_rotating8_weights"
             )
+            a_bytes = m * k * bits_per_value // 8
+            selected_weight_bytes = n * k * bits_per_value // 8
+            per_call_bytes = a_bytes + selected_weight_bytes + output_bytes
             measured_s = cache["timings"][key]["seconds_per_call_median"]
-            floor_s = bank_bytes / bandwidth
+            floor_s = per_call_bytes / bandwidth
             cases.append(
                 {
                     "case": key,
-                    "min_bytes_read": bank_bytes,
+                    "weight_matrices_selected_per_call": 1,
+                    "weight_bank_matrices": bank_count,
+                    "weight_bank_working_set_bytes": bank_count * selected_weight_bytes,
+                    "assumed_a_read_bytes_per_call": a_bytes,
+                    "assumed_selected_weight_read_bytes_per_call": selected_weight_bytes,
+                    "assumed_output_write_bytes_per_call": output_bytes,
+                    "one_pass_transfer_bytes_per_call": per_call_bytes,
                     "hbm_floor_s_at_analysis_bandwidth": floor_s,
                     "measured_s": measured_s,
                     "measured_over_hbm_floor": measured_s / floor_s,
@@ -336,9 +341,11 @@ def cache_hbm_consistency(
             if item["case"] == "int8_rotating8_weights"
         ),
         "note": (
-            "consistency flag is a floor check, not a roofline attribution: a "
-            "measured call faster than its own HBM byte floor cannot be "
-            "explained by HBM streaming alone."
+            "One weight matrix is selected per call; eight calls visit the "
+            "rotating bank. Times assume A and the selected B are read from "
+            "HBM and C is written once. A time above this estimate is "
+            "compatible with that traffic, not proof of HBM attribution. "
+            "Actual traffic can be reduced by cache reuse."
         ),
     }
 
@@ -384,6 +391,10 @@ def build() -> dict:
         "hardware": raw["hardware"],
         "semantics": raw["semantics"],
         "timing_families": families,
+        "timing_table_keys": {
+            family: "squares" if family == "square" else family
+            for family in families
+        },
         "squares": timing_tables.get("square", []),
         "k_sweep": timing_tables.get("k_sweep", []),
         "batch": timing_tables.get("batch", []),
@@ -457,6 +468,12 @@ def build() -> dict:
         },
         "physical_calibration": physical_calibration(),
     }
+    for family, rows in timing_tables.items():
+        key = result["timing_table_keys"][family]
+        if family not in ("square", "batch", "k_sweep", "output_bound"):
+            if key in result:
+                raise ValueError(f"Timing family {family!r} conflicts with a report field")
+            result[key] = rows
     return result
 
 
@@ -479,9 +496,12 @@ def write_csv(result: dict) -> None:
     with CSV_PATH.open("w", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
-        # Write whatever families the raw sweep actually carries.
-        for key in ("squares", "k_sweep", "batch", "output_bound"):
-            writer.writerows(result.get(key, []))
+        # Keep the existing CSV order, then include every other raw family.
+        legacy_order = ("square", "k_sweep", "batch")
+        families = [family for family in legacy_order if family in result["timing_families"]]
+        families.extend(family for family in result["timing_families"] if family not in legacy_order)
+        for family in families:
+            writer.writerows(result[result["timing_table_keys"][family]])
 
 
 if __name__ == "__main__":
