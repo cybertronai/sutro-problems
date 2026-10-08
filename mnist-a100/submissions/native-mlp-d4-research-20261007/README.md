@@ -22,3 +22,9 @@ labels = classify(train_x, train_y, test_x)
 ```
 
 Required next steps: settle a fresh-draw passing learner, package within the 20 KiB standalone-source limit, run the sandbox evaluator, then official timing and energy verification.
+
+## Longer-training variant: additional fresh evidence
+
+A subsequent 11-draw paired study on a separate fresh pool compared three and four SiLU/RMSNorm hidden layers at 2,000 student updates. The three-layer candidate reached **2.110%** at **1,562.302 ms**, versus **2.150%** at **2,183.778 ms** for four layers (paired difference +0.040 percentage points, SE 0.01784). Retain three layers. The included `mlp_rms_graph_selftrain_silu_fourstudent_2000_research.py` freezes the longer three-layer variant.
+
+The longer variant passes the D4 mean error threshold on this research pool. Its reported time sums warmed teacher/student training and readouts; it excludes some pseudo-label selection and concatenation orchestration, and is not complete-wrapper qualification. It remains multi-file, unsandboxed and unofficial. The 1,000-update complete-wrapper result above remains unchanged. Neither result establishes a D5 pass.
