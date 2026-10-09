@@ -1,3 +1,5 @@
+> Superseded by [leancompile-repair](leancompile-repair/README.md): three energy-enabled Modal passes. Earlier source failed independent cold-warmup review. Historical records preserved below.
+
 # Native BF16 self-training candidate for difficulty 4
 
 Qualification: **3/3 independent local sandbox evaluations passed**. The local push gate is satisfied. Official timing and energy verification remain outstanding. This package does not modify the leaderboard.
