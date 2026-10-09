@@ -1,0 +1,20 @@
+// Approximate reciprocal diagnostic; BF16 boundaries retained, floating rounding changes.
+// Approximate-exp experiment only; no global --use_fast_math.
+// SiLU learning diagnostic. Forward RMS and backward RMS retain original distinct reduction associations.
+namespace mlp_bn16 {
+__device__ __forceinline__ float sigmoid_approx(float a){float denominator=1.f+__expf(-a),r;asm volatile("rcp.approx.ftz.f32 %0, %1;":"=f"(r):"f"(denominator));return r;}
+__device__ __forceinline__ float silu(float a){return a*sigmoid_approx(a);}
+__device__ __forceinline__ float silu_grad(float a){float s=sigmoid_approx(a);return s*(1.f+a*(1.f-s));}
+__device__ __forceinline__ float warp_four_reduce(float sums[4]){float x=sums[0]+sums[1]+sums[2]+sums[3];for(int d=16;d;d>>=1)x+=__shfl_down_sync(0xffffffff,x,d);return __shfl_sync(0xffffffff,x,0);}
+template<int M>__global__ void forward_rowpacked(const B*u,B*z,int rows,int b,float p,unsigned seed){int lane=threadIdx.x&31,r=blockIdx.x*4+(threadIdx.x>>5);if(r>=rows)return;constexpr int Count=M/128;float uv[4][Count],sq[4]={};for(int v=0;v<4;v++)for(int k=0;k<Count;k++){int c=lane+v*32+k*128;uv[v][k]=__bfloat162float(u[r*M+c]);sq[v]+=uv[v][k]*uv[v][k];}float inv=rsqrtf(warp_four_reduce(sq)/M+1e-5f);
+if(p<=0){for(int v=0;v<4;v++)for(int k=0;k<Count;k++){int c=lane+v*32+k*128;z[r*M+c]=__float2bfloat16_rn(silu(uv[v][k]*inv));}return;}
+const unsigned hashbase=(r%b)*M+seed+(r/b)*101;
+// Split p==.1 once per row; preserve original multiplication versus division rounding.
+if(p==.1f){for(int v=0;v<4;v++)for(int k=0;k<Count;k++){int c=lane+v*32+k*128;B activation=__float2bfloat16_rn(silu(uv[v][k]*inv));float random=(pb_hash(hashbase+c)+1.f)/4294967296.f;float val=__bfloat162float(activation);z[r*M+c]=__float2bfloat16_rn(random<p?0:val*1.111111164093017578125f);}}
+else{const float denominator=1-p;for(int v=0;v<4;v++)for(int k=0;k<Count;k++){int c=lane+v*32+k*128;B activation=__float2bfloat16_rn(silu(uv[v][k]*inv));float random=(pb_hash(hashbase+c)+1.f)/4294967296.f;float val=__bfloat162float(activation);z[r*M+c]=__float2bfloat16_rn(random<p?0:val/denominator);}}
+}
+__device__ __forceinline__ float2 unpack_bits(unsigned packed){unsigned lo,hi;asm volatile("shl.b32 %0, %2, 16;\n and.b32 %1, %2, 0xffff0000;":"=r"(lo),"=r"(hi):"r"(packed));return make_float2(__uint_as_float(lo),__uint_as_float(hi));}
+template<int M>__global__ void backward_rowpacked(B*g,const B*z,const B*u,int rows,float gain,int b,float p,unsigned seed){int lane=threadIdx.x&31,r=blockIdx.x*4+(threadIdx.x>>5);if(r>=rows)return;constexpr int Count=M/64;float2 uv[Count],gv[Count];float sq=0;for(int k=0;k<Count;k++){int i=(r*M)/2+lane+k*32;uv[k]=unpack_bits(reinterpret_cast<const unsigned*>(u)[i]);int c=2*(lane+k*32);float rx=(pb_hash((r%b)*M+c+seed+(r/b)*101)+1.f)/4294967296.f,ry=(pb_hash((r%b)*M+c+1+seed+(r/b)*101)+1.f)/4294967296.f;float2 gg=unpack_bits(reinterpret_cast<const unsigned*>(g)[i]);gv[k]=make_float2((p<=0||rx>=p)?gain*gg.x:0,(p<=0||ry>=p)?gain*gg.y:0);sq+=uv[k].x*uv[k].x+uv[k].y*uv[k].y;}for(int d=16;d;d>>=1)sq+=__shfl_down_sync(0xffffffff,sq,d);float inv=rsqrtf(__shfl_sync(0xffffffff,sq,0)/M+1e-5f);for(int k=0;k<Count;k++){gv[k].x*=silu_grad(uv[k].x*inv);gv[k].y*=silu_grad(uv[k].y*inv);}float dot=0;for(int k=0;k<Count;k++)dot+=gv[k].x*uv[k].x*inv+gv[k].y*uv[k].y*inv;for(int d=16;d;d>>=1)dot+=__shfl_down_sync(0xffffffff,dot,d);float gn=__shfl_sync(0xffffffff,dot,0)/M;for(int k=0;k<Count;k++){float2 v=make_float2(inv*(gv[k].x-uv[k].x*inv*gn),inv*(gv[k].y-uv[k].y*inv*gn));reinterpret_cast<__nv_bfloat162*>(g)[(r*M)/2+lane+k*32]=__float22bfloat162_rn(v);}}
+inline void act(const B*u,B*z,int rows,int m,int b,float p,unsigned seed,float*,cudaStream_t s){if(m==256)forward_rowpacked<256><<<(rows+3)/4,128,0,s>>>(u,z,rows,b,p,seed);else forward_rowpacked<512><<<(rows+3)/4,128,0,s>>>(u,z,rows,b,p,seed);}
+inline void back(B*g,const B*z,const B*u,int rows,int m,int b,float gain,const float*,cudaStream_t s,float p=0,unsigned seed=0){if(m==256)backward_rowpacked<256><<<(rows+3)/4,128,0,s>>>(g,z,u,rows,gain,b,p,seed);else backward_rowpacked<512><<<(rows+3)/4,128,0,s>>>(g,z,u,rows,gain,b,p,seed);}
+}
