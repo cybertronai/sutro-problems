@@ -1,3 +1,5 @@
+> Superseded: the K5-only source below failed one independent Modal review run. See [graph1250-repair](graph1250-repair/README.md) for the replacement and all three passing energy-enabled evaluations.
+
 # Difficulty 3 native BF16 MLP
 
 Adds a standalone native BF16 difficulty 3 candidate: eight width-256 MLPs, three RMSNorm/ReLU hidden layers, 1,250 updates in a CUDA graph, and five-neighbor embedding voting.
