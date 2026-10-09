@@ -38,3 +38,62 @@ The raw JSON retained the 1,555 GB/s roofline constant for the requested
 A100-40GB. Modal supplied an A100-80GB, so `build_report_data.py` correctly uses
 that product's published 2,039 GB/s bandwidth in `derived.json`. The raw timing
 and energy measurements are unaffected.
+
+The bandwidth is no longer taken from the raw constant. It is selected from
+`hardware.gpu_memory_bytes` by `canonical_hbm_bandwidth_GB_per_s()`, which
+uses a 60 GiB discriminator between the supported 40GB and 80GB SXM4 parts,
+returning 2,039 GB/s for the 80GB part and 1,555 GB/s for the 40GB part,
+so a future run on the requested 40GB part derives its own correct roofline.
+`derived.json` records both the derived and the raw constants under
+`roofline.raw_json_bandwidth_GB_per_s` and `roofline.raw_json_bandwidth_matches_hardware`.
+The raw JSON is left unmodified as the measurement record; every per-shape
+`*_hbm_floor_s` and `*_roofline_floor_s` it contains was computed at 1,555 GB/s
+and is therefore superseded by `derived.json` `per_shape_roofline`, which
+recomputes the same byte and operation counts at the derived bandwidth.
+
+## Roofline ceiling versus measurement
+
+`roofline.square_roofline_speedup_ceiling_at_8192` is a theoretical ceiling built
+from the dense peak TOPS and the bandwidth constant, capped by the 8x peak
+ratio. It is not a measurement. The observed value for the same shape is
+`roofline.square_measured_speedup_at_8192` (6.74x). The two are separate keys
+precisely so the 8x figure cannot be read as an achieved result.
+
+## Do not compare with `a100-grid-energy-report` at equal weight
+
+`a100-grid-energy-report` reports 2.944 ms and 0.648 J for its B1 stage at
+8192^3, while this track reports 0.37083 ms and 0.12269 J for the same nominal
+shape. These are two independent records, not two values of one quantity:
+
+- different hardware. That report ran on `NVIDIA A100-SXM4-40GB`
+  (`gpu_memory_bytes` 42,405,855,232, HBM2); this one ran on
+  `NVIDIA A100-SXM4-80GB` (85,094,825,984, HBM2e).
+- different energy protocol. That report used five 5 s trials with a 5 s idle
+  window; this one uses three 3 s trials with a 3 s idle window.
+- different B1 kernel. That report's stage is recorded as "native SM80 WMMA
+  BMMA"; this one uses CUTLASS 3.8.0 `OpAndPopc` on `mma.sync m16n8k256`,
+  with the per-shape fragment and threadblock shape chosen per form.
+
+Neither number is corrected here and neither is preferred. Reconciling them
+requires a new A100 run, not an edit.
+
+## Weight-residency caveat
+
+The eight-rotating-weights panel reports 5.45x less energy. The harness selects
+one weight matrix per timed GEMM call; eight successive calls visit the full
+bank. The 512 MiB INT8 bank and 64 MiB packed bank are cache working sets, while
+each call selects a 64 MiB INT8 matrix or an 8 MiB packed matrix.
+
+`derived.json` `cache.hbm_floor_consistency` distinguishes those working sets
+from per-call traffic. Assuming A and the selected B are read from HBM and the
+S32 output is written once, the traffic is 69,730,304 bytes for INT8 and
+10,551,296 bytes for B1. At 2,039 GB/s the one-pass estimates are 0.0342 ms and
+0.00517 ms, respectively. The measured CUDA-event medians are 0.0570 ms and
+0.0110 ms, both compatible with those transfers. Charging the entire bank to
+one call would incorrectly multiply its weight traffic by eight.
+
+Bank capacity exceeding L2 does not establish that the stage is bandwidth
+limited, and a measured time above a one-pass estimate does not prove HBM
+attribution. Cache reuse can reduce actual HBM traffic. The measured 5.45x
+energy result is preserved; identifying the limiting resource would require
+memory-traffic profiling or further measurements.

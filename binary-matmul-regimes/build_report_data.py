@@ -22,9 +22,27 @@ DERIVED_PATH = HERE / "derived.json"
 
 A100_INT8_TOPS = 624.0
 A100_B1_TOPS = 4_992.0
-A100_80GB_HBM_GB_S = 2_039.0
 A100_DIE_MM2 = 826.0
 A100_L2_MIB = 40.0
+
+# Published HBM bandwidth per A100 SXM4 memory size.  Modal honoured the
+# A100-40GB request with an 80GB SXM4 (HBM2e), so the roofline constant has to
+# follow the card that actually ran rather than the card that was requested.
+# A 60 GiB discriminator separates the supported 40GB and 80GB SXM4 parts.
+A100_80GB_MIN_BYTES = 60 * 1024**3
+A100_80GB_HBM_GB_S = 2_039.0
+A100_40GB_HBM_GB_S = 1_555.0
+
+
+def canonical_hbm_bandwidth_GB_per_s(gpu_memory_bytes: int) -> float:
+    """Published HBM bandwidth for the card that actually ran.
+
+    Derived from the reported device capacity instead of from the requested
+    Modal SKU, so the raw JSON's stale 1555 GB/s cannot propagate.
+    """
+    if gpu_memory_bytes >= A100_80GB_MIN_BYTES:
+        return A100_80GB_HBM_GB_S
+    return A100_40GB_HBM_GB_S
 
 DALLY_WIRE_FJ_PER_BIT_MM = 100.0
 DALLY_ADD_FJ_PER_BIT = 1.0
@@ -177,11 +195,168 @@ def physical_calibration() -> dict:
     }
 
 
+def timing_families(raw: dict) -> list[str]:
+    """Every family present in the raw timing sweep, in raw-JSON order.
+
+    Derived tables are driven by this list rather than a hand-written tuple so
+    that a family present in the raw artifact can never be silently dropped
+    from derived.json or results.csv.
+    """
+    families: list[str] = []
+    for record in raw["timing_results"]:
+        if record["family"] not in families:
+            families.append(record["family"])
+    return families
+
+
+def bandwidth_audit(raw: dict, bandwidth_GB_per_s: float) -> dict:
+    """State which HBM constant was used, and which the raw JSON carried."""
+    raw_bandwidth = raw["theory_constants"]["a100_hbm_bandwidth_GB_per_s"]
+    matches_hardware = raw_bandwidth == bandwidth_GB_per_s
+    return {
+        "analysis_bandwidth_GB_per_s": bandwidth_GB_per_s,
+        "analysis_bandwidth_source": (
+            "selected from hardware.gpu_memory_bytes by "
+            "canonical_hbm_bandwidth_GB_per_s"
+        ),
+        "raw_json_bandwidth_GB_per_s": raw_bandwidth,
+        "raw_json_bandwidth_matches_hardware": matches_hardware,
+        "raw_json_bandwidth_warning": (
+            None
+            if matches_hardware
+            else (
+                f"Raw JSON carries {raw_bandwidth} GB/s, while the supported "
+                "SXM4 device capacity selects "
+                f"{bandwidth_GB_per_s} GB/s; derived rooflines use the "
+                "hardware-selected value without changing the raw record."
+            )
+        ),
+    }
+
+
+def per_shape_roofline(
+    raw: dict, bandwidth_GB_per_s: float
+) -> list[dict]:
+    """Recompute every shape's HBM and roofline floors at the derived bandwidth.
+
+    The raw JSON's per-shape ``theory`` block was produced with the stale
+    1555 GB/s constant.  Byte counts and operation counts are bandwidth
+    independent, so the floors are recomputed here from those same numbers
+    rather than edited inside the raw artifact.
+    """
+    bandwidth = bandwidth_GB_per_s * 1e9
+    rows = []
+    for record in raw["timing_results"]:
+        theory = record["theory"]
+        m, n, k = record["m"], record["n"], record["k"]
+        int8_bytes = m * k + k * n + 4 * m * n
+        b1_bytes = (m * k + k * n) // 8 + 4 * m * n
+        operations = 2 * m * n * k
+        int8_compute_floor = operations / (A100_INT8_TOPS * 1e12)
+        b1_compute_floor = operations / (A100_B1_TOPS * 1e12)
+        int8_hbm_floor = int8_bytes / bandwidth
+        b1_hbm_floor = b1_bytes / bandwidth
+        rows.append(
+            {
+                "family": record["family"],
+                "m": m,
+                "n": n,
+                "k": k,
+                "minimum_bytes_int8_s32": int8_bytes,
+                "minimum_bytes_b1_s32": b1_bytes,
+                "int8_compute_floor_s": int8_compute_floor,
+                "b1_compute_floor_s": b1_compute_floor,
+                "int8_hbm_floor_s": int8_hbm_floor,
+                "b1_hbm_floor_s": b1_hbm_floor,
+                "int8_roofline_floor_s": max(int8_compute_floor, int8_hbm_floor),
+                "b1_roofline_floor_s": max(b1_compute_floor, b1_hbm_floor),
+                "measured_int8_s": record["timings"]["int8"][
+                    "seconds_per_call_median"
+                ],
+                "measured_b1_prepacked_s": record["timings"][
+                    "b1_prepacked"
+                ]["seconds_per_call_median"],
+                "int8_regime": (
+                    "memory"
+                    if int8_hbm_floor > int8_compute_floor
+                    else "compute"
+                ),
+                "b1_regime": (
+                    "memory" if b1_hbm_floor > b1_compute_floor else "compute"
+                ),
+            }
+        )
+    return rows
+
+
+def cache_hbm_consistency(
+    cache: dict, bandwidth_GB_per_s: float
+) -> dict:
+    """Compare per-call timing with an assumed one-pass HBM transfer estimate.
+
+    Each harness repetition selects ONE matrix from its weight bank. Eight
+    repetitions visit the full rotating bank; bank capacity is a cache working
+    set, not the traffic of one GEMM. The estimate assumes A and the selected B
+    are read from HBM and C is written once. Cache reuse can reduce actual HBM
+    traffic, and time above this estimate does not establish an HBM bottleneck.
+    """
+    bandwidth = bandwidth_GB_per_s * 1e9
+    m, n, k = cache["m"], cache["n"], cache["k"]
+    output_bytes = 4 * m * n
+    cases = []
+    for regime, bank_count in (("hot", 1), ("rotating8", 8)):
+        for label, bits_per_value in (("int8", 8), ("b1", 1)):
+            key = (
+                f"{label}_hot_static_weight"
+                if regime == "hot"
+                else f"{label}_rotating8_weights"
+            )
+            a_bytes = m * k * bits_per_value // 8
+            selected_weight_bytes = n * k * bits_per_value // 8
+            per_call_bytes = a_bytes + selected_weight_bytes + output_bytes
+            measured_s = cache["timings"][key]["seconds_per_call_median"]
+            floor_s = per_call_bytes / bandwidth
+            cases.append(
+                {
+                    "case": key,
+                    "weight_matrices_selected_per_call": 1,
+                    "weight_bank_matrices": bank_count,
+                    "weight_bank_working_set_bytes": bank_count * selected_weight_bytes,
+                    "assumed_a_read_bytes_per_call": a_bytes,
+                    "assumed_selected_weight_read_bytes_per_call": selected_weight_bytes,
+                    "assumed_output_write_bytes_per_call": output_bytes,
+                    "one_pass_transfer_bytes_per_call": per_call_bytes,
+                    "hbm_floor_s_at_analysis_bandwidth": floor_s,
+                    "measured_s": measured_s,
+                    "measured_over_hbm_floor": measured_s / floor_s,
+                    "consistent_with_streaming_from_hbm": measured_s >= floor_s,
+                }
+            )
+    return {
+        "analysis_bandwidth_GB_per_s": bandwidth_GB_per_s,
+        "cases": cases,
+        "rotating8_int8_consistent_with_hbm_bound": next(
+            item["consistent_with_streaming_from_hbm"]
+            for item in cases
+            if item["case"] == "int8_rotating8_weights"
+        ),
+        "note": (
+            "One weight matrix is selected per call; eight calls visit the "
+            "rotating bank. Times assume A and the selected B are read from "
+            "HBM and C is written once. A time above this estimate is "
+            "compatible with that traffic, not proof of HBM attribution. "
+            "Actual traffic can be reduced by cache reuse."
+        ),
+    }
+
+
 def build() -> dict:
     raw = json.loads(RAW_PATH.read_text())
-    square = timing_rows(raw, "square")
-    k_sweep = timing_rows(raw, "k_sweep")
-    batch = timing_rows(raw, "batch")
+    bandwidth_GB_per_s = canonical_hbm_bandwidth_GB_per_s(
+        raw["hardware"]["gpu_memory_bytes"]
+    )
+    families = timing_families(raw)
+    timing_tables = {family: timing_rows(raw, family) for family in families}
     energy = energy_rows(raw)
     cache = raw["weight_residency_result"]
     cache_energy = {
@@ -191,19 +366,39 @@ def build() -> dict:
     }
 
     n = float(N)
-    int8_square_ridge_n = 3 * A100_INT8_TOPS * 1e12 / (
-        A100_80GB_HBM_GB_S * 1e9
-    )
+    int8_square_ridge_n = 3 * A100_INT8_TOPS * 1e12 / (bandwidth_GB_per_s * 1e9)
     b1_square_ridge_n = 2.125 * A100_B1_TOPS * 1e12 / (
-        A100_80GB_HBM_GB_S * 1e9
+        bandwidth_GB_per_s * 1e9
+    )
+    # Square 8192 has exactly one raw timing record; find it rather than
+    # re-deriving the number from constants.
+    square_8192 = next(
+        row
+        for row in timing_tables.get("square", [])
+        if row["n"] == N
+    )
+    measured_8192_speedup = square_8192["speedup_prepacked"]
+    peak_ratio = A100_B1_TOPS / A100_INT8_TOPS
+    # Theoretical B1-vs-INT8 speedup ceiling at square 8192: the arithmetic
+    # intensity ratio, capped by the dense-peak ratio.  This is a ceiling from
+    # constants only and is NOT a measurement.
+    roofline_speedup_ceiling_at_8192 = min(
+        peak_ratio,
+        n / (A100_INT8_TOPS * 1e12 * 4.25 / (2 * bandwidth_GB_per_s * 1e9)),
     )
     result = {
         "source": RAW_PATH.name,
         "hardware": raw["hardware"],
         "semantics": raw["semantics"],
-        "squares": square,
-        "k_sweep": k_sweep,
-        "batch": batch,
+        "timing_families": families,
+        "timing_table_keys": {
+            family: "squares" if family == "square" else family
+            for family in families
+        },
+        "squares": timing_tables.get("square", []),
+        "k_sweep": timing_tables.get("k_sweep", []),
+        "batch": timing_tables.get("batch", []),
+        "output_bound": timing_tables.get("output_bound", []),
         "energy": energy,
         "cache": {
             "shape": [cache["m"], cache["n"], cache["k"]],
@@ -236,30 +431,31 @@ def build() -> dict:
             / cache_energy["b1_rotating8_weights"][
                 "idle_adjusted_gpu_energy_J_per_call"
             ],
+            "hbm_floor_consistency": cache_hbm_consistency(
+                cache, bandwidth_GB_per_s
+            ),
         },
         "roofline": {
-            "analysis_bandwidth_GB_per_s": A100_80GB_HBM_GB_S,
-            "raw_json_bandwidth_warning": (
-                "Raw JSON retained 1555 GB/s for the requested 40GB part; "
-                "actual hardware was 80GB, so derived rooflines use 2039."
-            ),
+            **bandwidth_audit(raw, bandwidth_GB_per_s),
             "int8_peak_TOPS": A100_INT8_TOPS,
             "b1_peak_TOPS": A100_B1_TOPS,
-            "peak_ratio": A100_B1_TOPS / A100_INT8_TOPS,
+            "peak_ratio": peak_ratio,
             "square_int8_ridge_n": int8_square_ridge_n,
             "square_b1_ridge_n": b1_square_ridge_n,
             "both_memory_bound_speedup_ceiling": 24.0 / 17.0,
-            "square_roofline_speedup_at_8192": min(
-                A100_B1_TOPS / A100_INT8_TOPS,
-                n
-                / (
-                    A100_INT8_TOPS
-                    * 1e12
-                    * 4.25
-                    / (2 * A100_80GB_HBM_GB_S * 1e9)
-                ),
+            "square_roofline_speedup_ceiling_at_8192": (
+                roofline_speedup_ceiling_at_8192
+            ),
+            "square_measured_speedup_at_8192": measured_8192_speedup,
+            "roofline_vs_measurement_note": (
+                "square_roofline_speedup_ceiling_at_8192 is computed from the "
+                "dense peak TOPS and the HBM bandwidth constant only, and is "
+                "capped by the 8x peak ratio; it is a theoretical ceiling, not "
+                "a measurement.  square_measured_speedup_at_8192 is the value "
+                "observed on hardware for the same shape."
             ),
         },
+        "per_shape_roofline": per_shape_roofline(raw, bandwidth_GB_per_s),
         "eightk": {
             "n": N,
             "pair_contributions": N**3,
@@ -272,6 +468,12 @@ def build() -> dict:
         },
         "physical_calibration": physical_calibration(),
     }
+    for family, rows in timing_tables.items():
+        key = result["timing_table_keys"][family]
+        if family not in ("square", "batch", "k_sweep", "output_bound"):
+            if key in result:
+                raise ValueError(f"Timing family {family!r} conflicts with a report field")
+            result[key] = rows
     return result
 
 
@@ -294,8 +496,12 @@ def write_csv(result: dict) -> None:
     with CSV_PATH.open("w", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=fields, lineterminator="\n")
         writer.writeheader()
-        for family in ("squares", "k_sweep", "batch"):
-            writer.writerows(result[family])
+        # Keep the existing CSV order, then include every other raw family.
+        legacy_order = ("square", "k_sweep", "batch")
+        families = [family for family in legacy_order if family in result["timing_families"]]
+        families.extend(family for family in result["timing_families"] if family not in legacy_order)
+        for family in families:
+            writer.writerows(result[result["timing_table_keys"][family]])
 
 
 if __name__ == "__main__":
