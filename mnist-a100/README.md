@@ -65,7 +65,8 @@ provisional. ★ identifies an established record.
 | 2026-09-29 | 259,847 | 1,895.4 | [py](submissions/ladder-fast-20260929/ladder_d3.py), [report](submissions/ladder-fast-20260929/README.md) | [@SethTS](https://github.com/SethTS) | Ladder, batch 1,000, 1,200 steps, TF32, fused Triton kernels in a CUDA graph |
 | 2026-09-29 | 201,792 | 1,443.3 | [py](submissions/ladder-sampled-20260929/ladder_d3.py), [report](submissions/ladder-sampled-20260929/README.md) | [@SethTS](https://github.com/SethTS) | Ladder, batch 1,000, 900 steps, labelled rows sampled by loss, TF32, fused Triton kernels in a CUDA graph |
 | 2026-09-30 | 253,761 | 1,732.2 | [py](submissions/improved-20260930/ladder_d3.py), [report](submissions/improved-20260930/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | Ladder, 1,100 steps; 8.3% fewer updates; one sandboxed run |
-| 2026-10-05 | 151,404 | 1,157.1 | [py](submissions/ladder-kernel-tuned-20261003/ladder_d3.py), [report](submissions/ladder-kernel-tuned-20261003/README.md) | [@islamborghini](https://github.com/islamborghini) | Sampled Ladder, batch 1,000, 800 steps, TF32; tuned forward and backward Triton kernels; median of three sandboxed runs ★ best |
+| 2026-10-05 | 151,404 | 1,157.1 | [py](submissions/ladder-kernel-tuned-20261003/ladder_d3.py), [report](submissions/ladder-kernel-tuned-20261003/README.md) | [@islamborghini](https://github.com/islamborghini) | Sampled Ladder, batch 1,000, 800 steps, TF32; tuned forward and backward Triton kernels; median of three sandboxed runs |
+| 2026-10-08 | 98,226 | 416.1 | [py](submissions/native-mlp-d3-20261007/graph1250-repair/submission.py), [report](submissions/native-mlp-d3-20261007/graph1250-repair/README.md) | [@sjbaebae](https://github.com/sjbaebae) | Eight 60-256-256-256-10 RMSNorm/ReLU MLPs, 1,250 updates, five-neighbor voting and three-step query graph propagation; median of three sandboxed Modal runs ★ best |
 
 ## Difficulty = 4 (error ≤ 2.30%)
 

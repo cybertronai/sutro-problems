@@ -1,0 +1,84 @@
+{
+  "pull_request": 113,
+  "reviewed_head": "0b4a34abbb4a73927d14f7ec43f3e142a61f458d",
+  "observed_worktree_head_after_main_merge": "c1b3708c248a678e81bb8b291fb09594fb1f135b",
+  "original_head_blob_matches_reviewed_source": true,
+  "head_note": "During review, the parent merged origin/main into the worktree. git show of the originally requested PR head's submission blob independently hashes to the same c6082659... source; the learner reviewed is unchanged.",
+  "source_filename": "mnist-a100/submissions/native-mlp-d3-20261007/graph1250-repair/submission.py",
+  "source_sha256": "c6082659a49a6bd942077e359db42f28016626bb49303d68032467710d765a7e",
+  "source_bytes": 17973,
+  "source_limit_bytes": 20480,
+  "scorer_sha256": "1bc6d8d96a776565bc70f3ccdb91be7de57187d4495b2b0437fac98f5e120064",
+  "scope": "Independent human read of the frozen submission, safely decoded archive, and all 15 readable Python/C++/CUDA/header files. Trusted canonical scorer's AST source gate only. No learner import, execution, compilation, Modal jobs, source edit, Git mutation or publication.",
+  "source_gate": "PASS",
+  "review_flags": [
+    "embedded data? 1 high-entropy literal(s), 17,285 characters",
+    "decodes data: imports base64, lzma",
+    "17,973 bytes, close to the 20,480-byte limit"
+  ],
+  "review_flags_resolution": "The one base85/LZMA literal decodes to a JSON mapping of 15 ordinary source files, 58,573 archive bytes including JSON syntax. Every path is relative with no parent traversal. All 15 files were inspected. No examples, dataset indices, pretrained parameter arrays, learned constants or second encoded payload were found. The file is 2,507 bytes under the canonical limit.",
+  "embedded_extraction": {
+    "method": "AST literal extraction, base85 decoding, bounded LZMA decompression, JSON parsing, validated relative-path writes; never import or execute the learner",
+    "encoded_characters": 17285,
+    "compressed_bytes": 13828,
+    "archive_bytes": 58573,
+    "files": 15,
+    "manifest": "archive-manifest.json",
+    "decoded_directory": "decoded"
+  },
+  "learner": {
+    "training": "Eight BF16 60-256-256-256-10 MLPs, three RMSNorm/ReLU hidden layers, 1250 updates; batch=1024 with two augmented views, momentum=0.95, cosine decay, 0.2 mixup, 0.15 input noise, 0.1 dropout, 0.05 smoothing, and final-312-update SWA. First-layer initialization samples supplied training rows with deterministic Gaussian jitter; remaining hidden weights are deterministic Gaussian draws and classification heads start at zero.",
+    "readout": "Normalize the concatenated eight-network embeddings, take five training neighbors at temperature 100, normalize their label votes, then construct five-neighbor query-to-all adjacency excluding each query itself. Three diffusion steps with alpha=0.9 combine adjacent current predictions with 0.1 of the original K5 probabilities, while supplied training-label anchors stay clamped. Return argmax for query rows only.",
+    "configuration_references": [
+      "decoded/candidates/mlp_rms_d3_knn_fast.py:4",
+      "decoded/candidates/mlp_rms_graph_selftrain_silu_fourstudent_shortteacher_rcp_nonoise_softlookup.py:3",
+      "decoded/kernels/embedding_graph.cu:9"
+    ]
+  },
+  "comparison_with_prior_failed_learner": {
+    "prior_source_sha256": "6c00a6f593d3e4015c9e6d0ce126fac7fd0519654906421682d631c394750083",
+    "same_training_design": "The active configuration and native loop retain E=8, width=256, three hidden RMSNorm/ReLU layers, 1250 updates, same optimizer, augmentation, seed schedule, initialization and SWA settings as the earlier specialized K5-only learner. The decoded native implementation is a more general source version rather than a byte-identical copy.",
+    "changed_readout": "The earlier learner returned K5 label-vote argmax. This replacement normalizes those votes and applies three rounds of query graph propagation. It additionally computes unused head predictions when producing the native embeddings and uses a fuller device/stream/shape/hyperparameter graph-cache key.",
+    "qualification": "The previous run-3 accuracy failure does not qualify this changed source. Source inspection cannot establish whether the repair meets the error band; independent fresh canonical runs are required and are handled separately by the parent reviewer. Submitted README/runtime records were not treated as proof of qualification."
+  },
+  "original_only_labels": {
+    "passed": true,
+    "training": "launch_pb optimization reads x and y only. pb_error indexes y through indices reduced modulo n. ensemble_input draws only from tx derived from x with matching mixup partner indices. Combined x/query rows are forwarded after training to produce embeddings and do not enter a supervised loss.",
+    "knn": "neighbor constructs similarities between final query embeddings and the first n training embeddings. votes searches indices in [0,n) and reads only y[id].",
+    "graph": "initial and diffuse read y[r] only for r<n; all rows r>=n initialize from the K5 probabilities and propagate only those predictions and supplied training anchors. Similarity adjacency uses provided input embeddings, never query labels. Uninitialized adjacency slots for training rows are never read because diffuse returns immediately for r<n.",
+    "references": [
+      "decoded/kernels/persistent_bf16_deep3_rmsnorm_input32.cu:23",
+      "decoded/kernels/persistent_bf16_deep3_rmsnorm_input32.cu:122",
+      "decoded/kernels/persistent_bf16_deep3_rmsnorm_input32.cu:136",
+      "decoded/kernels/learned_ridge_head.cu:11",
+      "decoded/kernels/embedding_graph.cu:13",
+      "decoded/kernels/embedding_graph.cu:14"
+    ]
+  },
+  "per_call_reset": {
+    "passed": true,
+    "graph_inputs": "On every call, including calls reusing a captured graph, classify copies the current x, y and combined x/query tensor into all three captured input buffers on the original stream before cudaGraphLaunch.",
+    "parameters": "Every captured replay includes input conversion, all eight first-layer initializations from current training rows, both later hidden-layer Gaussian initializations, and zero-head initialization. The inactive fourth-layer weights are zeroed as well.",
+    "optimizer": "All active momentum buffers and FP32 SWA accumulators are zeroed on every replay. Every active gradient/activation matmul has beta=0 and overwrite kernels cover all entries used by subsequent operations. SWA is formed from the last 312 current-call updates.",
+    "readout": "Full inference overwrites all used embeddings. Each K5 and graph invocation allocates fresh tensors and fully initializes each used output; the graph diffusion's odd-step final copy returns the newest probabilities through the binding's original a tensor.",
+    "work": "The one-step call during graph creation primes BLAS algorithms; the captured and timed graph performs all 1250 updates. There are no cached-prediction returns or dataset-dependent step-count reductions.",
+    "references": [
+      "decoded/kernels/persistent_bf16_deep3_rmsnorm_input32_bindings.cpp:29",
+      "decoded/kernels/persistent_bf16_deep3_rmsnorm_input32_bindings.cpp:34",
+      "decoded/kernels/persistent_bf16_deep3_rmsnorm_input32.cu:135",
+      "decoded/kernels/persistent_bf16_deep3_rmsnorm_input32.cu:136",
+      "decoded/kernels/persistent_bf16_deep3_rmsnorm_input32.cu:143",
+      "decoded/kernels/embedding_graph.cu:15"
+    ]
+  },
+  "cached_state": {
+    "passed": true,
+    "description": "Python retains the callable and compiled extension objects. Native caches retain graph executables, workspaces, cuBLAS handles and cuBLASLt selected algorithms/descriptors; pb_last exposes only the current call's graph workspace for embedding readout. Although reused buffers contain old values, all fitted learner state used for the next prediction is initialized or overwritten before use.",
+    "graph_cache": "The graph key includes device, stream, training/query/input shapes and all training hyperparameters. This avoids the previous specialized graph's omitted-shape issue for graph workspace reuse.",
+    "timing": "CUDA events in the decoded native code are used only to choose BLAS algorithms during initial graph creation. No scorer event hooks, parent memory/frame access, hidden dataset access, cross-call trained-model reuse or unexplained launch-stream switch was found.",
+    "scope_limitations": "The canonical protocol is single-device, single-call operation with 10000 training rows, 10000 query rows and width-256 embeddings. Static global readout handles and thread-local BLAS plan/workspace caches do not establish arbitrary concurrent or multi-device safety; those scenarios are outside this qualification review."
+  },
+  "side_effects": "Only inside classify, the wrapper creates a fixed-source /tmp directory suffixed by the worker UID, writes the decoded source files if absent/different, prepends that directory to sys.path and imports the source callable. The extension wrappers set an A100 architecture default and invoke ordinary torch extension compilation linked with cuBLAS/cuBLASLt. The only reads are its own written source text and normal compilation/import machinery. Native code allocates GPU buffers, prints BLAS tuning diagnostics and runs kernels. No dataset or fitted-state file access, network access, /proc inspection or additional external data loading was found.",
+  "blockers": [],
+  "verdict": "No static source, label-isolation, per-call reset, retained fitted-state or canonical sandbox merge blocker found. The graph readout is a substantive repair using only supplied inputs and labels. Runtime, accuracy, timing, energy and the three-run qualification verdict must come from the separate canonical Modal validation."
+}
