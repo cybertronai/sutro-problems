@@ -1,0 +1,239 @@
+{
+ "returncode": 0,
+ "stdout": "mlp_bn_head16_d5_depthensemble_minimal.py:classify at 1.90% error: 15 timed calls, each in a fresh process\n  review flag: embedded data? 1 high-entropy literal(s), 19,775 characters\n  review flag: decodes data: imports base64, lzma\n  review flag: 20,428 bytes, close to the 20,480-byte limit\n  NVIDIA A100-SXM4-80GB, torch 2.12.0+cu130, sandbox on\n  call  1/15: 7,020.666 ms, scorer's clock 7,023.418 ms\n  call  2/15: 7,021.938 ms, scorer's clock 7,025.403 ms\n  call  3/15: 7,022.278 ms, scorer's clock 7,025.365 ms\n  call  4/15: 7,024.231 ms, scorer's clock 7,027.095 ms\n  call  5/15: 7,021.264 ms, scorer's clock 7,024.117 ms\n  call  6/15: 7,026.137 ms, scorer's clock 7,029.209 ms\n  call  7/15: 7,018.731 ms, scorer's clock 7,022.833 ms\n  call  8/15: 7,021.524 ms, scorer's clock 7,024.759 ms\n  call  9/15: 7,016.133 ms, scorer's clock 7,018.853 ms\n  call 10/15: 7,017.574 ms, scorer's clock 7,021.077 ms\n  call 11/15: 7,013.446 ms, scorer's clock 7,017.123 ms\n  call 12/15: 7,022.803 ms, scorer's clock 7,024.461 ms\n  call 13/15: 7,021.482 ms, scorer's clock 7,024.878 ms\n  call 14/15: 7,013.239 ms, scorer's clock 7,016.073 ms\n  call 15/15: 7,022.836 ms, scorer's clock 7,025.250 ms\nMNIST 98.15% (107,963/110,000), 7019.590 ms/call; hold-out (fashion) 88.47%, 7022.198 ms/call; score 7022.198 ms\nenergy: one more fresh process runs the method back to back on fresh MNIST draws for 20 s, between idle windows in which it is frozen\n  NVIDIA A100-SXM4-80GB: idle 66.1 W with the method frozen; telemetry reference 18.2 TFLOP/s at 8.30 J/TFLOP above idle (a healthy NVIDIA A100-SXM4-80GB reads 6-11)\n  the round trip alone: 10.0 mJ per call over 1,945 empty calls, subtracted\n  the method: 3 calls in 21.1 s, MNIST 98.25%, 7,023.633 ms per call, 347.1 W on average\nenergy 1978525.562 mJ per call above idle\n",
+ "stderr": "tes=8 winner=0 id=6 tile=20 split=1 us=55.4667\nLT tuned m=4096 n=16 k=512 at=0 bt=1 E=4 candidates=6 winner=5 id=21 tile=5 split=1 us=17.3227\nLT tuned m=512 n=16 k=4096 at=1 bt=1 E=4 candidates=4 winner=2 id=31 tile=15 split=1 us=22.6133\nLT tuned m=4096 n=512 k=16 at=0 bt=0 E=4 candidates=4 winner=0 id=5 tile=24 split=1 us=22.8693\nLT tuned m=512 n=512 k=4096 at=1 bt=1 E=4 candidates=5 winner=3 id=31 tile=18 split=1 us=85.0773\nLT tuned m=4096 n=512 k=512 at=0 bt=1 E=4 candidates=8 winner=0 id=6 tile=20 split=1 us=55.3813\nLT tuned m=512 n=128 k=4096 at=1 bt=1 E=4 candidates=5 winner=0 id=31 tile=15 split=1 us=24.4053\nLT tuned m=20000 n=512 k=128 at=0 bt=0 E=4 candidates=8 winner=0 id=6 tile=20 split=1 us=110.5920\nLT tuned m=20000 n=512 k=512 at=0 bt=0 E=4 candidates=8 winner=0 id=6 tile=20 split=1 us=233.9840\nLT tuned m=20000 n=16 k=512 at=0 bt=1 E=4 candidates=8 winner=0 id=6 tile=17 split=1 us=59.3920\n[1/3] /usr/local/cuda/bin/nvcc -MD -MF centered_halfnorm_small_members.cuda.o.d -DTORCH_EXTENSION_NAME=sutro_centered_halfnorm_small_members_bn_stagepack -DTORCH_API_INCLUDE_EXTENSION_H -isystem /usr/local/lib/python3.13/site-packages/torch/include -isystem /usr/local/lib/python3.13/site-packages/torch/include/torch/csrc/api/include -isystem /usr/local/cuda/include -isystem /usr/local/include/python3.13 -D__CUDA_NO_HALF_OPERATORS__ -D__CUDA_NO_HALF_CONVERSIONS__ -D__CUDA_NO_BFLOAT16_CONVERSIONS__ -D__CUDA_NO_HALF2_OPERATORS__ --expt-relaxed-constexpr -gencode=arch=compute_80,code=sm_80 --compiler-options '-fPIC' -O3 -lineinfo --ptxas-options=-v -std=c++20 -c /tmp/sutro-bn-stage-582fe8613daf6be1-65534/kernels/centered_halfnorm_small_members.cu -o centered_halfnorm_small_members.cuda.o \nptxas info    : 0 bytes gmem\nptxas info    : Compiling entry function '_Z9transformILi8EEvPK13__nv_bfloat16S2_PKfPS0_i' for 'sm_80'\nptxas info    : Function properties for _Z9transformILi8EEvPK13__nv_bfloat16S2_PKfPS0_i\n    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads\nptxas info    : Used 50 registers, used 1 barriers, 68 bytes smem, 388 bytes cmem[0]\nptxas info    : Compile time = 29.516 ms\nptxas info    : Compiling entry function '_Z9transformILi4EEvPK13__nv_bfloat16S2_PKfPS0_i' for 'sm_80'\nptxas info    : Function properties for _Z9transformILi4EEvPK13__nv_bfloat16S2_PKfPS0_i\n    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads\nptxas info    : Used 32 registers, used 1 barriers, 36 bytes smem, 388 bytes cmem[0]\nptxas info    : Compile time = 17.224 ms\nptxas info    : Compiling entry function '_Z9transformILi2EEvPK13__nv_bfloat16S2_PKfPS0_i' for 'sm_80'\nptxas info    : Function properties for _Z9transformILi2EEvPK13__nv_bfloat16S2_PKfPS0_i\n    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads\nptxas info    : Used 32 registers, used 1 barriers, 20 bytes smem, 388 bytes cmem[0]\nptxas info    : Compile time = 16.961 ms\nptxas info    : Compiling entry function '_Z9transformILi1EEvPK13__nv_bfloat16S2_PKfPS0_i' for 'sm_80'\nptxas info    : Function properties for _Z9transformILi1EEvPK13__nv_bfloat16S2_PKfPS0_i\n    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads\nptxas info    : Used 32 registers, used 1 barriers, 12 bytes smem, 388 bytes cmem[0]\nptxas info    : Compile time = 15.553 ms\nptxas info    : Compiling entry function '_Z11finish_meanPKfPfiii' for 'sm_80'\nptxas info    : Function properties for _Z11finish_meanPKfPfiii\n    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads\nptxas info    : Used 32 registers, used 0 barriers, 380 bytes cmem[0]\nptxas info    : Compile time = 11.087 ms\nptxas info    : Compiling entry function '_Z12partial_meanPK13__nv_bfloat16S1_Pfiiii' for 'sm_80'\nptxas info    : Function properties for _Z12partial_meanPK13__nv_bfloat16S1_Pfiiii\n    0 bytes stack frame, 0 bytes spill stores, 0 bytes spill loads\nptxas info    : Used 32 registers, used 1 barriers, 1024 bytes smem, 392 bytes cmem[0]\nptxas info    : Compile time = 8.678 ms\n[2/3] c++ -MMD -MF centered_halfnorm_small_members_bindings.o.d -DTORCH_EXTENSION_NAME=sutro_centered_halfnorm_small_members_bn_stagepack -DTORCH_API_INCLUDE_EXTENSION_H -isystem /usr/local/lib/python3.13/site-packages/torch/include -isystem /usr/local/lib/python3.13/site-packages/torch/include/torch/csrc/api/include -isystem /usr/local/cuda/include -isystem /usr/local/include/python3.13 -fPIC -std=c++20 -O0 -g0 -c /tmp/sutro-bn-stage-582fe8613daf6be1-65534/kernels/centered_halfnorm_small_members_bindings.cpp -o centered_halfnorm_small_members_bindings.o \n[3/3] c++ centered_halfnorm_small_members_bindings.o centered_halfnorm_small_members.cuda.o -shared -L/usr/local/lib/python3.13/site-packages/torch/lib -lc10 -lc10_cuda -ltorch_cpu -ltorch_cuda -ltorch -ltorch_python -L/usr/local/cuda/lib64 -lcudart -o sutro_centered_halfnorm_small_members_bn_stagepack.so\nLT tuned m=10 n=128 k=20000 at=1 bt=1 E=1 candidates=7 winner=0 id=23 tile=11 split=48 us=19.0293\nLT tuned m=4096 n=512 k=128 at=0 bt=0 E=4 candidates=8 winner=4 id=6 tile=18 split=1 us=32.9387\nLT tuned m=4096 n=512 k=512 at=0 bt=0 E=4 candidates=8 winner=0 id=6 tile=20 split=1 us=55.2960\nLT tuned m=4096 n=16 k=512 at=0 bt=1 E=4 candidates=6 winner=2 id=31 tile=15 split=1 us=17.3227\nLT tuned m=512 n=16 k=4096 at=1 bt=1 E=4 candidates=4 winner=2 id=31 tile=15 split=1 us=22.6987\nLT tuned m=4096 n=512 k=16 at=0 bt=0 E=4 candidates=4 winner=0 id=5 tile=24 split=1 us=22.6987\nLT tuned m=512 n=512 k=4096 at=1 bt=1 E=4 candidates=5 winner=3 id=31 tile=18 split=1 us=85.1627\nLT tuned m=4096 n=512 k=512 at=0 bt=1 E=4 candidates=8 winner=0 id=6 tile=20 split=1 us=55.4667\nLT tuned m=512 n=128 k=4096 at=1 bt=1 E=4 candidates=5 winner=1 id=31 tile=15 split=1 us=24.4053\nLT tuned m=20000 n=512 k=128 at=0 bt=0 E=4 candidates=8 winner=0 id=6 tile=20 split=1 us=110.4213\nLT tuned m=20000 n=512 k=512 at=0 bt=0 E=4 candidates=8 winner=0 id=6 tile=20 split=1 us=233.8133\nLT tuned m=20000 n=16 k=512 at=0 bt=1 E=4 candidates=8 winner=0 id=6 tile=17 split=1 us=62.5493\n",
+ "record": {
+  "version": "mnist-a100/1.2.0 (protections of sutro-mnist-medium/3.0.0, tightened; energy column)",
+  "file": "mlp_bn_head16_d5_depthensemble_minimal.py",
+  "function": "classify",
+  "source_sha256": "86a1a749f5b12c34be86c2e5025487827bda6b8b20f55fac72bb2911dcaa9066",
+  "band_bp": 190,
+  "sandboxed": true,
+  "holdout": "fashion",
+  "device": "NVIDIA A100-SXM4-80GB",
+  "torch": "2.12.0+cu130",
+  "calls": [
+   {
+    "dataset": "mnist",
+    "ms": 7020.666015625,
+    "parent_ms": 7026.986425999993,
+    "correct": 9817,
+    "total": 10000,
+    "overhead_ms": 3.5685789982586336
+   },
+   {
+    "dataset": "mnist",
+    "ms": 7021.9375,
+    "parent_ms": 7029.0649000000085,
+    "correct": 9839,
+    "total": 10000,
+    "overhead_ms": 3.661619998433082
+   },
+   {
+    "dataset": "fashion",
+    "ms": 7022.27783203125,
+    "parent_ms": 7029.045191999984,
+    "correct": 8867,
+    "total": 10000,
+    "overhead_ms": 3.6802094994833396
+   },
+   {
+    "dataset": "mnist",
+    "ms": 7024.2314453125,
+    "parent_ms": 7030.66386100005,
+    "correct": 9825,
+    "total": 10000,
+    "overhead_ms": 3.5687469992941487
+   },
+   {
+    "dataset": "mnist",
+    "ms": 7021.263671875,
+    "parent_ms": 7027.66303200002,
+    "correct": 9813,
+    "total": 10000,
+    "overhead_ms": 3.545548500506584
+   },
+   {
+    "dataset": "fashion",
+    "ms": 7026.13720703125,
+    "parent_ms": 7032.641905000048,
+    "correct": 8826,
+    "total": 10000,
+    "overhead_ms": 3.4331345001876343
+   },
+   {
+    "dataset": "mnist",
+    "ms": 7018.7314453125,
+    "parent_ms": 7026.215803000014,
+    "correct": 9810,
+    "total": 10000,
+    "overhead_ms": 3.383040999124205
+   },
+   {
+    "dataset": "mnist",
+    "ms": 7021.52392578125,
+    "parent_ms": 7028.3281839999745,
+    "correct": 9815,
+    "total": 10000,
+    "overhead_ms": 3.5690189985425604
+   },
+   {
+    "dataset": "mnist",
+    "ms": 7016.1328125,
+    "parent_ms": 7022.332625000104,
+    "correct": 9815,
+    "total": 10000,
+    "overhead_ms": 3.479902499281252
+   },
+   {
+    "dataset": "fashion",
+    "ms": 7017.57421875,
+    "parent_ms": 7024.947642000029,
+    "correct": 8827,
+    "total": 10000,
+    "overhead_ms": 3.870256000027439
+   },
+   {
+    "dataset": "mnist",
+    "ms": 7013.44580078125,
+    "parent_ms": 7020.615591000023,
+    "correct": 9831,
+    "total": 10000,
+    "overhead_ms": 3.492248498911067
+   },
+   {
+    "dataset": "fashion",
+    "ms": 7022.802734375,
+    "parent_ms": 7029.242490999991,
+    "correct": 8868,
+    "total": 10000,
+    "overhead_ms": 4.7818209986712645
+   },
+   {
+    "dataset": "mnist",
+    "ms": 7021.48193359375,
+    "parent_ms": 7029.277389000072,
+    "correct": 9800,
+    "total": 10000,
+    "overhead_ms": 4.399425000546216
+   },
+   {
+    "dataset": "mnist",
+    "ms": 7013.23876953125,
+    "parent_ms": 7019.586971000081,
+    "correct": 9806,
+    "total": 10000,
+    "overhead_ms": 3.5143329988541154
+   },
+   {
+    "dataset": "mnist",
+    "ms": 7022.8359375,
+    "parent_ms": 7028.929613999935,
+    "correct": 9792,
+    "total": 10000,
+    "overhead_ms": 3.679271998807053
+   }
+  ],
+  "problems": [],
+  "summary": "MNIST 98.15% (107,963/110,000), 7019.590 ms/call; hold-out (fashion) 88.47%, 7022.198 ms/call",
+  "ranked_ms": 7022.197998046875,
+  "energy": {
+   "mj_per_call": 1978525.5624460743,
+   "problems": [],
+   "net_mj_before_control": 1978535.610372294,
+   "control_mj_per_call": 10.047926219547563,
+   "control_calls": 1945,
+   "gross_mj_per_call": 2443895.3333333335,
+   "idle_w": 66.08848375371974,
+   "active_w": 347.07201561213265,
+   "calls": 3,
+   "seconds": 21.124393988000065,
+   "ms_median": 7023.63330078125,
+   "timed_mnist_ms_median": 7021.263671875,
+   "correct": 29476,
+   "total": 30000,
+   "reference": {
+    "tflops_per_s": 18.153640542174482,
+    "j_per_tflop": 8.297390949273412,
+    "exact": true,
+    "band": [
+     [
+      6.0,
+      11.0
+     ],
+     [
+      15.0,
+      23.0
+     ]
+    ]
+   },
+   "device": {
+    "name": "NVIDIA A100-SXM4-80GB",
+    "uuid": "GPU-97317eee-a400-c971-fad7-d6b048e19357",
+    "vbios": "92.00.45.00.0E",
+    "driver": "610.57.04",
+    "power_limit_w": 400.0
+   },
+   "windows": [
+    {
+     "name": "idle 1",
+     "seconds": 5.006262193000111,
+     "joules": 330.403,
+     "utilization_max": 0,
+     "contexts": 1
+    },
+    {
+     "name": "reference",
+     "seconds": 5.208762384000011,
+     "joules": 1127.902,
+     "matmuls": 688,
+     "dim": 4096,
+     "exact": true
+    },
+    {
+     "name": "idle 2",
+     "seconds": 5.005237758000021,
+     "joules": 329.47,
+     "utilization_max": 0,
+     "contexts": 1
+    },
+    {
+     "name": "control",
+     "seconds": 5.004476378999925,
+     "joules": 348.117,
+     "calls": 1945
+    },
+    {
+     "name": "idle 3",
+     "seconds": 5.005153082000106,
+     "joules": 327.772,
+     "utilization_max": 0,
+     "contexts": 1
+    },
+    {
+     "name": "method",
+     "seconds": 21.124393988000065,
+     "joules": 7331.686,
+     "calls": 3,
+     "ms": [
+      7054.4638671875,
+      7022.966796875,
+      7023.63330078125
+     ],
+     "correct": [
+      9830,
+      9820,
+      9826
+     ]
+    },
+    {
+     "name": "idle 4",
+     "seconds": 5.005063768999889,
+     "joules": 333.788,
+     "utilization_max": 0,
+     "contexts": 1
+    }
+   ]
+  }
+ }
+}
