@@ -57,6 +57,7 @@ provisional. ★ identifies an established record.
 | 2026-09-30 | 132,635 | 761.9 | [py](submissions/improved-20260930/mlp_d2.py), [report](submissions/improved-20260930/README.md) | [@yaroslavvb](https://github.com/yaroslavvb) | 8 MLPs, 500 steps, EMA 0.992; one sandboxed run |
 | 2026-10-08 | 1,333 | 14.6 | [py](submissions/native-mlp-d2-20261007/mlp_neighbor3_register_d2.py), [report](submissions/native-mlp-d2-20261007/README.md) | [@sjbaebae](https://github.com/sjbaebae) | Two 60-256-256-10 MLPs, 120 updates, three-neighbor voting; median of three sandboxed Modal runs |
 | 2026-10-12 | 603 | 4.6 | [py](submissions/rfm-pcg-d2-20261012/submission.py), [report](submissions/rfm-pcg-d2-20261012/README.md) | [@spartanhaden](https://github.com/spartanhaden) | RBF kernel ridge with one learned (AGOP) metric, 5 Nyström-preconditioned CG steps; no backprop; median of three independent reviewer sandboxed Modal runs ★ best |
+| 2026-10-19 | 282 | 2.9 | [py](submissions/fisher-pcg-d2-20261019/submission.py), [report](submissions/fisher-pcg-d2-20261019/README.md) | [@spartanhaden](https://github.com/spartanhaden) | Port of @sigkillme0's #125 to d2: LDA+QDA Fisher-metric RBF kernel ridge on a k-means-compressed training set, Woodbury-preconditioned PCG, one CUDA graph; no backprop; median of three sandboxed Modal runs |
 
 ## Difficulty = 3 (error ≤ 2.70%)
 
