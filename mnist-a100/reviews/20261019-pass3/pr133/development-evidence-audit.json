@@ -1,0 +1,196 @@
+{
+  "checked_at_utc": "2026-10-20T04:27:04.374033+00:00",
+  "screens": [
+    {
+      "file": "classical-easy-d2-modal.json",
+      "sha256": "7fa2c33a7c8bef06e6ecf08e717bac94b7c599a0c33559f8c779191266da90a0",
+      "metadata": {
+        "target": "d2",
+        "parent_sha256": "de16bb0926ae35895400758697ba68f73e7f5ec366f2b84495b74c0abba89804",
+        "entrypoint": "kc_d2",
+        "configs": {
+          "base": {
+            "NHARD": 4096,
+            "STEPS": 5
+          },
+          "hard3072_s5": {
+            "NHARD": 3072,
+            "STEPS": 5
+          },
+          "hard3072_s6": {
+            "NHARD": 3072,
+            "STEPS": 6
+          },
+          "hard2048_s6": {
+            "NHARD": 2048,
+            "STEPS": 6
+          }
+        },
+        "gpu": "NVIDIA A100-SXM4-80GB",
+        "scope": "11fresh paired development draws; fullwarmcall timing, NOTsandbox qualification. Per-module parameters overridden before first graph capture; original baseline included."
+      },
+      "variants": {
+        "base": {
+          "config": {
+            "NHARD": 4096,
+            "STEPS": 5
+          },
+          "paired_draws": 11,
+          "recorded_mean_error_pct": 3.1154544786973433,
+          "integer_reconstructed_error_pct": 3.1154545454545453,
+          "error_count": 3427,
+          "total": 110000,
+          "mean_of_draw_median_wall_ms": 2.7068835454546947,
+          "mean_of_draw_median_cuda_ms": 2.6726196245713667,
+          "descriptive_mean_within_D2_band": true
+        },
+        "hard2048_s6": {
+          "config": {
+            "NHARD": 2048,
+            "STEPS": 6
+          },
+          "paired_draws": 11,
+          "recorded_mean_error_pct": 3.812727212905884,
+          "integer_reconstructed_error_pct": 3.8127272727272725,
+          "error_count": 4194,
+          "total": 110000,
+          "mean_of_draw_median_wall_ms": 2.4023456363636666,
+          "mean_of_draw_median_cuda_ms": 2.3701119856400923,
+          "descriptive_mean_within_D2_band": false
+        },
+        "hard3072_s5": {
+          "config": {
+            "NHARD": 3072,
+            "STEPS": 5
+          },
+          "paired_draws": 11,
+          "recorded_mean_error_pct": 3.28818171674555,
+          "integer_reconstructed_error_pct": 3.288181818181818,
+          "error_count": 3617,
+          "total": 110000,
+          "mean_of_draw_median_wall_ms": 2.5458564545453233,
+          "mean_of_draw_median_cuda_ms": 2.5123403505845503,
+          "descriptive_mean_within_D2_band": true
+        },
+        "hard3072_s6": {
+          "config": {
+            "NHARD": 3072,
+            "STEPS": 6
+          },
+          "paired_draws": 11,
+          "recorded_mean_error_pct": 3.2927271886305376,
+          "integer_reconstructed_error_pct": 3.292727272727273,
+          "error_count": 3622,
+          "total": 110000,
+          "mean_of_draw_median_wall_ms": 2.618863090908974,
+          "mean_of_draw_median_cuda_ms": 2.5859898220409048,
+          "descriptive_mean_within_D2_band": true
+        }
+      },
+      "row_arithmetic_passed": true,
+      "stdout_rows_exact": true,
+      "qualification": false,
+      "scope": "Declared11paired fresh development draws with3warm full refits per draw/variant; no fresh-worker sandbox,holdout,parent-clock or energy qualification. Reconstructs saved arithmetic, not independent execution or secret-draw provenance."
+    },
+    {
+      "file": "classical-easy-refined-d2-modal.json",
+      "sha256": "c3e928d76e7d87ac523e183dc9ec095dcece177f7a3885e7c6d3f298a1d6abb1",
+      "metadata": {
+        "target": "d2",
+        "parent_sha256": "de16bb0926ae35895400758697ba68f73e7f5ec366f2b84495b74c0abba89804",
+        "entrypoint": "kc_d2",
+        "configs": {
+          "base": {
+            "NHARD": 4096,
+            "STEPS": 5
+          },
+          "hard3072": {
+            "NHARD": 3072,
+            "STEPS": 5
+          },
+          "fisher1024": {
+            "NHARD": 3072,
+            "STEPS": 5,
+            "QROWS": 1024
+          },
+          "fisher512": {
+            "NHARD": 3072,
+            "STEPS": 5,
+            "QROWS": 512
+          }
+        },
+        "gpu": "NVIDIA A100-SXM4-80GB",
+        "scope": "11fresh paired development draws; fullwarmcall timing, NOTsandbox qualification. Per-module parameters overridden before first graph capture; original baseline included."
+      },
+      "variants": {
+        "base": {
+          "config": {
+            "NHARD": 4096,
+            "STEPS": 5
+          },
+          "paired_draws": 11,
+          "recorded_mean_error_pct": 3.1290908510034736,
+          "integer_reconstructed_error_pct": 3.129090909090909,
+          "error_count": 3442,
+          "total": 110000,
+          "mean_of_draw_median_wall_ms": 2.7004874545454203,
+          "mean_of_draw_median_cuda_ms": 2.6684044057672676,
+          "descriptive_mean_within_D2_band": true
+        },
+        "fisher1024": {
+          "config": {
+            "NHARD": 3072,
+            "STEPS": 5,
+            "QROWS": 1024
+          },
+          "paired_draws": 11,
+          "recorded_mean_error_pct": 3.2999999306418677,
+          "integer_reconstructed_error_pct": 3.3,
+          "error_count": 3630,
+          "total": 110000,
+          "mean_of_draw_median_wall_ms": 2.5055339090906354,
+          "mean_of_draw_median_cuda_ms": 2.4744959744540127,
+          "descriptive_mean_within_D2_band": true
+        },
+        "fisher512": {
+          "config": {
+            "NHARD": 3072,
+            "STEPS": 5,
+            "QROWS": 512
+          },
+          "paired_draws": 11,
+          "recorded_mean_error_pct": 3.290909008546309,
+          "integer_reconstructed_error_pct": 3.290909090909091,
+          "error_count": 3620,
+          "total": 110000,
+          "mean_of_draw_median_wall_ms": 2.5103103636362984,
+          "mean_of_draw_median_cuda_ms": 2.4797556400299072,
+          "descriptive_mean_within_D2_band": true
+        },
+        "hard3072": {
+          "config": {
+            "NHARD": 3072,
+            "STEPS": 5
+          },
+          "paired_draws": 11,
+          "recorded_mean_error_pct": 3.2745454094626685,
+          "integer_reconstructed_error_pct": 3.2745454545454544,
+          "error_count": 3602,
+          "total": 110000,
+          "mean_of_draw_median_wall_ms": 2.5457485454550137,
+          "mean_of_draw_median_cuda_ms": 2.513224710117687,
+          "descriptive_mean_within_D2_band": true
+        }
+      },
+      "row_arithmetic_passed": true,
+      "stdout_rows_exact": true,
+      "qualification": false,
+      "scope": "Declared11paired fresh development draws with3warm full refits per draw/variant; no fresh-worker sandbox,holdout,parent-clock or energy qualification. Reconstructs saved arithmetic, not independent execution or secret-draw provenance."
+    }
+  ],
+  "claims": {
+    "refined_base_error_pct": 3.129090909090909,
+    "refined_candidate_error_pct": 3.3
+  },
+  "blockers": []
+}

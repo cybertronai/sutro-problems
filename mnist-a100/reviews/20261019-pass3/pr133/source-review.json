@@ -1,0 +1,66 @@
+{
+  "checked_at_utc": "2026-10-20T04:25:23.159097+00:00",
+  "pull_request": 133,
+  "reviewed_head": "62b0b1ca6daed88399a14949be59dac24f49cf9b",
+  "frozen_main": "5f40e0e93af6ed5b57d74e81c5121d7cd8af2548",
+  "source_sha256": "65a14f4024d8af73ea3b7c088aeec44591715095b5cf2f76bcaf3a5c1d693a91",
+  "source_bytes": 16400,
+  "function": "kc_d2",
+  "source_gate_passed": true,
+  "review_flags": [
+    "16,400 bytes, close to the 20,480-byte limit"
+  ],
+  "static_blockers": [],
+  "review_status": "complete: no static blocker; initial independent reviewer group2/3 score passes, accuracy reproduction unresolved",
+  "source_comparison": {
+    "reviewed_head": "62b0b1ca6daed88399a14949be59dac24f49cf9b",
+    "source_sha256": "65a14f4024d8af73ea3b7c088aeec44591715095b5cf2f76bcaf3a5c1d693a91",
+    "upstream_source_sha256": "de16bb0926ae35895400758697ba68f73e7f5ec366f2b84495b74c0abba89804",
+    "upstream_entry": "fisher-pcg-d2-20261019 (#131)",
+    "runtime_configuration_changes": {
+      "QROWS": [
+        2048,
+        1024
+      ],
+      "NHARD": [
+        4096,
+        3072
+      ]
+    },
+    "all_function_and_class_ASTs_identical": true,
+    "whole_module_AST_identical_after_removing_module_docstring_and_normalizing_two_P_constants": true,
+    "source_docstring_changes": "2048Fisher rows->1024;4096hard rows->3072;4336weighted points->3312",
+    "static_semantics_scope": "Parameter budget changes accuracy and runtime; not numerical equivalence. All executable functions are identical to fully reviewed and independently qualified #131."
+  },
+  "implementation": "Plain PyTorch/cuBLAS/cuSOLVER/ATen and PyTorch flash-attention; no custom Triton definitions or compiler patches. Reductions use shape-derived dimensions for3312weighted points.",
+  "current_input_learning": "Only current train rows/labels determine LDA, QDA Fisher metric(now1024trainingrows), power transform, class-seeded k-means,3072low-margin hard rows,weighted centroids,landmark preconditioner and fresh five-step PCG+extrapolation. Query rows are only row-scaled/transformed/scored; no query labels or external data access.",
+  "input_integrity": "Entry clones inputs then writes only owned static copies. Every downstream in-place operation targets concatenations,current factors or allocated scratch; caller storage is not mutated. Returned labels cloned.",
+  "cache_reset": "_C contains only fixed identity/zero/one/index/scalar tensors; no cached data or fitted parameters. _ST caches streams. _GRAPHS captures the complete fit and owned buffers by shape/dtype/device. Every replay recomputes metric,centroids,weighted support,preconditioner,current target/residual and every PCG D/G slot before use. New NHARD also determines every support/vector/kernel shape.",
+  "ownership_and_streams": "Graph cache retains static inputs/output and graph-private intermediates. Side-stream factorization waits on current landmarks/main products; main waits on side before CG. No unjoined fitting work, external pointers or deferred data-dependent fit.",
+  "warmup": "Two eager full fits for setup, then one full-fit graph capture,64full warmup replays and synchronize. Timed/energy path copies current inputs,replays a complete refit and clones output. No timer/process/scorer access or dataset identity branch.",
+  "prior_review": "All literals are algorithm/hyperparameter scalars or descriptive text. No pretrained weights,encoded data,decoder,file/network IO or sandbox introspection.",
+  "upstream_credit": "README explicitly assigns original Fisher-PCG implementation to @spartanhaden and inherited #125method to @sigkillme0. Original source credits ownRFM-PCG and @islamborghini kernel-PCG are retained. Entrant @sjbaebae claims only two parameter-budget changes; no new algorithm/kernel credit.",
+  "published_rules": "D2 mean error<=3.40% over11complete MNIST calls,worst draw<=4.90%,holdout>=15%,all canonical timing/dispersion/sandbox gates and15totalcalls. Three official stockModal runs and median. Optional energy assessed separately; no mandatory second-batch/permanentban rule imposed.",
+  "prior_exact_source_reviewer_search": "No previous exact-source independent group identified before this initial launch; author evidence is separate.",
+  "finalized_at_utc": "2026-10-20T04:29:59.493957+00:00",
+  "reviewer_outcome": {
+    "passed_runs": 2,
+    "energy_valid_runs": 2,
+    "required_runs": 3,
+    "complete_timed_calls": 45,
+    "median_ranked_ms": null,
+    "median_energy_mj": null,
+    "aggregate_mnist_error_pct": 3.341818181818182,
+    "accuracy_margins_labels": [
+      108,
+      85,
+      -1
+    ],
+    "distinct_energy_gpu_uuids_observed": 2,
+    "retries_or_replacements": 0,
+    "source_modified": false,
+    "modal_app_stopped": true,
+    "disposition": "hold open: reviewer run3 misses D2 mean accuracy by exactly1label; no qualifying group median"
+  },
+  "qualification_blocker": "Run3 has106259/110000 correct versus106260required; all15calls complete and no other canonical gate failed. Author3/3 remains separately valid. No permanent source ban or new mandatory second-batch rule is claimed."
+}

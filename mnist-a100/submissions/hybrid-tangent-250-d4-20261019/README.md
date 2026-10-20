@@ -1,5 +1,28 @@
 # D4 tangent hybrid with 250 student updates
 
+## Independent reviewer reproduction — October 19, 2026, later pass
+
+The first frozen reviewer group passed **3/3 fresh canonical sandboxed Modal A100-80GB runs**. Median ranked time is **78.333838 ms/call**; median above-idle energy is **12,845.449793 mJ/call**. Pooled MNIST error is **2.215455%** (322,689/330,000 correct). Each run independently passes every accuracy, holdout and timing gate; pooled accuracy is descriptive.
+
+| Reviewer run | MNIST error | Margin, labels | Ranked ms | Above-idle mJ |
+| - | -: | -: | -: | -: |
+| 1 | 2.197273% | +113 | 78.772494 | 13176.733304 |
+| 2 | 2.192727% | +118 | 78.333838 | 12845.449793 |
+| 3 | 2.256364% | +48 | 76.959902 | 11434.012357 |
+
+The submitted source is unchanged, SHA-256 `ec90dfb48793017577eaeac212b7357ff19bfef950dfb884025921b53198e608`; scorer and stock runner are unchanged. All 45 timed calls completed. No outcome was replaced or retried. [Raw records and executable verifier](evidence/reviewer-20261019-pass3/), [reconstruction](evidence/reviewer-20261019-pass3/verification.json) and [source review](evidence/reviewer-20261019-pass3/source-review.json) are retained. Optional energy is assessed separately from score qualification.
+
+This training-budget optimization retains @spartanhaden's hybrid and its credits to @islamborghini, @likelytobelaura, @sjbaebae, RFM/HKNN and modded-nanogpt. Every function/class AST matches accepted #130. The sole executable changes are 400 to 250 student updates and target refresh chunks (13,27) to (8,17). Development summaries reconstruct separately; stochastic retrainings of the same draw are not independent draws.
+
+The leaderboard uses these independent medians; original author results below remain separate. Published instructions require three official runs and their median; this reviewer reproduction supplies evidence and does not introduce a permanent source ban or an additional published submission rule.
+
+Using Python 3.13, from this submission directory: `python evidence/reviewer-20261019-pass3/verify_records.py evidence/reviewer-20261019-pass3 submission.py --difficulty 4 --function hybrid_d4 --output /tmp/pr132-verification.json`. This audits saved records without executing the learner.
+
+## Original author report (as submitted)
+
+Pending-review and record claims below describe the author submission; the dated reviewer section gives accepted status.
+
+
 Reducing the published [tangent hybrid](../hybrid-tangent-d4-20261019/README.md) from 400 to 250 Adam updates, with cross-teaching moved from chunks (13, 27) to (8, 17), gives **77.010242 ms/call** and **11,464.572860 mJ/call** medians across three fresh canonical sandboxed Modal evaluations. All three runs pass difficulty 4 (MNIST error ≤2.30%); pooled MNIST error is **2.148182%** (322,911/330,000 correct).
 
 These are author execution results, not independent reviewer execution. Independent review is pending; this PR does not change the leaderboard. No failed qualification run was replaced or retried. Three distinct recorded GPU UUIDs are included.

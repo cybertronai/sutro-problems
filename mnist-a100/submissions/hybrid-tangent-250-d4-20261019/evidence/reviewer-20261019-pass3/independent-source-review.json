@@ -1,0 +1,47 @@
+{
+  "checked_at_utc": "2026-10-20T04:32:22.800923+00:00",
+  "pull_request": 132,
+  "reviewed_head": "fce9bb9fb7a4ec6d20add09c1fb9111b5c4e8d10",
+  "frozen_main": "5f40e0e93af6ed5b57d74e81c5121d7cd8af2548",
+  "source_sha256": "ec90dfb48793017577eaeac212b7357ff19bfef950dfb884025921b53198e608",
+  "source_bytes": 20458,
+  "scope": "Independent read-only AST, source, reset and ownership review. No learner import/execution, new GPU job, source edit or public mutation. Fresh execution is separately controlled by the parent reviewer.",
+  "source_gate_passed": true,
+  "static_blockers": [],
+  "AST_audit": {
+    "all25_function_class_ASTs_identical_to_accepted130": true,
+    "only_module_differences": [
+      "STEPS: 400 to 250",
+      "XT: (13, 27) to (8, 17)",
+      "Corresponding module documentation"
+    ],
+    "no_numerical_equivalence_claim": "Fewer updates and shorter LR anneal alter fits/accuracy; identical function ASTs do not prove equal predictions."
+  },
+  "per_call_reset": "Each full graph replay recomputes current teacher fits, targets, features, tangents and neighbor arrays. Students.reset initializes hidden weights, zeros the head, bias, Adam moments and counter, then copies FP32 master weights into BF16. All 25 chunks and 250 updates execute. The counter indexes the 250-entry learning-rate and bias-correction arrays; target refreshes occur after 80 and 170 updates. Fitted warm-up state is not reused as initialization.",
+  "truth_and_input_boundary": "Caller tensors are copied into owned static clones. Only train_y supplies truth. Query classes used by teachers, tangents and final HKNN are current predictions. Refreshes use the current ensemble average, including self-model contributions; no hidden query labels or disjoint-pool guarantee is claimed.",
+  "ownership_resolution": {
+    "conclusion": "No confirmed dangling-buffer defect. The accepted #130 ownership proof applies unchanged.",
+    "proof": [
+      "Students.fn wraps the bound _step method. Tagged Torch 2.12 code preserves bound self and retains fn through _torchdynamo_orig_callable and functools.wraps/__wrapped__.",
+      "The strong cycle is student -> compiled wrapper -> bound method -> student. The student owns every pre-capture buffer.",
+      "gc.collect executes while the hybrid_d4 frame and run closure still root the student, so the live cycle is not collected.",
+      "gc.freeze moves this live tracked cycle into the permanent generation. After the frame returns, its internal strong references survive refcounting and future cyclic collections ignore it. No unfreeze occurs.",
+      "The graph private pool separately owns captured intermediates. The proof does not rely on that pool retaining pre-capture tensors, or on passing GPU measurements."
+    ],
+    "primary_runtime_hashes": {
+      "torch_init.py": "d9dfff4b75d46e4c75572200a3466b70231d05b0318e38ac1bd121789165fb49",
+      "eval_frame.py": "e6bfb6d3f22f879635b1d7702e5b4a48f051f24895ff7d1bc4ecc388b3be1100"
+    },
+    "prior_Python313_control_reviewed": "The prior ownership_cycle_check.py and its JSON demonstrate collection without freeze, retention with freeze, and collection after unfreeze using the same wrapper reference shape. Tagged Torch source establishes the actual wrapper references; no new GPU diagnostic was needed.",
+    "limitation": "This depends on canonical Torch 2.12 wrapper retention and the existing freeze placement. Future changes removing either should retain the student owner explicitly."
+  },
+  "streams_and_work": "Teacher preconditioner streams join before dependent products. The complete teacher fit, 250 student updates and readout are captured. Scratch values and Flash normalizers are refreshed from current inputs. No timer edits, unjoined work or fit-bypass branch was found.",
+  "attribution": "The README assigns the learner to @spartanhaden #130 and preserves the kernel/RFM/HKNN, tangent-student, @islamborghini, @likelytobelaura, @sjbaebae and modded-nanogpt credit chain. This entrant claims a budget and schedule optimization.",
+  "integration_helper_review": {
+    "full_precision_baselines": "The helper now compares exact accepted D2 3.184644651675189 ms and D4 97.0473794240142 ms baselines, avoiding rounded table comparisons.",
+    "score_energy_separate": "Score passes control qualification separately. Absent optional energy produces a dash column.",
+    "verifier_roots": "Accepted-entry parents[4] and held-review parents[3] resolve to mnist-a100.",
+    "publication_scope": "Final execution status is separate from this static assessment. Published source-review outcomes should match the retained raw records."
+  },
+  "findings": []
+}
