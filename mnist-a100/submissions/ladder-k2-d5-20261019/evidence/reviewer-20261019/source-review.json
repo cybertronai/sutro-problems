@@ -1,0 +1,227 @@
+{
+  "pr": 129,
+  "head": "1e2f7649a7429bd72ac7917531f9d1f3c591dfa4",
+  "main_head": "f66769ec46e1817f86404b3cc8c4c135a58f4128",
+  "folder": "ladder-k2-d5-20261019",
+  "source_path": "/Users/yaroslavvb/git/sutro-problems/output/pr-review-20261019-pass2/pr129/source/mnist-a100/submissions/ladder-k2-d5-20261019/submission.py",
+  "source_sha256": "cc423b95ed940a5bcd5dc3b08f71502dddbcee3b42cbc34fc5322819378aef2a",
+  "source_bytes": 20474,
+  "function": "ladder_kernel",
+  "upstream_source_sha256": "039bde8b8576a67dbfd20017d7b70cbb2fce59f0927d0fc9f989c1bb6db45728",
+  "scorer_sha256": "1bc6d8d96a776565bc70f3ccdb91be7de57187d4495b2b0437fac98f5e120064",
+  "runner_sha256": "1180b843cf6c32414774da90c835a8b7298d2db8719989237a793ca1c62a10ab",
+  "reviewed_head": "1e2f7649a7429bd72ac7917531f9d1f3c591dfa4",
+  "checked_at_utc": "2026-10-20T02:20:33.952159+00:00",
+  "entrant": "spartanhaden",
+  "source_gate_passed": true,
+  "review_flags": [
+    "20,474 bytes, close to the 20,480-byte limit"
+  ],
+  "static_blockers": [],
+  "source_limit_bytes": 20480,
+  "source_headroom_bytes": 6,
+  "scope": "Manual full source, reset, guard, custom-op/Triton and provenance review. Trusted canonical check_source/review_flags and nonexecuting upstream AST comparison. No learner or author verifier executed locally. One frozen initial stock reviewer Modal group supplies separate GPU reproduction.",
+  "method": "Kernel-taught Ladder 60-1024-512-256-10, AGOP^0.5 student coordinates, 600 Adam steps of batch 2500, current-training same-class tangent jitter, double-sampling of least-confident current queries late in training, 30 updates per CUDA graph replay, fused wide-combinator backward and class-symmetric teacher fallback.",
+  "fresh_teacher": "teacher overwrites every cloned static training/query tensor before graph replay. sym_scores starts identity metric and zero PCG coefficients, computes both metric updates from current labels and refits with current-query predicted pseudo labels. Student metric and teacher scores are newly computed from supplied data every call.",
+  "fresh_student": "ladder_kernel overwrites owned x/y/pool/ptar, refits tangents and hard-query IDs before reset. reset reinitializes all encoder/decoder/combinator parameters and biases/gain, clears Adam moments and step counts, update counter and loss-sampling scores, recreates all 600 minibatch index rows from current hard-query IDs and reseeds randomness. Scalar LR is overwritten from reset counter inside compiled fwd before every optimizer update.",
+  "graph_and_optimizer": "CACHE preserves only compiled graphs/workspaces. Capture explicitly sets gradients to None for each of 30 steps, so all loss/backward/Adam work is captured. Twenty graph replays perform 600 fixed updates on every call. Adam state tensor objects are retained but their values reset before fitting. Inference derives BN statistics again from current train rows.",
+  "guard_review": {
+    "data": "Only current teacher scores, current student query labels and student errors on supplied training labels. No query truth or holdout/dataset identity is consulted.",
+    "logic": "Counts confident teacher/student off-diagonal class confusions in a 10\u00d710 table, zeroes its diagonal and tests max count >60 or training mistakes >40. torch.where then selects confident teacher labels for every query row when triggered. Index structure and max are invariant to class relabeling.",
+    "work": "Both teacher and student, all 600 updates, both query and train prediction passes execute before the guard regardless of whether it triggers; the output selection is branchless. Author statement that it often triggers on Fashion describes observed model behavior, not a dataset-based computational shortcut.",
+    "status": "No static rule violation identified; actual holdout/time/dispersion gates are evaluated by the unchanged scorer."
+  },
+  "triton_review": "comb_bwd is registered at call time as a custom op with no mutated inputs; fake registration supplies shapes/dtypes for compile tracing only. Actual custom backward runs the Triton implementation. Phase 1 computes live combinator/BN adjoints and partial parameter/statistic sums; phase 2 reduces owned workspace and writes newly allocated gradient outputs. Kernel launch geometry uses GPU multiprocessor count for hardware partitioning. Supported widths 1024/512/256 divide configured column blocks, so unmasked per-column metadata loads are in bounds; row tails are masked and workspace uses 20*S entries per chunk. No arbitrary external pointers, timer access or scorer mutation found.",
+  "input_and_truth": "Original caller tensors receive no in-place writes. Teacher static tensors are clones; normalization/metric coordinates and tangent neighbor matrices are owned allocations. Query supervision comes from current teacher predictions and unlabeled reconstruction only; train label fit is allowed for guard/model selection.",
+  "prior_or_bypass": "Only scalar hyperparameters, architecture/index lists and a three-entry launch-configuration dictionary; no stored fitted tensor/encoded pool, decoder, network, file read or parent/process introspection. os usage sets only compiler cache paths under /tmp. All graph side streams synchronize with current stream.",
+  "canonical_rules": {
+    "version": "mnist-a100/1.2.0",
+    "D5_mean_error_limit_pct": 1.9,
+    "worst_draw_limit_pct": 3.4,
+    "holdout_accuracy_floor_pct": 15,
+    "calls": "11 MNIST + 4 foreign holdout, fresh sandbox worker per timed call; slower dataset mean with parent-clock floor, clock and timing dispersion checks.",
+    "review_scope": "One initial stock canonical three-run group, unchanged source/scorer/launcher. All outcomes retained; no retries, replacements or permanent source-exclusion inference.",
+    "energy": "Optional separate column; invalid energy telemetry leaves energy blank without invalidating a qualifying canonical time."
+  },
+  "upstream_attribution": {
+    "source_sha256": "cc423b95ed940a5bcd5dc3b08f71502dddbcee3b42cbc34fc5322819378aef2a",
+    "upstream_source_sha256": "039bde8b8576a67dbfd20017d7b70cbb2fce59f0927d0fc9f989c1bb6db45728",
+    "source": "Own #121 base at pinned canonical commit f66769ec46e1817f86404b3cc8c4c135a58f4128",
+    "functions": [
+      {
+        "function": "agop",
+        "current_line": 159,
+        "upstream_line": 193,
+        "normalized_ast_identical": false
+      },
+      {
+        "function": "aug",
+        "current_line": 48,
+        "upstream_line": 64,
+        "normalized_ast_identical": true
+      },
+      {
+        "function": "bn",
+        "current_line": 251,
+        "upstream_line": 286,
+        "normalized_ast_identical": true
+      },
+      {
+        "function": "chol",
+        "current_line": 42,
+        "upstream_line": 56,
+        "normalized_ast_identical": true
+      },
+      {
+        "function": "combine",
+        "current_line": 258,
+        "upstream_line": 295,
+        "normalized_ast_identical": false
+      },
+      {
+        "function": "h3_ops",
+        "current_line": 59,
+        "upstream_line": 78,
+        "normalized_ast_identical": true
+      },
+      {
+        "function": "kern",
+        "current_line": 55,
+        "upstream_line": 73,
+        "normalized_ast_identical": true
+      },
+      {
+        "function": "ladder_kernel",
+        "current_line": 626,
+        "upstream_line": 445,
+        "normalized_ast_identical": false
+      },
+      {
+        "function": "lfac",
+        "current_line": 124,
+        "upstream_line": 152,
+        "normalized_ast_identical": true
+      },
+      {
+        "function": "lrelu",
+        "current_line": 255,
+        "upstream_line": 291,
+        "normalized_ast_identical": true
+      },
+      {
+        "function": "mm",
+        "current_line": 474,
+        "upstream_line": 306,
+        "normalized_ast_identical": true
+      },
+      {
+        "function": "panels",
+        "current_line": 65,
+        "upstream_line": 86,
+        "normalized_ast_identical": true
+      },
+      {
+        "function": "pcg",
+        "current_line": 130,
+        "upstream_line": 160,
+        "normalized_ast_identical": true
+      },
+      {
+        "function": "rownorm",
+        "current_line": 45,
+        "upstream_line": 60,
+        "normalized_ast_identical": true
+      },
+      {
+        "function": "sqrtm",
+        "current_line": 148,
+        "upstream_line": 180,
+        "normalized_ast_identical": true
+      },
+      {
+        "function": "sym_scores",
+        "current_line": 175,
+        "upstream_line": 212,
+        "normalized_ast_identical": false
+      },
+      {
+        "function": "teacher",
+        "current_line": 222,
+        "upstream_line": 261,
+        "normalized_ast_identical": true
+      },
+      {
+        "function": "upd_comp",
+        "current_line": 113,
+        "upstream_line": 139,
+        "normalized_ast_identical": true
+      }
+    ],
+    "exact_normalized_matches": 14,
+    "added_top_level_functions": [
+      "_ld",
+      "_p",
+      "_s",
+      "comb_bwd",
+      "comb_bwd_kernel",
+      "comb_math",
+      "guard",
+      "register",
+      "tangents"
+    ],
+    "attribution": "Source/README/PR explicitly credit own #121 base, SethTS/Rasmus Ladder, islamborghini kernel-PCG and #124 tuning, likelytobelaura #118 tangent jitter, and sigkillme0 #127 multi-step replay. No missing attribution blocker found.",
+    "limits": "Claims that the new kernel predates and was developed independently of #127 are author provenance assertions; this single submitted snapshot cannot attest development chronology."
+  },
+  "author_provenance": {
+    "head": "1e2f7649a7429bd72ac7917531f9d1f3c591dfa4",
+    "source_sha256": "cc423b95ed940a5bcd5dc3b08f71502dddbcee3b42cbc34fc5322819378aef2a",
+    "checks": {
+      "source_hash": true,
+      "source_bytes": true,
+      "function": true,
+      "stock_launcher_sha": true,
+      "median_time": true,
+      "median_energy": true
+    },
+    "runs": [
+      {
+        "file": "evidence/official/run-1.json",
+        "raw_sha_matches": true,
+        "source_hash_matches": true,
+        "device_matches": true,
+        "gpu_uuid_matches": true,
+        "ranked_ms_matches": true,
+        "energy_matches": true
+      },
+      {
+        "file": "evidence/official/run-2.json",
+        "raw_sha_matches": true,
+        "source_hash_matches": true,
+        "device_matches": true,
+        "gpu_uuid_matches": true,
+        "ranked_ms_matches": true,
+        "energy_matches": true
+      },
+      {
+        "file": "evidence/official/run-3.json",
+        "raw_sha_matches": true,
+        "source_hash_matches": true,
+        "device_matches": true,
+        "gpu_uuid_matches": true,
+        "ranked_ms_matches": true,
+        "energy_matches": true
+      }
+    ],
+    "all_manifest_checks_pass": true,
+    "author_scope": "Raw records include full console logs and GPU UUIDs and match manifest source/run/launcher hashes. The manifest does not include a scorer file hash, original Modal app ID or controller timestamps; assertions about initial/only set and development chronology remain supplied provenance rather than independently attested history.",
+    "related_source_scope": "README discloses earlier distinct source variants by different hash prefixes; none are pooled into this exact-source qualification or replace fresh reviewer outcomes.",
+    "development_scope": "Claim of 4301 fresh development calls and prior kernel chronology is not accompanied by raw development records; not used for qualification."
+  },
+  "documentation_notes": [
+    "Proposed main README uses author measurements without an established-record star. If accepted, replace/add independent reviewer medians and scope; preserve source bytes and all author evidence.",
+    "Claim of 4301 development calls, ~0.99 success probability and earlier kernel chronology is not independently attested by submitted raw records. Separate source versions must not be pooled or used to replace this reviewer group."
+  ],
+  "prior_exact_source_reviewer_group_found": false,
+  "modal_app_id": "ap-w3ipJVyQDr6kjqQ2NXVEJH",
+  "replacement_runs": 0
+}

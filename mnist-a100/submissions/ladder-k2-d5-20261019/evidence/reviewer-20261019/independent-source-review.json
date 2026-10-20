@@ -1,0 +1,103 @@
+{
+  "pull_request": 129,
+  "reviewed_head": "1e2f7649a7429bd72ac7917531f9d1f3c591dfa4",
+  "frozen_main": "f66769ec46e1817f86404b3cc8c4c135a58f4128",
+  "source_sha256": "cc423b95ed940a5bcd5dc3b08f71502dddbcee3b42cbc34fc5322819378aef2a",
+  "source_bytes": 20474,
+  "checked_at_utc": "2026-10-20T02:32:18.492303+00:00",
+  "scope": "Second independent targeted manual source pass plus CPU-only index-coverage arithmetic; no learner import/execution, new GPU jobs, source edits or public mutations. Does not infer accuracy from static inspection.",
+  "findings": [],
+  "static_blockers": [],
+  "guard": {
+    "lines": "618-656",
+    "data": "Current teacher scores, current student query predictions, and current labelled-train error only.",
+    "logic": "p*10+t indexes a fresh 10x10 student/teacher confusion table; c[::11]=0 removes agreement. Max off-diagonal confident-count>60 or train mistakes>40 triggers confident teacher-label selection. This is equivariant to any class permutation: the table rows and columns permute together, its diagonal and maximum remain invariant.",
+    "work": "teacher and every student update, query prediction and training prediction complete before torch.where. No data-dependent Python branch skips fitting or replay. No class ID, dataset identity, query truth, timer or parent state shortcut.",
+    "bounds": "Student and teacher argmax labels are0..9, so flattened confusion indexes are0..99."
+  },
+  "per_call_reset": {
+    "teacher_lines": "180-241",
+    "teacher": "Every cloned static input overwritten before replay; captured sym_scores starts with identity transform/zero PCG solutions, computes both current AGOP updates and fresh confident-query pseudo-label refit. Cloned score/metric outputs passed onward.",
+    "student_input_lines": "641-649",
+    "student_inputs": "Current x, one-hot train y, full train/query pool, teacher targets, same-class training tangents and least-confident query IDs overwrite every persistent data buffer before reset.",
+    "reset_lines": "570-596",
+    "parameters": "All encoder/decoder/combinator parameters, beta, gamma initialized each call; all Adam exp_avg/exp_avg_sq/step tensors zeroed. No AMSGrad state exists in configured Adam.",
+    "sampler": "Counter resets0; loss-sampling scores reset1; all600 minibatch rows rebuilt from current hard IDs, and RNG reset. LR schedule, mix schedule and row offsets are immutable scalar/index schedules; LR value overwritten at each fwd before opt.step.",
+    "bounds": "20 replays times30 captured updates reads schedule/sampler indexes0..599 then increments counter600, which is reset before next call. Label sampler clamps indices to n-1. Late duplicated query IDs stay inside current pool.",
+    "inference": "BN statistics are recomputed from the current supplied training rows during both prediction passes. No persisted running BN stats."
+  },
+  "graph_ownership": {
+    "teacher": "CACHE[key]=(g,static,out) strongly retains all external static inputs, outputs and graph. Capture-created intermediate allocations remain in its private pool; side-stream work branches from and rejoins capture stream. Output clone separates later use from teacher scratch.",
+    "student": "CACHE strongly retains Ladder, which retains params, all pre-capture input/state/sampler tensors, Adam state and graph. Compiled bound methods also remain on Ladder. No reliance on garbage-collection freeze or hidden compiler cache.",
+    "multi_step": "Each of30 captured updates sets every p.grad=None before backward. Gradient and backward workspace created during capture use the graph-private pool; captured kernels refill their static allocations on every replay. Graph is retained for20 ordered replays, and default distinct pools keep teacher/student graph storage separate.",
+    "primary_reference": "https://docs.pytorch.org/docs/2.12/notes/cuda.html",
+    "reference_sections": [
+      "Whole-network capture (grad=None and static gradient refill)",
+      "Usage with multiple streams (branch/rejoin dependencies)",
+      "Graph memory management (graph-private allocation lifetime)"
+    ]
+  },
+  "custom_backward_bounds": {
+    "lines": "282-450",
+    "configured_shapes": "M=1,B=2500,S in1024/512/256; custom CombFn is used only for these three wide combinators. Other widths use ordinary combine. Flattened parameter shape has17*S elements; per-column mean/rstd hasS.",
+    "columns": "Each supported S divides BC exactly and NCB=S//BC; all unmasked metadata/workspace column accesses therefore remain0..S-1. Unsupported widths fail KCFG lookup rather than silently using mismatched geometry.",
+    "rows": "PHASE1/2 use disjoint row chunks with rows<r1 masks, including prefetched rows. Invalid-row GO is zero; partial-gradient contributions are zero, and normalized-v statistic explicitly masks row tails.",
+    "workspace": "PHASE1 writes every20*S workspace entry per row chunk, DV and DLAT for every valid row/column. PHASE2 reduces only initialized workspace, with DP e<e_hi<=17*S and WS stride20*S. DP chunks partition17*S; DU writes cover every valid input row/column. Two phases launch in order on current stream.",
+    "gradients": "New du/dlat/dp/workspace allocations belong to this op, mutates_args is empty, no caller-input stores. Algebra implements both leaky-ReLU combinator layers plus BN adjoint; BF16 rounding is an ordinary numerical approximation, not a pointer/lifetime issue.",
+    "cpu_only_coverage": [
+      {
+        "M": 1,
+        "B": 2500,
+        "S": 1024,
+        "BC": 64,
+        "SUB": 8,
+        "SB": 32,
+        "SM_count": 108,
+        "rows_per_chunk": 224,
+        "row_chunks": 12,
+        "column_blocks": 16,
+        "programs": 192,
+        "parameter_chunk": 91,
+        "row_exact_once_coverage": true,
+        "all_17S_parameter_output_exact_once_coverage": true,
+        "column_tail_absent": true
+      },
+      {
+        "M": 1,
+        "B": 2500,
+        "S": 512,
+        "BC": 32,
+        "SUB": 8,
+        "SB": 32,
+        "SM_count": 108,
+        "rows_per_chunk": 224,
+        "row_chunks": 12,
+        "column_blocks": 16,
+        "programs": 192,
+        "parameter_chunk": 46,
+        "row_exact_once_coverage": true,
+        "all_17S_parameter_output_exact_once_coverage": true,
+        "column_tail_absent": true
+      },
+      {
+        "M": 1,
+        "B": 2500,
+        "S": 256,
+        "BC": 16,
+        "SUB": 16,
+        "SB": 64,
+        "SM_count": 108,
+        "rows_per_chunk": 448,
+        "row_chunks": 6,
+        "column_blocks": 16,
+        "programs": 96,
+        "parameter_chunk": 46,
+        "row_exact_once_coverage": true,
+        "all_17S_parameter_output_exact_once_coverage": true,
+        "column_tail_absent": true
+      }
+    ],
+    "limitations": "Analytical bounds apply to fixed submitted M=1 and configured widths; this pass is not a GPU sanitizer or full floating-point gradient comparison."
+  },
+  "conclusion": "No confirmed blocker in requested guard, reset, graph-ownership or custom-backward bounds areas. Runtime accuracy/time/energy qualification belongs to the single initial canonical group handled separately."
+}
