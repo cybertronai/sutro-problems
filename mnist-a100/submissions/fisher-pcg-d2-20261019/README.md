@@ -1,5 +1,28 @@
 # RBF kernel ridge in a Fisher metric on a compressed training set: difficulty 2
 
+## Independent reviewer reproduction — October 19, 2026
+
+The first frozen reviewer group passed **3/3 fresh canonical sandboxed Modal A100-80GB runs**, with valid above-idle energy measurements (3 recorded GPU UUIDs). Median ranked time is **3.184645 ms/call** and median energy is **207.682235 mJ/call**; pooled MNIST error is **3.087576%** (319,811/330,000 correct).
+
+| Reviewer run | MNIST error | Margin, labels | Ranked ms | Above-idle mJ |
+| - | -: | -: | -: | -: |
+| 1 | 2.987273% | +454 | 3.184645 | 189.029881 |
+| 2 | 3.060000% | +374 | 3.918747 | 207.682235 |
+| 3 | 3.215455% | +203 | 2.691631 | 281.843872 |
+
+Source is unchanged at SHA-256 `de16bb0926ae35895400758697ba68f73e7f5ec366f2b84495b74c0abba89804`. The scorer and runner are unchanged. [Verification](evidence/reviewer-20261019/verification.json) reconstructs every complete canonical score and energy result from the [raw records](evidence/reviewer-20261019/); [source review](evidence/reviewer-20261019/source-review.json) covers per-call fitting, label isolation and cached-state reset. No reviewer outcome was replaced or retried.
+
+This plain-PyTorch D2 port credits @sigkillme0's accepted [D3 Fisher/compression method](../kernel-d3-20261018/README.md), @spartanhaden's [earlier D2 kernel](../rfm-pcg-d2-20261012/README.md) and @islamborghini's [kernel-PCG](../kernel-pcg-20260929/README.md). The Fisher metric, log-radius feature, class-restricted compression and extrapolated PCG derive from #125; the triangular-solve preconditioner, side-stream factorization and D2 retuning are the submitted changes. Exact-source author records use working filename `kk_d2_final.py` and reconstruct separately. Development-call counts, probability estimates and optimization comparisons below were not independently reproduced by this review.
+
+The leaderboard uses the independent reviewer medians above. Author results below are retained separately. The published instructions specify three official Modal runs and their median; this independent reproduction is review evidence, not a newly imposed second-batch submission rule.
+
+Using Python 3.13 as in the canonical runner, recheck saved records from this submission directory with `python evidence/reviewer-20261019/verify_records.py evidence/reviewer-20261019 submission.py --difficulty 2 --function kc_d2 --output /tmp/pr131-verification.json`. This reconstructs recorded verdicts without executing the learner.
+
+## Original author report (as submitted)
+
+Present-tense record and pending-review claims below describe the submission date; the dated reviewer section above gives the accepted review status.
+
+
 Entrant: [@spartanhaden](https://github.com/spartanhaden).
 
 This entry ports @sigkillme0's merged d3 record ([#125](../kernel-d3-20261018/README.md)) to difficulty 2, in plain PyTorch, with a faster preconditioner solve and retuned constants.

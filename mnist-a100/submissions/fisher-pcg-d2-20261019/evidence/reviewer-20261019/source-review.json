@@ -1,0 +1,43 @@
+{
+  "checked_at_utc": "2026-10-20T02:18:57.641340+00:00",
+  "pull_request": 131,
+  "reviewed_head": "c0c711f3f9d33146cb6e157e57a8361f7ee8c7b1",
+  "frozen_main": "f66769ec46e1817f86404b3cc8c4c135a58f4128",
+  "source_sha256": "de16bb0926ae35895400758697ba68f73e7f5ec366f2b84495b74c0abba89804",
+  "source_bytes": 16400,
+  "function": "kc_d2",
+  "source_gate_passed": true,
+  "review_flags": [
+    "16,400 bytes, close to the 20,480-byte limit"
+  ],
+  "static_blockers": [],
+  "implementation": "Plain PyTorch/cuBLAS/cuSOLVER/ATen and PyTorch flash-attention kernel; no custom Triton definitions or compiler patches.",
+  "current_input_learning": "Current train rows/labels determine LDA, QDA Fisher metric, power transform, current class-seeded k-means, low-margin hard-row selection, weighted centroids, landmark preconditioner and fresh five-step PCG with extrapolated last direction. Query rows are only scaled, transformed and scored; no query labels or external data access.",
+  "input_integrity": "Entry clones input tensors and only writes owned static copies. All later in-place operations target concatenations, factors, current fit buffers or owned temporaries; no writes through caller tensor views. Returned labels are cloned.",
+  "cached_state_reset": "_C caches only identity/zero/one/index/algorithm constants. _ST caches streams and _GRAPHS caches shape/dtype/device keyed full-fit graphs plus owned input/output buffers. Every replay recomputes all data-dependent metric, clustering, weighted support, preconditioner and PCG state. PCG residual starts from current targets; every D/G slot is initialized before final reduction.",
+  "stream_integrity": "High-priority preconditioner stream waits for current main-stream landmarks and factors; main stream waits for side completion before PCG. Both side chains fork and rejoin the captured main graph; no work is hidden after return or outside timed graph replay.",
+  "warmup": "Two eager fits initialize kernels/constants, then full run is captured; 64 full-fit warmup replays and synchronize precede normal copy/full-refit/clone path. Same algorithm on foreign warmup and timed/energy draws; no dataset identity, timer or parent-process introspection.",
+  "pretrained_prior_review": "All literals are algorithm/hyperparameter scalars and metadata text; no encoded arrays, pretrained weights, decoder, file/network IO or scorer/sandbox access.",
+  "upstream": "Source and report explicitly credit @sigkillme0 #125 Fisher/compression/FITC/extrapolation/warmup method, own accepted rfm-pcg-d2 and inherited @islamborghini kernel-PCG. The new implementation uses triangular preconditioner solves, fewer PyTorch kernels, stream scheduling and retuned constants. Does not claim #125 Triton/HKNN code reuse.",
+  "published_rules": "Canonical mnist-a100/1.2.0 D2 mean error<=3.40%, worst draw<=4.90%, holdout>=15%, complete11 MNIST+4 foreign calls plus all canonical clock/dispersion/sandbox gates; three official stock Modal runs and median. Optional energy validity separate. No new mandatory second-reviewer-batch or permanent source ban rule imposed.",
+  "prior_exact_source_reviewer_search": "No prior independent verification/decision/manifest found under output for exact hash before this initial launch; only current downloaded author manifest and snapshot matched.",
+  "finalized_at_utc": "2026-10-20T02:30:08.918052+00:00",
+  "review_status": "complete: exact-source static review and initial fixed independent group passed",
+  "reviewer_outcome": {
+    "passed_runs": 3,
+    "energy_valid_runs": 3,
+    "complete_timed_calls": 45,
+    "median_ranked_ms": 3.184644651675189,
+    "median_energy_mj": 207.6822349423755,
+    "aggregate_mnist_error_pct": 3.0875757575757574,
+    "accuracy_margins_labels": [
+      454,
+      374,
+      203
+    ],
+    "distinct_energy_gpu_uuids": 3,
+    "retries_or_replacements": 0,
+    "source_modified": false,
+    "modal_app_stopped": true
+  }
+}
