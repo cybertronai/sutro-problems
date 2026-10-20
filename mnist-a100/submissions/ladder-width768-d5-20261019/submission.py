@@ -1,6 +1,6 @@
 """MNIST difficulty 5 (band 1.90%): kernel-taught Ladder.
 
-Width 768; 510 Adam steps, batch 2,500, LR 0.01297058823529412, teacher weight 0.25.
+Width 768; 480 fused Adam steps, batch 2,500, LR .01378125, teacher weight .25.
  1. Teacher (after @islamborghini's kernel-pcg): RBF kernel ridge by Nystrom-PCG; the fit's AGOP M sets the metric
     M^0.75, twice; confident test rows (top-2 margin >= 0.15) join as pseudo-labels in a refit.
  2. Student inputs: rownorm(x) @ L, rescaled, with L L^T = AGOP^0.5.
@@ -26,7 +26,7 @@ AGOP_N,M_STEPS,BSTEPS,RSTEPS=((3000,10000),(16,16),14,16)
 PSEUDO_CONF,P,NS_ITERS,SHIFT=(0.15,2000,15,3.0)
 F32=torch.float32
 M,DIMS=(1,(60,768,512,256,10))
-STEPS,BATCH,LR,BETA1,DECAY_START=(510,2500,0.01297058823529412,0.8,2/3)
+STEPS,BATCH,LR,BETA1,DECAY_START=(480,2500,0.01378125,0.8,2/3)
 UF,GK=0.2,30
 NOISE,SCALE,RECON,EPS,CSTD,SEED=(0.25,0.6,2000.0,1e-10,0.025,11)
 MIX,MIX_A,MIX_B,MIX_C=(0.5,0.1,0.6,0.9)
@@ -505,7 +505,7 @@ class Ladder:
   o.mixs=MIX*torch.where(frac < MIX_A,0.0,torch.where(frac < MIX_B,1.0,ramp))
   o.lr=torch.tensor(LR,device=device)
   o.hard=torch.zeros(int(UF*nq),dtype=torch.long,device=device)
-  o.opt=torch.optim.Adam(o.params,lr=o.lr,betas=(BETA1,0.999),foreach=True,capturable=True)
+  o.opt=torch.optim.Adam(o.params,lr=o.lr,betas=(BETA1,0.999),fused=True,capturable=True)
   o.ostep=torch.compile(o.opt.step)
   o.lossfn=torch.compile(o.fwd,dynamic=False,options=IND)
   o.reset()
