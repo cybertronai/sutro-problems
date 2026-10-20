@@ -1,0 +1,43 @@
+{
+  "pull_request": 130,
+  "reviewed_head": "dab10785ad550f0c3f73a9e48bc18b05fb25e02f",
+  "frozen_main": "f66769ec46e1817f86404b3cc8c4c135a58f4128",
+  "source_sha256": "102363cfe2825eee42b5ee641731655679825e7087c3d83e19c3340d93859306",
+  "source_bytes": 20460,
+  "source_limit_bytes": 20480,
+  "source_byte_margin": 20,
+  "source_gate_passed": true,
+  "review_flags": [
+    "20,460 bytes, close to the 20,480-byte limit"
+  ],
+  "review_flag_disposition": "Full source reviewed; scalar algorithm hyperparameters and normal code only, no embedded model/data table or decoder. Twenty bytes below published cap.",
+  "function": "hybrid_d4",
+  "canonical_scorer_unchanged": true,
+  "canonical_runner_unchanged": true,
+  "imports": [
+    "gc",
+    "math",
+    "torch",
+    "torch.nn.functional",
+    "torch._inductor.config (inside first-call setup)"
+  ],
+  "implementation": "Plain PyTorch and ATen flash-attention matmuls; no hand-written Triton/CUDA kernels. Inductor may generate standard kernels for student step.",
+  "fitting": "Two cyclically reordered current-label RFM teachers each learn three AGOP metrics (3000/6000/10000 rows,12PCG steps each), fit full-data ridge with Nystr\u00f6m preconditioning and HKNN. Current scores become averaged soft targets. Three 60-256-256-10 RMSNorm/ReLU students (padded64input/16output) train400Adam steps on current labelled/query examples with teacher labels, tangent/noise jitter and two target refreshes. Final prediction blends75percentstudents/25percentteacher and adds HKNN.",
+  "per_call_reset": "Graph replay copies all current inputs, recomputes teachers/metrics/Gram products/preconditioners/soft labels/neighbors/tangents; writes current features, one-hot training labels and teacher soft query targets into all student arrays. Students.reset freshly randomizes hidden layers, zeros head/bias/Adam moments/counter and copies FP32 master weights to BF16. Each fit executes400updates and current final readout. No fitted weight or prediction reused from warm-up.",
+  "truth_boundary": "Only train_y provides truth. Query labels are current teacher or student predictions, never test truth. Query rows can enter class-conditioned neighbor/tangent/HKNN support only with predicted labels. Target refreshes average current ensemble predictions including self-model contribution; no disjoint opposite-half split is implemented here, unlike credited earlier cross-teaching sources. This remains ordinary allowed transductive fitting.",
+  "input_integrity": "Static clones separate caller storage. Current inputs only read in metric/label operations; all in-place outputs, diagonals, gradient arrays, student buffers and graph copies are owned tensors. Output.clone isolates returned labels from later replay.",
+  "graph_work_and_streams": "Full teacher+student call captured during permitted foreign warm-up. _ST retains stream objects; tri_inv splits diagonal inverse blocks across four streams, joins paired blocks and then both halves; precond/member have explicit wait_stream joins before dependent products. Same fixed loop counts/shapes and current-data masks for bothMNIST/holdout. No timer manipulation or skipped fit branch.",
+  "flash_cache": "Each Flash operator is built anew during capture for the corresponding metric/fit. Its q/k/v zeros, current embeddings and first-mv logsumexp-derived self.el calculation are captured operations, so replay refreshes all values for the current draw. Reuse of self.el across subsequentCGsteps is within one fixed current operator, not fitted reuse across draws.",
+  "object_lifetime_status": "RESOLVED: no lifetime defect. Although STATE does not directly retain Students, stu.fn retains its bound _step method via Torch2.12 wrapper, forming a strong self-cycle. gc.collect and gc.freeze run while the first hybrid_d4 frame still roots stu. Freeze permanently retains that live tracked cycle and its pre-capture student tensors after frame return. Captured intermediate allocations are separately protected by the CUDA graph private pool. See object-lifetime-audit.json for tagged primary-source references and controlled Python3.13 weakref proof.",
+  "object_lifetime_initial_concern": "A preliminary possibility of freed pre-capture buffers was investigated; it omitted the still-live frame and freeze timing. It is not a remaining blocker, and this conclusion does not rely on passing GPU measurements or an assumed hidden compiler cache.",
+  "gc_behavior": "One first-call collect/freeze retains execution objects; fresh replay values and RNG initialization still recompute fits. No unfreeze is called by learner/scorer; sandbox worker ends after the timed call or energy window. New-object garbage collection remains enabled.",
+  "precision": "TF32 and FP16 reduced-precision reductions disabled uniformly. Teacher uses FP16 hi/lo splits/flash with FP32 state and numerically scaled preconditioning. Student master weights/Adam/normalization/softmax are FP32 and matrix operands BF16. Padded output classes>=10 are masked during training and ignored during prediction.",
+  "backward": "Hand-written MLP gradient computes softmax-target loss, head/bias sums, BF16matmul gradients and RMSNorm/ReLU derivative. All current target/index tensors remain GPU data in the captured student graph.",
+  "provenance": "Three provided author records match exact submitted SHA despite working filename sd4_z400.py; all manifest raw hashes and full score/energy reconstructions match, with3distinctUUIDs and raw stdout/stderr intact. They are separate from fresh reviewer records. Development4224-call/0.99probability/old-source chronology claims lack supporting raw files here and are not verified.",
+  "upstream": "Five small named helper ASTs match the explicitly credited accepted RFM/HKNN, kernel/Ladder and D4 ensemble entries after docstring removal. Source/README preserve @spartanhaden,@islamborghini,@likelytobelaura, RFM/HKNN and modded-nanogpt lineage and acknowledge held126 related design. No-code-reuse/development history assertions cannot be independently authenticated.",
+  "published_rule_scope": "D4 needs107470/110000 correct per complete11MNIST+4holdout run, worst draw>=9620/10000, holdout>=15percent and every timing gate. Three stockModal runs are reported by their median. Extra reviewer reproduction is evidence, not a new permanent source-ban rule. Energy remains optional and separate; invalid telemetry alone blanks its column.",
+  "static_source_blockers": [],
+  "blockers": [],
+  "fresh_reviewer_outcome": "Pending initial once-only fixed3-run energy group. No replacement or retry.",
+  "checked_at_utc": "2026-10-20T02:25:04.962564+00:00"
+}

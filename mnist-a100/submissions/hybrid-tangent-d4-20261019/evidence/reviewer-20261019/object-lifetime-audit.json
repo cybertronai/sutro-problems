@@ -1,0 +1,72 @@
+{
+  "question": "Are pre-capture Students buffers kept alive after first hybrid_d4 return?",
+  "disposition": "Resolved: no confirmed lifetime defect. A live self/wrapper/bound-method reference cycle is frozen before the frame releases stu, retaining every student buffer for the worker lifetime.",
+  "initial_concern": "STATE does not directly store stu; graph private allocation pool alone would not retain external pre-capture tensors. Passing qualification runs alone would not answer lifetime.",
+  "proof_chain": [
+    "submission.py:491 roots stu in hybrid_d4 frame; run closure also captures it.",
+    "Students.__init__ stores torch.compile(self._step) as self.fn.",
+    "torch2.12 torch.compile delegates to Dynamo optimize(model); innermost_fn preserves bound-method self.",
+    "Torch2.12 compile_wrapper stores fn in _torchdynamo_orig_callable and functools.wraps retains __wrapped__; both are strong Python references to a callable retaining self.",
+    "Cycle: stu -> self.fn -> original bound method -> stu, and stu -> buffers.",
+    "submission.py:512 calls gc.collect while stu is still locally reachable; it cannot collect the cycle then.",
+    "submission.py:513 gc.freeze moves the live tracked cycle into permanent generation. After frame return, cycle survives refcounting and is excluded from future GC.",
+    "No gc.unfreeze is called in source/canonical scoring worker; worker is killed after its timed call, or after repeated energy window.",
+    "Python3.13 weakref control demonstrates collection without freeze and retention with source-equivalent freeze placement; unfreeze then collects, proving the frozen cycle retains the buffer without other roots."
+  ],
+  "primary_sources": [
+    {
+      "url": "https://raw.githubusercontent.com/pytorch/pytorch/v2.12.0/torch/__init__.py",
+      "local_sha256": "d9dfff4b75d46e4c75572200a3466b70231d05b0318e38ac1bd121789165fb49",
+      "lines": "2791-2798",
+      "supports": "torch.compile delegates model to torch._dynamo.optimize"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/pytorch/pytorch/v2.12.0/torch/_dynamo/eval_frame.py",
+      "local_sha256": "e6bfb6d3f22f879635b1d7702e5b4a48f051f24895ff7d1bc4ecc388b3be1100",
+      "lines": "620-642,970,1106",
+      "supports": "Preserves bound-self callable and retains it strongly on wrapper"
+    },
+    {
+      "url": "https://docs.python.org/3.13/library/gc.html#gc.freeze",
+      "supports": "Tracked objects in permanent generation are ignored by future collections"
+    },
+    {
+      "url": "https://docs.pytorch.org/docs/2.12/notes/cuda.html#cuda-graphs",
+      "supports": "Captured external tensor pointers need long-lived storage; graph pool not used as ownership proof"
+    }
+  ],
+  "diagnostic": {
+    "python": "3.13.11 (main, Dec  9 2025, 21:00:44) [Clang 21.1.4 ]",
+    "scope": "Python-only ownership-shape demonstration; exact Torch2.12 wrapper strong references established separately by tagged upstream source. No Torch/GPU execution or source modification.",
+    "cases": [
+      {
+        "freeze": false,
+        "live_during_pre_freeze_collection": true,
+        "objects_tracked": true,
+        "student_and_buffer_alive_after_return_and_3_collections": [
+          false,
+          false
+        ],
+        "student_and_buffer_cleared_after_unfreeze_collection": null
+      },
+      {
+        "freeze": true,
+        "live_during_pre_freeze_collection": true,
+        "objects_tracked": true,
+        "student_and_buffer_alive_after_return_and_3_collections": [
+          true,
+          true
+        ],
+        "student_and_buffer_cleared_after_unfreeze_collection": [
+          true,
+          true
+        ]
+      }
+    ]
+  },
+  "limitations": [
+    "Python demonstration substitutes an equivalent wrapper reference shape, not a Torch or GPU run. Exact wrapper reference semantics are read directly from tagged Torch2.12 source.",
+    "Relies on existing freeze placement and wrapper-bound-self retention in canonical runtime; future changes removing either should explicitly retain student state."
+  ],
+  "static_blocker": false
+}

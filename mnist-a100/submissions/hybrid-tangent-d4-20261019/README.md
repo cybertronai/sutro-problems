@@ -1,5 +1,28 @@
 # Two RFM kernel teachers distilled into tangent-jittered MLP students: difficulty 4
 
+## Independent reviewer reproduction — October 19, 2026
+
+The first frozen reviewer group passed **3/3 fresh canonical sandboxed Modal A100-80GB runs**, with valid above-idle energy measurements (3 recorded GPU UUIDs). Median ranked time is **97.047379 ms/call** and median energy is **14,754.131810 mJ/call**; pooled MNIST error is **2.083333%** (323,125/330,000 correct).
+
+| Reviewer run | MNIST error | Margin, labels | Ranked ms | Above-idle mJ |
+| - | -: | -: | -: | -: |
+| 1 | 2.127273% | +190 | 97.047379 | 14,754.131810 |
+| 2 | 2.107273% | +212 | 97.567776 | 15,407.721624 |
+| 3 | 2.015455% | +313 | 94.964916 | 13,283.403602 |
+
+Source is unchanged at SHA-256 `102363cfe2825eee42b5ee641731655679825e7087c3d83e19c3340d93859306`. The scorer and runner are unchanged. [Verification](evidence/reviewer-20261019/verification.json) reconstructs every complete canonical score and energy result from the [raw records](evidence/reviewer-20261019/); [source review](evidence/reviewer-20261019/source-review.json) covers per-call fitting, label isolation and cached-state reset. No reviewer outcome was replaced or retried.
+
+The teacher credits @spartanhaden's [RFM/HKNN learner](../rfm-hknn-d3-20261012/README.md), @islamborghini's [kernel-PCG](../kernel-pcg-20260929/README.md) and [RFM ensemble](../rfm-ensemble-d4-20261017/README.md), including cyclic row orders, the third metric update and softmax averaging. The student design credits @likelytobelaura's [tangent cross-teaching](../tangent-crossteach-d5-20261012/README.md) and [ReLU/Muon ensemble](../tangent-relu-d5-20261012/README.md); those upstream reports credit @sjbaebae for graph propagation. The submitted report also credits the kernel-taught feature/target design and modded-nanogpt's zero head initialization, and distinguishes held #126's related design. Exact-source author records use working filename `sd4_z400.py`. Their results reconstruct separately. Development-call counts and probability estimates below were not independently reproduced by this review.
+
+The leaderboard uses the independent reviewer medians above. Author results below are retained separately. The published instructions specify three official Modal runs and their median; this independent reproduction is review evidence, not a newly imposed second-batch submission rule.
+
+Using Python 3.13 as in the canonical runner, recheck saved records from this submission directory with `python evidence/reviewer-20261019/verify_records.py evidence/reviewer-20261019 submission.py --difficulty 4 --function hybrid_d4 --output /tmp/pr130-verification.json`. This reconstructs recorded verdicts without executing the learner.
+
+## Original author report (as submitted)
+
+Present-tense record and pending-review claims below describe the submission date; the dated reviewer section above gives the accepted review status.
+
+
 Entrant: [@spartanhaden](https://github.com/spartanhaden).
 
 Three sandboxed Modal A100-80GB runs of the unchanged scorer (`mnist-a100/1.2.0`, stock `run_modal.py --difficulty 4 --runs 3`) all passed.

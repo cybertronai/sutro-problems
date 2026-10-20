@@ -1,0 +1,74 @@
+{
+  "reviewed_head": "dab10785ad550f0c3f73a9e48bc18b05fb25e02f",
+  "source_sha256": "102363cfe2825eee42b5ee641731655679825e7087c3d83e19c3340d93859306",
+  "comparisons": {
+    "rfm_hknn": {
+      "path": "mnist-a100/submissions/rfm-hknn-d3-20261012/submission.py",
+      "sha256": "da456d0ed99d8fb59b26e76b1658d6cd8d69b31710122936f2ca5f81f0ced966",
+      "AST_identical_named_definitions_after_docstrings_removed": [
+        "aug",
+        "chol",
+        "kern",
+        "rownorm",
+        "sqrtm"
+      ],
+      "shared_named_but_changed_definitions": [
+        "agop",
+        "h3_ops",
+        "hknn",
+        "pcg",
+        "precond"
+      ]
+    },
+    "kernel_teacher": {
+      "path": "mnist-a100/submissions/ladder-kernel-d4-20261012/submission.py",
+      "sha256": "f4c69bf486197cd00721320a90dbd644ad734b3371e65ea2fff498d9304ebbdc",
+      "AST_identical_named_definitions_after_docstrings_removed": [
+        "aug",
+        "chol",
+        "kern",
+        "rownorm",
+        "sqrtm"
+      ],
+      "shared_named_but_changed_definitions": [
+        "agop",
+        "h3_ops",
+        "pcg",
+        "teacher"
+      ]
+    },
+    "kernel_ensemble": {
+      "path": "mnist-a100/submissions/rfm-ensemble-d4-20261017/submission.py",
+      "sha256": "0bb2b7b4852db2bda7726029d7f211d109473d1b7c672a8256d6ce86daa94bef",
+      "AST_identical_named_definitions_after_docstrings_removed": [
+        "aug",
+        "chol",
+        "kern",
+        "rownorm",
+        "sqrtm"
+      ],
+      "shared_named_but_changed_definitions": [
+        "agop",
+        "h3_ops",
+        "hknn",
+        "pcg"
+      ]
+    },
+    "tangent_relu": {
+      "path": "mnist-a100/submissions/tangent-relu-d5-20261012/submission.py",
+      "sha256": "9adc570a02279b34d0766344ec72f5589ff10fae06e1b6b341b58dc351a6445a",
+      "AST_identical_named_definitions_after_docstrings_removed": [],
+      "shared_named_but_changed_definitions": []
+    },
+    "tangent_cross": {
+      "path": "mnist-a100/submissions/tangent-crossteach-d5-20261012/submission.py",
+      "sha256": "a3b18bac64dddc3f7aa8c614e2279932aa74040720cb861e8dfa40eaa67923c3",
+      "AST_identical_named_definitions_after_docstrings_removed": [],
+      "shared_named_but_changed_definitions": []
+    }
+  },
+  "credits": "Current source/header/README explicitly identify @spartanhaden earlier RFM/HKNN and kernel/Ladder teacher, @islamborghini kernel-PCG and D4 ensemble #123, @likelytobelaura tangent/student/cross-teaching entries #118/#120, and modded-nanogpt zero head. Held #126 related D4 metric/student design is acknowledged with an author assertion of no code reuse.",
+  "credit_chain_note": "Laura accepted reports credit @sjbaebae for their graph-propagation readout. This current hybrid final prediction is HKNN and student/teacher mixture, not that query graph-propagation readout, but inherited design chain should remain clear.",
+  "whole_source_equivalence_claimed": false,
+  "limitations": "Small exact helpers and explicit attribution support identifiable reuse. No-code-reuse claim about held126 and whole development history are not independently authenticated."
+}
