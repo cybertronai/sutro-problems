@@ -1,0 +1,76 @@
+{
+  "pull_request": 134,
+  "reviewed_head": "9d8fd5315a3b621ab772733f575f64b312cf3598",
+  "frozen_main": "5f40e0e93af6ed5b57d74e81c5121d7cd8af2548",
+  "source_sha256": "321a606267643768e00a9fb760e9864a0a0a9d37c0e83e2045d9443f33dc4cfb",
+  "source_bytes": 20027,
+  "function": "kc_d3",
+  "checked_at_utc": "2026-10-20T04:28:47.894572+00:00",
+  "source_gate_passed": true,
+  "review_flags": [
+    "embedded data? 1 high-entropy literal(s), 984 characters",
+    "reaches outside the process: imports ctypes",
+    "dynamic code or files: calls getattr",
+    "20,027 bytes, close to the 20,480-byte limit"
+  ],
+  "flag_disposition": "The 984-character literal is readable standalone hull-CG CUDA source, not fitted data. ctypes/getattr only load or call CUDA/NVRTC symbols. Clock reads measure compile/load diagnostics only. Library globs discover installed compiler libraries. Source is 453 bytes below cap.",
+  "static_blockers": [],
+  "source_review_status": "Full source, native CUDA control/data bounds, ownership, reset, rules, exact-source author arithmetic and credited upstream inspected. No static blocker.",
+  "reset": "Every call copies all current inputs to retained static clones. Captured run starts fresh labels/one-hot counts/Fisher metric, compression/hard rows/landmarks/weights, zero-origin PCG recurrence and current HKNN neighborhoods/solutions. Constants cache contains only eyes/zeros/ones/aranges/scalars; no fitted reuse.",
+  "kernel": "One64-thread CTA/system; bound d<=64, canonical hull dimension61. Loads cover64x64 padded shared matrix, fill row/column outside d with0; p[64],s[3] reductions across exactly2fullwarps. Uniformshared residual exit, maximum48steps, output t<d writes complete owned output. No external source/data pointers except supplied owned matrices/vectors/output; currentstream driverlaunch is captured.",
+  "ownership": "_GRAPHS retains graph/static inputs/output; _C retains only input-independent constants, _ST retains streams, _HC retains compiled module/function handles/binary. Graph-private allocations remain alive with graph. Stream fork/rejoin explicit.",
+  "truth_boundary": "Only current train_y supplies truth; query support class labels are current predictions and valid teacher-margin masks. No query truth, prior pool, network or parent/scorer access.",
+  "timing_work": "Same metric/compression/8PCG/local-hull procedure per call. NativeCG has normal current-residual convergence bound, not dataset recognition. Initial compilation/capture/64warmreplays are foreign warmup; every timed/energy call repeats full current-data graph.",
+  "published_scope": "Three official stockModal runs median; additional independent reviewer group is review evidence, not a second-batch permanent-source exclusion rule. Optional energy validity separate from score.",
+  "fresh_reviewer_outcome": {
+    "passed_runs": 3,
+    "required_passed_runs": 3,
+    "energy_valid_runs": 3,
+    "score_qualification_passed": true,
+    "optional_energy_valid": true,
+    "median_ranked_ms": 4.558382597836581,
+    "median_energy_mj": 639.4054570743433,
+    "aggregate_mnist_error_pct": 2.508787878787879,
+    "all_45_timed_calls_complete": true,
+    "reruns": 0,
+    "learner_repairs": 0,
+    "failed_outcomes_replaced": 0,
+    "blockers": [],
+    "decision": "merge exact submitted source; record status determined by reviewer median"
+  },
+  "source_limit_bytes": 20480,
+  "source_byte_margin": 453,
+  "canonical_scorer_sha256": "1bc6d8d96a776565bc70f3ccdb91be7de57187d4495b2b0437fac98f5e120064",
+  "canonical_runner_sha256": "1180b843cf6c32414774da90c835a8b7298d2db8719989237a793ca1c62a10ab",
+  "upstream": "18 Fisher-PCG D2 helpers AST-identical after docstring removal, matching explicitly credited reuse. hk_fix is identical to credited hybrid D4; hknn identical after replacing only Cholesky solve with native CG. Embedded984-byteCUDA matches separately maintained source exactly. See upstream-attribution-audit.json.",
+  "author": "Exact source author3/3 score and3/3energy verified independently; three GPU UUIDs retained; working filename classical-native-hull-d3-20261019.py documented; all stdout/stderr fields present. Developer comparisons are warm/paired, not canonical qualification. See author-evidence-audit.json.",
+  "kernel_detail": {
+    "block_threads": 64,
+    "warp_count": 2,
+    "canonical_systems": 1152,
+    "canonical_dimension": 61,
+    "max_dimension": 64,
+    "shared_bytes": 16908,
+    "matrix": "Every64x64 used cell initialized; stride65padding untouched and unread. Global A/B loads guarded row/col<d. Per-system output each t<d exactly once; dummy rows startandremain0.",
+    "synchronization": "Two full-warp shuffle reductions write s[0] and s[1]; thread0 sums into s[2], with block barriers before use. Residual rho is identical across the block, so early exit is uniform. Each p update ends in a barrier before the next matrix-vector product.",
+    "math": "Zero initial x, r=b, p=r; FP32CG rho=r\u00b7r, alpha=rho/(p\u00b7Ap), beta=next/rho. Current full regularizedGram A=8I+vTv, so SPD regularization; denominator floored1e-30, stops at48steps or rho<=initial*1e-12. Numerical approximation; no bitwise-equivalence claim.",
+    "loader": "NVRTC creates and compiles the readable source, obtains CUBIN, destroys the compilation program, then loads the CUDA module and function. Launch uses the current torch CUDA stream and standard copied pointer/scalar parameters. _HC strongly retains module, binary and function handles; it never unloads them.",
+    "dynamic_work": "Early termination is an ordinary current-residual numerical condition, not class/data identity. Published canonical dispersion/time gates still apply per dataset."
+  },
+  "primary_sources": [
+    {
+      "url": "https://docs.nvidia.com/cuda/archive/13.3.0/cuda-driver-api/group__CUDA__EXEC.html",
+      "supports": "Driver launch ABI and device function/module lifetime"
+    },
+    {
+      "url": "https://docs.nvidia.com/cuda/archive/13.3.0/nvrtc/index.html",
+      "supports": "NVRTC source compilation and CUBIN APIs"
+    },
+    {
+      "url": "https://docs.pytorch.org/docs/2.12/notes/cuda.html#graph-memory-management",
+      "supports": "Graph-private allocation lifetime with retained graphs"
+    }
+  ],
+  "ownership_detail": "Externally allocated static inputs, constants, streams and module handles have explicit global roots. Native matrices/RHS/output allocate during capture and belong to retained graph private pool, not to unrooted pre-capture learner buffers. Per-call run closures operate only within capture. out.clone separates returned storage from future graph replay.",
+  "finalization_complete": true
+}

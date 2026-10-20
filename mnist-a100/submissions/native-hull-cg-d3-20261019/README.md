@@ -1,5 +1,28 @@
 # D3 Fisher-PCG with native local-hull CG
 
+## Independent reviewer reproduction — October 19, 2026, later pass
+
+The first frozen reviewer group passed **3/3 fresh canonical sandboxed Modal A100-80GB runs**. Median ranked time is **4.558383 ms/call**; median above-idle energy is **639.405457 mJ/call**. Pooled MNIST error is **2.508788%** (321,721/330,000 correct). Each run independently passes every accuracy, holdout and timing gate; pooled accuracy is descriptive.
+
+| Reviewer run | MNIST error | Margin, labels | Ranked ms | Above-idle mJ |
+| - | -: | -: | -: | -: |
+| 1 | 2.503636% | +216 | 4.594201 | 635.273460 |
+| 2 | 2.566364% | +147 | 4.541534 | 730.734845 |
+| 3 | 2.456364% | +268 | 4.558383 | 639.405457 |
+
+The submitted source is unchanged, SHA-256 `321a606267643768e00a9fb760e9864a0a0a9d37c0e83e2045d9443f33dc4cfb`; scorer and stock runner are unchanged. All 45 timed calls completed. No outcome was replaced or retried. [Raw records and executable verifier](evidence/reviewer-20261019-pass3/), [reconstruction](evidence/reviewer-20261019-pass3/verification.json) and [source review](evidence/reviewer-20261019-pass3/source-review.json) are retained. Optional energy is assessed separately from score qualification.
+
+The Fisher/compression/PCG foundation credits @spartanhaden, @sigkillme0 and @islamborghini; HKNN comes from Haden's hybrid. The native CUDA source is readable numerical CG, compiled by NVRTC and launched on the current stream. Current input matrices and vectors determine every solve. Its median energy is higher than the previous D3 record's 320.165897 mJ; this is a latency record, with no energy-improvement claim. The original author manifest's pending wording is historical; its complete raw records were audited separately.
+
+The leaderboard uses these independent medians; original author results below remain separate. Published instructions require three official runs and their median; this reviewer reproduction supplies evidence and does not introduce a permanent source ban or an additional published submission rule.
+
+Using Python 3.13, from this submission directory: `python evidence/reviewer-20261019-pass3/verify_records.py evidence/reviewer-20261019-pass3 submission.py --difficulty 3 --function kc_d3 --output /tmp/pr134-verification.json`. This audits saved records without executing the learner.
+
+## Original author report (as submitted)
+
+Pending-review and record claims below describe the author submission; the dated reviewer section gives accepted status.
+
+
 A latency candidate derived from [Fisher-PCG D2](../fisher-pcg-d2-20261019/README.md) by @spartanhaden, using @sigkillme0’s learned Fisher/compression method and @islamborghini’s kernel-PCG work. The HKNN affine-hull readout comes from the published hybrid-tangent work. Existing credits remain in the source.
 
 The learner fits a full-dimensional Fisher metric, compresses training data to 6144 hard rows plus 240 weighted class landmarks, and performs eight extrapolated FITC-preconditioned CG updates. Flash attention evaluates test scores; local affine hulls correct the 384 lowest-margin queries, with 70 neighbors per candidate class and a 2048-neighbor prescreen. All fitting is repeated per call; no test labels are used. This is an alternative implementation/budget to the published D3 record, not an isolated kernel-only comparison against it.
