@@ -1,0 +1,74 @@
+{
+  "scope": "CPU-only integer coverage for actual A100 SM108 and new width768 plus retained512/256; no learner import or GPU diagnostic. Implements launch-index arithmetic from exact source, not numerical gradient equivalence.",
+  "coverage": [
+    {
+      "B": 2500,
+      "S": 768,
+      "gpu_multiprocessors": 108,
+      "column_block": 64,
+      "column_blocks": 12,
+      "no_column_tail": true,
+      "row_chunk_size": 160,
+      "row_chunks": 16,
+      "phase_programs": 192,
+      "parameter_chunk_size": 68,
+      "all_valid_rows_exact_once": true,
+      "all_17S_parameter_gradients_exact_once": true,
+      "workspace_initialized_elements": 245760,
+      "row_tail_mask_required": true,
+      "sub_and_stage_blocks_divide_row_chunk": true
+    },
+    {
+      "B": 2500,
+      "S": 512,
+      "gpu_multiprocessors": 108,
+      "column_block": 32,
+      "column_blocks": 16,
+      "no_column_tail": true,
+      "row_chunk_size": 224,
+      "row_chunks": 12,
+      "phase_programs": 192,
+      "parameter_chunk_size": 46,
+      "all_valid_rows_exact_once": true,
+      "all_17S_parameter_gradients_exact_once": true,
+      "workspace_initialized_elements": 122880,
+      "row_tail_mask_required": true,
+      "sub_and_stage_blocks_divide_row_chunk": true
+    },
+    {
+      "B": 2500,
+      "S": 256,
+      "gpu_multiprocessors": 108,
+      "column_block": 16,
+      "column_blocks": 16,
+      "no_column_tail": true,
+      "row_chunk_size": 448,
+      "row_chunks": 6,
+      "phase_programs": 96,
+      "parameter_chunk_size": 46,
+      "all_valid_rows_exact_once": true,
+      "all_17S_parameter_gradients_exact_once": true,
+      "workspace_initialized_elements": 30720,
+      "row_tail_mask_required": true,
+      "sub_and_stage_blocks_divide_row_chunk": true
+    }
+  ],
+  "all_bounds_pass": true,
+  "graph_updates": {
+    "replays": 16,
+    "steps_per_replay": 30,
+    "total_updates": 480,
+    "sampler_schedule_rows": 480,
+    "counter_range_read": [
+      0,
+      479
+    ],
+    "counter_final": 480
+  },
+  "discrete_lr_budget": {
+    "parent600": 5.5055,
+    "current480": 5.519390625,
+    "change_pct": 0.25230451366815565,
+    "claim": "Approximately preserved, not exactly identical."
+  }
+}

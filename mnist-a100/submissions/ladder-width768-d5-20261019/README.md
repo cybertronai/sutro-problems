@@ -1,5 +1,28 @@
 # D5 kernel-taught Ladder: width 768, 480 fused Adam updates
 
+## Independent reviewer reproduction — October 19, 2026, later pass
+
+The first frozen reviewer group passed **3/3 fresh canonical sandboxed Modal A100-80GB runs**. Median ranked time is **492.842637 ms/call**; median above-idle energy is **77,089.864599 mJ/call**. Pooled MNIST error is **1.792424%** (324,085/330,000 correct). Each run independently passes every accuracy, holdout and timing gate; pooled accuracy is descriptive.
+
+| Reviewer run | MNIST error | Margin, labels | Ranked ms | Above-idle mJ |
+| - | -: | -: | -: | -: |
+| 1 | 1.807273% | +102 | 492.842637 | 71983.093171 |
+| 2 | 1.697273% | +223 | 492.085754 | 77089.864599 |
+| 3 | 1.872727% | +30 | 495.066059 | 80849.184445 |
+
+The submitted source is unchanged, SHA-256 `e8d330a1a81b139f5b89290325b6f7a04123f47dc3c84af354b141f96a059b53`; scorer and stock runner are unchanged. All 45 timed calls completed. No outcome was replaced or retried. [Raw records and executable verifier](evidence/reviewer-20261019-pass3/), [reconstruction](evidence/reviewer-20261019-pass3/verification.json) and [source review](evidence/reviewer-20261019-pass3/source-review.json) are retained. Optional energy is assessed separately from score qualification.
+
+This is @sjbaebae's budget/kernel optimization of @spartanhaden's kernel-taught Ladder. Credits to Haden, @SethTS/Rasmus et al., @islamborghini, @likelytobelaura and @sigkillme0 remain in the submission. Teacher fitting, 480 student updates and both predictions execute every call; the label-symmetric guard selects already-computed predictions. Earlier 510-step and failed fast450 groups remain separate from this exact-source group. Development arithmetic reconstructs; unpublished variant source/history claims are not independently authenticated. The author manifest's pending wording is historical.
+
+The leaderboard uses these independent medians; original author results below remain separate. Published instructions require three official runs and their median; this reviewer reproduction supplies evidence and does not introduce a permanent source ban or an additional published submission rule.
+
+Using Python 3.13, from this submission directory: `python evidence/reviewer-20261019-pass3/verify_records.py evidence/reviewer-20261019-pass3 submission.py --difficulty 5 --function ladder_kernel --output /tmp/pr135-verification.json`. This audits saved records without executing the learner.
+
+## Original author report (as submitted)
+
+Pending-review and record claims below describe the author submission; the dated reviewer section gives accepted status.
+
+
 This derives directly from [@spartanhaden’s kernel-taught Ladder D5](../ladder-k2-d5-20261019/README.md), retaining its kernel teacher, reconstruction, tangent jitter, hard-query sampling, fused Triton combinator backward and guard. Original credits remain: @SethTS/Rasmus et al. for Ladder, @islamborghini for kernel-PCG and batch/step work, @likelytobelaura for tangent jitter, and @sigkillme0 for grouped graph replays. This is an architecture/learning-budget/optimizer-implementation change, not a new learning algorithm.
 
 ## Current frozen candidate

@@ -1,0 +1,1297 @@
+{
+  "pr": 135,
+  "head": "74c4a15b345cbfeadf317e29e6c451238144b0f0",
+  "main_head": "5f40e0e93af6ed5b57d74e81c5121d7cd8af2548",
+  "folder": "ladder-width768-d5-20261019",
+  "source_path": "/Users/yaroslavvb/git/sutro-problems/output/pr-review-20261019-pass3/pr135/source/mnist-a100/submissions/ladder-width768-d5-20261019/submission.py",
+  "source_sha256": "e8d330a1a81b139f5b89290325b6f7a04123f47dc3c84af354b141f96a059b53",
+  "source_bytes": 20436,
+  "function": "ladder_kernel",
+  "upstream_source_sha256": "cc423b95ed940a5bcd5dc3b08f71502dddbcee3b42cbc34fc5322819378aef2a",
+  "scorer_sha256": "1bc6d8d96a776565bc70f3ccdb91be7de57187d4495b2b0437fac98f5e120064",
+  "runner_sha256": "1180b843cf6c32414774da90c835a8b7298d2db8719989237a793ca1c62a10ab",
+  "reviewed_head": "74c4a15b345cbfeadf317e29e6c451238144b0f0",
+  "checked_at_utc": "2026-10-20T04:24:55.388524+00:00",
+  "entrant": "sjbaebae",
+  "source_gate_passed": true,
+  "review_flags": [
+    "20,436 bytes, close to the 20,480-byte limit"
+  ],
+  "static_blockers": [],
+  "source_limit_bytes": 20480,
+  "source_headroom_bytes": 44,
+  "scope": "Complete frozen-rule/source/reset/custom-kernel review, including exact full diff against independently audited merged #129 and current width/reset arithmetic; canonical source gate. No learner import or execution locally. Fresh initial GPU group is separate evidence.",
+  "method": "Kernel-taught Ladder 60-768-512-256-10, AGOP^0.5 student coordinates, 480 Adam steps of batch 2500, current-training same-class tangent jitter, double-sampling of least-confident current queries late in training, 30 updates per CUDA graph replay, fused wide-combinator backward and class-symmetric teacher fallback. Native fused capturable Adam replaces foreach; LR .01378125.",
+  "fresh_teacher": "teacher overwrites every cloned static training/query tensor before graph replay. sym_scores starts identity metric and zero PCG coefficients, computes both metric updates from current labels and refits with current-query predicted pseudo labels. Student metric and teacher scores are newly computed from supplied data every call.",
+  "fresh_student": "ladder_kernel overwrites owned x/y/pool/ptar, refits tangents and hard-query IDs before reset. reset reinitializes all encoder/decoder/combinator parameters and biases/gain, clears Adam moments and step counts, update counter and loss-sampling scores, recreates all 480 minibatch index rows from current hard-query IDs and reseeds randomness. Scalar LR is overwritten from reset counter inside compiled fwd before every optimizer update.",
+  "graph_and_optimizer": "CACHE preserves only compiled graphs/workspaces. Capture explicitly sets gradients to None for each of 30 steps, so all loss/backward/Adam work is captured. Sixteen graph replays perform 480 fixed updates on every call. Adam state tensor objects are retained but their values reset before fitting. Inference derives BN statistics again from current train rows. Fused Adam retains the same three per-parameter state tensors (step, exp_avg, exp_avg_sq), all cleared in reset. No scaler or AMSGrad is configured.",
+  "guard_review": {
+    "data": "Only current teacher scores, current student query labels and student errors on supplied training labels. No query truth or holdout/dataset identity is consulted.",
+    "logic": "Counts confident teacher/student off-diagonal class confusions in a 10\u00d710 table, zeroes its diagonal and tests max count >60 or training mistakes >40. torch.where then selects confident teacher labels for every query row when triggered. Index structure and max are invariant to class relabeling.",
+    "work": "Both teacher and student, all 480 updates, both query and train prediction passes execute before the guard regardless of whether it triggers; the output selection is branchless. Author statement that it often triggers on Fashion describes observed model behavior, not a dataset-based computational shortcut.",
+    "status": "No static rule violation identified; actual holdout/time/dispersion gates are evaluated by the unchanged scorer."
+  },
+  "triton_review": "comb_bwd is registered at call time as a custom op with no mutated inputs; fake registration supplies shapes/dtypes for compile tracing only. Actual custom backward runs the Triton implementation. Phase 1 computes live combinator/BN adjoints and partial parameter/statistic sums; phase 2 reduces owned workspace and writes newly allocated gradient outputs. Kernel launch geometry uses GPU multiprocessor count for hardware partitioning. Current student widths 768/512/256 divide configured column blocks, so unmasked per-column metadata loads are in bounds; row tails are masked and workspace uses 20*S entries per chunk. No arbitrary external pointers, timer access or scorer mutation found. Width768 has12 column blocks of64; no column tails. All kernel bodies are byte-identical to the independently audited accepted #129 source.",
+  "input_and_truth": "Original caller tensors receive no in-place writes. Teacher static tensors are clones; normalization/metric coordinates and tangent neighbor matrices are owned allocations. Query supervision comes from current teacher predictions and unlabeled reconstruction only; train label fit is allowed for guard/model selection.",
+  "prior_or_bypass": "Only scalar hyperparameters, architecture/index lists and a four-entry launch-configuration dictionary; no stored fitted tensor/encoded pool, decoder, network, file read or parent/process introspection. os usage sets only compiler cache paths under /tmp. All graph side streams synchronize with current stream.",
+  "canonical_rules": {
+    "version": "mnist-a100/1.2.0",
+    "D5_mean_error_limit_pct": 1.9,
+    "worst_draw_limit_pct": 3.4,
+    "holdout_accuracy_floor_pct": 15,
+    "calls": "11 MNIST + 4 foreign holdout, fresh sandbox worker per timed call; slower dataset mean with parent-clock floor, clock and timing dispersion checks.",
+    "review_scope": "One initial stock canonical three-run group, unchanged source/scorer/launcher. All outcomes retained; no retries, replacements or permanent source-exclusion inference.",
+    "energy": "Optional separate column; invalid energy telemetry leaves energy blank without invalidating a qualifying canonical time."
+  },
+  "prior_exact_source_reviewer_group_found": false,
+  "replacement_runs": 0,
+  "upstream_change_audit": {
+    "parent_pr": 129,
+    "parent_source_sha256": "cc423b95ed940a5bcd5dc3b08f71502dddbcee3b42cbc34fc5322819378aef2a",
+    "exact_diff_scope": [
+      "module documentation",
+      "student width1024->768",
+      "steps600->480",
+      "LR.011->.01378125",
+      "KCFG adds768:(64,8,4,2,32)",
+      "Adam foreach=True->fused=True"
+    ],
+    "algorithm": "Teacher, metric fitting, tangent jitter, hard-query sampler, reconstruction, guard, reset and custom backward bodies unchanged; substantial ancestor credit retained.",
+    "schedule": "STEPS/GK=480/30=16; sampler and loss/LR schedule arrays contain480 rows; counter reset0 and reads0..479; full fitting before guard."
+  },
+  "documentation_notes": [
+    "Author evidence/manifest.json retains stale qualification=\"pending three canonical evaluations\" despite current author3/3 raw records. Treat as author provenance metadata; fix or date-scope during integration, retaining original report.",
+    "Author original report explicitly acknowledges independent reviewer replication outstanding; integration must date-scope it after results.",
+    "Different-source prior510 and fast450 groups remain separately retained; no pooled qualification."
+  ],
+  "review_status": "Complete: static/provenance audit and initial independent canonical execution finalized.",
+  "modal_app_id": "ap-KcsKz8JF2OPmfrH4yqHQnt",
+  "upstream_attribution": {
+    "pr": 135,
+    "reviewed_head": "74c4a15b345cbfeadf317e29e6c451238144b0f0",
+    "source_sha256": "e8d330a1a81b139f5b89290325b6f7a04123f47dc3c84af354b141f96a059b53",
+    "parent_pr": 129,
+    "parent_source_sha256": "cc423b95ed940a5bcd5dc3b08f71502dddbcee3b42cbc34fc5322819378aef2a",
+    "parent_source_commit": "5f40e0e93af6ed5b57d74e81c5121d7cd8af2548",
+    "nodes": [
+      {
+        "kind": "ClassDef",
+        "name": "CombFn",
+        "current_line": 457,
+        "parent_line": 457,
+        "ast_identical": true
+      },
+      {
+        "kind": "ClassDef",
+        "name": "Ladder",
+        "current_line": 480,
+        "parent_line": 480,
+        "ast_identical": false
+      },
+      {
+        "kind": "ClassDef",
+        "name": "Sym",
+        "current_line": 75,
+        "parent_line": 75,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "_ld",
+        "current_line": 270,
+        "parent_line": 270,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "_p",
+        "current_line": 278,
+        "parent_line": 278,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "_s",
+        "current_line": 274,
+        "parent_line": 274,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "agop",
+        "current_line": 159,
+        "parent_line": 159,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "aug",
+        "current_line": 48,
+        "parent_line": 48,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "bn",
+        "current_line": 251,
+        "parent_line": 251,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "chol",
+        "current_line": 42,
+        "parent_line": 42,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "comb_bwd",
+        "current_line": 436,
+        "parent_line": 436,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "comb_bwd_kernel",
+        "current_line": 282,
+        "parent_line": 282,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "comb_math",
+        "current_line": 261,
+        "parent_line": 261,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "combine",
+        "current_line": 258,
+        "parent_line": 258,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "guard",
+        "current_line": 618,
+        "parent_line": 618,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "h3_ops",
+        "current_line": 59,
+        "parent_line": 59,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "kern",
+        "current_line": 55,
+        "parent_line": 55,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "ladder_kernel",
+        "current_line": 626,
+        "parent_line": 626,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "lfac",
+        "current_line": 124,
+        "parent_line": 124,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "lrelu",
+        "current_line": 255,
+        "parent_line": 255,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "mm",
+        "current_line": 474,
+        "parent_line": 474,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "panels",
+        "current_line": 65,
+        "parent_line": 65,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "pcg",
+        "current_line": 130,
+        "parent_line": 130,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "register",
+        "current_line": 452,
+        "parent_line": 452,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "rownorm",
+        "current_line": 45,
+        "parent_line": 45,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "sqrtm",
+        "current_line": 148,
+        "parent_line": 148,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "sym_scores",
+        "current_line": 175,
+        "parent_line": 175,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "tangents",
+        "current_line": 244,
+        "parent_line": 244,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "teacher",
+        "current_line": 222,
+        "parent_line": 222,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "upd_comp",
+        "current_line": 113,
+        "parent_line": 113,
+        "ast_identical": true
+      }
+    ],
+    "identical_nodes": 29,
+    "changed_nodes": [
+      "Ladder"
+    ],
+    "added_nodes": [],
+    "credit_chain": [
+      "spartanhaden #129/#121 direct source and fused combinator author",
+      "SethTS and Rasmus et al. Ladder",
+      "islamborghini kernel-PCG and batch/step tuning",
+      "likelytobelaura #118 tangent jitter",
+      "sigkillme0 #127 grouped graph replay"
+    ],
+    "assessment": "The README explicitly identifies the direct parent, architecture/learning-budget/optimizer changes, and all upstream credits. Kernel body, teacher, guard and helper ASTs are unchanged. Ladder class differs only foreach=True to fused=True as confirmed by full source diff. No attribution blocker.",
+    "full_diff": "upstream-diff.patch"
+  },
+  "author_provenance": {
+    "reviewed_head": "74c4a15b345cbfeadf317e29e6c451238144b0f0",
+    "source_sha256": "e8d330a1a81b139f5b89290325b6f7a04123f47dc3c84af354b141f96a059b53",
+    "checks": {
+      "manifest_source": true,
+      "manifest_bytes": true,
+      "manifest_parent": true,
+      "manifest_entrypoint": true,
+      "all_current_raw_exact_source": true,
+      "all_current_canonical_energy_checks": true,
+      "current_three_distinct_gpu_uuids": true
+    },
+    "current_set": {
+      "passed_runs": 3,
+      "energy_valid_runs": 3,
+      "median_ranked_ms": 492.0132294590257,
+      "median_energy_mj": 84000.85306556908,
+      "aggregate_mnist_error_pct": 1.7754545454545454,
+      "mnist_correct": 324141,
+      "mnist_total": 330000
+    },
+    "prior510_set": {
+      "source_sha256": "5681b8eafe2310c416b69336cb96ad2fe96c38d9d850818d23602aab9e252667",
+      "passed_runs": 3,
+      "energy_valid_runs": 3,
+      "median_ranked_ms": 507.51812616015246,
+      "median_energy_mj": 86870.44820355046,
+      "aggregate_mnist_error_pct": 1.78
+    },
+    "priorfast450_set": {
+      "scope": "Raw-record canonical judge reconstruction only; exact prior-fast450 source is not packaged here, so static/source identity not independently verified. This is a different hash from current source and prior510.",
+      "runs": [
+        {
+          "run": 1,
+          "raw_sha256": "ce50cae2c920886b4959f534176fc09289820736a5811cd26a07ac04960a236b",
+          "source_sha256": "33f4e91bcb5e03bf5e42b97eed612f19b377a113152a73970d95e97d7a274696",
+          "calls": 15,
+          "correct": 107932,
+          "total": 110000,
+          "error_pct": 1.88,
+          "accuracy_margin_labels": 22,
+          "canonical_problems": [],
+          "record_problems_match": true,
+          "score_matches": true,
+          "summary_matches": true,
+          "ranked_ms": 489.6750078742528,
+          "score_passed": true
+        },
+        {
+          "run": 2,
+          "raw_sha256": "1b981883817c5eaa1dafe7e2c8718c919a8b09dcf9912d1f9998a00b3cf8ea99",
+          "source_sha256": "33f4e91bcb5e03bf5e42b97eed612f19b377a113152a73970d95e97d7a274696",
+          "calls": 15,
+          "correct": 107902,
+          "total": 110000,
+          "error_pct": 1.9072727272727272,
+          "accuracy_margin_labels": -8,
+          "canonical_problems": [
+            "MNIST accuracy 98.093% (107,902/110,000); the band needs 107,910 correct"
+          ],
+          "record_problems_match": true,
+          "score_matches": false,
+          "summary_matches": true,
+          "ranked_ms": 487.2415291677468,
+          "score_passed": false
+        },
+        {
+          "run": 3,
+          "raw_sha256": "f47bb03f6cf836c965057f89ceec2166fa8d03dbe2519ccdea74630f999f278a",
+          "source_sha256": "33f4e91bcb5e03bf5e42b97eed612f19b377a113152a73970d95e97d7a274696",
+          "calls": 15,
+          "correct": 108038,
+          "total": 110000,
+          "error_pct": 1.7836363636363637,
+          "accuracy_margin_labels": 128,
+          "canonical_problems": [],
+          "record_problems_match": true,
+          "score_matches": true,
+          "summary_matches": true,
+          "ranked_ms": 487.06182768461997,
+          "score_passed": true
+        }
+      ],
+      "passed_runs": 2,
+      "required_runs": 3,
+      "median_ranked_ms": null
+    },
+    "stale_manifest_qualification": "pending three canonical evaluations",
+    "provenance_limits": [
+      "Author master manifest lacks raw-record hashes, scorer/runner hashes, original Modal app ID and controller timestamps; source/function/bytes/config are correct. Scorer version and every reconstructed canonical gate/energy result match trusted frozen canonical locally.",
+      "Canonical stock launcher returns full stdout and only last6000 stderr characters; submitted records have that format, including current three distinct board UUIDs. The original execution controller/source filesystem is not independently attested.",
+      "AST match to development program is asserted in manifest, but development variant source is not packaged. Development metadata hashes differ from release source and are explained as module-prose changes; their program-equivalence cannot be independently established from rows alone.",
+      "Full fresh paired development records are diagnostic author evidence, not sandbox qualification or reviewer execution.",
+      "All prior groups retained separately, current and510 exact source hashes differ; no outcomes pooled or replaced in this review."
+    ]
+  },
+  "source_gate_review_complete": true,
+  "provenance_review_complete": true,
+  "static_review_complete": true,
+  "fused_adam_primary_source_review": {
+    "url": "https://github.com/pytorch/pytorch/blob/v2.12.0/torch/optim/adam.py",
+    "version": "v2.12.0",
+    "local_file": "primary-runtime-source/adam.py",
+    "sha256": "7efa850aab7342ed1e8675cf0f7a77df038ab532496434b0a7f2aa6866cb3a5c",
+    "state_lines": "160-187",
+    "fused_update_lines": "864-898",
+    "assessment": "Default amsgrad=False maintains only step,exp_avg,exp_avg_sq; learner resets all3 per parameter before fitting. grad_scale/found_inf are optional optimizer attributes, absent here because no GradScaler; fused step-support flag is metadata, not learned state. Fused updates increment the captured step tensor and receive the current tensor learning rate."
+  },
+  "author_development_arithmetic": {
+    "scope": "Author development arithmetic only: fresh paired draws and three stochastic retrainings are supplied metadata. These are warm nonsandbox measurements and do not count toward qualification. No independent development reruns or source-equivalence assumption.",
+    "groups": [
+      {
+        "record": "classical-d5-fused-adam-validation-modal.json",
+        "raw_returncode": 0,
+        "rows": 33,
+        "per_draw_checks": [
+          {
+            "draw": 0,
+            "variant": "baseline",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 0,
+            "variant": "fused480",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 0,
+            "variant": "fused510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 1,
+            "variant": "baseline",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 1,
+            "variant": "fused480",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 1,
+            "variant": "fused510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 2,
+            "variant": "baseline",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 2,
+            "variant": "fused480",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 2,
+            "variant": "fused510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 3,
+            "variant": "baseline",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 3,
+            "variant": "fused480",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 3,
+            "variant": "fused510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 4,
+            "variant": "baseline",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 4,
+            "variant": "fused480",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 4,
+            "variant": "fused510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 5,
+            "variant": "baseline",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 5,
+            "variant": "fused480",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 5,
+            "variant": "fused510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 6,
+            "variant": "baseline",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 6,
+            "variant": "fused480",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 6,
+            "variant": "fused510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 7,
+            "variant": "baseline",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 7,
+            "variant": "fused480",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 7,
+            "variant": "fused510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 8,
+            "variant": "baseline",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 8,
+            "variant": "fused480",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 8,
+            "variant": "fused510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 9,
+            "variant": "baseline",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 9,
+            "variant": "fused480",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 9,
+            "variant": "fused510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 10,
+            "variant": "baseline",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 10,
+            "variant": "fused480",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 10,
+            "variant": "fused510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          }
+        ],
+        "rebuilt_summary": [
+          {
+            "variant": "baseline",
+            "draws": 11,
+            "error_pct": 1.8239393812237363,
+            "warm_wall_ms": 509.6536500000016
+          },
+          {
+            "variant": "fused480",
+            "draws": 11,
+            "error_pct": 1.8424241976304487,
+            "warm_wall_ms": 494.0137240000023
+          },
+          {
+            "variant": "fused510",
+            "draws": 11,
+            "error_pct": 1.8296969478780574,
+            "warm_wall_ms": 525.6291769090922
+          }
+        ],
+        "submitted_summary_checks": [
+          {
+            "variant": "baseline",
+            "draws": true,
+            "error_close": true,
+            "time_close": true
+          },
+          {
+            "variant": "fused480",
+            "draws": true,
+            "error_close": true,
+            "time_close": true
+          },
+          {
+            "variant": "fused510",
+            "draws": true,
+            "error_close": true,
+            "time_close": true
+          }
+        ]
+      },
+      {
+        "record": "classical-d5-margin-validation-modal.json",
+        "raw_returncode": 0,
+        "rows": 33,
+        "per_draw_checks": [
+          {
+            "draw": 0,
+            "variant": "control450",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 0,
+            "variant": "width768_510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 0,
+            "variant": "width768_540",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 1,
+            "variant": "control450",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 1,
+            "variant": "width768_510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 1,
+            "variant": "width768_540",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 2,
+            "variant": "control450",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 2,
+            "variant": "width768_510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 2,
+            "variant": "width768_540",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 3,
+            "variant": "control450",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 3,
+            "variant": "width768_510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 3,
+            "variant": "width768_540",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 4,
+            "variant": "control450",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 4,
+            "variant": "width768_510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 4,
+            "variant": "width768_540",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 5,
+            "variant": "control450",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 5,
+            "variant": "width768_510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 5,
+            "variant": "width768_540",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 6,
+            "variant": "control450",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 6,
+            "variant": "width768_510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 6,
+            "variant": "width768_540",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 7,
+            "variant": "control450",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 7,
+            "variant": "width768_510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 7,
+            "variant": "width768_540",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 8,
+            "variant": "control450",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 8,
+            "variant": "width768_510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 8,
+            "variant": "width768_540",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 9,
+            "variant": "control450",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 9,
+            "variant": "width768_510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 9,
+            "variant": "width768_540",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 10,
+            "variant": "control450",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 10,
+            "variant": "width768_510",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 10,
+            "variant": "width768_540",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          }
+        ],
+        "rebuilt_summary": [
+          {
+            "variant": "control450",
+            "draws": 11,
+            "error_pct": 1.8381817774339155,
+            "warm_wall_ms": 484.8824310000013
+          },
+          {
+            "variant": "width768_510",
+            "draws": 11,
+            "error_pct": 1.803636326934352,
+            "warm_wall_ms": 506.6659150909061
+          },
+          {
+            "variant": "width768_540",
+            "draws": 11,
+            "error_pct": 1.837575735467853,
+            "warm_wall_ms": 532.8991293636382
+          }
+        ],
+        "submitted_summary_checks": [
+          {
+            "variant": "control450",
+            "draws": true,
+            "error_close": true,
+            "time_close": true
+          },
+          {
+            "variant": "width768_510",
+            "draws": true,
+            "error_close": true,
+            "time_close": true
+          },
+          {
+            "variant": "width768_540",
+            "draws": true,
+            "error_close": true,
+            "time_close": true
+          }
+        ]
+      },
+      {
+        "record": "classical-d5-margin-budget-modal.json",
+        "raw_returncode": 0,
+        "rows": 12,
+        "per_draw_checks": [
+          {
+            "draw": 0,
+            "variant": "control450",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 0,
+            "variant": "margin480",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 0,
+            "variant": "width768_480",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 0,
+            "variant": "width768_540",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 1,
+            "variant": "control450",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 1,
+            "variant": "margin480",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 1,
+            "variant": "width768_480",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 1,
+            "variant": "width768_540",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 2,
+            "variant": "control450",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 2,
+            "variant": "margin480",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 2,
+            "variant": "width768_480",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          },
+          {
+            "draw": 2,
+            "variant": "width768_540",
+            "retrainings": 3,
+            "mean_error_exact": true,
+            "median_cuda_exact": true,
+            "median_wall_exact": true
+          }
+        ],
+        "rebuilt_summary": [
+          {
+            "variant": "control450",
+            "draws": 3,
+            "error_pct": 1.7677777608235676,
+            "warm_wall_ms": 485.59421433334177
+          },
+          {
+            "variant": "margin480",
+            "draws": 3,
+            "error_pct": 1.7622221973207262,
+            "warm_wall_ms": 513.7507763333341
+          },
+          {
+            "variant": "width768_480",
+            "draws": 3,
+            "error_pct": 1.7977777454588149,
+            "warm_wall_ms": 480.44309466667795
+          },
+          {
+            "variant": "width768_540",
+            "draws": 3,
+            "error_pct": 1.7233332792917888,
+            "warm_wall_ms": 534.1157466666573
+          }
+        ],
+        "submitted_summary_checks": []
+      }
+    ],
+    "all_submitted_summaries_match": true,
+    "current_author_improvement_vs_parent_pct": {
+      "latency": 22.33774611045115,
+      "energy": 22.138900520442718
+    }
+  },
+  "kernel_schedule_bounds_audit": {
+    "scope": "CPU-only integer coverage for actual A100 SM108 and new width768 plus retained512/256; no learner import or GPU diagnostic. Implements launch-index arithmetic from exact source, not numerical gradient equivalence.",
+    "coverage": [
+      {
+        "B": 2500,
+        "S": 768,
+        "gpu_multiprocessors": 108,
+        "column_block": 64,
+        "column_blocks": 12,
+        "no_column_tail": true,
+        "row_chunk_size": 160,
+        "row_chunks": 16,
+        "phase_programs": 192,
+        "parameter_chunk_size": 68,
+        "all_valid_rows_exact_once": true,
+        "all_17S_parameter_gradients_exact_once": true,
+        "workspace_initialized_elements": 245760,
+        "row_tail_mask_required": true,
+        "sub_and_stage_blocks_divide_row_chunk": true
+      },
+      {
+        "B": 2500,
+        "S": 512,
+        "gpu_multiprocessors": 108,
+        "column_block": 32,
+        "column_blocks": 16,
+        "no_column_tail": true,
+        "row_chunk_size": 224,
+        "row_chunks": 12,
+        "phase_programs": 192,
+        "parameter_chunk_size": 46,
+        "all_valid_rows_exact_once": true,
+        "all_17S_parameter_gradients_exact_once": true,
+        "workspace_initialized_elements": 122880,
+        "row_tail_mask_required": true,
+        "sub_and_stage_blocks_divide_row_chunk": true
+      },
+      {
+        "B": 2500,
+        "S": 256,
+        "gpu_multiprocessors": 108,
+        "column_block": 16,
+        "column_blocks": 16,
+        "no_column_tail": true,
+        "row_chunk_size": 448,
+        "row_chunks": 6,
+        "phase_programs": 96,
+        "parameter_chunk_size": 46,
+        "all_valid_rows_exact_once": true,
+        "all_17S_parameter_gradients_exact_once": true,
+        "workspace_initialized_elements": 30720,
+        "row_tail_mask_required": true,
+        "sub_and_stage_blocks_divide_row_chunk": true
+      }
+    ],
+    "all_bounds_pass": true,
+    "graph_updates": {
+      "replays": 16,
+      "steps_per_replay": 30,
+      "total_updates": 480,
+      "sampler_schedule_rows": 480,
+      "counter_range_read": [
+        0,
+        479
+      ],
+      "counter_final": 480
+    },
+    "discrete_lr_budget": {
+      "parent600": 5.5055,
+      "current480": 5.519390625,
+      "change_pct": 0.25230451366815565,
+      "claim": "Approximately preserved, not exactly identical."
+    }
+  },
+  "author_source_history_audit": {
+    "first_commit": "07a9c4543c11bb80116fb70ab237bdccf3e0e41a",
+    "current_head": "74c4a15b345cbfeadf317e29e6c451238144b0f0",
+    "current_source_sha256": "e8d330a1a81b139f5b89290325b6f7a04123f47dc3c84af354b141f96a059b53",
+    "files": {
+      "submission.py": {
+        "first_commit_sha256": "5681b8eafe2310c416b69336cb96ad2fe96c38d9d850818d23602aab9e252667",
+        "retained_path": "evidence/prior-width768-s510/submission.py",
+        "retained_sha256": "5681b8eafe2310c416b69336cb96ad2fe96c38d9d850818d23602aab9e252667",
+        "exact_retention": true
+      },
+      "evidence/official/run-1.json": {
+        "first_commit_sha256": "7c880320eff05fc5739d2f8c2712272cbe5de1ce447fd0eb7aeaad65dc3209c2",
+        "retained_path": "evidence/prior-width768-s510/run-1.json",
+        "retained_sha256": "7c880320eff05fc5739d2f8c2712272cbe5de1ce447fd0eb7aeaad65dc3209c2",
+        "exact_retention": true
+      },
+      "evidence/official/run-2.json": {
+        "first_commit_sha256": "f93640b522be6cbaf86e04775a7f708d32e5c1edcfa119e7b69cf3c7325cf206",
+        "retained_path": "evidence/prior-width768-s510/run-2.json",
+        "retained_sha256": "f93640b522be6cbaf86e04775a7f708d32e5c1edcfa119e7b69cf3c7325cf206",
+        "exact_retention": true
+      },
+      "evidence/official/run-3.json": {
+        "first_commit_sha256": "24b8ee5a202b1c40dfb12d71964852908ecc32c7b5f7e14366fd7446c532f696",
+        "retained_path": "evidence/prior-width768-s510/run-3.json",
+        "retained_sha256": "24b8ee5a202b1c40dfb12d71964852908ecc32c7b5f7e14366fd7446c532f696",
+        "exact_retention": true
+      },
+      "evidence/official/verification.json": {
+        "first_commit_sha256": "bda9fb3f7a978fa1b8c8dfadc6f665bd9bc61cee73e155216ec7ed3060f0ca3e",
+        "retained_path": "evidence/prior-width768-s510/verification.json",
+        "retained_sha256": "b156ca12c9bbaa304b4c39acd9e229f54feac9d4d879d0127810f9ca61800c7f",
+        "exact_retention": false
+      }
+    },
+    "original_qualification_source_and_all_raw_runs_preserved": true,
+    "note": "Author re-audit verification may change its source-file path after archival; prior source and raw outcomes must remain byte-identical. Different source groups are kept separately; no source-level permanent ineligibility inference.",
+    "prior_author_verification_changed_fields": [
+      "source_file"
+    ],
+    "prior_verification_only_source_path_changed": true
+  },
+  "gpu_reproduction_complete": true,
+  "reviewer_passed_runs": 3,
+  "reviewer_required_runs": 3,
+  "reviewer_qualified": true,
+  "reviewer_energy_valid_runs": 3,
+  "reviewer_median_ranked_ms": 492.84263749556106,
+  "reviewer_median_energy_mj": 77089.86459895759
+}
