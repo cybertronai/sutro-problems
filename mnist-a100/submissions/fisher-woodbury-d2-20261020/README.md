@@ -1,5 +1,28 @@
 # Fisher-metric kernel ridge with a standard-form Woodbury preconditioner: difficulty 2
 
+## Independent reviewer reproduction — October 22, 2026
+
+The first frozen reviewer group passed **3/3 fresh canonical sandboxed Modal A100-80GB runs**. Median ranked time is **2.924269 ms/call**; median above-idle GPU board energy is **172.382541 mJ/call**. Pooled MNIST error is **3.109697%** (319,738/330,000 correct). Each complete run independently passes all accuracy, holdout and timing gates; pooled accuracy is descriptive.
+
+| Reviewer run | MNIST error | Margin, labels | Ranked ms | Above-idle mJ |
+| - | -: | -: | -: | -: |
+| 1 | 3.067273% | +366 | 2.906669 | 322.672610 |
+| 2 | 3.150909% | +274 | 2.924269 | 171.027417 |
+| 3 | 3.110909% | +318 | 2.937826 | 172.382541 |
+
+The submitted source is unchanged, SHA-256 `311c1d980e162691e3872e7bafe18a357548d3c3442237e788c06570fcf6dde6`; scorer and stock runner are unchanged. All 45 timed calls completed. Every initial outcome is retained; no maintainer-launched replacement or retry was made. [Raw records and executable verifier](evidence/reviewer-20261022/), [reconstruction](evidence/reviewer-20261022/verification.json), [decision](evidence/reviewer-20261022/review-decision.json) and [source review](evidence/reviewer-20261022/source-review.json) are retained. Optional energy is assessed separately from score qualification and excludes host/system energy and initial compilation.
+
+This is @spartanhaden's linear-algebra optimization of the accepted Fisher-PCG D2. The report/source retain @sigkillme0's Fisher/compression/PCG and @islamborghini's kernel-PCG credits. Woodbury identities were checked independently; FP16 products can change numerical predictions. Author raw records reconstruct separately under working filename `kd2_k.py`. In-process call counts (1,056 in the PR body versus 2,112 in its README), pass-probability estimates, paired timing claims and earlier unsubmitted groups have no supplied raw development records and were not independently verified.
+
+The leaderboard uses these independent reviewer medians; the original author report below remains separate. Published instructions specify three official runs and their median; this reviewer reproduction supplies evidence, without adding a permanent source exclusion or a new mandatory second-batch submission rule. No D6 qualification is claimed here.
+
+Using Python 3.13 from this submission directory: `python evidence/reviewer-20261022/verify_records.py evidence/reviewer-20261022 submission.py --difficulty 2 --function kc_d2 --output /tmp/pr136-verification.json`. This audits saved records without executing the learner.
+
+## Original author report (as submitted)
+
+Present-tense record and pending-review claims below describe the author submission date; the dated reviewer section above gives accepted status.
+
+
 Entrant: [@spartanhaden](https://github.com/spartanhaden).
 
 This entry speeds up our merged [fisher-pcg-d2](../fisher-pcg-d2-20261019/README.md) (#131). The learner and all its constants are unchanged; only the linear algebra and the stream layout around it are restructured.

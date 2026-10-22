@@ -1,0 +1,78 @@
+{
+  "scope": "CPU-only integer index arithmetic for fixed n10000/NU512; no source import or GPU call.",
+  "cases": [
+    {
+      "low_count": 0,
+      "row0_low": false,
+      "real_selected": 0,
+      "spare_slots": 512,
+      "bounds_and_first512_selection": true
+    },
+    {
+      "low_count": 1,
+      "row0_low": false,
+      "real_selected": 1,
+      "spare_slots": 511,
+      "bounds_and_first512_selection": true
+    },
+    {
+      "low_count": 1,
+      "row0_low": true,
+      "real_selected": 1,
+      "spare_slots": 511,
+      "bounds_and_first512_selection": true
+    },
+    {
+      "low_count": 511,
+      "row0_low": false,
+      "real_selected": 511,
+      "spare_slots": 1,
+      "bounds_and_first512_selection": true
+    },
+    {
+      "low_count": 511,
+      "row0_low": true,
+      "real_selected": 511,
+      "spare_slots": 1,
+      "bounds_and_first512_selection": true
+    },
+    {
+      "low_count": 512,
+      "row0_low": false,
+      "real_selected": 512,
+      "spare_slots": 0,
+      "bounds_and_first512_selection": true
+    },
+    {
+      "low_count": 512,
+      "row0_low": true,
+      "real_selected": 512,
+      "spare_slots": 0,
+      "bounds_and_first512_selection": true
+    },
+    {
+      "low_count": 513,
+      "row0_low": false,
+      "real_selected": 512,
+      "spare_slots": 0,
+      "bounds_and_first512_selection": true
+    },
+    {
+      "low_count": 513,
+      "row0_low": true,
+      "real_selected": 512,
+      "spare_slots": 0,
+      "bounds_and_first512_selection": true
+    },
+    {
+      "low_count": 10000,
+      "row0_low": true,
+      "real_selected": 512,
+      "spare_slots": 0,
+      "bounds_and_first512_selection": true
+    }
+  ],
+  "interpretation": "True low rows write unique slots0..min(count,512)-1; all surplus writes go to discarded scratchslot512. Spares repeat row0. Readout executes fixed512 hull queries and3classes even with fewer low rows. Repeated row0 final writes target in-bounds storage and select from the same current query/model; any stochastic last-writer difference affects classifier predictions, not truth access or a work bypass.",
+  "lower_Gram_triangle": "Top-left49x49 G, last lower row rT and finalscalar c are all written; the unused upper-right column is not part of lower-factorization input.",
+  "static_blockers": []
+}

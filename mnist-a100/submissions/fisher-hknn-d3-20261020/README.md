@@ -1,5 +1,28 @@
 # Fisher-metric kernel ridge with an HKNN readout, in plain PyTorch: difficulty 3
 
+## Independent reviewer reproduction — October 22, 2026
+
+The first frozen reviewer group passed **3/3 fresh canonical sandboxed Modal A100-80GB runs**. Median ranked time is **3.510784 ms/call**; median above-idle GPU board energy is **358.758434 mJ/call**. Pooled MNIST error is **2.523030%** (321,674/330,000 correct). Each complete run independently passes all accuracy, holdout and timing gates; pooled accuracy is descriptive.
+
+| Reviewer run | MNIST error | Margin, labels | Ranked ms | Above-idle mJ |
+| - | -: | -: | -: | -: |
+| 1 | 2.557273% | +157 | 3.510784 | 444.613117 |
+| 2 | 2.509091% | +210 | 3.380503 | 358.758434 |
+| 3 | 2.502727% | +217 | 5.392590 | 351.673144 |
+
+The submitted source is unchanged, SHA-256 `eae98d2337442db3c2ed5984e455cf2fc945bfa6846aeaa93d0decb51799d232`; scorer and stock runner are unchanged. All 45 timed calls completed. Every initial outcome is retained; no maintainer-launched replacement or retry was made. [Raw records and executable verifier](evidence/reviewer-20261022/), [reconstruction](evidence/reviewer-20261022/verification.json), [decision](evidence/reviewer-20261022/review-decision.json) and [source review](evidence/reviewer-20261022/source-review.json) are retained. Optional energy is assessed separately from score qualification and excludes host/system energy and initial compilation.
+
+The report/source credit @sigkillme0's Fisher/compression/PCG method, @spartanhaden's RFM/HKNN and @islamborghini's kernel-PCG, including Vincent and Bengio's hull method. This is a whole-learner comparison with the previous native-hull record, rather than an isolated kernel experiment. Current labels/metrics, preconditioner and compacted low-margin readout are refitted each call. Author raw records reconstruct separately under working filename `kd3_k.py`; in-process counts, probability estimates, paired screens and unsubmitted source histories lack supplied development records and remain unverified.
+
+The leaderboard uses these independent reviewer medians; the original author report below remains separate. Published instructions specify three official runs and their median; this reviewer reproduction supplies evidence, without adding a permanent source exclusion or a new mandatory second-batch submission rule. No D6 qualification is claimed here.
+
+Using Python 3.13 from this submission directory: `python evidence/reviewer-20261022/verify_records.py evidence/reviewer-20261022 submission.py --difficulty 3 --function kc_d3 --output /tmp/pr137-verification.json`. This audits saved records without executing the learner.
+
+## Original author report (as submitted)
+
+Present-tense record and pending-review claims below describe the author submission date; the dated reviewer section above gives accepted status.
+
+
 Entrant: [@spartanhaden](https://github.com/spartanhaden).
 
 Our plain-PyTorch d3 learner: @sigkillme0's [#125](../kernel-d3-20261018/README.md) method, re-implemented, with the HKNN readout of our [rfm-hknn-d3](../rfm-hknn-d3-20261012/README.md) and our d2 entry's linear algebra. No hand-written kernels.
