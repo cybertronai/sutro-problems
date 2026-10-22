@@ -23,7 +23,7 @@ Individual sources and reports retain the relevant @sigkillme0 Fisher/compressio
 
 ## Older open PRs
 
-[Fresh GitHub metadata](older-pr-recheck.json) confirms all seven older heads, bodies and file metadata are unchanged, with no new discussion, review or inline comments. Their unchanged sources were not rerun.
+[Fresh GitHub metadata](older-pr-recheck.json) and the [final 19:40 UTC scan](final-pr-scan.json) confirm all seven older heads, bodies and file metadata are unchanged, with no new submissions, discussion, review or inline comments. Their unchanged sources were not rerun.
 
 | PR | Reason it remains open |
 | - | - |

@@ -1,0 +1,460 @@
+{
+  "reviewed_at_utc": "2026-10-22T19:03:33.910347+00:00",
+  "status": "static_review_complete_with_analysis_and_pairing_qualifications",
+  "scope": "Read-only independent review of frozen ten-arm development study, source modifications and currently available raw outputs; no new GPU execution and no source changes.",
+  "frozen_identity": {
+    "study_sha256": "f08fac2739f1d8571351f42a38babea2baa0baf2b6e89a30ba040bb2368579b1",
+    "plan_sha256": "5b1ae0f7c6e8713af83d957bcd415ebc40921ae808139dd71a5105efa5265854",
+    "parent_source_sha256": "98e310b12031555088ee47e6f8170ad001fad1b6f0be28dcead493ff7682f5c3",
+    "canonical_main": "b374daa1a59cf0e3ce9a6462ecdf2f143ac5b5fc",
+    "scorer_sha256": "1bc6d8d96a776565bc70f3ccdb91be7de57187d4495b2b0437fac98f5e120064",
+    "runner_sha256": "1180b843cf6c32414774da90c835a8b7298d2db8719989237a793ca1c62a10ab",
+    "all_source_hashes_match_plan": true,
+    "sources": [
+      {
+        "arm": "baseline450",
+        "sha256": "fac513eab08147b168db7f97ef65d0edaf7245f046e5e2ab7155eae9bd68a6d3",
+        "matches_frozen_plan": true,
+        "bytes": 19686
+      },
+      {
+        "arm": "long1800",
+        "sha256": "26dcf76495c39f08c091f2c89e53e18ba2c2480a069b77ccdd4b0f77c97270ae",
+        "matches_frozen_plan": true,
+        "bytes": 19687
+      },
+      {
+        "arm": "long7200",
+        "sha256": "ce5598dce19e244392215600b0bb526a9d9ed5ccfa1a925ae7006923568a77c0",
+        "matches_frozen_plan": true,
+        "bytes": 19687
+      },
+      {
+        "arm": "l2_7200",
+        "sha256": "e1779bb54f1532562f6d4f70ef8d4ad071318686630bec58e73ccce1c77a74f1",
+        "matches_frozen_plan": true,
+        "bytes": 19737
+      },
+      {
+        "arm": "dropout7200",
+        "sha256": "d6b890afe775d9686cb91fceb378a096a05f36ead1769df4c6af445d9437e2c2",
+        "matches_frozen_plan": true,
+        "bytes": 19707
+      },
+      {
+        "arm": "dropconnect7200",
+        "sha256": "9e236d0278c7a162079724f1096cb70999695fa9afb981dec0a176ae6dcde088",
+        "matches_frozen_plan": true,
+        "bytes": 19723
+      },
+      {
+        "arm": "l2_dropout7200",
+        "sha256": "c188fed1c8f434b9842bd51d4f58517505229c7960d313c7a5197a644c916c5b",
+        "matches_frozen_plan": true,
+        "bytes": 19757
+      },
+      {
+        "arm": "noise7200",
+        "sha256": "0d3d98e27edddaf6d6f89238957efd9c14136959dee37977d37f63fd71e6fd54",
+        "matches_frozen_plan": true,
+        "bytes": 19686
+      },
+      {
+        "arm": "teacher_taper7200",
+        "sha256": "0d60b855aece9ba149f85a918ffc6f83c80dbd271dd0f1420a8e6bdb8e452229",
+        "matches_frozen_plan": true,
+        "bytes": 19717
+      },
+      {
+        "arm": "long28800",
+        "sha256": "0147f7d1dfcd019eafbf6ae31bce9c1ee3e1922f257eaded54590966550efe2c",
+        "matches_frozen_plan": true,
+        "bytes": 19688
+      }
+    ]
+  },
+  "confirmed_static_blockers": [],
+  "truth_boundary": {
+    "learner_arguments": [
+      "train_x",
+      "train_y",
+      "test_x"
+    ],
+    "query_truth_used_only_by_outer_research_scoring": true,
+    "no_reviewed_source_access_to_pixels_release_map_prior_model_or_truth": true,
+    "isolation_limit": "Unsandboxed same-process research. Argument/source audit supports no leakage for these reviewed bytes; this is not canonical sandbox enforcement.",
+    "formal_d6_qualification": false,
+    "global_accuracy_ceiling_proved": false
+  },
+  "reset_and_pairing": {
+    "fresh_fit_each_member": true,
+    "reset_evidence": [
+      "Encoder/decoder/combinator initialization, bias/gain, Adam moments/step, counter, loss-sampling scores, sampler, noise bank/offsets reset.",
+      "Current training labels, query pool, teacher soft targets, hard-query indices, tangents and transformations refit/copied before reset and graph replay."
+    ],
+    "same_image_draw_seed_sequence": [
+      2610221101,
+      2610221102,
+      2610221103
+    ],
+    "member_model_seeds": "11 + 997 * zero_based_member",
+    "pairing_scope": "Seeded image selection and label permutation are paired by canonical algorithm. Different step counts change RNG consumption and sampler/noise shapes; identical training randomness is not promised.",
+    "released_coordinate_warning": "dropout7200 has different train/query coordinate hashes for all three seeds from the other eight currently returned arms. Query-label arrays match exactly for all arms. Byte-identical released-coordinate pairing is therefore false for this arm; magnitude/metric equivalence cannot be recovered from hashes because inputs were not saved. CPU BLAS/eigh variation is a plausible unconfirmed cause, not established by this audit. Qualify pairedness claims and retain the discrepancy.",
+    "returned_pairing": [
+      {
+        "seed": 2610221101,
+        "query_label_arrays_identical": true,
+        "released_coordinate_hash_groups": [
+          [
+            "baseline450",
+            "dropconnect7200",
+            "l2_7200",
+            "l2_dropout7200",
+            "long1800",
+            "long7200",
+            "noise7200",
+            "teacher_taper7200"
+          ],
+          [
+            "dropout7200"
+          ]
+        ],
+        "rows": [
+          {
+            "arm": "baseline450",
+            "train_sha256": "bcd389d2df186aa5828eb5fec7212f933e8a37dfef2d1834279d65409330d8e5",
+            "query_sha256": "5419468b864c765e2dc003e5e38d556d35c60628931a5aca31c1a41599b985a4",
+            "query_labels_sha256": "8e524ea7bbb3ac00281f854d87054c229e5093ae2e8fc42c25875f99477cd36c"
+          },
+          {
+            "arm": "dropconnect7200",
+            "train_sha256": "bcd389d2df186aa5828eb5fec7212f933e8a37dfef2d1834279d65409330d8e5",
+            "query_sha256": "5419468b864c765e2dc003e5e38d556d35c60628931a5aca31c1a41599b985a4",
+            "query_labels_sha256": "8e524ea7bbb3ac00281f854d87054c229e5093ae2e8fc42c25875f99477cd36c"
+          },
+          {
+            "arm": "dropout7200",
+            "train_sha256": "22de2472b7f2cbeecfa53c8a1ad7b2784774554dcedb1fc65f5d090c70bceb4d",
+            "query_sha256": "69447aa9ec0f639b5e42c81677bb26929e6f756820fbca95c5693324ab0f48bb",
+            "query_labels_sha256": "8e524ea7bbb3ac00281f854d87054c229e5093ae2e8fc42c25875f99477cd36c"
+          },
+          {
+            "arm": "l2_7200",
+            "train_sha256": "bcd389d2df186aa5828eb5fec7212f933e8a37dfef2d1834279d65409330d8e5",
+            "query_sha256": "5419468b864c765e2dc003e5e38d556d35c60628931a5aca31c1a41599b985a4",
+            "query_labels_sha256": "8e524ea7bbb3ac00281f854d87054c229e5093ae2e8fc42c25875f99477cd36c"
+          },
+          {
+            "arm": "l2_dropout7200",
+            "train_sha256": "bcd389d2df186aa5828eb5fec7212f933e8a37dfef2d1834279d65409330d8e5",
+            "query_sha256": "5419468b864c765e2dc003e5e38d556d35c60628931a5aca31c1a41599b985a4",
+            "query_labels_sha256": "8e524ea7bbb3ac00281f854d87054c229e5093ae2e8fc42c25875f99477cd36c"
+          },
+          {
+            "arm": "long1800",
+            "train_sha256": "bcd389d2df186aa5828eb5fec7212f933e8a37dfef2d1834279d65409330d8e5",
+            "query_sha256": "5419468b864c765e2dc003e5e38d556d35c60628931a5aca31c1a41599b985a4",
+            "query_labels_sha256": "8e524ea7bbb3ac00281f854d87054c229e5093ae2e8fc42c25875f99477cd36c"
+          },
+          {
+            "arm": "long7200",
+            "train_sha256": "bcd389d2df186aa5828eb5fec7212f933e8a37dfef2d1834279d65409330d8e5",
+            "query_sha256": "5419468b864c765e2dc003e5e38d556d35c60628931a5aca31c1a41599b985a4",
+            "query_labels_sha256": "8e524ea7bbb3ac00281f854d87054c229e5093ae2e8fc42c25875f99477cd36c"
+          },
+          {
+            "arm": "noise7200",
+            "train_sha256": "bcd389d2df186aa5828eb5fec7212f933e8a37dfef2d1834279d65409330d8e5",
+            "query_sha256": "5419468b864c765e2dc003e5e38d556d35c60628931a5aca31c1a41599b985a4",
+            "query_labels_sha256": "8e524ea7bbb3ac00281f854d87054c229e5093ae2e8fc42c25875f99477cd36c"
+          },
+          {
+            "arm": "teacher_taper7200",
+            "train_sha256": "bcd389d2df186aa5828eb5fec7212f933e8a37dfef2d1834279d65409330d8e5",
+            "query_sha256": "5419468b864c765e2dc003e5e38d556d35c60628931a5aca31c1a41599b985a4",
+            "query_labels_sha256": "8e524ea7bbb3ac00281f854d87054c229e5093ae2e8fc42c25875f99477cd36c"
+          }
+        ]
+      },
+      {
+        "seed": 2610221102,
+        "query_label_arrays_identical": true,
+        "released_coordinate_hash_groups": [
+          [
+            "baseline450",
+            "dropconnect7200",
+            "l2_7200",
+            "l2_dropout7200",
+            "long1800",
+            "long7200",
+            "noise7200",
+            "teacher_taper7200"
+          ],
+          [
+            "dropout7200"
+          ]
+        ],
+        "rows": [
+          {
+            "arm": "baseline450",
+            "train_sha256": "b1b953e0093ba51ac300f7b387ec777fe7e3a8967a882d31a6f2d283b42db595",
+            "query_sha256": "1a02aed8248fecae9876a2f1f984beb8f3a5f2d43f6a85cb0e504ad5dfd7b85a",
+            "query_labels_sha256": "001882edede29d6c3ba07cad51748e0b6f8d1c53b7a98defee80fa4201830f09"
+          },
+          {
+            "arm": "dropconnect7200",
+            "train_sha256": "b1b953e0093ba51ac300f7b387ec777fe7e3a8967a882d31a6f2d283b42db595",
+            "query_sha256": "1a02aed8248fecae9876a2f1f984beb8f3a5f2d43f6a85cb0e504ad5dfd7b85a",
+            "query_labels_sha256": "001882edede29d6c3ba07cad51748e0b6f8d1c53b7a98defee80fa4201830f09"
+          },
+          {
+            "arm": "dropout7200",
+            "train_sha256": "a22857ad1540ca44577d8aacf05e246042450a5bdfb66e7e9ffd2f4c61527383",
+            "query_sha256": "00facc98d6abdeb9430586abcd591720639d52d22fa7d23890908239911ada80",
+            "query_labels_sha256": "001882edede29d6c3ba07cad51748e0b6f8d1c53b7a98defee80fa4201830f09"
+          },
+          {
+            "arm": "l2_7200",
+            "train_sha256": "b1b953e0093ba51ac300f7b387ec777fe7e3a8967a882d31a6f2d283b42db595",
+            "query_sha256": "1a02aed8248fecae9876a2f1f984beb8f3a5f2d43f6a85cb0e504ad5dfd7b85a",
+            "query_labels_sha256": "001882edede29d6c3ba07cad51748e0b6f8d1c53b7a98defee80fa4201830f09"
+          },
+          {
+            "arm": "l2_dropout7200",
+            "train_sha256": "b1b953e0093ba51ac300f7b387ec777fe7e3a8967a882d31a6f2d283b42db595",
+            "query_sha256": "1a02aed8248fecae9876a2f1f984beb8f3a5f2d43f6a85cb0e504ad5dfd7b85a",
+            "query_labels_sha256": "001882edede29d6c3ba07cad51748e0b6f8d1c53b7a98defee80fa4201830f09"
+          },
+          {
+            "arm": "long1800",
+            "train_sha256": "b1b953e0093ba51ac300f7b387ec777fe7e3a8967a882d31a6f2d283b42db595",
+            "query_sha256": "1a02aed8248fecae9876a2f1f984beb8f3a5f2d43f6a85cb0e504ad5dfd7b85a",
+            "query_labels_sha256": "001882edede29d6c3ba07cad51748e0b6f8d1c53b7a98defee80fa4201830f09"
+          },
+          {
+            "arm": "long7200",
+            "train_sha256": "b1b953e0093ba51ac300f7b387ec777fe7e3a8967a882d31a6f2d283b42db595",
+            "query_sha256": "1a02aed8248fecae9876a2f1f984beb8f3a5f2d43f6a85cb0e504ad5dfd7b85a",
+            "query_labels_sha256": "001882edede29d6c3ba07cad51748e0b6f8d1c53b7a98defee80fa4201830f09"
+          },
+          {
+            "arm": "noise7200",
+            "train_sha256": "b1b953e0093ba51ac300f7b387ec777fe7e3a8967a882d31a6f2d283b42db595",
+            "query_sha256": "1a02aed8248fecae9876a2f1f984beb8f3a5f2d43f6a85cb0e504ad5dfd7b85a",
+            "query_labels_sha256": "001882edede29d6c3ba07cad51748e0b6f8d1c53b7a98defee80fa4201830f09"
+          },
+          {
+            "arm": "teacher_taper7200",
+            "train_sha256": "b1b953e0093ba51ac300f7b387ec777fe7e3a8967a882d31a6f2d283b42db595",
+            "query_sha256": "1a02aed8248fecae9876a2f1f984beb8f3a5f2d43f6a85cb0e504ad5dfd7b85a",
+            "query_labels_sha256": "001882edede29d6c3ba07cad51748e0b6f8d1c53b7a98defee80fa4201830f09"
+          }
+        ]
+      },
+      {
+        "seed": 2610221103,
+        "query_label_arrays_identical": true,
+        "released_coordinate_hash_groups": [
+          [
+            "baseline450",
+            "dropconnect7200",
+            "l2_7200",
+            "l2_dropout7200",
+            "long1800",
+            "long7200",
+            "noise7200",
+            "teacher_taper7200"
+          ],
+          [
+            "dropout7200"
+          ]
+        ],
+        "rows": [
+          {
+            "arm": "baseline450",
+            "train_sha256": "95364b6a45f14f8096d10809e78418b14a71d94d82f7f2a0eee85700f44309c9",
+            "query_sha256": "895fe831bd31d60f92f2a83522f21a32c508a2aa62355d5c033a9c298d4c72af",
+            "query_labels_sha256": "86ba39eec1358bbe33c5398d1124d21121849b0bd346b8f293ad57c8afd1ac8d"
+          },
+          {
+            "arm": "dropconnect7200",
+            "train_sha256": "95364b6a45f14f8096d10809e78418b14a71d94d82f7f2a0eee85700f44309c9",
+            "query_sha256": "895fe831bd31d60f92f2a83522f21a32c508a2aa62355d5c033a9c298d4c72af",
+            "query_labels_sha256": "86ba39eec1358bbe33c5398d1124d21121849b0bd346b8f293ad57c8afd1ac8d"
+          },
+          {
+            "arm": "dropout7200",
+            "train_sha256": "93c835a739367284227fbefc7c0edb37d7599283b34245d5649b16c82191d2f7",
+            "query_sha256": "1ca4c4250f81c7a745260b2e12ca760167407e2961097ae2d264805f5290cf35",
+            "query_labels_sha256": "86ba39eec1358bbe33c5398d1124d21121849b0bd346b8f293ad57c8afd1ac8d"
+          },
+          {
+            "arm": "l2_7200",
+            "train_sha256": "95364b6a45f14f8096d10809e78418b14a71d94d82f7f2a0eee85700f44309c9",
+            "query_sha256": "895fe831bd31d60f92f2a83522f21a32c508a2aa62355d5c033a9c298d4c72af",
+            "query_labels_sha256": "86ba39eec1358bbe33c5398d1124d21121849b0bd346b8f293ad57c8afd1ac8d"
+          },
+          {
+            "arm": "l2_dropout7200",
+            "train_sha256": "95364b6a45f14f8096d10809e78418b14a71d94d82f7f2a0eee85700f44309c9",
+            "query_sha256": "895fe831bd31d60f92f2a83522f21a32c508a2aa62355d5c033a9c298d4c72af",
+            "query_labels_sha256": "86ba39eec1358bbe33c5398d1124d21121849b0bd346b8f293ad57c8afd1ac8d"
+          },
+          {
+            "arm": "long1800",
+            "train_sha256": "95364b6a45f14f8096d10809e78418b14a71d94d82f7f2a0eee85700f44309c9",
+            "query_sha256": "895fe831bd31d60f92f2a83522f21a32c508a2aa62355d5c033a9c298d4c72af",
+            "query_labels_sha256": "86ba39eec1358bbe33c5398d1124d21121849b0bd346b8f293ad57c8afd1ac8d"
+          },
+          {
+            "arm": "long7200",
+            "train_sha256": "95364b6a45f14f8096d10809e78418b14a71d94d82f7f2a0eee85700f44309c9",
+            "query_sha256": "895fe831bd31d60f92f2a83522f21a32c508a2aa62355d5c033a9c298d4c72af",
+            "query_labels_sha256": "86ba39eec1358bbe33c5398d1124d21121849b0bd346b8f293ad57c8afd1ac8d"
+          },
+          {
+            "arm": "noise7200",
+            "train_sha256": "95364b6a45f14f8096d10809e78418b14a71d94d82f7f2a0eee85700f44309c9",
+            "query_sha256": "895fe831bd31d60f92f2a83522f21a32c508a2aa62355d5c033a9c298d4c72af",
+            "query_labels_sha256": "86ba39eec1358bbe33c5398d1124d21121849b0bd346b8f293ad57c8afd1ac8d"
+          },
+          {
+            "arm": "teacher_taper7200",
+            "train_sha256": "95364b6a45f14f8096d10809e78418b14a71d94d82f7f2a0eee85700f44309c9",
+            "query_sha256": "895fe831bd31d60f92f2a83522f21a32c508a2aa62355d5c033a9c298d4c72af",
+            "query_labels_sha256": "86ba39eec1358bbe33c5398d1124d21121849b0bd346b8f293ad57c8afd1ac8d"
+          }
+        ]
+      }
+    ]
+  },
+  "regularization_semantics": {
+    "l2": "0.0005 * sum(square) over encoder and decoder matrices means lambda/2 with lambda=.001, coupled into Adam gradients. Bias/gain/combinators excluded; not decoupled AdamW.",
+    "dropout": "p=.1 after training hidden ReLU only; clean prediction path has no dropout.",
+    "dropconnect": "p=.1 on training hidden encoder weight matrices only; excludes class head and decoder; clean prediction uses full weights.",
+    "gaussian_noise": "Noise arm changes .25 to .4. Fixed circular noise-bank scheme otherwise unchanged.",
+    "teacher_taper": "Tapers only soft-target loss weight from TW to TW/STEPS, nearly zero at last step. Teacher still supplies pseudo-label/reconstruction targets, features/readout/guard; do not call teacher-free.",
+    "long_training": "Fixed initial LR and anneal fraction across step budgets. Total integrated LR budget increases with step count, so length and integrated optimization exposure co-vary."
+  },
+  "probability_ensemble": {
+    "valid": true,
+    "definition": "Per member, normalize nonnegative HKNN-adjusted class scores to unit row sum; if the original guard changes the winning class, replace that row with normalized teacher softmax. Otherwise keep neural/HKNN probabilities.",
+    "preserves_parent_single_member_guarded_argmax": true,
+    "aggregation": "Equal-weight sum of normalized final probabilities. Argmax is equivalent to their mean; not averaging hard labels or raw logits.",
+    "scope": "This is an explicit research probability extension of parent PR139 classifier. If teacher and student select the same class, student confidence remains. Do not describe as pure neural-softmax or unconditional teacher mixture."
+  },
+  "mandatory_analysis_guards": [
+    "Require all three declared draw seeds for each candidate arm/prefix; completed=True alone does not establish every requested member or prefix returned.",
+    "Require the selected prefix to be present and measured full_call_seconds <=300 on each of all three draws, not just pooled/mean time.",
+    "The code records a prefix before testing elapsed>300 and can overrun by one full member. Preserve such data but exclude over-budget prefixes from budget-constrained selection.",
+    "Use actual per-prefix correct/total/prediction arrays; all currently saved counts independently reconstruct.",
+    "Report coordinate-hash discrepancy for dropout; do not claim all released inputs are byte-identical across arms.",
+    "Freeze winning configuration after development; retain all 10 arms and failures. Confirm on the predeclared 11 genuinely fresh draw seeds without further tuning, reporting every confirmation outcome.",
+    "Ten arms and multiple correlated ensemble prefixes selected using only three development draws create selection optimism; selected development accuracy is not an unbiased generalization estimate.",
+    "Report research fit-call timing separately from canonical latency/energy. It excludes data preparation, host scoring and probability aggregation and is not official qualification.",
+    "Any width or additional-arm follow-up chosen after viewing this screen is adaptive exploration, must be separately labeled, and needs independent confirmation."
+  ],
+  "infrastructure_history": {
+    "bootstrap_attempt": {
+      "running": false,
+      "started_utc": "2026-10-22T18:45:40.830513+00:00",
+      "finished_utc": "2026-10-22T18:47:11.346665+00:00",
+      "phase": "remote import before any learner execution",
+      "error": "Canonical runner directory was not mounted into the remote image; no learning/accuracy outcome exists.",
+      "learner_executions": 0
+    },
+    "serialization_attempt": {
+      "running": false,
+      "started_utc": "2026-10-22T18:47:11.960809+00:00",
+      "finished_utc": "2026-10-22T18:51:33.157873+00:00",
+      "phase": "client result metadata deserialization",
+      "error": "TorchVersion metadata required an unavailable local torch module. One function input completed, nine were terminated after client failure; no numeric accuracy outcome could be recovered from map output cache.",
+      "call_graph": "serialization-failure-call-graph.json",
+      "source_or_plan_changes": false,
+      "selection_by_outcome": false,
+      "repair": "Controller returns and remotely persists plain JSON before transfer; learner bytes and planned seeds/hyperparameters unchanged."
+    },
+    "interpretation": "Only first bootstrap failure had zero learner executions. The second attempt completed one remote function input before client metadata deserialization failed; numeric metrics were not recoverable and nine other inputs terminated. Do not claim zero executed prior attempts or silently omit this missing-outcome limitation. Retained logs/call graph and frozen source/plan identity support infrastructure repair rather than observed-outcome selection."
+  },
+  "available_raw_audit": {
+    "received_arms": 9,
+    "planned_arms": 10,
+    "outcomes": [
+      {
+        "arm": "baseline450",
+        "sha256": "5093f6219b55baec6adf42d09a2c95203f82db2664e9ab2224f9dee0fce3772c",
+        "completed": true,
+        "draws": 3,
+        "all_saved_prediction_counts_reconstruct": true,
+        "errors": []
+      },
+      {
+        "arm": "dropconnect7200",
+        "sha256": "f3dcd2a4bc99711ba9b3a4cd3433021dae36245c10038275838752d10e99bcd3",
+        "completed": true,
+        "draws": 3,
+        "all_saved_prediction_counts_reconstruct": true,
+        "errors": []
+      },
+      {
+        "arm": "dropout7200",
+        "sha256": "68b777251ca530de5ab42ebcfa9080245273a161a48cba3226be5654ae8d63d1",
+        "completed": true,
+        "draws": 3,
+        "all_saved_prediction_counts_reconstruct": true,
+        "errors": []
+      },
+      {
+        "arm": "l2_7200",
+        "sha256": "6c6d9fef4484d5634b3ab12e4a295d09fb2aa73cc7ab1b6ca105c88060adad31",
+        "completed": true,
+        "draws": 3,
+        "all_saved_prediction_counts_reconstruct": true,
+        "errors": []
+      },
+      {
+        "arm": "l2_dropout7200",
+        "sha256": "52fce106d922127f73605784f5e94a55a7f70dc4e7f7c23cf1d7705e88e862fd",
+        "completed": true,
+        "draws": 3,
+        "all_saved_prediction_counts_reconstruct": true,
+        "errors": []
+      },
+      {
+        "arm": "long1800",
+        "sha256": "8f2f69baeb04eb4d1df4a11285ac2065a6853f69d0b6a8fe95cff3b12151c8b6",
+        "completed": true,
+        "draws": 3,
+        "all_saved_prediction_counts_reconstruct": true,
+        "errors": []
+      },
+      {
+        "arm": "long7200",
+        "sha256": "7dabea96d666f0d95fdcf772ad9b0709c4d493343ff4633160f9e26ece59eea2",
+        "completed": true,
+        "draws": 3,
+        "all_saved_prediction_counts_reconstruct": true,
+        "errors": []
+      },
+      {
+        "arm": "noise7200",
+        "sha256": "b78452e981ba24c4dedf7a98d7b246d591050bed3cb62dd53b432f21944910bd",
+        "completed": true,
+        "draws": 3,
+        "all_saved_prediction_counts_reconstruct": true,
+        "errors": []
+      },
+      {
+        "arm": "teacher_taper7200",
+        "sha256": "54f0c950ff42d96c1b5e10a6cf97262170f17545f446c5aa2411d334abff95a4",
+        "completed": true,
+        "draws": 3,
+        "all_saved_prediction_counts_reconstruct": true,
+        "errors": []
+      }
+    ],
+    "all_saved_counts_reconstruct": true,
+    "not_a_final_winner_selection": true
+  },
+  "conclusion": "No confirmed truth-boundary, regularization, probability-aggregation or reset defect found in reviewed source. Development results remain exploratory and require the stated budget/completeness/pairing/selection disclosures plus independent confirmation. No official D6 pass or global accuracy ceiling follows from this screen."
+}

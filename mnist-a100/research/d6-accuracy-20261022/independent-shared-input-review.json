@@ -1,0 +1,163 @@
+{
+  "checked_utc": "2026-10-22T19:16:18.674931+00:00",
+  "status": "READY",
+  "scope": "Independent read-only static and CPU shared-input audit. No GPU functions launched; no producer/helper/source/plan changes.",
+  "confirmed_extension_launch_blockers": [],
+  "identity": {
+    "study.py": "2c169364b1142d2bfde9b7db50ad4b7855ca85378044fb866aedefd4f02b58f8",
+    "input_bundles.py": "1eeecd1d02816344fbfdff1bd3d361225bb807207dda33140c8c38b6bf85999d",
+    "extension-plan.json": "05df196a7bd628d9696e852c1dd4c87bc32f826c5ceae817d5d0bf8dd4f1cca0",
+    "inputs-development-manifest.json": "32eb1252ecc62f25e7de621a3917b8967e0b7360190a279c68611c6d3814d972",
+    "canonical/mnist.py": "1bc6d8d96a776565bc70f3ccdb91be7de57187d4495b2b0437fac98f5e120064",
+    "canonical/run_modal.py": "1180b843cf6c32414774da90c835a8b7298d2db8719989237a793ca1c62a10ab"
+  },
+  "controller_boundary": {
+    "CPU_preparer_imports_no_learner": true,
+    "learner_arguments_exactly": [
+      "tx",
+      "ty",
+      "qx"
+    ],
+    "qy_kept_in_trusted_outer_scoring": true,
+    "source_or_metadata_passed_to_learner": false,
+    "no_pixels_or_release_map_in_bundles": true,
+    "isolation_scope": "Unsandboxed research; reviewed exact learner bytes do not introspect enclosing code. No canonical sandbox qualification is claimed."
+  },
+  "archive_validation": [
+    {
+      "bundle": "fashion:2610221190",
+      "npz_bytes": 4474972,
+      "all_hashes_verified": true,
+      "canonical_dtypes_shapes_values": true,
+      "contiguous_independent_decoded_arrays": true,
+      "corrupt_archive_rejected": true,
+      "metadata_drift_rejected": true
+    },
+    {
+      "bundle": "mnist:2610221101",
+      "npz_bytes": 4474800,
+      "all_hashes_verified": true,
+      "canonical_dtypes_shapes_values": true,
+      "contiguous_independent_decoded_arrays": true,
+      "corrupt_archive_rejected": true,
+      "metadata_drift_rejected": true
+    },
+    {
+      "bundle": "mnist:2610221102",
+      "npz_bytes": 4474628,
+      "all_hashes_verified": true,
+      "canonical_dtypes_shapes_values": true,
+      "contiguous_independent_decoded_arrays": true,
+      "corrupt_archive_rejected": true,
+      "metadata_drift_rejected": true
+    },
+    {
+      "bundle": "mnist:2610221103",
+      "npz_bytes": 4473617,
+      "all_hashes_verified": true,
+      "canonical_dtypes_shapes_values": true,
+      "contiguous_independent_decoded_arrays": true,
+      "corrupt_archive_rejected": true,
+      "metadata_drift_rejected": true
+    }
+  ],
+  "immutability": {
+    "first_writer_preserved": "store.put(skip_if_exists=True) refuses overwriting a previously prepared key; generator reuses and decodes existing stored payload.",
+    "content_integrity": "Pinned manifest SHA, exact metadata equality, compressed NPZ SHA/length, every array SHA/shape/dtype and aggregate train/query SHA are checked. Local existing archives cannot be replaced with differing bytes.",
+    "decode_copy_isolation": true,
+    "limitation": "Modal Dict is not a write-once security primitive; independent content hashes detect later drift. Local archives preserve evidence beyond remote inactivity expiration."
+  },
+  "job_schema_CPU_tests": {
+    "job_count": 9,
+    "all_nine_sources_match_frozen_hashes": true,
+    "all_jobs_have_scorer_runner_bundle_metadata_and_manifest_hash": true,
+    "all_jobs_save_normalized_member_probabilities": true,
+    "no_root_query_labels_in_job_source_or_learner_arguments": true,
+    "rejected_drift_fields": [
+      "runner_sha256",
+      "scorer_sha256",
+      "input_manifest_sha256",
+      "learner_source_sha256"
+    ]
+  },
+  "probability_codec_CPU_test": {
+    "format": "zlib-base64-f32-le",
+    "shape": [
+      10000,
+      10
+    ],
+    "byte_exact_roundtrip": true,
+    "argmax_matches": true,
+    "corrupt_hash_rejected": true,
+    "scope": "Generated CPU fixture exercises producer byte format and current consumer, not GPU execution."
+  },
+  "budget_timing": {
+    "current_extension": "Each member records synchronized fit/inference plus synchronized probability accumulation and member/prefix argmax; prefix cumulative_algorithm_seconds sums them.",
+    "excluded": "Input preparation/warmup, truth comparison and evidence probability/label serialization. This is a declared research algorithm timing, not canonical latency.",
+    "required_filter": "Selected prefix must exist, validate and have cumulative_algorithm_seconds<=300 on each of all3developmentdraws. Do not use fit-only full_call_seconds for new extension selection. Initial legacy fit-only scope remains explicitly separate.",
+    "over_budget_outcome_retained": "Post-member check can overshoot by one fit; retain but exclude over-budget prefix. completed=True alone does not prove all requested prefixes exist."
+  },
+  "initial_input_pairing_audit": {
+    "arms": [
+      {
+        "arm": "baseline450",
+        "all_three_coordinate_hashes_match_shared_bundle": true,
+        "query_labels_match_shared_bundle": true
+      },
+      {
+        "arm": "dropconnect7200",
+        "all_three_coordinate_hashes_match_shared_bundle": true,
+        "query_labels_match_shared_bundle": true
+      },
+      {
+        "arm": "dropout7200",
+        "all_three_coordinate_hashes_match_shared_bundle": false,
+        "query_labels_match_shared_bundle": true
+      },
+      {
+        "arm": "l2_7200",
+        "all_three_coordinate_hashes_match_shared_bundle": true,
+        "query_labels_match_shared_bundle": true
+      },
+      {
+        "arm": "l2_dropout7200",
+        "all_three_coordinate_hashes_match_shared_bundle": true,
+        "query_labels_match_shared_bundle": true
+      },
+      {
+        "arm": "long1800",
+        "all_three_coordinate_hashes_match_shared_bundle": true,
+        "query_labels_match_shared_bundle": true
+      },
+      {
+        "arm": "long28800",
+        "all_three_coordinate_hashes_match_shared_bundle": false,
+        "query_labels_match_shared_bundle": true
+      },
+      {
+        "arm": "long7200",
+        "all_three_coordinate_hashes_match_shared_bundle": true,
+        "query_labels_match_shared_bundle": true
+      },
+      {
+        "arm": "noise7200",
+        "all_three_coordinate_hashes_match_shared_bundle": true,
+        "query_labels_match_shared_bundle": true
+      },
+      {
+        "arm": "teacher_taper7200",
+        "all_three_coordinate_hashes_match_shared_bundle": true,
+        "query_labels_match_shared_bundle": true
+      }
+    ],
+    "matching_arms": 8,
+    "total_arms": 10,
+    "different_hash_family": [
+      "dropout7200",
+      "long28800"
+    ],
+    "same_query_labels_all_ten": true,
+    "historical_scope": "Both alternate-hash arms match each other on all3seeds. Magnitude unknown because original coordinate arrays were not archived. Do not relabel earlier inputs or claim all10werebyteidentical. New shared bundles make future extension arms byte-paired."
+  },
+  "confirmation_handoff": "D5 agent is adapting dedicated confirmation jobs to current runner_sha256, input_manifest and probability/timing schemas. Confirmation requires a separate final audit; extension READY does not authorize/finalize confirmation."
+}

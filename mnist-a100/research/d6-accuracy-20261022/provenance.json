@@ -1,0 +1,71 @@
+{
+  "format": "sutro-d6-research-provenance-v1",
+  "created_utc": "2026-10-22T19:23:59.668902+00:00",
+  "canonical_main": "b374daa1a59cf0e3ce9a6462ecdf2f143ac5b5fc",
+  "scorer_sha256": "1bc6d8d96a776565bc70f3ccdb91be7de57187d4495b2b0437fac98f5e120064",
+  "runner_sha256": "1180b843cf6c32414774da90c835a8b7298d2db8719989237a793ca1c62a10ab",
+  "parent_PR": 139,
+  "parent_head": "643d425329ae03f23b704e9e5cec8bb5cc9ab363",
+  "parent_source_sha256": "98e310b12031555088ee47e6f8170ad001fad1b6f0be28dcead493ff7682f5c3",
+  "controller_chronology": {
+    "retained_actual_before_input_patch": "study-before-input-bundles.py",
+    "before_input_patch_sha256": "f08fac2739f1d8571351f42a38babea2baa0baf2b6e89a30ba040bb2368579b1",
+    "scope": "This actual saved copy predates the shared-input/timing patch, but includes the root postlaunch probability-serialization edit. It is not claimed to be the exact code loaded by the initial running controller. Initial raw outcomes and source/plan bytes are retained unchanged. Extension launch should snapshot the actual final study.py and input_bundles.py before dispatch."
+  },
+  "initial_infrastructure_attempts": [
+    {
+      "running": false,
+      "started_utc": "2026-10-22T18:45:40.830513+00:00",
+      "finished_utc": "2026-10-22T18:47:11.346665+00:00",
+      "phase": "remote import before any learner execution",
+      "error": "Canonical runner directory was not mounted into the remote image; no learning/accuracy outcome exists.",
+      "learner_executions": 0
+    },
+    {
+      "running": false,
+      "started_utc": "2026-10-22T18:47:11.960809+00:00",
+      "finished_utc": "2026-10-22T18:51:33.157873+00:00",
+      "phase": "client result metadata deserialization",
+      "error": "TorchVersion metadata required an unavailable local torch module. One function input completed, nine were terminated after client failure; no numeric accuracy outcome could be recovered from map output cache.",
+      "call_graph": "serialization-failure-call-graph.json",
+      "source_or_plan_changes": false,
+      "selection_by_outcome": false,
+      "repair": "Controller returns and remotely persists plain JSON before transfer; learner bytes and planned seeds/hyperparameters unchanged."
+    }
+  ],
+  "initial_pairing_qualification": {
+    "affected_arms": [
+      "dropout7200",
+      "long28800"
+    ],
+    "coordinate_hashes_differ_from_other_initial_arms": true,
+    "query_label_arrays_match": true,
+    "outcomes_retained_without_replacement": true,
+    "raw_initial_arrays_archived": false
+  },
+  "future_pairing": "Extension and confirmation use centrally frozen trusted-controller NPZ bundles, with byte hashes checked before use; manifests are public, arrays retained locally.",
+  "argument_boundary": "Research _predict receives train_x,train_y,test_x only; query truth is held by the outer controller. This is same-process unsandboxed research, not an adversarial isolation proof.",
+  "source_interface": "Research _predict returns (probabilities,training_errors); derivatives are not established as official label-only submission entrypoints.",
+  "discussion_references": [
+    {
+      "url": "https://t.me/sutro_group/2993/3186",
+      "scope": "Contributor development claim on4090, not independently verified A100 evidence: longer training and probability ensembles were reported to improve released-draw accuracy."
+    },
+    {
+      "url": "https://t.me/sutro_group/2993/3198",
+      "scope": "User requested testing dropout, L2 and DropConnect as possible regularizers."
+    }
+  ],
+  "discussion_exclusions": "No complete chat transcript is published. Secret-map/oracle experiments from the discussion are not evidence for the allowed-protocol accuracy bound.",
+  "attribution": [
+    "spartanhaden PR139 and its PR129/PR121 kernel-taught Ladder and fused combinator ancestry",
+    "SethTS and Rasmus et al. Ladder",
+    "islamborghini kernel-PCG/batch-step ancestry",
+    "likelytobelaura PR118 tangent jitter",
+    "sigkillme0 PR127 grouped replay and label top-down decoder idea, with parent labels-only reimplementation",
+    "sjbaebae PR135 width768",
+    "Vincent and Bengio2002 local hull/HKNN",
+    "Salimans et al.2017 shared-noise-table idea"
+  ],
+  "publication_scope": "Full original records, probabilities, released-array archives and local transcript remain in original output/local complete archive. Public result files are declared derived excerpts. No image pool or secret release map is included."
+}

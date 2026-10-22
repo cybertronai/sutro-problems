@@ -1,0 +1,224 @@
+{
+  "checked_utc": "2026-10-22T19:33:25.161745+00:00",
+  "status": "READY_FOR_FROZEN_CONFIRMATION",
+  "finalization_complete": true,
+  "confirmed_blockers": [],
+  "scope": "Independent static and adversarial CPU review of confirmation freeze, job controller and saved-outcome aggregation. No confirmation execution or empirical result is certified here. No GPU/network invocation or study/source edits by this auditor.",
+  "reviewed_code_sha256": {
+    "analyze.py": "5f0c0216218798425b1b36a3352c22131064dc52ba382a51f75521d59987329e",
+    "analyze_confirmation.py": "0cab7ee2921406eddeb647e566d869226fb8509ec9683ecfd22c1072619ab2d9",
+    "confirm.py": "1b63dbcf38fefbd65e1be0a98567707a3ae8c0b021e4c1b34c514775a1d85004",
+    "freeze_confirmation.py": "d5004240ee6f194950914d542dc27b6f9641573da0d40d25f6a361e5081f5bb9"
+  },
+  "test_evidence": {
+    "development": {
+      "path": "independent-analyzer-fixtures.json",
+      "sha256": "bfa7699bf1d8a0d9bc611cfe6360c8ed70401512c8c234271d901e2ca4539dbf",
+      "passed_cases": 20
+    },
+    "confirmation": {
+      "path": "independent-confirmation-fixtures.json",
+      "sha256": "39ca753d26f359086464d62bc3a1fa1a36f27da2ae326cd57f9a7d5bde3f6eee",
+      "passed_cases": 21
+    },
+    "matched_controls": {
+      "path": "independent-control-audit.json",
+      "sha256": "13b8727e1f0bc297c39bc772bd481df2ae941c3de8b9faa7a6817effb673afe4",
+      "regularized_source_transformations": 13
+    }
+  },
+  "freeze_and_roles": {
+    "winner_after_all_nineteen_terminal_outcomes": true,
+    "global_integrity_corruption_locks_selection": true,
+    "ordinary_retained_execution_failures_do_not_force_replacement": true,
+    "early_failure_before_warmup_metadata_is_not_mislabeled_corruption": true,
+    "selected_baseline_and_prespecified_regularized_control_roles": true,
+    "algorithm_AST_and_member_prefix_deduplication": true,
+    "dropconnect_redundant_branch_simplified_for_dedupe": true,
+    "second_freeze_refused": true,
+    "no_post_confirmation_model_prefix_or_source_reselection": true
+  },
+  "job_controller": {
+    "eleven_new_seeds": [
+      2610222101,
+      2610222102,
+      2610222103,
+      2610222104,
+      2610222105,
+      2610222106,
+      2610222107,
+      2610222108,
+      2610222109,
+      2610222110,
+      2610222111
+    ],
+    "shard_sizes": [
+      3,
+      3,
+      3,
+      2
+    ],
+    "concurrency": 4,
+    "exact_producer_helper_source_scorer_runner_hashes_required": true,
+    "live_remote_archives_checked_before_GPU_dispatch": true,
+    "immutable_input_manifest_required": true,
+    "learner_arguments": [
+      "train_x",
+      "train_y",
+      "test_x"
+    ],
+    "query_truth_outer_scoring_only": true,
+    "retains_all_outcomes_and_refuses_relaunch_overwrite": true
+  },
+  "result_validation": {
+    "requires_each_frozen_draw_once": true,
+    "requires_frozen_prefix_on_each_draw": true,
+    "requires_every_draw_cumulative_algorithm_seconds_at_most": 300,
+    "requires_compressed_normalized_FP32_probabilities_and_SHA": true,
+    "rebuilds_member_and_ensemble_argmax_from_ordered_FP32_sums": true,
+    "checks_source_truth_archive_array_warmup_runner_provenance": true,
+    "checks_current_producer_helper_and_harness_files": true,
+    "rejects_missing_draws_prefixes_or_shards": true,
+    "retains_but_invalidates_over_budget_outcomes": true,
+    "lossless_gzip_records_keep_decoded_payload_SHA_and_separate_file_SHA": true
+  },
+  "statistics": {
+    "sample_unit_for_intervals": "11 draw accuracies or 11 paired draw differences",
+    "interval": "Approximate 95% Student t interval, df=10: mean +/- 2.2281388519649385 * sample SD / sqrt(11)",
+    "scope": "Conditional on fixed MNIST pool and frozen procedure. Do not model110000 overlapping/correlated within-fit predictions as independent Bernoulli trials. Selection uses development only; the fresh set assesses the frozen choice.",
+    "target": "108460/110000 correct (98.6%), with every frozen draw within the 300 second algorithm budget. This is a research target, not canonical D6 qualification."
+  },
+  "research_entry_scope": "All 19 current research sources expose only _predict returning (probabilities, training_errors) for study.screen. No classify/ladder_kernel label wrapper is present. An official candidate needs a separately reviewed label-returning entry and canonical qualification; these exact files are research artifacts.",
+  "source_entry_audit": [
+    {
+      "source": "sources/baseline450.py",
+      "sha256": "fac513eab08147b168db7f97ef65d0edaf7245f046e5e2ab7155eae9bd68a6d3",
+      "research_entry": "_predict",
+      "official_label_wrapper_present": false
+    },
+    {
+      "source": "sources/dropconnect7200.py",
+      "sha256": "9e236d0278c7a162079724f1096cb70999695fa9afb981dec0a176ae6dcde088",
+      "research_entry": "_predict",
+      "official_label_wrapper_present": false
+    },
+    {
+      "source": "sources/dropout7200.py",
+      "sha256": "d6b890afe775d9686cb91fceb378a096a05f36ead1769df4c6af445d9437e2c2",
+      "research_entry": "_predict",
+      "official_label_wrapper_present": false
+    },
+    {
+      "source": "sources/l2_7200.py",
+      "sha256": "e1779bb54f1532562f6d4f70ef8d4ad071318686630bec58e73ccce1c77a74f1",
+      "research_entry": "_predict",
+      "official_label_wrapper_present": false
+    },
+    {
+      "source": "sources/l2_dropout7200.py",
+      "sha256": "c188fed1c8f434b9842bd51d4f58517505229c7960d313c7a5197a644c916c5b",
+      "research_entry": "_predict",
+      "official_label_wrapper_present": false
+    },
+    {
+      "source": "sources/long1800.py",
+      "sha256": "26dcf76495c39f08c091f2c89e53e18ba2c2480a069b77ccdd4b0f77c97270ae",
+      "research_entry": "_predict",
+      "official_label_wrapper_present": false
+    },
+    {
+      "source": "sources/long28800.py",
+      "sha256": "0147f7d1dfcd019eafbf6ae31bce9c1ee3e1922f257eaded54590966550efe2c",
+      "research_entry": "_predict",
+      "official_label_wrapper_present": false
+    },
+    {
+      "source": "sources/long7200.py",
+      "sha256": "ce5598dce19e244392215600b0bb526a9d9ed5ccfa1a925ae7006923568a77c0",
+      "research_entry": "_predict",
+      "official_label_wrapper_present": false
+    },
+    {
+      "source": "sources/noguard7200.py",
+      "sha256": "8710a1c6c3e10aca4d22c6ae051d9e718bf3c891320d495fc65b1f1810b6edf3",
+      "research_entry": "_predict",
+      "official_label_wrapper_present": false
+    },
+    {
+      "source": "sources/noguard_dropconnect_01_7200.py",
+      "sha256": "bd12f622af54946f6766bdac174b58141a4d24421ed9c3d049a62c82fe9cad40",
+      "research_entry": "_predict",
+      "official_label_wrapper_present": false
+    },
+    {
+      "source": "sources/noguard_dropout_01_7200.py",
+      "sha256": "ee3cb18e901e4f820d5cb7971e17a3ec4bd12146467716b582a1551d0cea5ae6",
+      "research_entry": "_predict",
+      "official_label_wrapper_present": false
+    },
+    {
+      "source": "sources/noguard_dropout_02_7200.py",
+      "sha256": "b3775dd813edc616b960138ed3c8ddc0026b8da8d90402caa58c6aeb313dfb01",
+      "research_entry": "_predict",
+      "official_label_wrapper_present": false
+    },
+    {
+      "source": "sources/noguard_l2_1em3_7200.py",
+      "sha256": "9dcdb857ea3f0151c773496310c03ef7458425f6f1c60ad01cc52209c8dc4506",
+      "research_entry": "_predict",
+      "official_label_wrapper_present": false
+    },
+    {
+      "source": "sources/noguard_l2_1em4_7200.py",
+      "sha256": "b3d0f0807ee40b2326b9d854dbef83abc7d1f9703b8c531e8687be333b7037fe",
+      "research_entry": "_predict",
+      "official_label_wrapper_present": false
+    },
+    {
+      "source": "sources/noguard_noise7200.py",
+      "sha256": "f47566647f6ed8dc131f2bfdc8c9a7e5cc211603f64b412aa609a8b86fecc1e1",
+      "research_entry": "_predict",
+      "official_label_wrapper_present": false
+    },
+    {
+      "source": "sources/noguard_width1024_dropout_01_7200.py",
+      "sha256": "a0862e97cbd38a0b1cfb5c0ca2bd2dc3b816018c8a104d0b92e65054c342e762",
+      "research_entry": "_predict",
+      "official_label_wrapper_present": false
+    },
+    {
+      "source": "sources/noguard_width1536_dropout_01_7200.py",
+      "sha256": "9936d7b50870199aee6546ae05c9073b17fc3a8b183502f137b0f28133bb8d18",
+      "research_entry": "_predict",
+      "official_label_wrapper_present": false
+    },
+    {
+      "source": "sources/noise7200.py",
+      "sha256": "0d3d98e27edddaf6d6f89238957efd9c14136959dee37977d37f63fd71e6fd54",
+      "research_entry": "_predict",
+      "official_label_wrapper_present": false
+    },
+    {
+      "source": "sources/teacher_taper7200.py",
+      "sha256": "0d60b855aece9ba149f85a918ffc6f83c80dbd271dd0f1420a8e6bdb8e452229",
+      "research_entry": "_predict",
+      "official_label_wrapper_present": false
+    }
+  ],
+  "conclusion": "No unresolved static or CPU-validation blocker remains for freezing and executing the declared research confirmation procedure. Future raw outcomes must still pass this saved-record audit; readiness is not an accuracy result.",
+  "actual_frozen_job_audit": {
+    "path": "independent-frozen-confirmation-jobs.json",
+    "sha256": "476ac525390f9225f2263c33a0cba37a6ef14a01b3a3f65356c39cd91343f593",
+    "status": "READY",
+    "plan_sha256": "a9eb853d8c63b1d00c90e2c39c312a2f3ed567ed695dae96157c5fb6342ef1a7",
+    "input_manifest_sha256": "956ef8babea25b37934be1fa137ae8c98a8aeeb2d786cab10e3e26f753a63b7e",
+    "local_archives_validated": 12,
+    "job_count": 12,
+    "roles": 3,
+    "member_counts": [
+      8,
+      1,
+      8
+    ]
+  }
+}

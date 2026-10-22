@@ -1,0 +1,200 @@
+{
+  "checked_utc": "2026-10-22T19:32:02.957306+00:00",
+  "status": "PASS",
+  "all_passed": true,
+  "hashes": {
+    "analyze.py": "5f0c0216218798425b1b36a3352c22131064dc52ba382a51f75521d59987329e",
+    "analyze_confirmation.py": "0cab7ee2921406eddeb647e566d869226fb8509ec9683ecfd22c1072619ab2d9",
+    "confirm.py": "1b63dbcf38fefbd65e1be0a98567707a3ae8c0b021e4c1b34c514775a1d85004",
+    "freeze_confirmation.py": "d5004240ee6f194950914d542dc27b6f9641573da0d40d25f6a361e5081f5bb9"
+  },
+  "scope": "Disposable synthetic eleven-seed schemas, reused known archived arrays and synthetic prediction probabilities. No real fresh draws/results/source/plan modified, no learner execution, GPU or network call.",
+  "cases": [
+    {
+      "case": "three_algorithms_four_shards_job_schema",
+      "passed": true,
+      "jobs": 12,
+      "roles": 4
+    },
+    {
+      "case": "valid_frozen_eleven_draw_confirmation_and_role_aliases",
+      "passed": true,
+      "all_arms_valid": true,
+      "global_errors": [],
+      "selected_errors": []
+    },
+    {
+      "case": "missing_confirmation_draw",
+      "passed": true,
+      "all_arms_valid": false,
+      "global_errors": [],
+      "selected_errors": [
+        "Confirmation requires each of11 frozen draws exactly once",
+        "shard4: Missing, duplicated or reordered shard draws"
+      ]
+    },
+    {
+      "case": "duplicate_confirmation_draw",
+      "passed": true,
+      "all_arms_valid": false,
+      "global_errors": [],
+      "selected_errors": [
+        "Confirmation requires each of11 frozen draws exactly once",
+        "shard4: Missing, duplicated or reordered shard draws"
+      ]
+    },
+    {
+      "case": "missing_frozen_prefix",
+      "passed": true,
+      "all_arms_valid": false,
+      "global_errors": [],
+      "selected_errors": [
+        "draw2610222110: frozen prefix absent"
+      ]
+    },
+    {
+      "case": "over300_algorithm_despite_fast_fit",
+      "passed": true,
+      "all_arms_valid": false,
+      "global_errors": [],
+      "selected_errors": [
+        "draw2610222110: cumulative algorithm exceeds300seconds"
+      ]
+    },
+    {
+      "case": "query_truth_drift",
+      "passed": true,
+      "all_arms_valid": false,
+      "global_errors": [],
+      "selected_errors": [
+        "draw2610222110: Frozen bundle saved_truth_bytes mismatch",
+        "draw2610222110: Prefix accuracy mismatch",
+        "draw2610222110: Prefix correct/total mismatch",
+        "draw2610222110: member1: Member correct/total mismatch"
+      ]
+    },
+    {
+      "case": "coordinate_hash_drift",
+      "passed": true,
+      "all_arms_valid": false,
+      "global_errors": [],
+      "selected_errors": [
+        "draw2610222110: Frozen bundle train_bytes mismatch"
+      ]
+    },
+    {
+      "case": "source_identity_drift",
+      "passed": true,
+      "all_arms_valid": false,
+      "global_errors": [],
+      "selected_errors": [
+        "shard4: Raw source_sha256 mismatch"
+      ]
+    },
+    {
+      "case": "required_probability_missing",
+      "passed": true,
+      "all_arms_valid": false,
+      "global_errors": [],
+      "selected_errors": [
+        "draw2610222110: Required probability averaging cannot be reconstructed",
+        "draw2610222110: member1: Required member probabilities missing",
+        "draw2610222110: member1: Required probability codec/shape/byte-hash metadata missing or invalid"
+      ]
+    },
+    {
+      "case": "probability_argmax_mismatch",
+      "passed": true,
+      "all_arms_valid": false,
+      "global_errors": [],
+      "selected_errors": [
+        "draw2610222110: FP32 probability ensemble argmax mismatch",
+        "draw2610222110: member1: Probability/member-label argmax mismatch"
+      ]
+    },
+    {
+      "case": "new_cumulative_clock_missing",
+      "passed": true,
+      "all_arms_valid": false,
+      "global_errors": [],
+      "selected_errors": [
+        "draw2610222110: Required cumulative algorithm clock missing"
+      ]
+    },
+    {
+      "case": "warmup_bundle_identity_drift",
+      "passed": true,
+      "all_arms_valid": false,
+      "global_errors": [],
+      "selected_errors": [
+        "shard4: Warmup bundle identity mismatch"
+      ]
+    },
+    {
+      "case": "missing_whole_shard",
+      "passed": true,
+      "all_arms_valid": false,
+      "global_errors": [],
+      "selected_errors": [
+        "Awaiting shard4",
+        "Confirmation requires each of11 frozen draws exactly once"
+      ]
+    },
+    {
+      "case": "frozen_canonical_mnist.py_drift",
+      "passed": true,
+      "all_arms_valid": false,
+      "global_errors": [
+        "Frozen producer/helper/canonical hash mismatch: canonical/mnist.py"
+      ],
+      "selected_errors": []
+    },
+    {
+      "case": "frozen_canonical_run_modal.py_drift",
+      "passed": true,
+      "all_arms_valid": false,
+      "global_errors": [
+        "Frozen producer/helper/canonical hash mismatch: canonical/run_modal.py"
+      ],
+      "selected_errors": []
+    },
+    {
+      "case": "frozen_study.py_drift",
+      "passed": true,
+      "all_arms_valid": false,
+      "global_errors": [
+        "Frozen producer/helper/canonical hash mismatch: study.py"
+      ],
+      "selected_errors": []
+    },
+    {
+      "case": "frozen_input_bundles.py_drift",
+      "passed": true,
+      "all_arms_valid": false,
+      "global_errors": [
+        "Frozen producer/helper/canonical hash mismatch: input_bundles.py"
+      ],
+      "selected_errors": []
+    },
+    {
+      "case": "frozen_learner_file_drift",
+      "passed": true,
+      "all_arms_valid": false,
+      "global_errors": [],
+      "selected_errors": [
+        "Frozen source hash mismatch"
+      ]
+    },
+    {
+      "case": "draw_level_t_interval_not_query_binomial",
+      "passed": true,
+      "n": 11
+    },
+    {
+      "case": "matched_control_alias_dedup_and_one_shot_freeze",
+      "passed": true,
+      "physical_algorithms": 3,
+      "roles": 4
+    }
+  ]
+}

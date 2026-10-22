@@ -1,0 +1,361 @@
+{
+  "L2_convention": "Loss adds (lambda/2) times the sum of squared encoder and decoder matrix entries; biases, gamma and combinator parameters are unpenalized.",
+  "amendments": [
+    {
+      "after_members": 16,
+      "after_prefixes": [
+        1,
+        2,
+        4,
+        8,
+        16
+      ],
+      "before_copy": "extension-plan-original9x4.json",
+      "before_members": 4,
+      "before_prefixes": [
+        1,
+        2,
+        4
+      ],
+      "before_sha256": "23dac84f50bb5f6645fbf565794b0e3707e0d825be4439a17c65ddc8b1375ae5",
+      "extension_GPU_jobs_launched": 0,
+      "extension_results_seen": 0,
+      "reason": "Root requested better use of the approximately five-minute per-draw research budget after seeing initial ensemble trends. All selected-prefix draws must complete within300seconds. No extension result existed or extension GPU job had launched. Source bytes and hyperparameters unchanged.",
+      "utc": "2026-10-22T19:10:29.499888+00:00"
+    },
+    {
+      "before_copy": "extension-plan-before-input-bundles.json",
+      "before_sha256": "1b65fe9291dd66e93cb19a40f0c93d603d664923989557c4e7d735b9e6f20d34",
+      "extension_GPU_jobs_launched": 0,
+      "extension_results_seen": 0,
+      "input_manifest_sha256": "32eb1252ecc62f25e7de621a3917b8967e0b7360190a279c68611c6d3814d972",
+      "reason": "Before extension outcomes, replace per-arm draw regeneration with one frozen shared NPZ per seed to prevent observed initial coordinate drift; retain every original result. Enable compressed member probabilities and cumulative algorithm timing. No arm source or hyperparameter changes.",
+      "utc": "2026-10-22T19:14:18.907475+00:00"
+    }
+  ],
+  "arms": [
+    {
+      "DIMS": [
+        60,
+        768,
+        512,
+        256,
+        10
+      ],
+      "L2_lambda_matrix_only": 0,
+      "LR": 0.01467,
+      "encoder_dropconnect": 0,
+      "first_hidden_width": 768,
+      "gaussian_noise": 0.25,
+      "guard_enabled": false,
+      "hidden_dropout": 0,
+      "members": 16,
+      "name": "noguard7200",
+      "prefixes": [
+        1,
+        2,
+        4,
+        8,
+        16
+      ],
+      "source_bytes": 19583,
+      "source_path": "sources/noguard7200.py",
+      "source_sha256": "8710a1c6c3e10aca4d22c6ae051d9e718bf3c891320d495fc65b1f1810b6edf3",
+      "steps": 7200,
+      "teacher_taper": false,
+      "upstream_initial_arm": "long7200",
+      "upstream_source_sha256": "ce5598dce19e244392215600b0bb526a9d9ed5ccfa1a925ae7006923568a77c0"
+    },
+    {
+      "DIMS": [
+        60,
+        768,
+        512,
+        256,
+        10
+      ],
+      "L2_lambda_matrix_only": 0.0001,
+      "LR": 0.01467,
+      "encoder_dropconnect": 0,
+      "first_hidden_width": 768,
+      "gaussian_noise": 0.25,
+      "guard_enabled": false,
+      "hidden_dropout": 0,
+      "members": 16,
+      "name": "noguard_l2_1em4_7200",
+      "prefixes": [
+        1,
+        2,
+        4,
+        8,
+        16
+      ],
+      "source_bytes": 19634,
+      "source_path": "sources/noguard_l2_1em4_7200.py",
+      "source_sha256": "b3d0f0807ee40b2326b9d854dbef83abc7d1f9703b8c531e8687be333b7037fe",
+      "steps": 7200,
+      "teacher_taper": false,
+      "upstream_initial_arm": "l2_7200",
+      "upstream_source_sha256": "e1779bb54f1532562f6d4f70ef8d4ad071318686630bec58e73ccce1c77a74f1"
+    },
+    {
+      "DIMS": [
+        60,
+        768,
+        512,
+        256,
+        10
+      ],
+      "L2_lambda_matrix_only": 0.001,
+      "LR": 0.01467,
+      "encoder_dropconnect": 0,
+      "first_hidden_width": 768,
+      "gaussian_noise": 0.25,
+      "guard_enabled": false,
+      "hidden_dropout": 0,
+      "members": 16,
+      "name": "noguard_l2_1em3_7200",
+      "prefixes": [
+        1,
+        2,
+        4,
+        8,
+        16
+      ],
+      "source_bytes": 19633,
+      "source_path": "sources/noguard_l2_1em3_7200.py",
+      "source_sha256": "9dcdb857ea3f0151c773496310c03ef7458425f6f1c60ad01cc52209c8dc4506",
+      "steps": 7200,
+      "teacher_taper": false,
+      "upstream_initial_arm": "l2_7200",
+      "upstream_source_sha256": "e1779bb54f1532562f6d4f70ef8d4ad071318686630bec58e73ccce1c77a74f1"
+    },
+    {
+      "DIMS": [
+        60,
+        768,
+        512,
+        256,
+        10
+      ],
+      "L2_lambda_matrix_only": 0,
+      "LR": 0.01467,
+      "encoder_dropconnect": 0,
+      "first_hidden_width": 768,
+      "gaussian_noise": 0.25,
+      "guard_enabled": false,
+      "hidden_dropout": 0.1,
+      "members": 16,
+      "name": "noguard_dropout_01_7200",
+      "prefixes": [
+        1,
+        2,
+        4,
+        8,
+        16
+      ],
+      "source_bytes": 19603,
+      "source_path": "sources/noguard_dropout_01_7200.py",
+      "source_sha256": "ee3cb18e901e4f820d5cb7971e17a3ec4bd12146467716b582a1551d0cea5ae6",
+      "steps": 7200,
+      "teacher_taper": false,
+      "upstream_initial_arm": "dropout7200",
+      "upstream_source_sha256": "d6b890afe775d9686cb91fceb378a096a05f36ead1769df4c6af445d9437e2c2"
+    },
+    {
+      "DIMS": [
+        60,
+        768,
+        512,
+        256,
+        10
+      ],
+      "L2_lambda_matrix_only": 0,
+      "LR": 0.01467,
+      "encoder_dropconnect": 0,
+      "first_hidden_width": 768,
+      "gaussian_noise": 0.25,
+      "guard_enabled": false,
+      "hidden_dropout": 0.2,
+      "members": 16,
+      "name": "noguard_dropout_02_7200",
+      "prefixes": [
+        1,
+        2,
+        4,
+        8,
+        16
+      ],
+      "source_bytes": 19603,
+      "source_path": "sources/noguard_dropout_02_7200.py",
+      "source_sha256": "b3775dd813edc616b960138ed3c8ddc0026b8da8d90402caa58c6aeb313dfb01",
+      "steps": 7200,
+      "teacher_taper": false,
+      "upstream_initial_arm": "dropout7200",
+      "upstream_source_sha256": "d6b890afe775d9686cb91fceb378a096a05f36ead1769df4c6af445d9437e2c2"
+    },
+    {
+      "DIMS": [
+        60,
+        768,
+        512,
+        256,
+        10
+      ],
+      "L2_lambda_matrix_only": 0,
+      "LR": 0.01467,
+      "encoder_dropconnect": 0.1,
+      "first_hidden_width": 768,
+      "gaussian_noise": 0.25,
+      "guard_enabled": false,
+      "hidden_dropout": 0,
+      "members": 16,
+      "name": "noguard_dropconnect_01_7200",
+      "prefixes": [
+        1,
+        2,
+        4,
+        8,
+        16
+      ],
+      "source_bytes": 19619,
+      "source_path": "sources/noguard_dropconnect_01_7200.py",
+      "source_sha256": "bd12f622af54946f6766bdac174b58141a4d24421ed9c3d049a62c82fe9cad40",
+      "steps": 7200,
+      "teacher_taper": false,
+      "upstream_initial_arm": "dropconnect7200",
+      "upstream_source_sha256": "9e236d0278c7a162079724f1096cb70999695fa9afb981dec0a176ae6dcde088"
+    },
+    {
+      "DIMS": [
+        60,
+        1024,
+        512,
+        256,
+        10
+      ],
+      "L2_lambda_matrix_only": 0,
+      "LR": 0.01467,
+      "encoder_dropconnect": 0,
+      "first_hidden_width": 1024,
+      "gaussian_noise": 0.25,
+      "guard_enabled": false,
+      "hidden_dropout": 0.1,
+      "members": 16,
+      "name": "noguard_width1024_dropout_01_7200",
+      "prefixes": [
+        1,
+        2,
+        4,
+        8,
+        16
+      ],
+      "source_bytes": 19624,
+      "source_path": "sources/noguard_width1024_dropout_01_7200.py",
+      "source_sha256": "a0862e97cbd38a0b1cfb5c0ca2bd2dc3b816018c8a104d0b92e65054c342e762",
+      "steps": 7200,
+      "teacher_taper": false,
+      "upstream_initial_arm": "dropout7200",
+      "upstream_source_sha256": "d6b890afe775d9686cb91fceb378a096a05f36ead1769df4c6af445d9437e2c2"
+    },
+    {
+      "DIMS": [
+        60,
+        1536,
+        512,
+        256,
+        10
+      ],
+      "L2_lambda_matrix_only": 0,
+      "LR": 0.01467,
+      "encoder_dropconnect": 0,
+      "first_hidden_width": 1536,
+      "gaussian_noise": 0.25,
+      "guard_enabled": false,
+      "hidden_dropout": 0.1,
+      "members": 16,
+      "name": "noguard_width1536_dropout_01_7200",
+      "prefixes": [
+        1,
+        2,
+        4,
+        8,
+        16
+      ],
+      "source_bytes": 19624,
+      "source_path": "sources/noguard_width1536_dropout_01_7200.py",
+      "source_sha256": "9936d7b50870199aee6546ae05c9073b17fc3a8b183502f137b0f28133bb8d18",
+      "steps": 7200,
+      "teacher_taper": false,
+      "upstream_initial_arm": "dropout7200",
+      "upstream_source_sha256": "d6b890afe775d9686cb91fceb378a096a05f36ead1769df4c6af445d9437e2c2"
+    },
+    {
+      "DIMS": [
+        60,
+        768,
+        512,
+        256,
+        10
+      ],
+      "L2_lambda_matrix_only": 0,
+      "LR": 0.01467,
+      "encoder_dropconnect": 0,
+      "first_hidden_width": 768,
+      "gaussian_noise": 0.4,
+      "guard_enabled": false,
+      "hidden_dropout": 0,
+      "members": 16,
+      "name": "noguard_noise7200",
+      "prefixes": [
+        1,
+        2,
+        4,
+        8,
+        16
+      ],
+      "source_bytes": 19582,
+      "source_path": "sources/noguard_noise7200.py",
+      "source_sha256": "f47566647f6ed8dc131f2bfdc8c9a7e5cc211603f64b412aa609a8b86fecc1e1",
+      "steps": 7200,
+      "teacher_taper": false,
+      "upstream_initial_arm": "noise7200",
+      "upstream_source_sha256": "0d3d98e27edddaf6d6f89238957efd9c14136959dee37977d37f63fd71e6fd54"
+    }
+  ],
+  "budget_timing": "Every selected prefix must have cumulative_algorithm_seconds<=300 on all3 development draws. This synchronized sum includes _predict and GPU probability accumulation/argmax, and excludes truth comparisons and evidence serialization. Initial screen has only _predict full_call_seconds and retains that narrower scope.",
+  "canonical_main": "b374daa1a59cf0e3ce9a6462ecdf2f143ac5b5fc",
+  "coverage_proof": "extension-kernel-coverage.json",
+  "created_utc": "2026-10-22T19:03:00.772770+00:00",
+  "draw_seeds": [
+    2610221101,
+    2610221102,
+    2610221103
+  ],
+  "frozen": true,
+  "initial_arm_count": 10,
+  "initial_plan_path": "plan.json",
+  "initial_plan_sha256": "5b1ae0f7c6e8713af83d957bcd415ebc40921ae808139dd71a5105efa5265854",
+  "input_manifest": "inputs-development-manifest.json",
+  "input_manifest_sha256": "32eb1252ecc62f25e7de621a3917b8967e0b7360190a279c68611c6d3814d972",
+  "launch_status": "READY for root-controlled extension launch; all4 shared input bundles verified; no extension GPU job launched",
+  "max_fit_seconds": 300,
+  "members_are_sequential_full_fits": true,
+  "model_seed_formula": "11 + 997 * zero_based_member",
+  "omissions": [],
+  "parent_PR": 139,
+  "parent_head": "643d425329ae03f23b704e9e5cec8bb5cc9ab363",
+  "parent_sha256": "98e310b12031555088ee47e6f8170ad001fad1b6f0be28dcead493ff7682f5c3",
+  "phase": "development-extension",
+  "preserve": "The initial ten source files, plan, raw outcomes and submitted D5 PR source are unchanged.",
+  "reason": "The initial guard can substitute teacher probabilities when student training errors exceed 40, so stronger regularization may be hidden by that substitution. These arms disable both final guard conditions; teacher features, soft targets and HKNN readout remain.",
+  "runner_sha256": "1180b843cf6c32414774da90c835a8b7298d2db8719989237a793ca1c62a10ab",
+  "save_probabilities": true,
+  "scope": "Exploratory extension fixed after inspecting initial development outcomes, before extension outcomes. Uses exactly the same three canonical development draws and warmup seed. No official D6 qualification, unseen validation result, or accuracy upper bound is claimed.",
+  "scorer_sha256": "1bc6d8d96a776565bc70f3ccdb91be7de57187d4495b2b0437fac98f5e120064",
+  "selection": "Root will jointly select among all initial and extension arms/prefixes using pooled accuracy under 300 seconds on every development draw, tie by mean full-call time, after all initial and extension outcomes are retained. Then root will freeze the chosen algorithm and evaluate 11 fresh draws never used for hyperparameter selection. No new development draws or iterative extension replacements are authorized here.",
+  "source_internal_members_M": 1,
+  "strict_coordinate_pairing": true,
+  "warmup_seed": 2610221190,
+  "width_convention": "Only the first hidden width changes; later hidden widths remain 512 and 256."
+}

@@ -1,0 +1,200 @@
+{
+  "created_utc": "2026-10-22T18:45:40.134970+00:00",
+  "phase": "development",
+  "parent_PR": 139,
+  "parent_head": "643d425329ae03f23b704e9e5cec8bb5cc9ab363",
+  "parent_sha256": "98e310b12031555088ee47e6f8170ad001fad1b6f0be28dcead493ff7682f5c3",
+  "canonical_main": "b374daa1a59cf0e3ce9a6462ecdf2f143ac5b5fc",
+  "scorer_sha256": "1bc6d8d96a776565bc70f3ccdb91be7de57187d4495b2b0437fac98f5e120064",
+  "runner_sha256": "1180b843cf6c32414774da90c835a8b7298d2db8719989237a793ca1c62a10ab",
+  "draw_seeds": [
+    2610221101,
+    2610221102,
+    2610221103
+  ],
+  "warmup_seed": 2610221190,
+  "arms": [
+    {
+      "name": "baseline450",
+      "steps": 450,
+      "members": 1,
+      "prefixes": [
+        1
+      ],
+      "L2_lambda_matrix_only": 0,
+      "hidden_dropout": 0,
+      "encoder_dropconnect": 0,
+      "gaussian_noise": 0.25,
+      "teacher_taper": false,
+      "LR": 0.01467,
+      "source_sha256": "fac513eab08147b168db7f97ef65d0edaf7245f046e5e2ab7155eae9bd68a6d3",
+      "source_bytes": 19686
+    },
+    {
+      "name": "long1800",
+      "steps": 1800,
+      "members": 4,
+      "prefixes": [
+        1,
+        2,
+        4
+      ],
+      "L2_lambda_matrix_only": 0,
+      "hidden_dropout": 0,
+      "encoder_dropconnect": 0,
+      "gaussian_noise": 0.25,
+      "teacher_taper": false,
+      "LR": 0.01467,
+      "source_sha256": "26dcf76495c39f08c091f2c89e53e18ba2c2480a069b77ccdd4b0f77c97270ae",
+      "source_bytes": 19687
+    },
+    {
+      "name": "long7200",
+      "steps": 7200,
+      "members": 8,
+      "prefixes": [
+        1,
+        2,
+        4,
+        8
+      ],
+      "L2_lambda_matrix_only": 0,
+      "hidden_dropout": 0,
+      "encoder_dropconnect": 0,
+      "gaussian_noise": 0.25,
+      "teacher_taper": false,
+      "LR": 0.01467,
+      "source_sha256": "ce5598dce19e244392215600b0bb526a9d9ed5ccfa1a925ae7006923568a77c0",
+      "source_bytes": 19687
+    },
+    {
+      "name": "l2_7200",
+      "steps": 7200,
+      "members": 4,
+      "prefixes": [
+        1,
+        2,
+        4
+      ],
+      "L2_lambda_matrix_only": 0.001,
+      "hidden_dropout": 0,
+      "encoder_dropconnect": 0,
+      "gaussian_noise": 0.25,
+      "teacher_taper": false,
+      "LR": 0.01467,
+      "source_sha256": "e1779bb54f1532562f6d4f70ef8d4ad071318686630bec58e73ccce1c77a74f1",
+      "source_bytes": 19737
+    },
+    {
+      "name": "dropout7200",
+      "steps": 7200,
+      "members": 4,
+      "prefixes": [
+        1,
+        2,
+        4
+      ],
+      "L2_lambda_matrix_only": 0,
+      "hidden_dropout": 0.1,
+      "encoder_dropconnect": 0,
+      "gaussian_noise": 0.25,
+      "teacher_taper": false,
+      "LR": 0.01467,
+      "source_sha256": "d6b890afe775d9686cb91fceb378a096a05f36ead1769df4c6af445d9437e2c2",
+      "source_bytes": 19707
+    },
+    {
+      "name": "dropconnect7200",
+      "steps": 7200,
+      "members": 4,
+      "prefixes": [
+        1,
+        2,
+        4
+      ],
+      "L2_lambda_matrix_only": 0,
+      "hidden_dropout": 0,
+      "encoder_dropconnect": 0.1,
+      "gaussian_noise": 0.25,
+      "teacher_taper": false,
+      "LR": 0.01467,
+      "source_sha256": "9e236d0278c7a162079724f1096cb70999695fa9afb981dec0a176ae6dcde088",
+      "source_bytes": 19723
+    },
+    {
+      "name": "l2_dropout7200",
+      "steps": 7200,
+      "members": 4,
+      "prefixes": [
+        1,
+        2,
+        4
+      ],
+      "L2_lambda_matrix_only": 0.001,
+      "hidden_dropout": 0.1,
+      "encoder_dropconnect": 0,
+      "gaussian_noise": 0.25,
+      "teacher_taper": false,
+      "LR": 0.01467,
+      "source_sha256": "c188fed1c8f434b9842bd51d4f58517505229c7960d313c7a5197a644c916c5b",
+      "source_bytes": 19757
+    },
+    {
+      "name": "noise7200",
+      "steps": 7200,
+      "members": 4,
+      "prefixes": [
+        1,
+        2,
+        4
+      ],
+      "L2_lambda_matrix_only": 0,
+      "hidden_dropout": 0,
+      "encoder_dropconnect": 0,
+      "gaussian_noise": 0.4,
+      "teacher_taper": false,
+      "LR": 0.01467,
+      "source_sha256": "0d3d98e27edddaf6d6f89238957efd9c14136959dee37977d37f63fd71e6fd54",
+      "source_bytes": 19686
+    },
+    {
+      "name": "teacher_taper7200",
+      "steps": 7200,
+      "members": 4,
+      "prefixes": [
+        1,
+        2,
+        4
+      ],
+      "L2_lambda_matrix_only": 0,
+      "hidden_dropout": 0,
+      "encoder_dropconnect": 0,
+      "gaussian_noise": 0.25,
+      "teacher_taper": true,
+      "LR": 0.01467,
+      "source_sha256": "0d60b855aece9ba149f85a918ffc6f83c80dbd271dd0f1420a8e6bdb8e452229",
+      "source_bytes": 19717
+    },
+    {
+      "name": "long28800",
+      "steps": 28800,
+      "members": 8,
+      "prefixes": [
+        1,
+        2,
+        4,
+        8
+      ],
+      "L2_lambda_matrix_only": 0,
+      "hidden_dropout": 0,
+      "encoder_dropconnect": 0,
+      "gaussian_noise": 0.25,
+      "teacher_taper": false,
+      "LR": 0.01467,
+      "source_sha256": "0147f7d1dfcd019eafbf6ae31bce9c1ee3e1922f257eaded54590966550efe2c",
+      "source_bytes": 19688
+    }
+  ],
+  "scope": "Predeclared paired exploratory screen. Each arm uses exactly the same three canonical development draws, different student initializations, no secret-map access. Dropout/DropConnect only in training; L2 only encoder/decoder matrices. Fixed LR and anneal fraction across longer budgets. Per-draw ensemble full-call budget300seconds. Research is unsandboxed; no official D6 qualification or proven upper bound is claimed.",
+  "selection": "Freeze best development arm/prefix by pooled accuracy under300seconds/draw; tie by mean full-call time. Then independently confirm on11fresh seeded canonical draws not used to select hyperparameters, retaining all outcomes. Confirmed algorithm may still fail a full canonical sandbox/timing qualification; report separately."
+}
