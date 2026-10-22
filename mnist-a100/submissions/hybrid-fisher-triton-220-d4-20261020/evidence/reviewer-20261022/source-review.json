@@ -1,0 +1,51 @@
+{
+  "checked_at_utc": "2026-10-22T18:43:07.575846+00:00",
+  "pull_request": 138,
+  "reviewed_head": "7607b521189f77c8056c73d86df68783c3d0d14e",
+  "frozen_main": "b374daa1a59cf0e3ce9a6462ecdf2f143ac5b5fc",
+  "source_sha256": "1c25eb4ed6ef06cf94c1a34ca80eecd16e90b33c0a6091da0c2bd791db18f133",
+  "source_bytes": 20479,
+  "source_limit_bytes": 20480,
+  "source_byte_margin": 1,
+  "function": "hybrid_d4",
+  "source_gate_passed": true,
+  "review_flags": [
+    "20,479 bytes, close to the 20,480-byte limit"
+  ],
+  "static_blockers": [],
+  "review_status": "complete: no static blocker; three returned canonical runs pass, with one disclosed platform preemption/restart",
+  "fitting": "Two parallel Fisher-PCG teachers fit current-input LDA/QDA Fisher metrics, a rank-48 subspace, a natural-gradient metric step, weighted support (4,096 hard rows plus 240 centroids), a FITC preconditioner and five PCG steps plus extrapolation. HKNN readouts produce soft targets. Three MLPs then perform 220 Adam updates with tangent/isotropic noise and target refreshes after 70 and 150 steps, followed by a student/teacher mixture and HKNN.",
+  "truth_boundary": "Only train_y supplies truth. Query support classes are current model predictions; query rows enter neighbor/tangent/distillation calculations without labels. No scorer/dataset/parent access or pretrained payload found.",
+  "input_integrity": "Entry clones inputs, copies only into owned static arrays and returns out.clone. In-place metric/feature/training writes target owned derived buffers; caller tensors only read.",
+  "per_call_reset": "Every replay recomputes teacher fits, preconditioners, features, neighbors, tangents and targets. Students.reset initializes hidden weights, zeros the head, bias, Adam moments and bias-gradient accumulator, and copies FP32 master weights into BF16. All 220 updates and current readouts execute. Random inputs and scratch outputs are overwritten before use; no fitted warm-up state is reused.",
+  "ownership": "STATE explicitly retains the student together with the graph, static inputs and output. Its pre-capture buffers therefore have a strong owner, without depending on frozen cycles or the graph private pool. The stream cache holds streams; the compiled-function cache holds standalone numerical helpers.",
+  "streams": "Each teacher stream starts after the main stream and has its own factorization stream. The teacher joins its factorization work before dependent products, and the main stream joins both complete teacher paths before mixing and student training. Custom student kernels execute in graph order. No hidden trailing fit or timer changes were found.",
+  "kernel_review": "Manual k_rows/k_adam review and exact CPU index coverage show all 258,096 parameter slots written exactly once, with no overlapping or out-of-range weight writes. Row scratch has no tails; the G2-to-G1 dependency is confined to one CTA and synchronized. Bias atomics intentionally accumulate across row CTAs and are cleared between steps. See custom-kernel-audit.json.",
+  "neighbors": "The two-pass block-minimum top-k is exact relative to its computed fp16 distance scores: the ten selected blocks contain at least ten candidates no farther than any excluded block minimum. Gathers and tangents use current inputs. This does not claim numerical equivalence with full-FP32 distance calculations.",
+  "prior_or_bypass": "All literals are ordinary architecture, kernel or algorithm constants and readable text. No embedded weights, data table, decoder, file/network access, process/timer/scorer introspection or skipped-fit branch was found.",
+  "credit": "Source and report credit Haden hybrid/RFM-PCG/HKNN and kernel-taught inputs, #125/@sigkillme0 Fisher/compression ideas, @islamborghini kernel-PCG, @likelytobelaura tangent students and modded-nanogpt. The new student kernels, optimizer/noise settings and fitting budgets are implementation or algorithm changes, not established numerical equivalence.",
+  "published_rules": "D4 requires mean MNIST error at most 2.30%, worst draw at most 3.80%, holdout accuracy at least 15%, all 15 calls, and every canonical timing, sandbox and dispersion gate. Official records use three stock Modal runs and their median. Optional energy is assessed separately. No extra mandatory reviewer batch or permanent source ban is imposed.",
+  "prior_exact_source_reviewer_matches": [],
+  "finalized_at_utc": "2026-10-22T18:57:27.946660+00:00",
+  "fresh_reviewer_outcome": {
+    "passed_runs": 3,
+    "required_runs": 3,
+    "energy_valid_runs": 3,
+    "complete_timed_calls": 45,
+    "median_ranked_ms": 38.695740671597356,
+    "median_energy_mj": 6664.381443937203,
+    "aggregate_mnist_error_pct": 2.1175757575757577,
+    "accuracy_margins_labels": [
+      223,
+      94,
+      285
+    ],
+    "distinct_energy_gpu_uuids": 3,
+    "reviewer_initiated_retry_or_replacement_requests": 0,
+    "platform_preemption_notices_observed": 1,
+    "uninterrupted_initial_attempt_group": false,
+    "source_modified": false,
+    "modal_app_stopped": true
+  },
+  "infrastructure_scope": "All three returned score records and the complete SDK/controller log are retained. No reviewer-triggered additional invocation was submitted, and no returned failure was discarded or replaced. Do not describe this as zero infrastructure restarts or 3/3 uninterrupted physical attempts."
+}

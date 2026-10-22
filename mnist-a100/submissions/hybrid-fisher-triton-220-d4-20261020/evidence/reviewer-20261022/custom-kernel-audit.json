@@ -1,0 +1,26 @@
+{
+  "reviewed_head": "7607b521189f77c8056c73d86df68783c3d0d14e",
+  "source_sha256": "1c25eb4ed6ef06cf94c1a34ca80eecd16e90b33c0a6091da0c2bd791db18f133",
+  "canonical_constants": {
+    "M": 3,
+    "R": 2048,
+    "DIN": 64,
+    "W": 256,
+    "DOUT": 16
+  },
+  "flat_parameter_elements": 258096,
+  "flat_update_coverage": {
+    "elements_written_once": 258096,
+    "overlaps": 0,
+    "minimum": 0,
+    "maximum": 258095,
+    "exact_full_allocation_coverage": true
+  },
+  "row_kernel_bounds": "Grid (128, 3) with 16 rows per program covers exactly 3 x 2,048 rows. Bounded uniform indices choose train rows 0..9,999 or query rows 10,000..19,999. Noise stride 68 holds 64 isotropic and four tangent values; tangent stride 256 equals 4 x 64. H0 has 64 columns; H1/H2/G1/G2 have 256; G3 has 16. There are no row or column tails for these constants. TG columns 10..15 are masked.",
+  "row_internal_dependencies": "Each CTA owns 16 rows and all 256 columns. It stores G2 for those rows, synchronizes with tl.debug_barrier, then reads only those same rows to compute G1. There is no cross-CTA non-atomic dependency. The bias accumulator intentionally uses atomics across 128 row CTAs per model.",
+  "adam_bounds": "The 25 tiles per model partition 64x256 first-layer weights, 256x256 second-layer weights, 256x16 head weights and 16 bias values. Each tile reduces all 2,048 rows in 64-row chunks. Master weights, moments and BF16 copies use distinct allocations and identical logical offsets. Only the final bias tile clears the bias accumulator; the next row kernel follows completion of the Adam kernel on the same graph stream.",
+  "step_reset": "Each fit randomizes hidden weights, zeros head/bias/moments/bias-gradient accumulator, and copies all master weights to BF16. Every scratch output is written before use. Uniform and Gaussian inputs are regenerated every chunk. The 220 captured updates contain the learning-rate and bias-correction arguments for steps 0..219. The Python self.s counter only constructs this fixed schedule during capture; its final host value is not fitted state reused on replay.",
+  "source_gate_passed": true,
+  "static_blockers": [],
+  "scope": "Exact CPU index arithmetic and full manual Triton review. No learner/kernel execution or numerical-equivalence claim."
+}

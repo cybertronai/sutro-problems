@@ -1,0 +1,72 @@
+{
+  "scope": "CPU-only index coverage, not numerical gradient equivalence or a fresh sanitizer run.",
+  "kernel_body_AST_identical": true,
+  "bounds": [
+    {
+      "S": 768,
+      "B": 2500,
+      "SM_count": 108,
+      "BC": 16,
+      "SUB": 16,
+      "SB": 64,
+      "row_chunk": 320,
+      "row_chunks": 8,
+      "programs": 384,
+      "parameter_chunk": 34,
+      "no_column_tail": true,
+      "all_rows_exact_once": true,
+      "all_parameter_outputs_exact_once": true,
+      "row_chunk_divisible_by_SUB_SB": true
+    },
+    {
+      "S": 512,
+      "B": 2500,
+      "SM_count": 108,
+      "BC": 16,
+      "SUB": 16,
+      "SB": 64,
+      "row_chunk": 256,
+      "row_chunks": 10,
+      "programs": 320,
+      "parameter_chunk": 28,
+      "no_column_tail": true,
+      "all_rows_exact_once": true,
+      "all_parameter_outputs_exact_once": true,
+      "row_chunk_divisible_by_SUB_SB": true
+    },
+    {
+      "S": 256,
+      "B": 2500,
+      "SM_count": 108,
+      "BC": 16,
+      "SUB": 16,
+      "SB": 64,
+      "row_chunk": 128,
+      "row_chunks": 20,
+      "programs": 320,
+      "parameter_chunk": 14,
+      "no_column_tail": true,
+      "all_rows_exact_once": true,
+      "all_parameter_outputs_exact_once": true,
+      "row_chunk_divisible_by_SUB_SB": true
+    }
+  ],
+  "graph_updates": {
+    "steps": 450,
+    "group": 30,
+    "replays": 15,
+    "counter_reads": [
+      0,
+      449
+    ]
+  },
+  "noise_bank": {
+    "elements": 4194304,
+    "dtype": "bfloat16",
+    "byte_size": 8388608,
+    "offset_rows": 450,
+    "offsets_per_row": 5,
+    "noise_sites": 5,
+    "indexing": "(offset+arange(numel))%NB; all indices0..NB-1; every bank element and offset row reset before fit."
+  }
+}

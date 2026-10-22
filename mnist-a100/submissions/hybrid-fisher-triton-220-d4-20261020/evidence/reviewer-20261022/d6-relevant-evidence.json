@@ -1,0 +1,74 @@
+{
+  "checked_at_utc": "2026-10-22T18:46:09.208659+00:00",
+  "source_sha256": "1c25eb4ed6ef06cf94c1a34ca80eecd16e90b33c0a6091da0c2bd791db18f133",
+  "entry_scope": "Fast D4 classifier; supplied records do not establish a higher-accuracy tier.",
+  "verified_observations": {
+    "canonical_author_runs": 3,
+    "MNIST_calls": 33,
+    "MNIST_predictions": 330000,
+    "pooled_error_pct": 2.0845454545454545,
+    "per_run_error_pct": [
+      2.076363636363636,
+      2.0936363636363637,
+      2.0836363636363635
+    ],
+    "best_observed_single_draw_error_pct": 1.83,
+    "worst_observed_single_draw_error_pct": 2.45,
+    "all_saved_runs_above_D5_1point9percent": true
+  },
+  "training_and_regularization": {
+    "teacher": "Two current-input Fisher-PCG models with HKNN, softmax temperature 0.25, averaged soft targets.",
+    "students": 3,
+    "hidden_width": 256,
+    "Adam_updates": 220,
+    "batch_labelled": 1024,
+    "batch_query": 1024,
+    "Adam_betas": [
+      0.8,
+      0.95
+    ],
+    "learning_rate": 0.015,
+    "linear_decay_last_fraction": 0.3,
+    "query_target_weight": 0.3,
+    "local_tangent_components": 4,
+    "same_class_neighbors": 10,
+    "tangent_noise_scale": 1.2,
+    "isotropic_noise_scale": 0.1,
+    "target_refresh_steps": [
+      70,
+      150
+    ],
+    "refresh_student_weight": 0.7,
+    "final_student_weight": 0.75,
+    "final_teacher_weight": 0.25
+  },
+  "author_development_claims_not_raw_verified": {
+    "fresh_calls": 2112,
+    "mean_error_pct": 2.102,
+    "eleven_draw_split_sd_percentage_points": 0.064,
+    "splits_over_D4_band": "0 of 192",
+    "worst_call_error_pct": 2.59,
+    "estimated_three_run_pass_probability": 0.997,
+    "paired_kernel_comparison": "About 41 to 34.2 ms in-process; reported error differences +/-0.001 percentage points. No paired raw files provided.",
+    "related_200_step_version": "Author reports official 3/3, median37.526ms, margins82/88/212; full source/records absent here."
+  },
+  "long_training_evidence": "No attached longer-training or smaller-error development sweep. The submitted version uses 220 updates; the related version disclosed is shorter at 200. Do not infer an accuracy ceiling or expected D6 performance from these summaries.",
+  "qualification_limit": "Every retained author group mean exceeds 1.9%. This is a descriptive recheck of D4 records, not a new D5/D6 qualification or proof that tuning cannot do better.",
+  "source_and_report_links": {
+    "report": "https://github.com/cybertronai/sutro-problems/blob/7607b521189f77c8056c73d86df68783c3d0d14e/mnist-a100/submissions/hybrid-fisher-triton-220-d4-20261020/README.md",
+    "source": "https://github.com/cybertronai/sutro-problems/blob/7607b521189f77c8056c73d86df68783c3d0d14e/mnist-a100/submissions/hybrid-fisher-triton-220-d4-20261020/submission.py"
+  },
+  "fresh_reviewer_observations": {
+    "completed_runs": 3,
+    "MNIST_calls": 33,
+    "MNIST_predictions": 330000,
+    "pooled_error_pct": 2.1175757575757577,
+    "per_run_error_pct": [
+      2.097272727272727,
+      2.2145454545454544,
+      2.040909090909091
+    ],
+    "scope": "Completed reviewer records only; one automatic platform-preempted attempt has no retained score data. Not a new higher-band qualification."
+  },
+  "finalized_at_utc": "2026-10-22T18:57:27.946660+00:00"
+}

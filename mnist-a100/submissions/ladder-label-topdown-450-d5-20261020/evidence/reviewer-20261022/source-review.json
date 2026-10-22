@@ -1,0 +1,370 @@
+{
+  "pr": 139,
+  "head": "643d425329ae03f23b704e9e5cec8bb5cc9ab363",
+  "main_head": "b374daa1a59cf0e3ce9a6462ecdf2f143ac5b5fc",
+  "folder": "ladder-label-topdown-450-d5-20261020",
+  "source_path": "/Users/yaroslavvb/git/sutro-problems/output/pr-review-20261022/pr139/source/mnist-a100/submissions/ladder-label-topdown-450-d5-20261020/submission.py",
+  "source_sha256": "98e310b12031555088ee47e6f8170ad001fad1b6f0be28dcead493ff7682f5c3",
+  "source_bytes": 20474,
+  "function": "ladder_kernel",
+  "upstream_source_sha256": "cc423b95ed940a5bcd5dc3b08f71502dddbcee3b42cbc34fc5322819378aef2a",
+  "prior_width768_source_sha256": "e8d330a1a81b139f5b89290325b6f7a04123f47dc3c84af354b141f96a059b53",
+  "scorer_sha256": "1bc6d8d96a776565bc70f3ccdb91be7de57187d4495b2b0437fac98f5e120064",
+  "runner_sha256": "1180b843cf6c32414774da90c835a8b7298d2db8719989237a793ca1c62a10ab",
+  "reviewed_head": "643d425329ae03f23b704e9e5cec8bb5cc9ab363",
+  "checked_at_utc": "2026-10-22T18:42:46.227151+00:00",
+  "entrant": "spartanhaden",
+  "static_review_complete": true,
+  "source_gate_passed": true,
+  "static_blockers": [],
+  "review_flags": [
+    "20,474 bytes, close to the 20,480-byte limit"
+  ],
+  "source_limit_bytes": 20480,
+  "source_headroom_bytes": 6,
+  "prior_exact_source_reviewer_group_found": false,
+  "replacement_runs": 0,
+  "review_status": "Complete: static/provenance audit and initial independent canonical execution finalized.",
+  "gpu_reproduction_complete": true,
+  "provenance_review_complete": true,
+  "scope": "Full exact source, canonical published rules, reset, ownership, truth isolation, custom-kernel and source-attribution review. Nonexecuting AST comparison and CPU index arithmetic. No learner imported or executed locally.",
+  "method": "Kernel teacher with two AGOP metric fits and no query pseudo-label refit; teacher right-hand sides padded10->16; width768 Ladder,450 foreach-Adam updates at batch2500/LR.01467; labels-only straight-through decoder top-down input, per-call BF16 noise bank, current-query hard sampling, hidden-layer2 HKNN on1024 least-confident queries, class-symmetric fallback guard.",
+  "fresh_teacher": "Cloned static inputs overwritten every call before graph replay; sym_scores creates identity transform and pcg creates zero coefficients for each solve. Both AGOP metric fits and final training-only fit use current train labels; query scores are newly evaluated. Six duplicated one-hot RHS columns avoid zero-RHS PCG divisions and are discarded before AGOP/output; original10 solves remain independent RHSs.",
+  "fresh_student": "Current metric coordinates, current labels/teacher targets, tangent neighbours and hard-query IDs overwrite all data buffers before reset. Reset initializes all parameters/beta/gamma, clears every Adam exp_avg/exp_avg_sq/step, counter and loss scores, and rebuilds all450 minibatch rows. Learning rate is overwritten from reset counter before each optimizer update.",
+  "noise_review": "The8MiB BF16 bank and all450x5 random offsets are regenerated in reset from a per-call local generator, before all15 graph replays. Five noise sites consume five offsets: input plus4 encoder layers. Modulo NB bounds every read. This is generated Gaussian regularization, not fitted state, offline tensors or encoded data. Tangent noise and label sampling retain current PyTorch RNG reset.",
+  "topdown_truth": "lb=(iu<n) marks current supplied TRAIN rows in the unlabelled sampler; tu is their one-hot train label. v+(lb*(tu-v)).detach() substitutes known labels only there while its derivative follows current softmax. QUERY rows have lb=False and use their softmax; teacher targets for queries are predictions. No query label access.",
+  "graph_ownership": "CACHE strongly retains teacher graph/static/out and the Ladder object with all parameters, optimizer state, input/sampler/noise buffers, compiled bound methods and graph. Each of30 captured updates clears grads before backward; graph-private allocations remain owned by the retained graph. Fifteen ordered replays perform450 updates. Streams branch from and rejoin current stream. Cache omits device in keys, but canonical worker supplies one GPU and fixed shapes only; no cross-device state reuse occurs in this protocol.",
+  "inference_readout": "predict recomputes BN statistics from current training rows and returns current preactivations plus logits. hx/hq hs[2] preactivations (third hidden layer,256dimensions) are concatenated and norm-scaled for HKNN. Its candidates are supplied labelled train rows and confident current-query predictions; low-margin queries are not valid pseudo-labelled vertices. Top3 current classes,2048 nearby vertices and40 same-class neighbours feed ridge I+VV^T local-hull solves. All gather indices are bounded; missing classes get1e30 distance. No current-query truth or external fitted information.",
+  "guard_review": {
+    "data": "Current teacher scores, current refined student query predictions and errors on supplied train labels only.",
+    "logic": "Same10x10 off-diagonal confident-confusion count threshold60, or supplied-train mistakes>40. Diagonal zero and max are invariant to class relabelling.",
+    "work": "Teacher, all450 updates, both clean prediction passes and hidden-HKNN compute before branchless teacher selection; no dataset/timer-based work skip.",
+    "status": "No static violation found; both foreign holdouts and timing gates are left to unchanged canonical judging."
+  },
+  "triton_review": "Kernel body AST is identical to accepted #129. New launch configs use BC16 and supported768/512/256 widths divide it exactly, making unmasked metadata columns valid. Row tails and parameter tails are masked; phase1 fills owned20*S partial workspaces per row chunk, phase2 reduces initialized data and writes all17*S parameter grads and current-input grads. Two phases are ordered on the current stream. CPU arithmetic confirms all rows and parameter outputs exactly once for A100 SM108. No arbitrary pointers, timer access, external mutation, or missing retained graph owner found.",
+  "inputs_and_external_access": "Caller train/query tensors receive no in-place writes. Owned clones/transforms/workspaces only. os usage only sets compiler cache directories under/tmp. No file reads, networking, caller/process introspection, learned literal prior or large encoded arrays.",
+  "canonical_rules": {
+    "version": "mnist-a100/1.2.0",
+    "D5_mean_error_limit_pct": 1.9,
+    "worst_draw_error_limit_pct": 3.4,
+    "holdout_accuracy_floor_pct": 15,
+    "required_calls": "11 MNIST+4 foreign holdout, each warm+timed in fresh sandbox worker",
+    "score": "Slower dataset mean with parent-clock floor, timing/dispersion gates;60sec calls, implemented180sec first warm and90sec later warms.",
+    "energy": "Optional separate column; invalid energy cannot invalidate a qualifying score.",
+    "measurement_scope": "One initial unchanged stock canonical Modal A100-80GB three-run group; retain every outcome, no retries/replacements. No permanent source ban or new second-batch submission rule."
+  },
+  "upstream_attribution": {
+    "source_sha256": "98e310b12031555088ee47e6f8170ad001fad1b6f0be28dcead493ff7682f5c3",
+    "upstream_pr": 129,
+    "upstream_source_sha256": "cc423b95ed940a5bcd5dc3b08f71502dddbcee3b42cbc34fc5322819378aef2a",
+    "width_reference_pr": 135,
+    "width_source_sha256": "e8d330a1a81b139f5b89290325b6f7a04123f47dc3c84af354b141f96a059b53",
+    "functions_and_classes": [
+      {
+        "kind": "ClassDef",
+        "name": "CombFn",
+        "current_line": 420,
+        "upstream_line": 457,
+        "ast_identical": true
+      },
+      {
+        "kind": "ClassDef",
+        "name": "Ladder",
+        "current_line": 439,
+        "upstream_line": 480,
+        "ast_identical": false
+      },
+      {
+        "kind": "ClassDef",
+        "name": "Sym",
+        "current_line": 63,
+        "upstream_line": 75,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "_ld",
+        "current_line": 239,
+        "upstream_line": 270,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "_p",
+        "current_line": 245,
+        "upstream_line": 278,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "_s",
+        "current_line": 242,
+        "upstream_line": 274,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "agop",
+        "current_line": 134,
+        "upstream_line": 159,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "aug",
+        "current_line": 40,
+        "upstream_line": 48,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "bn",
+        "current_line": 224,
+        "upstream_line": 251,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "chol",
+        "current_line": 36,
+        "upstream_line": 42,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "comb_bwd",
+        "current_line": 401,
+        "upstream_line": 436,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "comb_bwd_kernel",
+        "current_line": 248,
+        "upstream_line": 282,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "comb_math",
+        "current_line": 231,
+        "upstream_line": 261,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "combine",
+        "current_line": 229,
+        "upstream_line": 258,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "guard",
+        "current_line": 578,
+        "upstream_line": 618,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "h3_ops",
+        "current_line": 49,
+        "upstream_line": 59,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "kern",
+        "current_line": 46,
+        "upstream_line": 55,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "ladder_kernel",
+        "current_line": 585,
+        "upstream_line": 626,
+        "ast_identical": false
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "lfac",
+        "current_line": 105,
+        "upstream_line": 124,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "lrelu",
+        "current_line": 227,
+        "upstream_line": 255,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "mm",
+        "current_line": 434,
+        "upstream_line": 474,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "panels",
+        "current_line": 54,
+        "upstream_line": 65,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "pcg",
+        "current_line": 110,
+        "upstream_line": 130,
+        "ast_identical": false
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "register",
+        "current_line": 416,
+        "upstream_line": 452,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "rownorm",
+        "current_line": 38,
+        "upstream_line": 45,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "sqrtm",
+        "current_line": 124,
+        "upstream_line": 148,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "sym_scores",
+        "current_line": 148,
+        "upstream_line": 175,
+        "ast_identical": false
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "tangents",
+        "current_line": 218,
+        "upstream_line": 244,
+        "ast_identical": true
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "teacher",
+        "current_line": 175,
+        "upstream_line": 222,
+        "ast_identical": false
+      },
+      {
+        "kind": "FunctionDef",
+        "name": "upd_comp",
+        "current_line": 97,
+        "upstream_line": 113,
+        "ast_identical": false
+      }
+    ],
+    "kernel_body_AST_identical": true,
+    "new_helpers": [
+      "hk_fix",
+      "hknn"
+    ],
+    "credits": [
+      "spartanhaden #129/#121 kernel-taught Ladder source and fused combinator backward",
+      "SethTS and Rasmus et al. Ladder",
+      "islamborghini kernel-PCG/batch-step ancestor work, via #129 credits",
+      "likelytobelaura #118 tangent jitter",
+      "sigkillme0 #127 grouped replay and labelled top-down decoder input",
+      "sjbaebae #135 width768",
+      "Vincent & Bengio2002 local hull/HKNN, via own #121/#130 readouts",
+      "Salimans et al.2017 shared-noise-table idea"
+    ],
+    "assessment": "Direct and transitive credit is explicit in module/README and linked parent reports; top-down input is described as a labels-only reimplementation. No attribution blocker. Noise-bank/optimization/sanitizer chronology and development gains are author assertions, not independently attested here."
+  },
+  "documentation_notes": [
+    "Development2112-call/certification/probability/sanitizer claims have no corresponding raw records in this PR; treat as author reports outside reproduced scope.",
+    "The source is6bytes below the cap; preserve learner bytes exactly.",
+    "Author current-record comparisons and separate related-source official sets are historical author statements; never pool their outcomes into this reviewer group."
+  ],
+  "modal_app_id": "ap-ouqI89NyNltuYjKPrhERVk",
+  "author_provenance": {
+    "reviewed_head": "643d425329ae03f23b704e9e5cec8bb5cc9ab363",
+    "source_sha256": "98e310b12031555088ee47e6f8170ad001fad1b6f0be28dcead493ff7682f5c3",
+    "manifest_checks": {
+      "source_hash": true,
+      "source_bytes": true,
+      "function": true,
+      "stock_launcher": true,
+      "median_time": true,
+      "median_energy": true,
+      "three_distinct_GPU_UUIDs": true
+    },
+    "runs": [
+      {
+        "run": 1,
+        "file": "evidence/official/run-1.json",
+        "raw_hash_matches": true,
+        "source_hash_matches": true,
+        "device_matches": true,
+        "gpu_uuid_matches": true,
+        "ranked_ms_matches": true,
+        "energy_matches": true,
+        "scorer_version_matches": true,
+        "all_canonical_score_energy_checks_pass": true
+      },
+      {
+        "run": 2,
+        "file": "evidence/official/run-2.json",
+        "raw_hash_matches": true,
+        "source_hash_matches": true,
+        "device_matches": true,
+        "gpu_uuid_matches": true,
+        "ranked_ms_matches": true,
+        "energy_matches": true,
+        "scorer_version_matches": true,
+        "all_canonical_score_energy_checks_pass": true
+      },
+      {
+        "run": 3,
+        "file": "evidence/official/run-3.json",
+        "raw_hash_matches": true,
+        "source_hash_matches": true,
+        "device_matches": true,
+        "gpu_uuid_matches": true,
+        "ranked_ms_matches": true,
+        "energy_matches": true,
+        "scorer_version_matches": true,
+        "all_canonical_score_energy_checks_pass": true
+      }
+    ],
+    "all_manifest_checks_pass": true,
+    "author_set_summary": {
+      "passed_runs": 3,
+      "energy_valid_runs": 3,
+      "median_ranked_ms": 405.07294780682264,
+      "median_energy_mj": 64776.718850052814,
+      "mnist_correct": 324355,
+      "mnist_total": 330000,
+      "aggregate_mnist_error_pct": 1.7106060606060607
+    },
+    "scope": "Independent canonical score/summary/energy reconstruction of all saved current-source author records; no author verifier executed. Exact source matches all three records under working name x_k5cFdt450.py. All stdout and stock-truncated stderr retained.",
+    "provenance_limits": [
+      "Manifest has source/raw/launcher hashes and board UUIDs, but no scorer-file hash, original Modal app ID, controller timestamps or independently attested run-selection history. Exact-scorer version and every reconstructed judge/energy gate match trusted pinned canonical.",
+      "The2,112-call development certification, paired optimization deltas, P(3/3) estimate and compute-sanitizer claim are not accompanied by raw development/sanitizer records in this PR. They are not used to establish score or an accuracy ceiling.",
+      "Related distinct480-step and no-label-input source groups are reported by abbreviated hashes and medians, without raw records here; they are not pooled into this reviewer group."
+    ]
+  },
+  "reviewer_passed_runs": 3,
+  "reviewer_required_runs": 3,
+  "reviewer_qualified": true,
+  "reviewer_energy_valid_runs": 3,
+  "reviewer_median_ranked_ms": 406.9154218344128,
+  "reviewer_median_energy_mj": 67812.87940030555
+}

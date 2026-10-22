@@ -1,5 +1,28 @@
 # Kernel-taught Ladder with a label top-down input, a hidden-space HKNN readout and a noise bank (450 steps): difficulty 5
 
+## Independent reviewer reproduction — October 22, 2026
+
+The first frozen reviewer group passed **3/3 fresh canonical sandboxed Modal A100-80GB runs**. Median ranked time is **406.915422 ms/call**; median above-idle GPU board energy is **67,812.879400 mJ/call**. Pooled MNIST error is **1.749091%** (324,228/330,000 correct). Each complete run independently passes all accuracy, holdout and timing gates; pooled accuracy is descriptive.
+
+| Reviewer run | MNIST error | Margin, labels | Ranked ms | Above-idle mJ |
+| - | -: | -: | -: | -: |
+| 1 | 1.790909% | +120 | 406.915422 | 67812.879400 |
+| 2 | 1.761818% | +152 | 406.980608 | 67766.748575 |
+| 3 | 1.694545% | +226 | 404.012348 | 71178.475965 |
+
+The submitted source is unchanged, SHA-256 `98e310b12031555088ee47e6f8170ad001fad1b6f0be28dcead493ff7682f5c3`; scorer and stock runner are unchanged. All 45 timed calls completed. Every initial outcome is retained; no maintainer-launched replacement or retry was made. [Raw records and executable verifier](evidence/reviewer-20261022/), [reconstruction](evidence/reviewer-20261022/verification.json), [decision](evidence/reviewer-20261022/review-decision.json) and [source review](evidence/reviewer-20261022/source-review.json) are retained. Optional energy is assessed separately from score qualification and excludes host/system energy and initial compilation.
+
+This is @spartanhaden's kernel-taught Ladder at @sjbaebae's width-768 budget, retaining the @SethTS/Rasmus et al., @islamborghini, @likelytobelaura and @sigkillme0 lineage. Labelled-row top-down input credits the related #127 idea, implemented with current training labels only; query targets remain predictions. The per-call noise bank, teacher change, launch configuration and hidden-space HKNN are stated separately from earlier budget/kernel work. Large development batches, sanitizer claims and unsubmitted variant histories remain author claims unless supported in the retained audits. The separate exploratory D6 study is research and does not qualify this submission.
+
+The leaderboard uses these independent reviewer medians; the original author report below remains separate. Published instructions specify three official runs and their median; this reviewer reproduction supplies evidence, without adding a permanent source exclusion or a new mandatory second-batch submission rule. No D6 qualification is claimed here.
+
+Using Python 3.13 from this submission directory: `python evidence/reviewer-20261022/verify_records.py evidence/reviewer-20261022 submission.py --difficulty 5 --function ladder_kernel --output /tmp/pr139-verification.json`. This audits saved records without executing the learner.
+
+## Original author report (as submitted)
+
+Present-tense record and pending-review claims below describe the author submission date; the dated reviewer section above gives accepted status.
+
+
 Entrant: [@spartanhaden](https://github.com/spartanhaden).
 
 This entry builds on our merged [ladder-k2-d5](../ladder-k2-d5-20261019/README.md) (#129) at #135's width of 768, with 450 Adam steps instead of 480, and changes the teacher, noise source, decoder top-down input and readout.

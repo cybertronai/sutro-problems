@@ -1,0 +1,63 @@
+{
+  "scope": "Source/report inspection for parent-owned exploratory D6 tests; no D6 learner execution or additional GPU jobs by this reviewer. No empirical upper-ceiling proof.",
+  "target": {
+    "accuracy_pct": 98.6,
+    "error_pct": 1.4,
+    "required_correct_per_11_draws": 108460,
+    "current_D5_required_correct": 107910
+  },
+  "latest139": {
+    "source_sha256": "98e310b12031555088ee47e6f8170ad001fad1b6f0be28dcead493ff7682f5c3",
+    "source": "https://github.com/cybertronai/sutro-problems/blob/643d425329ae03f23b704e9e5cec8bb5cc9ab363/mnist-a100/submissions/ladder-label-topdown-450-d5-20261020/submission.py",
+    "author_current_group_error_pct": 1.7106060606060607,
+    "author_dev_error_claim_pct": 1.743,
+    "author_dev_raw_available": false,
+    "steps": 450,
+    "batch": 2500,
+    "sampled_labelled_rows": 1125000,
+    "peak_lr": 0.01467,
+    "gaussian_noise": 0.25,
+    "tangent_jitter": 0.5,
+    "reconstruction_weight": 2000,
+    "teacher_weight": 0.25,
+    "current_reg": "Gaussian corruption on all noisy layers, local train-label tangent augmentation, unsupervised reconstruction and teacher distillation; labels-only top-down decoder, hard-query oversampling and hidden HKNN.",
+    "HKNN_embedding": "hs[2],256-dimensional third hidden preactivation"
+  },
+  "older_comparisons": [
+    {
+      "pr": 121,
+      "source_sha256": "039bde8b8576a67dbfd20017d7b70cbb2fce59f0927d0fc9f989c1bb6db45728",
+      "report": "https://github.com/cybertronai/sutro-problems/blob/b374daa1a59cf0e3ce9a6462ecdf2f143ac5b5fc/mnist-a100/submissions/ladder-kernel-d5-20261012/README.md",
+      "steps": 2300,
+      "batch": 1000,
+      "sampled_labelled_rows": 2300000,
+      "width": 1024,
+      "reviewer_errors_pct": [
+        1.805455,
+        1.683636,
+        1.622727
+      ],
+      "note": "About2.04x current labelled exposures, not5.11x. Different teacher/width/readout and unpaired draws prevent causal training-length comparison."
+    },
+    {
+      "pr": 118,
+      "report": "https://github.com/cybertronai/sutro-problems/blob/b374daa1a59cf0e3ce9a6462ecdf2f143ac5b5fc/mnist-a100/submissions/tangent-crossteach-d5-20261012/README.md",
+      "members": 8,
+      "steps": 2500,
+      "dropout": 0.1,
+      "weight_decay": 0.1,
+      "author_development_note": "More than2500steps,16members and width384 neutral/worse in reported development; no upper-bound proof."
+    }
+  ],
+  "experiment_implications": [
+    "Increase STEPS and allocated schedules/minibatch/noise offsets consistently; all step counts must divide GK30 unless changing replay logic.",
+    "A4x/16x step probe is useful but still likely seconds per fit; evaluate the user\u2019s longer wall-time budget separately.",
+    "Retain peak LR or intentionally tune it when extending training. Automatically dividing LR by step multiplier only preserves integrated budget.",
+    "Dropout can be applied after hidden ReLU only in loss, leaving clean predict unchanged; avoid final-logit dropout initially. Dropconnect can mask encoder matrices in loss, using original weights at predict.",
+    "For AdamW/L2, regularize encoder/decoder matrices separately from BN offsets/gain and combinator parameters initially.",
+    "Fixed-teacher query distillation can bias long training; tapering TW late is an informative ablation, while keeping teacher/readout constant for direct comparisons.",
+    "Track clean-current training accuracy alongside query accuracy to distinguish underfitting from overfitting; use paired fresh draws, then frozen independent11-draw confirmation.",
+    "Existing canonical60sec call/90sec later-warm limits cannot qualify five-minute fits. D6 development evidence must be labelled separately; this source\u2019s D5 qualification uses unchanged stock rules.",
+    "Log clean training-error count, pre-guard HKNN/student accuracy and guard trigger. Strong regularization may cross the40-training-mistake threshold and cause confident query predictions to revert to the fixed teacher; a prespecified no-guard D6 ablation separates that effect. Qualification source remains unchanged."
+  ]
+}

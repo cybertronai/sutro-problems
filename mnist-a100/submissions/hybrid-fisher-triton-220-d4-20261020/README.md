@@ -1,5 +1,28 @@
 # Fisher-PCG kernel teachers distilled into MLP students, with a Triton student step (220 steps): difficulty 4
 
+## Independent reviewer reproduction — October 22, 2026
+
+The first frozen reviewer group passed **3/3 fresh canonical sandboxed Modal A100-80GB runs**. Median ranked time is **38.695741 ms/call**; median above-idle GPU board energy is **6,664.381444 mJ/call**. Pooled MNIST error is **2.117576%** (323,012/330,000 correct). Each complete run independently passes all accuracy, holdout and timing gates; pooled accuracy is descriptive.
+
+| Reviewer run | MNIST error | Margin, labels | Ranked ms | Above-idle mJ |
+| - | -: | -: | -: | -: |
+| 1 | 2.097273% | +223 | 36.206193 | 5998.131722 |
+| 2 | 2.214545% | +94 | 39.126181 | 6664.381444 |
+| 3 | 2.040909% | +285 | 38.695741 | 6781.826246 |
+
+The submitted source is unchanged, SHA-256 `1c25eb4ed6ef06cf94c1a34ca80eecd16e90b33c0a6091da0c2bd791db18f133`; scorer and stock runner are unchanged. All 45 timed calls in the three returned records completed. All returned records and controller provenance are retained. No maintainer-launched replacement run was made. Modal automatically restarted an input after preemption; that platform restart is disclosed in the retained controller log. [Raw records and executable verifier](evidence/reviewer-20261022/), [reconstruction](evidence/reviewer-20261022/verification.json), [decision](evidence/reviewer-20261022/review-decision.json) and [source review](evidence/reviewer-20261022/source-review.json) are retained. Optional energy is assessed separately from score qualification and excludes host/system energy and initial compilation.
+
+This builds on @spartanhaden's tangent hybrid and its inherited @islamborghini, @likelytobelaura, @sjbaebae, RFM/HKNN and modded-nanogpt credits. Fisher-PCG teacher ideas credit @sigkillme0; the two-kernel Triton student step is Haden's. The submitted reports' large development batches, sanitizer results, numerical-drift comparisons and unsubmitted 200-step history are author claims unless separately supported in the retained reviewer audits; they are not substitutes for this exact-source execution group.
+
+The leaderboard uses these independent reviewer medians; the original author report below remains separate. Published instructions specify three official runs and their median; this reviewer reproduction supplies evidence, without adding a permanent source exclusion or a new mandatory second-batch submission rule. No D6 qualification is claimed here.
+
+Using Python 3.13 from this submission directory: `python evidence/reviewer-20261022/verify_records.py evidence/reviewer-20261022 submission.py --difficulty 4 --function hybrid_d4 --output /tmp/pr138-verification.json`. This audits saved records without executing the learner.
+
+## Original author report (as submitted)
+
+Present-tense record and pending-review claims below describe the author submission date; the dated reviewer section above gives accepted status.
+
+
 Entrant: [@spartanhaden](https://github.com/spartanhaden).
 
 This entry keeps the pipeline of our merged [hybrid-tangent-d4](../hybrid-tangent-d4-20261019/README.md) (#130): a kernel teacher, three tangent-jittered MLP students, then HKNN. New are our d3 Fisher-PCG learner as the teacher and a two-kernel Triton student step.
