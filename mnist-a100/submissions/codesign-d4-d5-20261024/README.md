@@ -1,5 +1,44 @@
 # D4/D5 GPU co-design: author canonical results and ongoing D5 research
 
+## Independent reviewer reproduction — October 25, 2026
+
+The exact D4 and latest width-480 D5 sources passed their first fixed independent groups, **3/3 fresh canonical sandboxed Modal A100-80GB runs each**. Scorer, runner, source bytes, CPU request and environment defaults were unchanged. All six returned records and launch logs are retained; no maintainer-launched failed-run replacement or tuning was performed. Infrastructure events, if any, are disclosed in the logs. The historical width-512 D5 remains author evidence and was not entered as a new reviewer record.
+
+### D4: three fresh reviewer runs passed
+
+Median ranked time: **25.264627 ms/call**. Median above-idle board energy: **3,346.874018 mJ/call**. Pooled MNIST error: **2.186970%**, descriptive; each complete run separately passed all canonical accuracy, holdout and timing gates.
+
+| Reviewer run | MNIST error | Margin, labels | Ranked ms | Above-idle mJ |
+| - | -: | -: | -: | -: |
+| 1 | 2.215455% | +93 | 25.264627 | 3346.874018 |
+| 2 | 2.163636% | +150 | 26.246056 | 3464.944016 |
+| 3 | 2.181818% | +130 | 23.721816 | 2930.405801 |
+
+Exact source SHA-256: `a2c32468ecb4e02957ef218b3d39419a711b55baaca6be98fb1645a6909bdc6a`. [Retained records and reconstruction](evidence/reviewer-20261025/d4/).
+
+Saved-record check from this directory: `python evidence/reviewer-20261025/verify_records.py evidence/reviewer-20261025/d4 d4/fisher-triton-width128-teacher1-split4-rolled-d4-20261022.py --difficulty 4 --function hybrid_d4 --output /tmp/pr140-d4-verification.json`.
+
+### D5: three fresh reviewer runs passed
+
+Median ranked time: **273.889134 ms/call**. Median above-idle board energy: **40,390.436435 mJ/call**. Pooled MNIST error: **1.686970%**, descriptive; each complete run separately passed all canonical accuracy, holdout and timing gates.
+
+| Reviewer run | MNIST error | Margin, labels | Ranked ms | Above-idle mJ |
+| - | -: | -: | -: | -: |
+| 1 | 1.636364% | +290 | 240.515970 | 36880.254882 |
+| 2 | 1.710909% | +208 | 273.889134 | 41203.652224 |
+| 3 | 1.713636% | +205 | 276.102590 | 40390.436435 |
+
+Exact source SHA-256: `a245b278c9f425ec951942caf13e4a14b7123717a428bc9862b13491f42fdc29`. [Retained records and reconstruction](evidence/reviewer-20261025/d5_244/).
+
+Saved-record check from this directory: `python evidence/reviewer-20261025/verify_records.py evidence/reviewer-20261025/d5_244 d5_244/ladder-w480-s315-population-tb20-dec50-lr720-cut50-ph2-initboth-d5-20261024.py --difficulty 5 --function ladder_kernel --output /tmp/pr140-d5_244-verification.json`.
+
+Energy is optional and separate from score qualification. It measures GPU-board energy above idle per call, excluding initial compilation and host/system energy. PCIe/SXM and draw variation prevent attributing cross-group speedups to a single change. Author profiling and numerical-parity claims retain the limited scope of their supplied evidence, detailed in the source reviews; they are not new reviewer measurements. [Independent audit](evidence/reviewer-20261025/actual-final-independent-audit.json), [source and provenance reviews](evidence/reviewer-20261025/), and the unchanged canonical reconstruction code are retained.
+
+## Original author report (as submitted)
+
+Pending-review statements below describe the submission date; the dated reviewer section above records accepted status.
+
+
 The three candidates below each passed all three initial author canonical A100 runs. Independent reviewer qualification is outstanding. None of the run groups measured energy (`--no-energy`), so no energy claim or leaderboard edit is included.
 
 | Candidate | Canonical times (ms) | Median (ms) | Pooled MNIST error | Minimum accuracy margin |

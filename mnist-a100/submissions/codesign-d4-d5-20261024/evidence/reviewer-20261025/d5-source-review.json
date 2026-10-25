@@ -1,0 +1,259 @@
+{
+  "format": "sutro-pr140-independent-d5-source-review-v1",
+  "checked_utc": "2026-10-25T19:48:47.304085+00:00",
+  "reviewed_head": "91cf2542e7229755edd2741efe0c1d68698ef2a2",
+  "status": "PASS_STATIC_SOURCE_PENDING_FRESH_REVIEWER_GROUP",
+  "source": "d5_244/ladder-w480-s315-population-tb20-dec50-lr720-cut50-ph2-initboth-d5-20261024.py",
+  "source_sha256": "a245b278c9f425ec951942caf13e4a14b7123717a428bc9862b13491f42fdc29",
+  "source_bytes": 20439,
+  "limit_bytes": 20480,
+  "remaining_bytes": 41,
+  "function": "ladder_kernel",
+  "canonical_source_check": "PASS",
+  "advisory_review_flags": [
+    "embedded weights? 526 numeric literals",
+    "20,439 bytes, close to the 20,480-byte limit"
+  ],
+  "published_rule_pins": {
+    "mnist.py": "1bc6d8d96a776565bc70f3ccdb91be7de57187d4495b2b0437fac98f5e120064",
+    "run_modal.py": "1180b843cf6c32414774da90c835a8b7298d2db8719989237a793ca1c62a10ab",
+    "README.md": "71397e8ba3f980f063df261d59d69f4fa54c28da62471572c629d0c92e1958a5"
+  },
+  "api_and_truth_boundary": {
+    "arguments": [
+      "train_x",
+      "train_y",
+      "test_x"
+    ],
+    "returned_labels": "argmax/guard integer tensor over test rows on same GPU",
+    "hidden_test_truth_access_found": false,
+    "dataset_or_network_access_found": false,
+    "external_io": "Only /tmp compiler-cache environment defaults are set. No file reads, network/process calls, scorer imports, prediction artifacts or pool access.",
+    "transduction": "Teacher, conditional decoder, hard-query sampling and hidden hull use unlabeled query coordinates plus train labels/predicted labels; no hidden query truth."
+  },
+  "initialization": {
+    "fixed_seed": 11,
+    "encoder_decoder_rng": "Every original encoder and decoder Gaussian draw is consumed; decoder values are then copied from fresh encoder transposes scaled by sqrt(input_width/output_width). No persistent tying after initialization.",
+    "combinator_rng": "Original random denoiser draws are consumed before the explicit17coefficient initializer overwrites them.",
+    "near_identity": "The fixed coefficients algebraically implement0.1*v+0.9*latent, a mathematical generative initialization, not frozen trained weights.",
+    "trained_offline_payload_found": false,
+    "credit": "Explicitly inspired by sigkillme0 PR127 commit19d2a3faba642814aee9c12ed1a118a927b796d2, whose reset uses the same transpose/scaling idea and piecewise-linear near-identity initializer."
+  },
+  "per_call_reset": {
+    "teacher_cache": "Copies current train_x/train_y/test_x into graph buffers, replays all RFM fitting and returns cloned current outputs. No fitted teacher state skips work.",
+    "ladder_inputs": "Refreshes x, class-conditioned tangent bank, one-hot train labels, pooled coordinates, teacher probabilities and hard-query indices from current inputs.",
+    "learned_state": "A.R resets encoders/decoders/combinators/biases/gain and Adam exp_avg/exp_avg_sq/step; sampling history/counter, sampling/noise tables and RNG are recreated before315updates.",
+    "retained_cache_scope": "Allocations, compiled graphs, optimizer objects, fixed schedules and CUDA streams only; learned state is overwritten.",
+    "gradients": "Each captured update clears parameter grads; side-stream matmul backward joins the caller stream before returning."
+  },
+  "custom_kernel_review": {
+    "phase1": "One owner per(row segment,column block) writes its data gradients and20workspace terms:17parameter partials plus dv,dv*normalized_input,normalized_input sums.",
+    "phase2": "Contiguous pid*ceil(17*S/NPROG) chunks cover each of17*S parameter outputs once. Masked padded row reduction sums partials; each feature block reduces three BN sums over all row segments, then writes only its own input-row segment.",
+    "tail_safety": "Supported widths60/256/480 divide BC exactly; row masks bound2500rows, padded row-segment loads use NR masks, and phase launches are ordered on the same stream. M=1 is a fixed source constant.",
+    "cpu_partition_checks": [
+      {
+        "sms": 58,
+        "width": 480,
+        "batch": 2500,
+        "row_size": 512,
+        "row_segments": 5,
+        "programs": 150,
+        "parameter_chunk": 55,
+        "data_writes_exactly_once": true,
+        "workspace_terms_exactly_once": true,
+        "parameter_writes_exactly_once": true
+      },
+      {
+        "sms": 58,
+        "width": 60,
+        "batch": 2500,
+        "row_size": 192,
+        "row_segments": 14,
+        "programs": 210,
+        "parameter_chunk": 5,
+        "data_writes_exactly_once": true,
+        "workspace_terms_exactly_once": true,
+        "parameter_writes_exactly_once": true
+      },
+      {
+        "sms": 58,
+        "width": 256,
+        "batch": 2500,
+        "row_size": 192,
+        "row_segments": 14,
+        "programs": 224,
+        "parameter_chunk": 20,
+        "data_writes_exactly_once": true,
+        "workspace_terms_exactly_once": true,
+        "parameter_writes_exactly_once": true
+      },
+      {
+        "sms": 108,
+        "width": 480,
+        "batch": 2500,
+        "row_size": 256,
+        "row_segments": 10,
+        "programs": 300,
+        "parameter_chunk": 28,
+        "data_writes_exactly_once": true,
+        "workspace_terms_exactly_once": true,
+        "parameter_writes_exactly_once": true
+      },
+      {
+        "sms": 108,
+        "width": 60,
+        "batch": 2500,
+        "row_size": 128,
+        "row_segments": 20,
+        "programs": 300,
+        "parameter_chunk": 4,
+        "data_writes_exactly_once": true,
+        "workspace_terms_exactly_once": true,
+        "parameter_writes_exactly_once": true
+      },
+      {
+        "sms": 108,
+        "width": 256,
+        "batch": 2500,
+        "row_size": 128,
+        "row_segments": 20,
+        "programs": 320,
+        "parameter_chunk": 14,
+        "data_writes_exactly_once": true,
+        "workspace_terms_exactly_once": true,
+        "parameter_writes_exactly_once": true
+      },
+      {
+        "sms": 132,
+        "width": 480,
+        "batch": 2500,
+        "row_size": 256,
+        "row_segments": 10,
+        "programs": 300,
+        "parameter_chunk": 28,
+        "data_writes_exactly_once": true,
+        "workspace_terms_exactly_once": true,
+        "parameter_writes_exactly_once": true
+      },
+      {
+        "sms": 132,
+        "width": 60,
+        "batch": 2500,
+        "row_size": 128,
+        "row_segments": 20,
+        "programs": 300,
+        "parameter_chunk": 4,
+        "data_writes_exactly_once": true,
+        "workspace_terms_exactly_once": true,
+        "parameter_writes_exactly_once": true
+      },
+      {
+        "sms": 132,
+        "width": 256,
+        "batch": 2500,
+        "row_size": 128,
+        "row_segments": 20,
+        "programs": 320,
+        "parameter_chunk": 14,
+        "data_writes_exactly_once": true,
+        "workspace_terms_exactly_once": true,
+        "parameter_writes_exactly_once": true
+      }
+    ],
+    "cpu_mathematical_gradient_and_initializer_checks": {
+      "finite_difference_max_absolute_errors_du_dlat_dp": [
+        3.871869543731199e-10,
+        4.777740425510046e-10,
+        6.120104562024054e-10
+      ],
+      "near_identity_1000_random_pairs_max_absolute_error": 4.440892098500626e-16,
+      "scope": "Independent CPU FP64 mathematical formula check. Not a Triton execution or BF16 bitwise parity test."
+    },
+    "author_gpu_gradient_gates": {
+      "d5-comb-parallel-phase2-gate-a100-modal.json": {
+        "file_sha256": "3275f2e96853d435f273abf9b8dbb53dc1052777606680b9446e8a18cdf944f7",
+        "gpu": "NVIDIA A100 80GB PCIe",
+        "max_relative_gradient_errors_by_width": {
+          "60": [
+            2.173053914589218e-08,
+            0.0,
+            1.1914116271327657e-07
+          ],
+          "256": [
+            3.596759142965311e-06,
+            0.0,
+            4.7377170631079935e-08
+          ],
+          "480": [
+            4.929212536808336e-06,
+            0.0,
+            4.927360564010996e-08
+          ]
+        },
+        "bitwise_exact": false
+      },
+      "d5-comb-parallel-phase2-gate-l4-modal.json": {
+        "file_sha256": "c9c77092e815e2a6a686aace1a92003960908994808cc538e973686b66794da2",
+        "gpu": "NVIDIA L4",
+        "max_relative_gradient_errors_by_width": {
+          "60": [
+            2.8670546825537713e-08,
+            0.0,
+            1.1885520478926992e-07
+          ],
+          "256": [
+            2.3340428469964536e-06,
+            0.0,
+            4.4791729436610694e-08
+          ],
+          "480": [
+            2.660208338056691e-06,
+            0.0,
+            4.175997858624214e-08
+          ]
+        },
+        "bitwise_exact": false
+      }
+    },
+    "scope": "Independent static indexing/formula review plus CPU checks; author supplied L4/A100 execution evidence is supporting data, not independently rerun GPU parity."
+  },
+  "parity_and_history": {
+    "cancelled_batches": {
+      "reason": "Stopped redundant in-flight experiments after the315-update source completed3/3 author canonical passes with243.411033ms median.",
+      "canonical285": {
+        "app": "ap-RRm09UZjAoMIkckZOZ9xEa",
+        "status": "cancelled_incomplete_not_qualified",
+        "completed_run_files": []
+      },
+      "development265_275_285": {
+        "app": "ap-WLSN1t2jjhe7RRKD0kwJkn",
+        "status": "cancelled_incomplete_not_qualified"
+      }
+    },
+    "initial_packaging_parity_failed_retained": true,
+    "later_exact_trained_parameter_prediction_parity_supported_by_saved_hashes": true,
+    "initial_parameter_exactness_scope": "The later summary reports initial exactness; exported row hashes independently demonstrate trained parameters/predictions, not full initial tensor arrays.",
+    "earlier_discrepancy_unexplained": true,
+    "two_failed_groups_use_different_source_hashes_from_latest": true,
+    "no_permanent_source_ban_in_published_rules": true
+  },
+  "attribution": [
+    "Rasmus",
+    "SethTS",
+    "spartanhaden",
+    "sigkillme0",
+    "islamborghini",
+    "likelytobelaura",
+    "Vincent/Bengio",
+    "HazyResearch/TK",
+    "sjbaebae"
+  ],
+  "documentation_notes": [
+    "The early implementation paragraph describes the historical width512/420-update candidate; the later D5_244 section correctly describes the selected width480/315 source. This could be clearer, but is not a compliance blocker.",
+    "Author median243.411ms is not a per-host maximum; the275.808ms SXM logical run is retained. Cross-host/draw changes prevent assigning the whole speedup to one kernel.",
+    "One Modal restart is transparently retained; same input means the remote job arguments, not the scorer entropy/tensor draw."
+  ],
+  "blockers": [],
+  "disposition": "Source review approves the latest candidate for root-owned unchanged initial independent three-run canonical qualification. Publication/merge/record promotion still depends on root review and those independent outcomes; energy is separate.",
+  "audit_program_sha256": "2377adc3958bf0933e27d9bf3928c61c796933f02897c07f0b2f87f3b19a3d5e"
+}

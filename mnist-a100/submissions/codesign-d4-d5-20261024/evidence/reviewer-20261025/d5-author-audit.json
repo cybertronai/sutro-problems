@@ -1,0 +1,622 @@
+{
+  "format": "sutro-pr140-independent-d5-author-record-audit-v1",
+  "checked_utc": "2026-10-25T19:48:47.304085+00:00",
+  "reviewed_head": "91cf2542e7229755edd2741efe0c1d68698ef2a2",
+  "status": "PASS_AUTHOR_ARITHMETIC_NOT_INDEPENDENT_QUALIFICATION",
+  "latest_source_sha256": "a245b278c9f425ec951942caf13e4a14b7123717a428bc9862b13491f42fdc29",
+  "method": "Independent literal arithmetic for every accuracy/timing/dispersion/clock-floor gate, then cross-check against frozen canonical judge; author verify_records.py is not imported or executed.",
+  "groups": [
+    {
+      "name": "latest_initboth",
+      "source": "d5_244/ladder-w480-s315-population-tb20-dec50-lr720-cut50-ph2-initboth-d5-20261024.py",
+      "source_sha256": "a245b278c9f425ec951942caf13e4a14b7123717a428bc9862b13491f42fdc29",
+      "source_bytes": 20439,
+      "passed_runs": 3,
+      "required_runs": 3,
+      "complete_scored_calls": 45,
+      "rows": [
+        {
+          "file": "d5_244/official/run-1.json",
+          "file_sha256": "7e79a59f80a4c3b3e44d6ed7ce977fd3781d4179d73d9bd5fc62373d47c15d52",
+          "device": "NVIDIA A100 80GB PCIe",
+          "torch": "2.12.0+cu130",
+          "holdout": "kmnist",
+          "passed": true,
+          "saved_problems": [],
+          "problems": [],
+          "ranked_ms": 241.0590385104804,
+          "groups": [
+            {
+              "group": "mnist",
+              "calls": 11,
+              "reported_mean_ms": 239.86641623757103,
+              "parent_minus_overhead_mean_ms": 242.26965127252626,
+              "clock_floor_ms": 240.9703191913384,
+              "ranked_group_ms": 240.9703191913384,
+              "clock_floor_applied": true,
+              "correct": 108067,
+              "total": 110000
+            },
+            {
+              "group": "holdout",
+              "calls": 4,
+              "reported_mean_ms": 239.90604782104492,
+              "parent_minus_overhead_mean_ms": 242.35856874958563,
+              "clock_floor_ms": 241.0590385104804,
+              "ranked_group_ms": 241.0590385104804,
+              "clock_floor_applied": true,
+              "correct": 39013,
+              "total": 40000
+            }
+          ],
+          "correct": 108067,
+          "total": 110000,
+          "required_correct": 107910,
+          "margin_labels": 157,
+          "minimum_mnist_draw_correct": 9811,
+          "error_pct": 1.7572727272727273
+        },
+        {
+          "file": "d5_244/official/run-2.json",
+          "file_sha256": "5ce2673e74b59be8ef2cd03b466f967ab7610b5c2bd194cd25965dd21cd83532",
+          "device": "NVIDIA A100-SXM4-80GB",
+          "torch": "2.12.0+cu130",
+          "holdout": "fashion",
+          "passed": true,
+          "saved_problems": [],
+          "problems": [],
+          "ranked_ms": 275.8082177936215,
+          "groups": [
+            {
+              "group": "mnist",
+              "calls": 11,
+              "reported_mean_ms": 273.803691517223,
+              "parent_minus_overhead_mean_ms": 277.1556266815801,
+              "clock_floor_ms": 275.68660822399397,
+              "ranked_group_ms": 275.68660822399397,
+              "clock_floor_applied": true,
+              "correct": 108004,
+              "total": 110000
+            },
+            {
+              "group": "holdout",
+              "calls": 4,
+              "reported_mean_ms": 274.4532165527344,
+              "parent_minus_overhead_mean_ms": 277.2804838763852,
+              "clock_floor_ms": 275.8082177936215,
+              "ranked_group_ms": 275.8082177936215,
+              "clock_floor_applied": true,
+              "correct": 35637,
+              "total": 40000
+            }
+          ],
+          "correct": 108004,
+          "total": 110000,
+          "required_correct": 107910,
+          "margin_labels": 94,
+          "minimum_mnist_draw_correct": 9796,
+          "error_pct": 1.8145454545454545
+        },
+        {
+          "file": "d5_244/official/run-3.json",
+          "file_sha256": "ddc2bd7a35978ca1fda174af7958ece83d5dab39a780b15e0bb949b0c89b9db9",
+          "device": "NVIDIA A100 80GB PCIe",
+          "torch": "2.12.0+cu130",
+          "holdout": "fashion",
+          "passed": true,
+          "saved_problems": [],
+          "problems": [],
+          "ranked_ms": 243.41103301852792,
+          "groups": [
+            {
+              "group": "mnist",
+              "calls": 11,
+              "reported_mean_ms": 240.28811645507812,
+              "parent_minus_overhead_mean_ms": 244.55797404504204,
+              "clock_floor_ms": 243.25653346276667,
+              "ranked_group_ms": 243.25653346276667,
+              "clock_floor_applied": true,
+              "correct": 108126,
+              "total": 110000
+            },
+            {
+              "group": "holdout",
+              "calls": 4,
+              "reported_mean_ms": 240.22272109985352,
+              "parent_minus_overhead_mean_ms": 244.71214662402718,
+              "clock_floor_ms": 243.41103301852792,
+              "ranked_group_ms": 243.41103301852792,
+              "clock_floor_applied": true,
+              "correct": 35565,
+              "total": 40000
+            }
+          ],
+          "correct": 108126,
+          "total": 110000,
+          "required_correct": 107910,
+          "margin_labels": 216,
+          "minimum_mnist_draw_correct": 9802,
+          "error_pct": 1.7036363636363636
+        }
+      ],
+      "pooled_correct": 324197,
+      "pooled_total": 330000,
+      "pooled_error_pct": 1.7584848484848485,
+      "minimum_margin_labels": 94,
+      "qualifying_author_median_ms": 243.41103301852792,
+      "energy_median_mj": null,
+      "energy_scope": "Not measured; author canonical invocation uses --no-energy."
+    },
+    {
+      "name": "historical_width512",
+      "source": "d5/ladder-label-topdown-width512-s420-d5-20261022.py",
+      "source_sha256": "d6b9cdc6fbbc2d5348235bbfd5e9554ab3f1bb05c3820ac14f4eba659c43f182",
+      "source_bytes": 20471,
+      "passed_runs": 3,
+      "required_runs": 3,
+      "complete_scored_calls": 45,
+      "rows": [
+        {
+          "file": "d5/official/run-1.json",
+          "file_sha256": "6282b062e6ee1fd2d352fdea67bce14df3ce70105f99466ca79759d59a4ef937",
+          "device": "NVIDIA A100-SXM4-80GB",
+          "torch": "2.12.0+cu130",
+          "holdout": "fashion",
+          "passed": true,
+          "saved_problems": [],
+          "problems": [],
+          "ranked_ms": 339.56222033265976,
+          "groups": [
+            {
+              "group": "mnist",
+              "calls": 11,
+              "reported_mean_ms": 336.37347689541906,
+              "parent_minus_overhead_mean_ms": 340.81060808988497,
+              "clock_floor_ms": 339.02874070540787,
+              "ranked_group_ms": 339.02874070540787,
+              "clock_floor_applied": true,
+              "correct": 107941,
+              "total": 110000
+            },
+            {
+              "group": "holdout",
+              "calls": 4,
+              "reported_mean_ms": 336.68505859375,
+              "parent_minus_overhead_mean_ms": 341.34564562562855,
+              "clock_floor_ms": 339.56222033265976,
+              "ranked_group_ms": 339.56222033265976,
+              "clock_floor_applied": true,
+              "correct": 35554,
+              "total": 40000
+            }
+          ],
+          "correct": 107941,
+          "total": 110000,
+          "required_correct": 107910,
+          "margin_labels": 31,
+          "minimum_mnist_draw_correct": 9785,
+          "error_pct": 1.8718181818181818
+        },
+        {
+          "file": "d5/official/run-2.json",
+          "file_sha256": "09ac949f62c5db4512331c6843cef256bd043beba85383ea36b29bcfaedcb368",
+          "device": "NVIDIA A100-SXM4-80GB",
+          "torch": "2.12.0+cu130",
+          "holdout": "fashion",
+          "passed": true,
+          "saved_problems": [],
+          "problems": [],
+          "ranked_ms": 340.03892567891785,
+          "groups": [
+            {
+              "group": "mnist",
+              "calls": 11,
+              "reported_mean_ms": 337.2757096724077,
+              "parent_minus_overhead_mean_ms": 341.8253042272799,
+              "clock_floor_ms": 340.03892567891785,
+              "ranked_group_ms": 340.03892567891785,
+              "clock_floor_applied": true,
+              "correct": 108070,
+              "total": 110000
+            },
+            {
+              "group": "holdout",
+              "calls": 4,
+              "reported_mean_ms": 337.5513610839844,
+              "parent_minus_overhead_mean_ms": 341.4611673752257,
+              "clock_floor_ms": 339.6734105698058,
+              "ranked_group_ms": 339.6734105698058,
+              "clock_floor_applied": true,
+              "correct": 35390,
+              "total": 40000
+            }
+          ],
+          "correct": 108070,
+          "total": 110000,
+          "required_correct": 107910,
+          "margin_labels": 160,
+          "minimum_mnist_draw_correct": 9809,
+          "error_pct": 1.7545454545454546
+        },
+        {
+          "file": "d5/official/run-3.json",
+          "file_sha256": "f4ce7e660991478e0888133b6a353ebcf220c7126944f9e692d62c78df1d9211",
+          "device": "NVIDIA A100-SXM4-80GB",
+          "torch": "2.12.0+cu130",
+          "holdout": "kmnist",
+          "passed": true,
+          "saved_problems": [],
+          "problems": [],
+          "ranked_ms": 345.59154466393454,
+          "groups": [
+            {
+              "group": "mnist",
+              "calls": 11,
+              "reported_mean_ms": 338.60440340909093,
+              "parent_minus_overhead_mean_ms": 347.38456668098,
+              "clock_floor_ms": 345.59154466393454,
+              "ranked_group_ms": 345.59154466393454,
+              "clock_floor_applied": true,
+              "correct": 108011,
+              "total": 110000
+            },
+            {
+              "group": "holdout",
+              "calls": 4,
+              "reported_mean_ms": 336.3299789428711,
+              "parent_minus_overhead_mean_ms": 340.4684346251338,
+              "clock_floor_ms": 338.6867847304194,
+              "ranked_group_ms": 338.6867847304194,
+              "clock_floor_applied": true,
+              "correct": 38855,
+              "total": 40000
+            }
+          ],
+          "correct": 108011,
+          "total": 110000,
+          "required_correct": 107910,
+          "margin_labels": 101,
+          "minimum_mnist_draw_correct": 9800,
+          "error_pct": 1.8081818181818181
+        }
+      ],
+      "pooled_correct": 324022,
+      "pooled_total": 330000,
+      "pooled_error_pct": 1.8115151515151515,
+      "minimum_margin_labels": 31,
+      "qualifying_author_median_ms": 340.03892567891785,
+      "energy_median_mj": null,
+      "energy_scope": "Not measured; author canonical invocation uses --no-energy."
+    },
+    {
+      "name": "earlier_decoder_combo315",
+      "source": "research/ladder-w480-s315-population-tb20-dec50-lr720-cut50-d5-20261024.py",
+      "source_sha256": "d2ea07e8b738edaca8ec91efc9f2b68cfec4adeee1d1641add1efaaf15a57bb3",
+      "source_bytes": 20186,
+      "passed_runs": 2,
+      "required_runs": 3,
+      "complete_scored_calls": 45,
+      "rows": [
+        {
+          "file": "research/d5-decoder-combo315-official-20261024/run-1.json",
+          "file_sha256": "6896d4d3accb90edfce0350519fe7b32e415abf7bd3a85e04557439a41c03825",
+          "device": "NVIDIA A100-SXM4-80GB",
+          "torch": "2.12.0+cu130",
+          "holdout": "kmnist",
+          "passed": true,
+          "saved_problems": [],
+          "problems": [],
+          "ranked_ms": 283.4634656692993,
+          "groups": [
+            {
+              "group": "mnist",
+              "calls": 11,
+              "reported_mean_ms": 281.73358431729406,
+              "parent_minus_overhead_mean_ms": 284.9721335908858,
+              "clock_floor_ms": 283.4634656692993,
+              "ranked_group_ms": 283.4634656692993,
+              "clock_floor_applied": true,
+              "correct": 107919,
+              "total": 110000
+            },
+            {
+              "group": "holdout",
+              "calls": 4,
+              "reported_mean_ms": 268.0499267578125,
+              "parent_minus_overhead_mean_ms": 270.7245313754529,
+              "clock_floor_ms": 269.2842817416638,
+              "ranked_group_ms": 269.2842817416638,
+              "clock_floor_applied": true,
+              "correct": 38813,
+              "total": 40000
+            }
+          ],
+          "correct": 107919,
+          "total": 110000,
+          "required_correct": 107910,
+          "margin_labels": 9,
+          "minimum_mnist_draw_correct": 9794,
+          "error_pct": 1.8918181818181818
+        },
+        {
+          "file": "research/d5-decoder-combo315-official-20261024/run-2.json",
+          "file_sha256": "c21f89110a467f9ddf8403ee959a16ec89efeb1cf01a5097a90efd33bd487d5a",
+          "device": "NVIDIA A100-SXM4-80GB",
+          "torch": "2.12.0+cu130",
+          "holdout": "kmnist",
+          "passed": true,
+          "saved_problems": [],
+          "problems": [],
+          "ranked_ms": 280.60573214755965,
+          "groups": [
+            {
+              "group": "mnist",
+              "calls": 11,
+              "reported_mean_ms": 268.8753925670277,
+              "parent_minus_overhead_mean_ms": 271.9630525004971,
+              "clock_floor_ms": 270.5186755376619,
+              "ranked_group_ms": 270.5186755376619,
+              "clock_floor_applied": true,
+              "correct": 108037,
+              "total": 110000
+            },
+            {
+              "group": "holdout",
+              "calls": 4,
+              "reported_mean_ms": 279.0376205444336,
+              "parent_minus_overhead_mean_ms": 282.10092025028183,
+              "clock_floor_ms": 280.60573214755965,
+              "ranked_group_ms": 280.60573214755965,
+              "clock_floor_applied": true,
+              "correct": 38817,
+              "total": 40000
+            }
+          ],
+          "correct": 108037,
+          "total": 110000,
+          "required_correct": 107910,
+          "margin_labels": 127,
+          "minimum_mnist_draw_correct": 9805,
+          "error_pct": 1.7845454545454544
+        },
+        {
+          "file": "research/d5-decoder-combo315-official-20261024/run-3.json",
+          "file_sha256": "cd962a40931dc738b2a9a4409b52ce42a5951c068541d2768abf5293efe80c2c",
+          "device": "NVIDIA A100 80GB PCIe",
+          "torch": "2.12.0+cu130",
+          "holdout": "kmnist",
+          "passed": false,
+          "saved_problems": [
+            "MNIST accuracy 98.050% (107,855/110,000); the band needs 107,910 correct"
+          ],
+          "problems": [
+            {
+              "gate": "mean_mnist_accuracy",
+              "shortfall": 55
+            }
+          ],
+          "ranked_ms": 246.77189651076307,
+          "groups": [
+            {
+              "group": "mnist",
+              "calls": 11,
+              "reported_mean_ms": 243.3709161931818,
+              "parent_minus_overhead_mean_ms": 248.08875109172897,
+              "clock_floor_ms": 246.77189651076307,
+              "ranked_group_ms": 246.77189651076307,
+              "clock_floor_applied": true,
+              "correct": 107855,
+              "total": 110000
+            },
+            {
+              "group": "holdout",
+              "calls": 4,
+              "reported_mean_ms": 243.39558029174805,
+              "parent_minus_overhead_mean_ms": 247.72178949845528,
+              "clock_floor_ms": 246.40481159699655,
+              "ranked_group_ms": 246.40481159699655,
+              "clock_floor_applied": true,
+              "correct": 38793,
+              "total": 40000
+            }
+          ],
+          "correct": 107855,
+          "total": 110000,
+          "required_correct": 107910,
+          "margin_labels": -55,
+          "minimum_mnist_draw_correct": 9790,
+          "error_pct": 1.95
+        }
+      ],
+      "pooled_correct": 323811,
+      "pooled_total": 330000,
+      "pooled_error_pct": 1.8754545454545455,
+      "minimum_margin_labels": -55,
+      "qualifying_author_median_ms": null,
+      "energy_median_mj": null,
+      "energy_scope": "Not measured; author canonical invocation uses --no-energy."
+    },
+    {
+      "name": "earlier_parallel_phase2",
+      "source": "research/ladder-w480-s315-population-tb20-dec50-lr720-cut50-ph2-d5-20261024.py",
+      "source_sha256": "b70e42ef41bd81e151bb084d5a4d27984168f8fa87a4e5a2e90ae7d67d12bca8",
+      "source_bytes": 20270,
+      "passed_runs": 2,
+      "required_runs": 3,
+      "complete_scored_calls": 45,
+      "rows": [
+        {
+          "file": "research/d5-decoder-combo315-phase2-official-20261024/run-1.json",
+          "file_sha256": "8a8db0005c5bf5f5d401d92a2eb3106a93360c2452e8b410edeab16bf9626f2c",
+          "device": "NVIDIA A100 80GB PCIe",
+          "torch": "2.12.0+cu130",
+          "holdout": "fashion",
+          "passed": false,
+          "saved_problems": [
+            "MNIST accuracy 98.048% (107,853/110,000); the band needs 107,910 correct"
+          ],
+          "problems": [
+            {
+              "gate": "mean_mnist_accuracy",
+              "shortfall": 57
+            }
+          ],
+          "ranked_ms": 241.25256563890952,
+          "groups": [
+            {
+              "group": "mnist",
+              "calls": 11,
+              "reported_mean_ms": 239.99292685768822,
+              "parent_minus_overhead_mean_ms": 242.55253027319796,
+              "clock_floor_ms": 241.25256563890952,
+              "ranked_group_ms": 241.25256563890952,
+              "clock_floor_applied": true,
+              "correct": 107853,
+              "total": 110000
+            },
+            {
+              "group": "holdout",
+              "calls": 4,
+              "reported_mean_ms": 239.68537521362305,
+              "parent_minus_overhead_mean_ms": 241.9757979996279,
+              "clock_floor_ms": 240.6773711235598,
+              "ranked_group_ms": 240.6773711235598,
+              "clock_floor_applied": true,
+              "correct": 35428,
+              "total": 40000
+            }
+          ],
+          "correct": 107853,
+          "total": 110000,
+          "required_correct": 107910,
+          "margin_labels": -57,
+          "minimum_mnist_draw_correct": 9775,
+          "error_pct": 1.951818181818182
+        },
+        {
+          "file": "research/d5-decoder-combo315-phase2-official-20261024/run-2.json",
+          "file_sha256": "af659c7b95978cfd5472893222d9bc57ea99e97f9ca9ed78946729fc1d65854c",
+          "device": "NVIDIA A100 80GB PCIe",
+          "torch": "2.12.0+cu130",
+          "holdout": "fashion",
+          "passed": true,
+          "saved_problems": [],
+          "problems": [],
+          "ranked_ms": 240.5009096242876,
+          "groups": [
+            {
+              "group": "mnist",
+              "calls": 11,
+              "reported_mean_ms": 239.5509296764027,
+              "parent_minus_overhead_mean_ms": 241.7986642726696,
+              "clock_floor_ms": 240.5009096242876,
+              "ranked_group_ms": 240.5009096242876,
+              "clock_floor_applied": true,
+              "correct": 108019,
+              "total": 110000
+            },
+            {
+              "group": "holdout",
+              "calls": 4,
+              "reported_mean_ms": 239.45753860473633,
+              "parent_minus_overhead_mean_ms": 241.46809387589954,
+              "clock_floor_ms": 240.17080618287588,
+              "ranked_group_ms": 240.17080618287588,
+              "clock_floor_applied": true,
+              "correct": 35348,
+              "total": 40000
+            }
+          ],
+          "correct": 108019,
+          "total": 110000,
+          "required_correct": 107910,
+          "margin_labels": 109,
+          "minimum_mnist_draw_correct": 9798,
+          "error_pct": 1.800909090909091
+        },
+        {
+          "file": "research/d5-decoder-combo315-phase2-official-20261024/run-3.json",
+          "file_sha256": "8841e8a49871b2077b9eae56d00faa9df1d98b8fadd1e1b22fb4f5ec4bce2870",
+          "device": "NVIDIA A100 80GB PCIe",
+          "torch": "2.12.0+cu130",
+          "holdout": "fashion",
+          "passed": true,
+          "saved_problems": [],
+          "problems": [],
+          "ranked_ms": 240.70613048054517,
+          "groups": [
+            {
+              "group": "mnist",
+              "calls": 11,
+              "reported_mean_ms": 239.67855834960938,
+              "parent_minus_overhead_mean_ms": 242.0045232722932,
+              "clock_floor_ms": 240.70613048054517,
+              "ranked_group_ms": 240.70613048054517,
+              "clock_floor_applied": true,
+              "correct": 107990,
+              "total": 110000
+            },
+            {
+              "group": "holdout",
+              "calls": 4,
+              "reported_mean_ms": 239.4931182861328,
+              "parent_minus_overhead_mean_ms": 241.80995437494389,
+              "clock_floor_ms": 240.51248878351322,
+              "ranked_group_ms": 240.51248878351322,
+              "clock_floor_applied": true,
+              "correct": 35503,
+              "total": 40000
+            }
+          ],
+          "correct": 107990,
+          "total": 110000,
+          "required_correct": 107910,
+          "margin_labels": 80,
+          "minimum_mnist_draw_correct": 9801,
+          "error_pct": 1.8272727272727274
+        }
+      ],
+      "pooled_correct": 323862,
+      "pooled_total": 330000,
+      "pooled_error_pct": 1.86,
+      "minimum_margin_labels": -57,
+      "qualifying_author_median_ms": null,
+      "energy_median_mj": null,
+      "energy_scope": "Not measured; author canonical invocation uses --no-energy."
+    }
+  ],
+  "infrastructure": {
+    "log_sha256": "28dd31fd2436159aac6cba33016a66edddcfbe4e5d56a7e35647645a7cd51ea2",
+    "uncompressed_log_sha256": "dbfc133e4424f3ddd11ea7d9a3077931ab3bb0baaaee0bedbac8c923c4d78681",
+    "modal_app_id": "ap-6WMzFM880X287hG8casCaN",
+    "preemptions_logged": 1,
+    "completed_logical_records": 3,
+    "agent_initiated_replacement_disclosed": false,
+    "scope": "The retained log supports one automatic preemption restart with identical remote-function arguments, not an identical tensor draw: the scorer seeds a fresh run from os.urandom. No completed failure is present/replaced in this saved logical group. Partial work on a preempted physical attempt is not recoverable from returned records; absence of omitted historical attempts cannot be proved from final files alone."
+  },
+  "retained_history": {
+    "cancelled_batches": {
+      "reason": "Stopped redundant in-flight experiments after the315-update source completed3/3 author canonical passes with243.411033ms median.",
+      "canonical285": {
+        "app": "ap-RRm09UZjAoMIkckZOZ9xEa",
+        "status": "cancelled_incomplete_not_qualified",
+        "completed_run_files": []
+      },
+      "development265_275_285": {
+        "app": "ap-WLSN1t2jjhe7RRKD0kwJkn",
+        "status": "cancelled_incomplete_not_qualified"
+      }
+    },
+    "initial_packaging_parity_failed_retained": true,
+    "later_exact_trained_parameter_prediction_parity_supported_by_saved_hashes": true,
+    "initial_parameter_exactness_scope": "The later summary reports initial exactness; exported row hashes independently demonstrate trained parameters/predictions, not full initial tensor arrays.",
+    "earlier_discrepancy_unexplained": true,
+    "two_failed_groups_use_different_source_hashes_from_latest": true,
+    "no_permanent_source_ban_in_published_rules": true
+  },
+  "latest_qualifying_author_median_ms": 243.41103301852792,
+  "energy_median_mj": null,
+  "blockers": [],
+  "qualification_scope": "Author records only. Saved calls contain canonical correct-count/timing summaries, not truth/prediction arrays to recount labels. Root owns one fresh independent three-run canonical group; no new GPU calls here.",
+  "audit_program_sha256": "2377adc3958bf0933e27d9bf3928c61c796933f02897c07f0b2f87f3b19a3d5e"
+}

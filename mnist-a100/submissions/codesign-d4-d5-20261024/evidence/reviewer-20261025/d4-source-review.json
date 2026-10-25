@@ -1,0 +1,256 @@
+{
+  "reviewed_utc": "2026-10-25T19:48:36.378274+00:00",
+  "reviewed_head": "91cf2542e7229755edd2741efe0c1d68698ef2a2",
+  "canonical_main": "87296ebde049f0215e51c9c9662bc5dbb5468b89",
+  "source_path": "source/mnist-a100/submissions/codesign-d4-d5-20261024/d4/fisher-triton-width128-teacher1-split4-rolled-d4-20261022.py",
+  "source_sha256": "a2c32468ecb4e02957ef218b3d39419a711b55baaca6be98fb1645a6909bdc6a",
+  "source_bytes": 19841,
+  "canonical_sha256": {
+    "mnist.py": "1bc6d8d96a776565bc70f3ccdb91be7de57187d4495b2b0437fac98f5e120064",
+    "run_modal.py": "1180b843cf6c32414774da90c835a8b7298d2db8719989237a793ca1c62a10ab",
+    "README.md": "71397e8ba3f980f063df261d59d69f4fa54c28da62471572c629d0c92e1958a5"
+  },
+  "GPU_calls": 0,
+  "public_mutations": false,
+  "source_or_canonical_modified": false,
+  "status": "PASS_STATIC_REVIEW",
+  "final_static_review": true,
+  "static_gate_passed": true,
+  "blockers": [],
+  "disposition": "Approve exact D4 source for parent-owned unchanged stock canonical independent3run A100-80GB group. Independent reviewer outcomes remain outstanding; no merge decision made by this static review.",
+  "published_rules": {
+    "source_limit_bytes": 20480,
+    "remaining_bytes": 639,
+    "three_arg_entrypoint": "hybrid_d4(train_x,train_y,test_x)",
+    "D4_band_basis_points": 230,
+    "per_run_MNIST_correct_required": 107470,
+    "per_MNIST_draw_correct_required": 9620,
+    "foreign_holdout_minimum_accuracy_pct": 15,
+    "timed_call_limit_seconds": 60,
+    "first_warmup_limit_seconds": 180,
+    "later_warmup_limit_seconds": 90,
+    "energy_optional": "Missing or rejected telemetry leaves the energycolumn empty; passing score stands."
+  },
+  "source_gate": {
+    "canonical_check_source": "PASS",
+    "advisory_review_flags": [
+      "19,841 bytes, close to the 20,480-byte limit"
+    ],
+    "imports": [
+      "gc",
+      "math",
+      "torch",
+      "torch.nn.functional",
+      "triton",
+      "triton.language",
+      "torch._inductor.config(runtime only)"
+    ],
+    "import_time": "Only imports, definitions, scalar/container constants and torchflag assignments. No model fit, allocatedGPU tensors, file/network/subprocess access or highentropy trained/data payload at import.",
+    "API": "Returns cachedgraph outputargmax clone, integerGPU tensor shape10000. Caller buffers are cloned/copied, not mutated. No querytruth, scorerstate, timing hooks, dataset files, network or precomputedtrainedweights accessed."
+  },
+  "reset_and_ownership": {
+    "lines": "Students.reset395-405;Students.chunk406-415;hybrid_d4436-469",
+    "every_call": [
+      "Copies train_x,train_y,test_x into rooted staticbuffers before graphreplay.",
+      "Graph recomputes Fisher/PCG kernel teacher, normalizedfeature rows, nearestneighbors and tangents from currentinputs.",
+      "Overwrites full Z/TT/TG buffers with currentfeatures, labels and teacherpseudotargets.",
+      "Resets random W1/W2; zeroes outputmatrix/headbias, first/secondAdam moments and biasgradient accumulator; copies freshweights intoBF16workingweights.",
+      "Regenerates uniformsampler andGaussiannoisebank eachchunk.",
+      "Runs220fixed studentupdates with22chunks, three128widthstudents, oneFisherteacher; cross-teaching targets overwritten at fixedchunks7/15.",
+      "All matrixpartial scratch destinations overwritten beforeeachfinishread; bias-scratch portionneverread.",
+      "finish clears all48biasgradient slots everyupdate; graphreset also clears them."
+    ],
+    "Python_counter": "self.s is reset duringgraphcapture and220perstepLR/biascorrection constants are captured. Replay executes the complete220node schedule without needing Pythoncountermutation.",
+    "ownership": "STATE stores(static,graph,out,stu) explicitly. Students owns preallocatedtrainstate/noise/workspaces/partials; graph andoutputremainrooted. gc.collect/freeze do not release these live objects. Streams synchronize teacher/compression/preconditioner work before consumers.",
+    "cache_scope": "Onlyshape/device graph/compilation/stream caches persist withinworker. Currentdata and learnedstate are recomputed onreplay, including backtoback energycalls. Freshworker boundary remains supplied byunchanged sandbox."
+  },
+  "custom_kernel_review": {
+    "k_rows": "Fixed16rows/CTA acrossR2048 andM3. Uniformsampleindex clippedto validtrain/queryrow; Zstride64,TTstride256and4directions, noise68channels allinbounds. Full128RMSnorm/relu outputs and derivative sums computed. Padded16headclasses10..15 masked tozero gradient. GB uses atomicrowbiasreduction, followedbysame-streampartial/finishkernels. Rolledloops preserve2x64hiddenwidthtiles and4tangentiterations.",
+    "partials": "Fourdisjoint512row spans coverall2048sampledrows. W1,W2,W3 tile grids cover their flattenedparametersegments exactlyonce persplit. FP32partialaccumulation andFP32splitreduction thenBF16gradientroundingbeforeAdam match mathematicalgradient sums; floatingorder differs from singlefullreduction and is an intentionalnumeric implementationchoice.",
+    "finish": "BSTART79872=matrixweights; F79920 adds48biases. Reads exactly4matrixpartials perweight. Bias gradients come fromGB withmasks; scratchbias slots remainunread. Tailparametersmasked, negativeGBpointerarithmetic underfalsemask has no enabledload/store. Everymoment/weight/BF16workingweight updated andbiasGBcleared.",
+    "CPU_exhaustive_address_proof": {
+      "status": "PASS_CPU_EXHAUSTIVE_ADDRESS_OWNERSHIP",
+      "fixed_dimensions": {
+        "M": 3,
+        "W": 128,
+        "R": 2048,
+        "S": 4,
+        "K": 64,
+        "E": 16
+      },
+      "flat_parameter_count": 79920,
+      "matrix_parameter_count": 79872,
+      "bias_parameter_count": 48,
+      "partial_shape": [
+        4,
+        79920
+      ],
+      "matrix_destination_cells_checked": 319488,
+      "each_matrix_destination_written_once_per_split": true,
+      "all_matrix_parameters_covered": true,
+      "bias_scratch_never_read": true,
+      "input_load_ranges": {
+        "H0": [
+          0,
+          393215
+        ],
+        "H1": [
+          0,
+          786431
+        ],
+        "H2": [
+          0,
+          786431
+        ],
+        "G1": [
+          0,
+          786431
+        ],
+        "G2": [
+          0,
+          786431
+        ],
+        "G3": [
+          0,
+          98303
+        ]
+      },
+      "split_row_ranges": {
+        "0": [
+          0,
+          511
+        ],
+        "1": [
+          512,
+          1023
+        ],
+        "2": [
+          1024,
+          1535
+        ],
+        "3": [
+          1536,
+          2047
+        ]
+      },
+      "sampler_rows_bound": [
+        0,
+        19999
+      ],
+      "tangent_load_bound": [
+        0,
+        5119999
+      ],
+      "noise_buffer_stride": 68,
+      "noise_channels_used": [
+        0,
+        67
+      ],
+      "update_calls": 220,
+      "rows_per_CTAtile": 16,
+      "no_gpu_numeric_parity_test_performed": true
+    },
+    "evidence_limits": "CPUaddressownershipproof and codegradientderivation do not replace GPU numericparity testing. No suchGPUtest was launched byreviewer. Parentfreshcanonicalgroup will testexactsubmittedbytes endtoend."
+  },
+  "ancestry_and_credits": {
+    "direct_upstream": {
+      "ref": "87296ebde049f0215e51c9c9662bc5dbb5468b89",
+      "path": "mnist-a100/submissions/hybrid-fisher-triton-220-d4-20261020/submission.py",
+      "source_sha256": "1c25eb4ed6ef06cf94c1a34ca80eecd16e90b33c0a6091da0c2bd791db18f133",
+      "bytes": 20479,
+      "entrant": "spartanhaden",
+      "PR": 138
+    },
+    "AST_identical_top_level_functions_classes": [
+      "chol",
+      "eye",
+      "_stream",
+      "sqrtm",
+      "metric",
+      "lda",
+      "qda_fisher",
+      "subspace",
+      "natstep",
+      "features",
+      "compress",
+      "aug",
+      "rbf",
+      "flash_scores",
+      "fitc",
+      "pcg_t",
+      "fit",
+      "hknn",
+      "hk_fix",
+      "cc",
+      "blkmin",
+      "blkget",
+      "neighbours",
+      "tangents",
+      "teacher",
+      "_bf",
+      "capture",
+      "hybrid_d4"
+    ],
+    "AST_different_existing_nodes": [
+      "k_rows",
+      "Students"
+    ],
+    "new_nodes": [
+      "partial_tile",
+      "partials",
+      "finish"
+    ],
+    "removed_nodes": [
+      "_adam",
+      "_tile",
+      "k_adam"
+    ],
+    "constant_changes": [
+      "FTM2\u21921teacher",
+      "W256\u2192128studentwidth"
+    ],
+    "other_changes": [
+      "k_rows staticunrolling\u2192rolledtl.range loops",
+      "Replacedfused k_adam/_tile/_adam withsplit4FP32partials+separatereduction/Adam",
+      "Students adds4x79920scratch and launchesnewkernels; reset/predict unchanged."
+    ],
+    "credit_assessment": "Source names directspartanhadenPR138 pluspriorPR121/130, sigkillme0PR125Fisher/compression/PCG, IslamkernelPCG, Laura tangentjitter/cross-teaching, Vincent/BengioHKNN andmoddednanogptzerohead. This matches detected ancestry; no uncrediteddirectupstreamblocker found.",
+    "source_header_lines": [
+      1,
+      6
+    ]
+  },
+  "author_evidence": {
+    "passed_runs": 3,
+    "median_ranked_ms": 22.805198103281022,
+    "minimum_accuracy_margin_labels": 55,
+    "energy_measured": false,
+    "audit_file": "d4-author-audit.json"
+  },
+  "microperformance_claim_scope": {
+    "record": "research/d4-row-rolled-ncu-comparison.json",
+    "record_sha256": "176ce04e2c23d9cb4349bd683aeae0542a0eeea614c972d199ca89bfcb4b5ab2",
+    "supported_as_author_report": [
+      "registers_per_thread255\u2192208",
+      "achievedoccupancy10.804117%\u219210.735554%,maximum12.5%",
+      "separaterepresentativeSXMkernel launches,unlockedclocks"
+    ],
+    "not_independently_established": [
+      "SuppliedNCUJSONdoesnotcontainspillload/storemetrics,soitdoesnotsubstantiate no-spills byitself.",
+      "No rawpairedwarmfullcalllatencyset is suppliedfor1.8% schedulingclaim; do notattribute full38.7\u219222.8ms gain to this isolatedkernelchange."
+    ],
+    "qualification_scope": "Canonicalauthorrecords support exactsource fullmethodtimes; microperformanceclaims are supplementary and not needed for sourceapproval."
+  },
+  "review_artifact_sha256": {
+    "independent_reconstruction": "0595631bbe713a019f79c4018b08d287d3e0ec3fa9932ce0d7baf42d46bdc408",
+    "author_audit_source_records": [
+      "3016a349d42f27dc3ae27912129d9f80c248dbe6d642390617d95ff6fcb4f703",
+      "6c398451a1f8e73a9ae99059af982f9e84b9a40023d1ee611c33cbf74b439d1e",
+      "2611c4e72b565632ffc9cdae24925c682356eec0c22ddf2297413b9320193887"
+    ]
+  },
+  "review_limits": [
+    "No GPUjob, numericgradientoracle, querylabel/probability access, outgoingpost, mergeorpush.",
+    "Staticapproval is distinct from independentreviewer accuracy/timing qualification, and optionalenergy acceptance is separate from score."
+  ]
+}
