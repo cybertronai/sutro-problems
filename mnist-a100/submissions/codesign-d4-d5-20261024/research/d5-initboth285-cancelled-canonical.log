@@ -1,0 +1,131 @@
+✓ Initialized. View run at 
+https://modal.com/apps/magi-labs/main/ap-RRm09UZjAoMIkckZOZ9xEa
+✓ Created objects.
+├── 🔨 Created mount 
+│   /Users/sbae703/Research/cybertronai/sutro-problems/mnista100/run_modal.py
+├── 🔨 Created mount 
+│   /Users/sbae703/Research/cybertronai/sutro-problems/mnista100/mnist.py
+└── 🔨 Created function remote_score.
+
+
+============
+== CUDA ==
+==========
+
+CUDA Version 13.3.0
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+
+========
+== CUDA ==
+==========
+
+CUDA Version 13.3.0
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+
+
+==========
+== CUDA ==
+==========
+
+CUDA Version 13.3.0
+
+Container image Copyright (c) 2016-2023, NVIDIA CORPORATION & AFFILIATES. All rights reserved.
+
+This container image and its contents are governed by the NVIDIA Deep Learning Container License.
+By pulling and using the container, you accept the terms and conditions of this license:
+https://developer.nvidia.com/ngc/nvidia-deep-learning-container-license
+
+A copy of this license is made available in this container at /NGC-DL-CONTAINER-LICENSE for your convenience.
+
+Stopping app - user stopped from CLI.
+Runner terminated.
+Runner terminated.
+Runner terminated.
+Traceback (most recent call last):
+  File "/Users/sbae703/Research/cybertronai/sutro-problems/mnista100/profiling/run_with_dns_fallback.py", line 24, in <module>
+    target=sys.argv[1];sys.argv=sys.argv[1:];runpy.run_path(target,run_name='__main__')
+                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<frozen runpy>", line 286, in run_path
+  File "<frozen runpy>", line 98, in _run_module_code
+  File "<frozen runpy>", line 88, in _run_code
+  File "run_modal.py", line 95, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "run_modal.py", line 74, in main
+    for index, result in enumerate(remote_score.starmap([job] * args.runs)):
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/_utils/async_utils.py", line 839, in __iter__
+    yield from run_async_gen(runner, self._async_iterable)
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/_utils/async_utils.py", line 917, in run_async_gen
+    next_yield = runner.run(gen.asend(next_send))  # type: ignore[arg-type]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/synchronicity/async_utils.py", line 82, in run
+    return self._loop.run_until_complete(wrapper_coro())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/anaconda3/lib/python3.12/asyncio/base_events.py", line 687, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/synchronicity/async_utils.py", line 48, in wrapper_coro
+    return await coro_task
+           ^^^^^^^^^^^^^^^
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/_utils/async_utils.py", line 749, in asend
+    return await self.gen.asend(value)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/parallel_map.py", line 1057, in _starmap_async
+    async for output in _map_helper(
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/parallel_map.py", line 1009, in _map_helper
+    async for output in map_output_stream:
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/_utils/async_utils.py", line 1091, in async_merge
+    raise item.value
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/_utils/async_utils.py", line 1070, in producer
+    async for item in stream:
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/_object.py", line 55, in wrapped
+    async for item in stream:
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/_functions.py", line 1642, in _map
+    async for item in stream:
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/parallel_map.py", line 965, in _map_invocation_inputplane
+    async for maybe_output in merged:
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/_utils/async_utils.py", line 1091, in async_merge
+    raise item.value
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/_utils/async_utils.py", line 1070, in producer
+    async for item in stream:
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/parallel_map.py", line 921, in poll_outputs
+    async for idx, output in streamer:
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/_utils/async_utils.py", line 1220, in async_map_ordered
+    async for output_idx, output_item in stream:
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/_utils/async_utils.py", line 1196, in async_map
+    async for item in stream:
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/_utils/async_utils.py", line 1091, in async_merge
+    raise item.value
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/_utils/async_utils.py", line 1070, in producer
+    async for item in stream:
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/_utils/async_utils.py", line 1185, in worker
+    res = await prevent_cancellation_abortion(async_mapper_func(item.value))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/_utils/async_utils.py", line 1150, in prevent_cancellation_abortion
+    return await asyncio.shield(t)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/_utils/async_utils.py", line 1209, in mapper_func_wrapper
+    return (tup[0], await async_mapper_func(tup[1]))
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/parallel_map.py", line 910, in fetch_output
+    raise e
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/parallel_map.py", line 905, in fetch_output
+    output = await _process_result(item.result, item.data_format, input_plane_stub, client)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/sbae703/.local/share/uv/tools/modal/lib/python3.12/site-packages/modal/_utils/function_utils.py", line 550, in _process_result
+    raise RemoteError(result.exception)
+modal.exception.RemoteError
