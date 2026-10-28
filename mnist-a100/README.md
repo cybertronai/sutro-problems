@@ -34,7 +34,10 @@ The rules are in [`mnist.py`](mnist.py)'s docstring.
 
 Each row is a separate submission by the listed entrant; source attribution and
 verification scope are in its report. Rows with one verification run are
-provisional. ★ identifies an established record.
+provisional. ★ identifies an established record. Non-record submissions are welcome.
+Research with failed or incomplete qualification checks can be included with all
+outcomes documented in the [research submissions](#research-submissions) below;
+its inclusion does not qualify it for a difficulty table.
 
 ## Difficulty = 1 (error ≤ 5.40%)
 
@@ -108,3 +111,20 @@ provisional. ★ identifies an established record.
 | 2026-10-19 | 77,090 | 492.8 | [py](submissions/ladder-width768-d5-20261019/submission.py), [report](submissions/ladder-width768-d5-20261019/README.md) | [@sjbaebae](https://github.com/sjbaebae) | Haden's kernel-taught Ladder narrowed to 768-512-256, 480 native fused Adam updates and batch 2,500; teacher and branchless guard retained; median of three independent reviewer sandboxed Modal runs |
 | 2026-10-22 | 67,813 | 406.9 | [py](submissions/ladder-label-topdown-450-d5-20261020/submission.py), [report](submissions/ladder-label-topdown-450-d5-20261020/README.md) | [@spartanhaden](https://github.com/spartanhaden) | Kernel-taught width-768 Ladder, 450 Adam updates, labelled-row top-down targets, per-call noise bank and hidden-space HKNN; median of three independent reviewer sandboxed Modal runs |
 | 2026-10-25 | 40,390 | 273.9 | [py](submissions/codesign-d4-d5-20261024/d5_244/ladder-w480-s315-population-tb20-dec50-lr720-cut50-ph2-initboth-d5-20261024.py), [report](submissions/codesign-d4-d5-20261024/README.md) | [@sjbaebae](https://github.com/sjbaebae) | Width-480 label-top-down Ladder, 315 updates, per-call transpose/near-identity initialization, population prediction statistics, parallel gradient reductions and decoder/hull readout; retains Ladder and kernel lineage credits; median of three independent reviewer sandboxed Modal runs ★ best |
+
+## Research submissions
+
+These non-record experiments are included with their original runtime code and
+author evidence. The outcomes below come from the retained independent reviewer
+runs on those frozen sources. Each report separates author results from reviewer
+results and preserves failed and incomplete runs. Research inclusion does not
+qualify a result for a difficulty table or establish a record.
+
+| Experiment | Reviewer outcome | Remaining limitations |
+| --- | --- | --- |
+| [D4 cold-compilation repair](submissions/native-mlp-d4-20261007/leancompile-repair/README.md) ([#114](https://github.com/cybertronai/sutro-problems/pull/114)) | 1 of 3 passed | Two complete runs missed by 64 and 4 labels; full source lineage remains unsettled. |
+| [D5 tangent-jitter ensemble](submissions/tangent-refresh400-d5-20261012/README.md) ([#119](https://github.com/cybertronai/sutro-problems/pull/119)) | 1 of 3 passed; two incomplete | Later foreign-data warm-ups timed out after seven timed calls in each incomplete run. |
+| [D5 width-128 Muon ensemble](submissions/tangent-relu-w128-bias-d5-20261013/README.md) ([#122](https://github.com/cybertronai/sutro-problems/pull/122)) | 1 of 3 passed | Two complete runs missed by 28 and 74 labels; both original author groups remain separately documented. |
+| [Neural learner submitted for D4](submissions/neural-d4-20261018/README.md) ([#126](https://github.com/cybertronai/sutro-problems/pull/126)) | 1 of 3 passed | Two complete runs missed by 26 and 20 labels; author timing records identify a different, unsupplied source. |
+| [Ladder variant submitted for D5](submissions/ladder-d5-20261018/README.md) ([#127](https://github.com/cybertronai/sutro-problems/pull/127)) | 1 of 3 passed | Two complete runs missed by 116 and 57 labels; remaining source-lineage limits are documented. |
+| [D2 reduced Fisher-PCG](submissions/fisher-reduced-d2-20261019/README.md) ([#133](https://github.com/cybertronai/sutro-problems/pull/133)) | 2 of 3 passed | The third complete run was one prediction below the cutoff. |

@@ -1,0 +1,17 @@
+"""Native persistent BF16/cuBLAS control. FP32 accumulation; BF16 model state."""
+from pathlib import Path
+from functools import lru_cache
+import os
+@lru_cache(None)
+def extension():
+ os.environ.setdefault('TORCH_CUDA_ARCH_LIST','8.0')
+ from torch.utils.cpp_extension import load
+ p=Path(__file__).resolve().parent/'kernels'
+ return load(name='sutro_persistent_bf16_deep3_rmsnorm_input32',sources=[str(p/'persistent_bf16_deep3_rmsnorm_input32_bindings.cpp'),str(p/'persistent_bf16_deep3_rmsnorm_input32.cu'),str(p/'fused_rms_input.cu'),str(p/'fused_rms_input_tile32.cu')],extra_cuda_cflags=['-O3','-lineinfo'],extra_ldflags=['-lcublas','-lcublasLt'],verbose=False)
+def classify(x,y,q,width=256,members=4,batch=512,views=1,steps=400,lr1=.3,lr2=.3,head_lr=.3,momentum=.9,seed=42,use_graph=True,schedule='none',weight_decay=.0001,dropout=0.,input_noise=0.,input_scale=-1.,optimizer='nesterov',mixup=0.,init_gain=1.,head_gain=0.,initialization='gaussian',swa_fraction=0.,dictionary_scale=1.,data_noise=.5,smoothing=0.):
+ schedule_id={'none':0,'cosine':1,'step':2}[schedule]
+ if optimizer not in ('nesterov','momentum','sgd'):raise ValueError('unknown optimizer')
+ if optimizer=='momentum':schedule_id+=3
+ if optimizer=='sgd':momentum=0.
+ init_kind={'gaussian':0,'paired':1,'hadamard':2,'xavier':3,'kaiming':4,'xavier_relu':5,'data_centroid':6,'data_sample':7}[initialization]
+ return extension().classify(x,y,q,width,members,batch,views,steps,lr1,lr2,head_lr,momentum,seed,use_graph,schedule_id,weight_decay,dropout,input_noise,input_scale,mixup,init_gain,head_gain,init_kind,swa_fraction,dictionary_scale,data_noise,smoothing)

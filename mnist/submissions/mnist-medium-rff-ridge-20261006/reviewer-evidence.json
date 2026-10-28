@@ -1,0 +1,555 @@
+{
+  "format": "sutro-pr110-nonrecord-reviewer-evidence-v1",
+  "review_date": "2026-10-28",
+  "submission_status": "non-record research; not leaderboard qualification",
+  "original_pull_request": {
+    "number": 110,
+    "url": "https://github.com/cybertronai/sutro-problems/pull/110",
+    "head_sha": "95368c5469238ff5d6c3c0633bf8831947454c84",
+    "author": "mikech76"
+  },
+  "preservation": {
+    "runtime_code_unchanged": true,
+    "original_json_unchanged": true,
+    "files": [
+      {
+        "path": "energy/nvml_energy.py",
+        "bytes": 17224,
+        "sha256": "3fd648e9d0ecddee2eeaffc3f1b879e09c4316b997ba3b2c4672fb37b72d73ef"
+      },
+      {
+        "path": "evidence/accuracy_D12000.json",
+        "bytes": 7714,
+        "sha256": "518978357565e7203506a4abf8cbe5fdc2d1b5be27ede02dfdcc705d97933dec"
+      },
+      {
+        "path": "evidence/accuracy_D2448.json",
+        "bytes": 9330,
+        "sha256": "19dd92044c2c04ce8a2de99fcbeb0e8ad60d6a3c2dd8a35b29ad833ac49fef87"
+      },
+      {
+        "path": "evidence/accuracy_D4000.json",
+        "bytes": 7715,
+        "sha256": "3d16016a20bb9a812a5886f251e29be4493a80375fed40745c4ac8034ece7e12"
+      },
+      {
+        "path": "evidence/accuracy_D8000.json",
+        "bytes": 7713,
+        "sha256": "b322c46c60a3ba523b74a4456d4f2fb46d4a9b602a57ea42360c1a36f365d678"
+      },
+      {
+        "path": "evidence/audit_evidence.json",
+        "bytes": 9303,
+        "sha256": "8eb092b996683545b19af43147402665266a5af3f5eb1ce4fcfcb4ffd3c1954f"
+      },
+      {
+        "path": "evidence/draw_manifest.json",
+        "bytes": 6677,
+        "sha256": "42ad181c18f7340c95230a9887bb1ae35947cc57ecdba74d3212da306b4105ae"
+      },
+      {
+        "path": "evidence/energy_rtx2060.json",
+        "bytes": 14148,
+        "sha256": "3ba4e38c871373145106ca54ab27a83c02fcb7a64755b42e01f0c90fc2cd685f"
+      },
+      {
+        "path": "evidence/selection_protocol_D12000.json",
+        "bytes": 27691,
+        "sha256": "105f51940a1422efcf26154ee0ad1da9ad79a09efd9daaf5b2f11290a058c07c"
+      },
+      {
+        "path": "rff_ridge.py",
+        "bytes": 9845,
+        "sha256": "c9ce69223b6d1625858d298cf462207435edac7026fbcf3bcce8040d48537ea6"
+      },
+      {
+        "path": "run_protocol.py",
+        "bytes": 6535,
+        "sha256": "7c4e09cbe3c54116fa08f90b2ed80429c9ddd07fc083802de14ce8cfd5cec6a8"
+      }
+    ],
+    "scope": "Documentation overlay and this additive summary only; measured learner, protocol, harness and original author evidence retained byte-identically."
+  },
+  "author_accuracy_evidence": {
+    "scope": "Archived exploratory results on eleven already-seen draws; grid design informed by earlier outcomes. Training-only inner selection does not erase development/test exposure. Integer/count/SD/grid consistency independently audited; no fresh eleven-draw reviewer qualification was run.",
+    "seeds": [
+      20261001,
+      20261002,
+      20261003,
+      20261004,
+      20261005,
+      20261006,
+      20261007,
+      20261008,
+      20261009,
+      20261010,
+      20261011
+    ],
+    "total_per_basis": 110000,
+    "totals": {
+      "D2448": 106735,
+      "D4000": 106900,
+      "D8000": 107169,
+      "D12000": 107240,
+      "pca_qda_reference": 105224
+    },
+    "arithmetic_checks": [
+      "All eleven dataset hashes agree internally between supplied evidence documents.",
+      "Aggregate counts, exact thresholds and sample SD agree for all four basis sizes.",
+      "All eleven D12000 selections agree with the eighteen-point grid and tie-break.",
+      "Synthetic10000-row learner agrees with an independently constructed dense ridge solve."
+    ],
+    "source_field_caveat": "load_draw accesses test_labels only for its length; test label values are not passed to fitting or used by selection."
+  },
+  "completed_a100_diagnostic": {
+    "completed_date": "2026-10-08",
+    "started_at_utc": "2026-10-08T17:56:37Z",
+    "finished_at_utc": "2026-10-08T17:58:25Z",
+    "scope": "One existing draw, not a fresh eleven-draw qualification. Three measurement rounds of31 repetitions each on the same draw, following warmup. Includes CPU random projection generation, CUDA allocations and host/device transfers in every fit; excludes dataset file loading. GPU board energy only, not host-system/wall-socket cost.",
+    "draw_seed": 20261001,
+    "profile": "medium-error-targets-v1",
+    "D": 2448,
+    "learner_seed": 42,
+    "config": {
+      "dtype": "float32",
+      "chunk": 2048,
+      "gram_dtype": "float64",
+      "f32_products": true
+    },
+    "hardware": {
+      "name": "NVIDIA A100-SXM4-40GB",
+      "driver": "610.57.04",
+      "vbios": "92.00.45.00.0A",
+      "power_limit_w": 400.0,
+      "temperature_c": 38,
+      "sm_count": 108,
+      "memory_bytes": 42429251584,
+      "reported_compute_process_count": 1
+    },
+    "software": {
+      "python": "3.10.17",
+      "numpy": "2.2.6",
+      "torch": "2.5.1+cu121",
+      "cuda": "12.1",
+      "pynvml": "13.615.71"
+    },
+    "measurement_rounds": 3,
+    "repeats_per_round": 31,
+    "shams_per_round": 1,
+    "idle_seconds_per_window": 10.0,
+    "peak_cuda_allocated_bytes": 220134912,
+    "counter_median_mj": 19854.014291898562,
+    "integrated_power_median_mj": 19900.217386794706,
+    "median_gpu_event_ms": 193.52409904233872,
+    "median_wall_ms": 193.51906867741957,
+    "rounds": [
+      {
+        "round": 0,
+        "repeats": 31,
+        "gpu_ms_per_task": 192.38794732862902,
+        "wall_ms_per_task": 192.38317038709687,
+        "counter_idle_adjusted_mj_per_task": 19395.951951872048,
+        "counter_sham_idle_adjusted_mj_per_nominal_task": -1216.870551526698,
+        "integrated_power_idle_adjusted_mj_per_task": 19329.41578998718,
+        "integrated_power_sham_idle_adjusted_mj_per_nominal_task": -1199.5861766612754
+      },
+      {
+        "round": 1,
+        "repeats": 31,
+        "gpu_ms_per_task": 193.52409904233872,
+        "wall_ms_per_task": 193.51906867741957,
+        "counter_idle_adjusted_mj_per_task": 20122.27357665045,
+        "counter_sham_idle_adjusted_mj_per_nominal_task": -481.2749626931368,
+        "integrated_power_idle_adjusted_mj_per_task": 20270.212847932857,
+        "integrated_power_sham_idle_adjusted_mj_per_nominal_task": -581.9913503314125
+      },
+      {
+        "round": 2,
+        "repeats": 31,
+        "gpu_ms_per_task": 193.63528540826613,
+        "wall_ms_per_task": 193.62993403225823,
+        "counter_idle_adjusted_mj_per_task": 19854.014291898562,
+        "counter_sham_idle_adjusted_mj_per_nominal_task": -249.91515694090037,
+        "integrated_power_idle_adjusted_mj_per_task": 19900.217386794706,
+        "integrated_power_sham_idle_adjusted_mj_per_nominal_task": -607.2756308427936
+      }
+    ],
+    "interval_summary": [
+      {
+        "name": "0-idle-before",
+        "repeats": 0,
+        "seconds": 10.005456023999997,
+        "counter_j": 617.709,
+        "integrated_power_j": 614.2735985193466,
+        "counter_w": 61.73721602676649,
+        "integrated_power_w": 61.39386321282049,
+        "sample_count": 196,
+        "wall_ms_per_task": 10000.0,
+        "gpu_ms_per_task": null,
+        "counter_begin": {
+          "t": 53.635466976000004,
+          "energy_mj": 21206128301,
+          "read_seconds": 0.003886615999995513
+        },
+        "counter_end": {
+          "t": 63.640923,
+          "energy_mj": 21206746010,
+          "read_seconds": 0.005017074000001287
+        }
+      },
+      {
+        "name": "0-active",
+        "repeats": 31,
+        "seconds": 5.968024658999994,
+        "counter_j": 971.61,
+        "integrated_power_j": 968.6747913296574,
+        "counter_w": 162.80261150308377,
+        "integrated_power_w": 162.31078902612464,
+        "sample_count": 117,
+        "wall_ms_per_task": 192.38317038709687,
+        "gpu_ms_per_task": 192.38794732862902,
+        "counter_begin": {
+          "t": 63.6492462275,
+          "energy_mj": 21206746010,
+          "read_seconds": 0.003799080999996818
+        },
+        "counter_end": {
+          "t": 69.6172708865,
+          "energy_mj": 21207717620,
+          "read_seconds": 0.004013821000000917
+        }
+      },
+      {
+        "name": "0-idle-after",
+        "repeats": 0,
+        "seconds": 10.004386978499994,
+        "counter_j": 623.967,
+        "integrated_power_j": 624.4765423054139,
+        "counter_w": 62.36933870520414,
+        "integrated_power_w": 62.42027059203628,
+        "sample_count": 197,
+        "wall_ms_per_task": 10000.0,
+        "gpu_ms_per_task": null,
+        "counter_begin": {
+          "t": 69.6259119315,
+          "energy_mj": 21207717620,
+          "read_seconds": 0.003636139000008143
+        },
+        "counter_end": {
+          "t": 79.63029891,
+          "energy_mj": 21208341587,
+          "read_seconds": 0.004412068000007707
+        }
+      },
+      {
+        "name": "0-sham-idle",
+        "repeats": 0,
+        "seconds": 10.004805764500006,
+        "counter_j": 583.108,
+        "integrated_power_j": 582.1810083322034,
+        "counter_w": 58.28279066336687,
+        "integrated_power_w": 58.19013602422477,
+        "sample_count": 196,
+        "wall_ms_per_task": 10000.0,
+        "gpu_ms_per_task": null,
+        "counter_begin": {
+          "t": 79.642172511,
+          "energy_mj": 21208341587,
+          "read_seconds": 0.004122163999994655
+        },
+        "counter_end": {
+          "t": 89.6469782755,
+          "energy_mj": 21208924695,
+          "read_seconds": 0.003716410999999198
+        }
+      },
+      {
+        "name": "1-idle-before",
+        "repeats": 0,
+        "seconds": 10.00575017700001,
+        "counter_j": 576.204,
+        "integrated_power_j": 579.48611599079,
+        "counter_w": 57.587286291087594,
+        "integrated_power_w": 57.91530927114706,
+        "sample_count": 197,
+        "wall_ms_per_task": 10000.0,
+        "gpu_ms_per_task": null,
+        "counter_begin": {
+          "t": 89.661238411,
+          "energy_mj": 21208924695,
+          "read_seconds": 0.005898553999998057
+        },
+        "counter_end": {
+          "t": 99.66698858800001,
+          "energy_mj": 21209500899,
+          "read_seconds": 0.004362397999997825
+        }
+      },
+      {
+        "name": "1-active",
+        "repeats": 31,
+        "seconds": 6.003517531,
+        "counter_j": 982.798,
+        "integrated_power_j": 988.5236768699294,
+        "counter_w": 163.70369452994606,
+        "integrated_power_w": 164.65741488478207,
+        "sample_count": 118,
+        "wall_ms_per_task": 193.51906867741957,
+        "gpu_ms_per_task": 193.52409904233872,
+        "counter_begin": {
+          "t": 99.6824938015,
+          "energy_mj": 21209500899,
+          "read_seconds": 0.00423252900000648
+        },
+        "counter_end": {
+          "t": 105.6860113325,
+          "energy_mj": 21210483697,
+          "read_seconds": 0.004086615000005622
+        }
+      },
+      {
+        "name": "1-idle-after",
+        "repeats": 0,
+        "seconds": 10.004245777000008,
+        "counter_j": 620.381,
+        "integrated_power_j": 620.8972952437716,
+        "counter_w": 62.01177118481737,
+        "integrated_power_w": 62.06337879775293,
+        "sample_count": 197,
+        "wall_ms_per_task": 10000.0,
+        "gpu_ms_per_task": null,
+        "counter_begin": {
+          "t": 105.70286652749999,
+          "energy_mj": 21210483697,
+          "read_seconds": 0.003971630999998865
+        },
+        "counter_end": {
+          "t": 115.7071123045,
+          "energy_mj": 21211104078,
+          "read_seconds": 0.004266851000011229
+        }
+      },
+      {
+        "name": "1-sham-idle",
+        "repeats": 0,
+        "seconds": 10.005137774000005,
+        "counter_j": 583.383,
+        "integrated_power_j": 582.1599201762838,
+        "counter_w": 58.30834249139644,
+        "integrated_power_w": 58.18609731583327,
+        "sample_count": 196,
+        "wall_ms_per_task": 10000.0,
+        "gpu_ms_per_task": null,
+        "counter_begin": {
+          "t": 115.726690428,
+          "energy_mj": 21211104078,
+          "read_seconds": 0.0052627780000022994
+        },
+        "counter_end": {
+          "t": 125.731828202,
+          "energy_mj": 21211687461,
+          "read_seconds": 0.004542845999992551
+        }
+      },
+      {
+        "name": "2-idle-before",
+        "repeats": 0,
+        "seconds": 10.004648312,
+        "counter_j": 576.927,
+        "integrated_power_j": 581.3464643344936,
+        "counter_w": 57.66589509278494,
+        "integrated_power_w": 58.10763619118944,
+        "sample_count": 196,
+        "wall_ms_per_task": 10000.0,
+        "gpu_ms_per_task": null,
+        "counter_begin": {
+          "t": 125.75386333750001,
+          "energy_mj": 21211687461,
+          "read_seconds": 0.003527764999986971
+        },
+        "counter_end": {
+          "t": 135.7585116495,
+          "energy_mj": 21212264388,
+          "read_seconds": 0.0046593810000103986
+        }
+      },
+      {
+        "name": "2-active",
+        "repeats": 31,
+        "seconds": 6.006888846499976,
+        "counter_j": 971.333,
+        "integrated_power_j": 978.1867765183404,
+        "counter_w": 161.7031752744959,
+        "integrated_power_w": 162.84416134789956,
+        "sample_count": 118,
+        "wall_ms_per_task": 193.62993403225823,
+        "gpu_ms_per_task": 193.63528540826613,
+        "counter_begin": {
+          "t": 135.78195808200002,
+          "energy_mj": 21212270227,
+          "read_seconds": 0.0042380760000071405
+        },
+        "counter_end": {
+          "t": 141.7888469285,
+          "energy_mj": 21213241560,
+          "read_seconds": 0.0039998489999959475
+        }
+      },
+      {
+        "name": "2-idle-after",
+        "repeats": 0,
+        "seconds": 10.005477340500022,
+        "counter_j": 608.509,
+        "integrated_power_j": 622.149933497923,
+        "counter_w": 60.81758813613883,
+        "integrated_power_w": 62.180934734577214,
+        "sample_count": 196,
+        "wall_ms_per_task": 10000.0,
+        "gpu_ms_per_task": null,
+        "counter_begin": {
+          "t": 141.8146964485,
+          "energy_mj": 21213257204,
+          "read_seconds": 0.004758622999986528
+        },
+        "counter_end": {
+          "t": 151.82017378900002,
+          "energy_mj": 21213865713,
+          "read_seconds": 0.004485549999998284
+        }
+      },
+      {
+        "name": "2-sham-idle",
+        "repeats": 0,
+        "seconds": 10.005518975500024,
+        "counter_j": 584.997,
+        "integrated_power_j": 582.9492449106428,
+        "counter_w": 58.467431967542176,
+        "integrated_power_w": 58.262769411369796,
+        "sample_count": 196,
+        "wall_ms_per_task": 10000.0,
+        "gpu_ms_per_task": null,
+        "counter_begin": {
+          "t": 151.84730033199997,
+          "energy_mj": 21213865713,
+          "read_seconds": 0.00472508999999377
+        },
+        "counter_end": {
+          "t": 161.8528193075,
+          "energy_mj": 21214450710,
+          "read_seconds": 0.004418321000002834
+        }
+      }
+    ],
+    "monitor_error_count": 0,
+    "single_draw_accuracy": {
+      "seed": 20261001,
+      "correct": 9684,
+      "total": 10000,
+      "selected": {
+        "p": 0.5,
+        "gamma": 0.1,
+        "lam": 10.0,
+        "inner_val_correct": 1942,
+        "inner_val_total": 2000
+      },
+      "prediction_sha256": "69a0941ad51820590de3c788fd7d7a692f1d50649f75b97cf3bb885cd24c1e59",
+      "torch_allow_tf32": false,
+      "cudnn_allow_tf32": true,
+      "overlap_rows": [
+        0,
+        0
+      ]
+    },
+    "single_draw_3percent_check": {
+      "accuracy_target_percent": 97.0,
+      "required_correct": 9700,
+      "meets_accuracy_target": false,
+      "error_target_percent": 3.0,
+      "error_rate_percent": 3.16
+    },
+    "prediction_sha256_matches_author": true,
+    "selected_parameters_match_author": true,
+    "single_draw_correct_matches_author": true,
+    "scoring_scope": "9684/10000 is the existing draw result. It is below9700 on that one draw; it neither establishes nor invalidates an eleven-draw aggregate by itself.",
+    "dataset_reproduction": {
+      "seed": 20261001,
+      "profile": "medium-error-targets-v1",
+      "file_sha256": "d0cf8afb05057354975bd15c8805dc4932d8281318f71cad5d415e49de28fea6",
+      "expected_file_sha256": "4e157a86dd86ca033d8c3145fe90468aabd0d4aee331ec48485d96301b6430d6",
+      "array_hashes": {
+        "ti": "ef51b1e0a957fcd8171358e74d6f2faf0b86688104a3316404aace72d1ecb8d5",
+        "tl": "3269ea5c59cd795d1c1917056ca0d5794999d775179db8be7f32c1adf776bf6a",
+        "tix": "3da2abdb7430dd71e7dda89f3cce352e4f17e66c0fb9d5f3450569fb0ee62a30",
+        "qi": "0287b36dbe7b9a41a0a64c771351c3c4168a60fd377b886fd09c31e0024cc6fe",
+        "ql": "63226d4fc3e26074681719e411744f08f7fea32896de29b41db4f3bc9c5dedc5",
+        "qix": "512132c431032f8df9565cbf024dbb26f0ba475913acefbd682b49409c4d9781"
+      },
+      "array_hash_matches": {
+        "ti": false,
+        "tl": true,
+        "tix": true,
+        "qi": false,
+        "ql": true,
+        "qix": true
+      },
+      "interpretation": "Index and label arrays match author hashes; regenerated train/query image-array and NPZ hashes differ. Original arrays absent, so exact pixel differences cannot be quantified. Predictions/count/selected parameters match on this diagnostic despite those differences."
+    }
+  },
+  "known_limitations": [
+    {
+      "code": "numpy_precision",
+      "source": [
+        "run_protocol.py:90",
+        "rff_ridge.py:95",
+        "rff_ridge.py:112"
+      ],
+      "detail": "run_protocol NumPy branch does not pass --dtype, so it uses float64. Direct requested-float32 NumPy design is promoted by float64 projection/offset. Do not interpret the legacy float32 label as a validated float32 arithmetic path."
+    },
+    {
+      "code": "scope_text",
+      "source": [
+        "rff_ridge.py:224",
+        "rff_ridge.py:234",
+        "energy/nvml_energy.py:303"
+      ],
+      "detail": "Original source/JSON scope strings exclude transfers/allocations incorrectly; actual full fit performs them each repetition. This overlay corrects prose while preserving those historical bytes."
+    },
+    {
+      "code": "gross_sham_not_noise",
+      "source": [
+        "energy/nvml_energy.py:350"
+      ],
+      "detail": "Legacy fields named *_noise_mj_per_nominal_task are gross idle energy/nominal repeats, not subtraction noise. Corrected sham residuals subtract that round mean bracketing idle power for the sham elapsed interval, then divide by nominal repeats. Signed residuals retained. Neither family is an uncertainty interval."
+    },
+    {
+      "code": "utilization_history",
+      "source": [
+        "energy/nvml_energy.py:151"
+      ],
+      "detail": "mean_util_percent averages all historical samples rather than interval-only samples. It is omitted from the sanitized interval summaries and not used to justify an interval utilization claim."
+    },
+    {
+      "code": "shared_sensors",
+      "detail": "Counter and sampled-power integration are two readouts of the same GPU telemetry; agreement does not establish independent calibration accuracy."
+    },
+    {
+      "code": "rtx_sham_claim",
+      "detail": "First RTX variant net counter energy47541.07815136759mJ has gross sham values56263.57142857143,53775.0,55792.857142857145mJ. They are not4\u20137times smaller and must not be used as baseline-subtracted noise."
+    }
+  ],
+  "summary_provenance": {
+    "raw_energy_record_sha256": "1a56c404cb30d82b0446c100a9e6899d316d202e4149a2831f6cc9ad56a3a4c2",
+    "raw_accuracy_score_sha256": "e35ee7e4d8a8b9fcb9e559fd83dfe0f52c552f22509c292e8fe395330cbb44d8",
+    "raw_saved_summary_sha256": "3017421d3780a51d51961486ccf2a5a73225c40d8a886021e3d169782fa16324",
+    "independent_energy_reconstruction_sha256": "1e1643d888040344a781b48cc6210584bc40b06fd95dd68e512a5056040ad16f",
+    "retained_raw_scope": "Original reviewer records retain the full samples and original fields in the review archive; this public file exports only sanitized summary/interval values and their content hashes. Raw logs, private paths and GPUUUIDs are omitted.",
+    "executed_source_sha256": {
+      "rff_ridge.py": "c9ce69223b6d1625858d298cf462207435edac7026fbcf3bcce8040d48537ea6",
+      "run_protocol.py": "7c4e09cbe3c54116fa08f90b2ed80429c9ddd07fc083802de14ce8cfd5cec6a8",
+      "energy/nvml_energy.py": "3fd648e9d0ecddee2eeaffc3f1b879e09c4316b997ba3b2c4672fb37b72d73ef"
+    },
+    "reconstruction": "Counter Joules=(end_mJ-begin_mJ)/1000. For each active round, subtract mean(before_W,after_W)*active_seconds then divide by31; same bracketing baseline is used for the separately labelled sham residual. Medians use all three rounds."
+  },
+  "new_gpu_runs_for_this_review": 0,
+  "privacy": "No private filesystem paths, GPUUUIDs, access tokens, raw transcripts or credentials. Dataset/prediction hashes identify retained evidence, not embedded data."
+}

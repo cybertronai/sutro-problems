@@ -194,25 +194,38 @@ definition and derivation; do not reuse the old single-core area conversion.
 
 ## Submission
 
-Open a pull request against `main` only for a result that qualifies for a table
-above, with every reported metric measured or shown as an em dash. Keep
-experiments, prototypes, measurement-harness proposals, and non-record results
-on a separate branch rather than merging them into `main`.
+Open a pull request against `main` for record or non-record submissions.
+A submission does not need to improve the current best result to be included.
+Report every metric as measured or as an em dash, with its measurement scope.
 
-A record pull request adds the source or generator, reproduction commands, and
+Results that satisfy a table's accuracy and measurement requirements may be
+listed there even when they are slower or use more energy than another result.
+Research experiments, prototypes, measurement-harness proposals, and negative
+results can also be included under `mnist/submissions/<name>/`, clearly labeled
+with their validation status and linked separately from qualified table rows.
+Preserve failed and incomplete runs alongside successful runs. Inclusion as
+research does not establish accuracy qualification or a record.
+
+A submission pull request adds the source or generator, reproduction commands, and
 a standalone report under `mnist/submissions/<name>/`. Include the tier, error
 target for medium or original, accuracy evidence, dataset and learner seeds,
 model revision, memory layout, scoring calculations, hardware/software versions, A100
 measurements, and any W&B runs. Identify which efficiency metrics have been
 measured and which remain unavailable.
 
-Add a row to the matching submission table above. For medium, use a table whose
+For a qualified result, add a row to the matching submission table above. For medium, use a table whose
 error bound the submission meets; a result may appear in multiple qualifying
 bands, as on the sparse-parity page. Include the submission date, measured
 accuracy, A100 energy and runtime, spatial-grid energy and runtime, and a link
 to the submission report. Put contributors, memory use, hop counts, the full
 measurement scope, and reproduction evidence in that report. Keep historical results under their original
 specification.
+
+## Non-record research submissions
+
+| Submission | Status and evidence |
+| --- | --- |
+| [RFF-ridge on MNIST-medium](submissions/mnist-medium-rff-ridge-20261006/README.md) ([PR #110](https://github.com/cybertronai/sutro-problems/pull/110)) | Exploratory accuracy on 11 previously inspected draws; the requested A100 diagnostic is complete on one existing draw, with three measurement rounds. The report documents precision, energy-scope and input-hash limitations. This is a research archive, without a new qualified table row. |
 
 ## Existing tooling
 

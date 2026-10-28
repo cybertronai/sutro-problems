@@ -1,0 +1,275 @@
+{
+ "returncode": 0,
+ "stdout": "mlp_rms_d4_leancompile_repair.py:classify at 2.30% error: 15 timed calls, each in a fresh process\n  review flag: embedded data? 1 high-entropy literal(s), 18,850 characters\n  review flag: decodes data: imports base64, lzma\n  review flag: 19,538 bytes, close to the 20,480-byte limit\n  NVIDIA A100-SXM4-80GB, torch 2.12.0+cu130, sandbox on\n  call  1/15: 983.156 ms, scorer's clock 987.589 ms\n  call  2/15: 983.193 ms, scorer's clock 987.171 ms\n  call  3/15: 983.239 ms, scorer's clock 986.025 ms\n  call  4/15: 983.362 ms, scorer's clock 985.501 ms\n  call  5/15: 982.977 ms, scorer's clock 985.004 ms\n  call  6/15: 983.269 ms, scorer's clock 985.597 ms\n  call  7/15: 983.525 ms, scorer's clock 988.818 ms\n  call  8/15: 997.633 ms, scorer's clock 999.799 ms\n  call  9/15: 982.863 ms, scorer's clock 985.057 ms\n  call 10/15: 983.269 ms, scorer's clock 985.369 ms\n  call 11/15: 983.011 ms, scorer's clock 987.370 ms\n  call 12/15: 983.816 ms, scorer's clock 985.665 ms\n  call 13/15: 983.546 ms, scorer's clock 987.515 ms\n  call 14/15: 982.610 ms, scorer's clock 984.860 ms\n  call 15/15: 983.341 ms, scorer's clock 985.506 ms\nMNIST 97.78% (107,558/110,000), 984.546 ms/call; hold-out (kmnist) 96.82%, 983.201 ms/call; score 984.546 ms\nenergy: one more fresh process runs the method back to back on fresh MNIST draws for 20 s, between idle windows in which it is frozen\n  NVIDIA A100-SXM4-80GB: idle 68.7 W with the method frozen; telemetry reference 18.5 TFLOP/s at 7.86 J/TFLOP above idle (a healthy NVIDIA A100-SXM4-80GB reads 6-11)\n  the round trip alone: 11.5 mJ per call over 3,288 empty calls, subtracted\n  the method: 21 calls in 20.8 s, MNIST 97.80%, 983.841 ms per call, 355.6 W on average\nenergy 283665.268 mJ per call above idle\n",
+ "stderr": "s=25.2672\nLT tuned m=2048 n=16 k=256 at=0 bt=1 E=8 candidates=7 winner=0 id=21 tile=5 split=1 us=9.9840\nLT tuned m=256 n=16 k=2048 at=1 bt=1 E=8 candidates=4 winner=1 id=31 tile=15 split=1 us=13.5552\nLT tuned m=2048 n=256 k=16 at=0 bt=0 E=8 candidates=7 winner=3 id=5 tile=20 split=1 us=14.0288\nLT tuned m=256 n=256 k=2048 at=1 bt=1 E=8 candidates=9 winner=7 id=6 tile=18 split=1 us=20.6720\nLT tuned m=2048 n=256 k=256 at=0 bt=1 E=8 candidates=12 winner=0 id=6 tile=18 split=1 us=27.7248\nLT tuned m=256 n=64 k=2048 at=1 bt=1 E=8 candidates=9 winner=0 id=31 tile=15 split=1 us=13.6192\nLT tuned m=20000 n=256 k=64 at=0 bt=0 E=8 candidates=7 winner=1 id=5 tile=24 split=1 us=84.3648\nLT tuned m=20000 n=256 k=256 at=0 bt=0 E=8 candidates=8 winner=0 id=6 tile=20 split=1 us=124.7360\nLT tuned m=20000 n=16 k=256 at=0 bt=1 E=8 candidates=8 winner=2 id=31 tile=17 split=1 us=69.2480\nLT tuned m=4096 n=512 k=64 at=0 bt=0 E=4 candidates=110 winner=90 id=21 tile=20 split=1 us=19.9168\nLT tuned m=4096 n=512 k=512 at=0 bt=0 E=4 candidates=117 winner=0 id=6 tile=20 split=1 us=45.2352\nLT tuned m=4096 n=16 k=512 at=0 bt=1 E=4 candidates=6 winner=5 id=21 tile=5 split=1 us=14.0288\nLT tuned m=512 n=16 k=4096 at=1 bt=1 E=4 candidates=4 winner=2 id=31 tile=15 split=1 us=17.8816\nLT tuned m=4096 n=512 k=16 at=0 bt=0 E=4 candidates=4 winner=0 id=5 tile=24 split=1 us=18.0736\nLT tuned m=512 n=512 k=4096 at=1 bt=1 E=4 candidates=111 winner=14 id=6 tile=20 split=1 us=53.6832\nLT tuned m=4096 n=512 k=512 at=0 bt=1 E=4 candidates=117 winner=0 id=6 tile=20 split=1 us=44.7104\nLT tuned m=512 n=64 k=4096 at=1 bt=1 E=4 candidates=4 winner=2 id=31 tile=15 split=1 us=17.9200\nLT tuned m=20000 n=512 k=64 at=0 bt=0 E=4 candidates=7 winner=0 id=6 tile=20 split=1 us=70.4384\nLT tuned m=20000 n=512 k=512 at=0 bt=0 E=4 candidates=8 winner=0 id=6 tile=20 split=1 us=197.2608\nLT tuned m=20000 n=16 k=512 at=0 bt=1 E=4 candidates=8 winner=0 id=6 tile=17 split=1 us=60.2880\nLT tuned m=2048 n=256 k=256 at=0 bt=0 E=8 candidates=12 winner=4 id=6 tile=18 split=1 us=25.3440\nLT tuned m=2048 n=16 k=256 at=0 bt=1 E=8 candidates=7 winner=0 id=21 tile=5 split=1 us=9.9968\nLT tuned m=256 n=16 k=2048 at=1 bt=1 E=8 candidates=4 winner=3 id=31 tile=15 split=1 us=13.5296\nLT tuned m=2048 n=256 k=16 at=0 bt=0 E=8 candidates=7 winner=3 id=5 tile=20 split=1 us=14.0672\nLT tuned m=256 n=256 k=2048 at=1 bt=1 E=8 candidates=9 winner=7 id=6 tile=18 split=1 us=20.6464\nLT tuned m=2048 n=256 k=256 at=0 bt=1 E=8 candidates=12 winner=0 id=6 tile=18 split=1 us=27.7888\nLT tuned m=256 n=64 k=2048 at=1 bt=1 E=8 candidates=9 winner=0 id=31 tile=15 split=1 us=11.0464\nLT tuned m=20000 n=256 k=64 at=0 bt=0 E=8 candidates=7 winner=0 id=6 tile=20 split=1 us=71.0912\nLT tuned m=20000 n=256 k=256 at=0 bt=0 E=8 candidates=8 winner=0 id=6 tile=20 split=1 us=124.8128\nLT tuned m=20000 n=16 k=256 at=0 bt=1 E=8 candidates=8 winner=2 id=31 tile=17 split=1 us=68.9920\nLT tuned m=4096 n=512 k=64 at=0 bt=0 E=4 candidates=110 winner=90 id=21 tile=20 split=1 us=19.9424\nLT tuned m=4096 n=512 k=512 at=0 bt=0 E=4 candidates=117 winner=0 id=6 tile=20 split=1 us=45.2608\nLT tuned m=4096 n=16 k=512 at=0 bt=1 E=4 candidates=6 winner=5 id=21 tile=5 split=1 us=13.9648\nLT tuned m=512 n=16 k=4096 at=1 bt=1 E=4 candidates=4 winner=2 id=31 tile=15 split=1 us=17.8944\nLT tuned m=4096 n=512 k=16 at=0 bt=0 E=4 candidates=4 winner=0 id=5 tile=24 split=1 us=18.0736\nLT tuned m=512 n=512 k=4096 at=1 bt=1 E=4 candidates=111 winner=14 id=6 tile=20 split=1 us=53.6960\nLT tuned m=4096 n=512 k=512 at=0 bt=1 E=4 candidates=117 winner=10 id=6 tile=20 split=1 us=44.6720\nLT tuned m=512 n=64 k=4096 at=1 bt=1 E=4 candidates=4 winner=3 id=31 tile=15 split=1 us=17.9072\nLT tuned m=20000 n=512 k=64 at=0 bt=0 E=4 candidates=7 winner=0 id=6 tile=20 split=1 us=70.4640\nLT tuned m=20000 n=512 k=512 at=0 bt=0 E=4 candidates=8 winner=0 id=6 tile=20 split=1 us=197.3248\nLT tuned m=20000 n=16 k=512 at=0 bt=1 E=4 candidates=8 winner=0 id=6 tile=17 split=1 us=60.1088\nLT tuned m=2048 n=256 k=256 at=0 bt=0 E=8 candidates=12 winner=4 id=6 tile=18 split=1 us=25.3440\nLT tuned m=2048 n=16 k=256 at=0 bt=1 E=8 candidates=7 winner=0 id=21 tile=5 split=1 us=10.3040\nLT tuned m=256 n=16 k=2048 at=1 bt=1 E=8 candidates=4 winner=3 id=31 tile=15 split=1 us=13.5552\nLT tuned m=2048 n=256 k=16 at=0 bt=0 E=8 candidates=7 winner=3 id=5 tile=20 split=1 us=13.8496\nLT tuned m=256 n=256 k=2048 at=1 bt=1 E=8 candidates=9 winner=7 id=6 tile=18 split=1 us=20.4800\nLT tuned m=2048 n=256 k=256 at=0 bt=1 E=8 candidates=12 winner=0 id=6 tile=18 split=1 us=28.0448\nLT tuned m=256 n=64 k=2048 at=1 bt=1 E=8 candidates=9 winner=0 id=31 tile=15 split=1 us=13.6192\nLT tuned m=20000 n=256 k=64 at=0 bt=0 E=8 candidates=7 winner=0 id=6 tile=20 split=1 us=87.7824\nLT tuned m=20000 n=256 k=256 at=0 bt=0 E=8 candidates=8 winner=0 id=6 tile=20 split=1 us=125.0944\nLT tuned m=20000 n=16 k=256 at=0 bt=1 E=8 candidates=8 winner=2 id=31 tile=17 split=1 us=68.8128\nLT tuned m=4096 n=512 k=64 at=0 bt=0 E=4 candidates=110 winner=90 id=21 tile=20 split=1 us=19.8784\nLT tuned m=4096 n=512 k=512 at=0 bt=0 E=4 candidates=117 winner=0 id=6 tile=20 split=1 us=45.3632\nLT tuned m=4096 n=16 k=512 at=0 bt=1 E=4 candidates=6 winner=5 id=21 tile=5 split=1 us=14.0544\nLT tuned m=512 n=16 k=4096 at=1 bt=1 E=4 candidates=4 winner=3 id=31 tile=15 split=1 us=17.8816\nLT tuned m=4096 n=512 k=16 at=0 bt=0 E=4 candidates=4 winner=0 id=5 tile=24 split=1 us=18.0480\nLT tuned m=512 n=512 k=4096 at=1 bt=1 E=4 candidates=111 winner=14 id=6 tile=20 split=1 us=53.7472\nLT tuned m=4096 n=512 k=512 at=0 bt=1 E=4 candidates=117 winner=14 id=6 tile=20 split=1 us=44.7360\nLT tuned m=512 n=64 k=4096 at=1 bt=1 E=4 candidates=4 winner=2 id=31 tile=15 split=1 us=17.9072\nLT tuned m=20000 n=512 k=64 at=0 bt=0 E=4 candidates=7 winner=0 id=6 tile=20 split=1 us=70.4128\nLT tuned m=20000 n=512 k=512 at=0 bt=0 E=4 candidates=8 winner=0 id=6 tile=20 split=1 us=197.0816\nLT tuned m=20000 n=16 k=512 at=0 bt=1 E=4 candidates=8 winner=0 id=6 tile=17 split=1 us=60.5312\n",
+ "record": {
+  "version": "mnist-a100/1.2.0 (protections of sutro-mnist-medium/3.0.0, tightened; energy column)",
+  "file": "mlp_rms_d4_leancompile_repair.py",
+  "function": "classify",
+  "source_sha256": "c5ed1d8ffb115cc58a6a6b4ac468b07c780d773b3f8d7387ec3f295b6f1b3eb1",
+  "band_bp": 230,
+  "sandboxed": true,
+  "holdout": "kmnist",
+  "device": "NVIDIA A100-SXM4-80GB",
+  "torch": "2.12.0+cu130",
+  "calls": [
+   {
+    "dataset": "mnist",
+    "ms": 983.1557006835938,
+    "parent_ms": 989.8628170000023,
+    "correct": 9793,
+    "total": 10000,
+    "overhead_ms": 2.273699999689917
+   },
+   {
+    "dataset": "kmnist",
+    "ms": 983.1925659179688,
+    "parent_ms": 989.6651650000052,
+    "correct": 9683,
+    "total": 10000,
+    "overhead_ms": 2.4941129998237557
+   },
+   {
+    "dataset": "kmnist",
+    "ms": 983.2386474609375,
+    "parent_ms": 988.184106999995,
+    "correct": 9677,
+    "total": 10000,
+    "overhead_ms": 2.1591099989522036
+   },
+   {
+    "dataset": "kmnist",
+    "ms": 983.3615112304688,
+    "parent_ms": 987.7325539999902,
+    "correct": 9683,
+    "total": 10000,
+    "overhead_ms": 2.2316675007867843
+   },
+   {
+    "dataset": "mnist",
+    "ms": 982.9765014648438,
+    "parent_ms": 987.4932969999577,
+    "correct": 9778,
+    "total": 10000,
+    "overhead_ms": 2.488858999634658
+   },
+   {
+    "dataset": "mnist",
+    "ms": 983.2693481445312,
+    "parent_ms": 987.9080609999846,
+    "correct": 9774,
+    "total": 10000,
+    "overhead_ms": 2.3113064997371566
+   },
+   {
+    "dataset": "mnist",
+    "ms": 983.525390625,
+    "parent_ms": 991.3621379999995,
+    "correct": 9776,
+    "total": 10000,
+    "overhead_ms": 2.543897499023842
+   },
+   {
+    "dataset": "mnist",
+    "ms": 997.6329956054688,
+    "parent_ms": 1002.208918000008,
+    "correct": 9784,
+    "total": 10000,
+    "overhead_ms": 2.4103990008993605
+   },
+   {
+    "dataset": "mnist",
+    "ms": 982.8628540039062,
+    "parent_ms": 987.5265279999894,
+    "correct": 9787,
+    "total": 10000,
+    "overhead_ms": 2.4697969994967934
+   },
+   {
+    "dataset": "mnist",
+    "ms": 983.2693481445312,
+    "parent_ms": 987.8057219999619,
+    "correct": 9775,
+    "total": 10000,
+    "overhead_ms": 2.4367809995874268
+   },
+   {
+    "dataset": "kmnist",
+    "ms": 983.0113525390625,
+    "parent_ms": 989.8021379999591,
+    "correct": 9684,
+    "total": 10000,
+    "overhead_ms": 2.4320539996533626
+   },
+   {
+    "dataset": "mnist",
+    "ms": 983.816162109375,
+    "parent_ms": 988.2337880000023,
+    "correct": 9786,
+    "total": 10000,
+    "overhead_ms": 2.568646500111754
+   },
+   {
+    "dataset": "mnist",
+    "ms": 983.5458374023438,
+    "parent_ms": 989.9626599999465,
+    "correct": 9767,
+    "total": 10000,
+    "overhead_ms": 2.4481404998196012
+   },
+   {
+    "dataset": "mnist",
+    "ms": 982.6099243164062,
+    "parent_ms": 987.16489800006,
+    "correct": 9775,
+    "total": 10000,
+    "overhead_ms": 2.3049625002545326
+   },
+   {
+    "dataset": "mnist",
+    "ms": 983.341064453125,
+    "parent_ms": 987.8436629999214,
+    "correct": 9763,
+    "total": 10000,
+    "overhead_ms": 2.3377925013751337
+   }
+  ],
+  "problems": [],
+  "summary": "MNIST 97.78% (107,558/110,000), 984.546 ms/call; hold-out (kmnist) 96.82%, 983.201 ms/call",
+  "ranked_ms": 984.5459206321023,
+  "energy": {
+   "mj_per_call": 283665.267619826,
+   "problems": [],
+   "net_mj_before_control": 283676.77558335295,
+   "control_mj_per_call": 11.507963526925618,
+   "control_calls": 3288,
+   "gross_mj_per_call": 351609.4761904762,
+   "idle_w": 68.71015590007165,
+   "active_w": 355.6334682572133,
+   "calls": 21,
+   "seconds": 20.762385037000058,
+   "ms_median": 983.8407592773438,
+   "timed_mnist_ms_median": 983.2693481445312,
+   "correct": 205388,
+   "total": 210000,
+   "reference": {
+    "tflops_per_s": 18.459662596666337,
+    "j_per_tflop": 7.86489260470739,
+    "exact": true,
+    "band": [
+     [
+      6.0,
+      11.0
+     ],
+     [
+      15.0,
+      23.0
+     ]
+    ]
+   },
+   "device": {
+    "name": "NVIDIA A100-SXM4-80GB",
+    "uuid": "GPU-664ba8c8-8d9d-7572-adfa-e695786e7f5d",
+    "vbios": "92.00.9E.00.02",
+    "driver": "580.95.05",
+    "power_limit_w": 500.0
+   },
+   "windows": [
+    {
+     "name": "idle 1",
+     "seconds": 5.0051446390000365,
+     "joules": 344.359,
+     "utilization_max": 0,
+     "contexts": 1
+    },
+    {
+     "name": "reference",
+     "seconds": 5.1819750829999975,
+     "joules": 1108.819,
+     "matmuls": 696,
+     "dim": 4096,
+     "exact": true
+    },
+    {
+     "name": "idle 2",
+     "seconds": 5.003377666999995,
+     "joules": 344.156,
+     "utilization_max": 0,
+     "contexts": 1
+    },
+    {
+     "name": "control",
+     "seconds": 5.003696070999922,
+     "joules": 381.338,
+     "calls": 3288
+    },
+    {
+     "name": "idle 3",
+     "seconds": 5.0054076920000625,
+     "joules": 342.939,
+     "utilization_max": 0,
+     "contexts": 1
+    },
+    {
+     "name": "method",
+     "seconds": 20.762385037000058,
+     "joules": 7383.799,
+     "calls": 21,
+     "ms": [
+      1014.7389526367188,
+      983.2898559570312,
+      983.1372680664062,
+      983.2796020507812,
+      983.6113891601562,
+      983.2857666015625,
+      983.4178466796875,
+      983.3011474609375,
+      983.2386474609375,
+      983.8407592773438,
+      983.9247436523438,
+      983.8079833984375,
+      983.8561401367188,
+      984.0548095703125,
+      983.9165649414062,
+      983.8131103515625,
+      984.0722045898438,
+      984.0394287109375,
+      983.8714599609375,
+      984.5493774414062,
+      983.8724975585938
+     ],
+     "correct": [
+      9762,
+      9776,
+      9789,
+      9762,
+      9779,
+      9792,
+      9809,
+      9768,
+      9781,
+      9793,
+      9764,
+      9787,
+      9786,
+      9782,
+      9778,
+      9782,
+      9762,
+      9791,
+      9784,
+      9774,
+      9787
+     ]
+    },
+    {
+     "name": "idle 4",
+     "seconds": 5.004570534000095,
+     "joules": 344.848,
+     "utilization_max": 0,
+     "contexts": 1
+    }
+   ]
+  }
+ }
+}
