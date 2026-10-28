@@ -1,0 +1,249 @@
+{
+ "returncode": 0,
+ "stdout": "mlp_d5_tangent_cross_once2000.py:classify at 1.90% error: 15 timed calls, each in a fresh process\n  NVIDIA A100 80GB PCIe, torch 2.12.0+cu130, sandbox on\n  call  1/15: 2,505.281 ms, scorer's clock 2,511.369 ms\n  call  2/15: 2,514.222 ms, scorer's clock 2,519.395 ms\n  call  3/15: 2,497.363 ms, scorer's clock 2,501.936 ms\n  call  4/15: 2,516.721 ms, scorer's clock 2,520.987 ms\n  call  5/15: 2,523.397 ms, scorer's clock 2,528.434 ms\n  call  6/15: 2,532.316 ms, scorer's clock 2,536.902 ms\n  call  7/15: 2,510.151 ms, scorer's clock 2,514.864 ms\n  call  8/15: 2,515.829 ms, scorer's clock 2,520.559 ms\n  call  9/15: 2,515.591 ms, scorer's clock 2,520.829 ms\n  call 10/15: 2,531.894 ms, scorer's clock 2,536.715 ms\n  call 11/15: 2,526.729 ms, scorer's clock 2,531.928 ms\n  call 12/15: 2,500.213 ms, scorer's clock 2,505.066 ms\n  call 13/15: 2,529.901 ms, scorer's clock 2,534.184 ms\n  call 14/15: 2,511.878 ms, scorer's clock 2,516.638 ms\n  call 15/15: 2,500.874 ms, scorer's clock 2,505.706 ms\nMNIST 98.12% (107,932/110,000), 2514.384 ms/call; hold-out (kmnist) 97.40%, 2518.535 ms/call; score 2518.535 ms\nenergy: one more fresh process runs the method back to back on fresh MNIST draws for 20 s, between idle windows in which it is frozen\n  NVIDIA A100 80GB PCIe: idle 69.0 W with the method frozen; telemetry reference 18.2 TFLOP/s at 7.23 J/TFLOP above idle (a healthy NVIDIA A100 80GB PCIe reads 6-11)\n  the round trip alone: 18.9 mJ per call over 2,556 empty calls, subtracted\n  the method: 8 calls in 20.2 s, MNIST 98.22%, 2,524.356 ms per call, 243.3 W on average\nenergy 440799.279 mJ per call above idle\n",
+ "stderr": "",
+ "record": {
+  "version": "mnist-a100/1.2.0 (protections of sutro-mnist-medium/3.0.0, tightened; energy column)",
+  "file": "mlp_d5_tangent_cross_once2000.py",
+  "function": "classify",
+  "source_sha256": "92e90c1ffcc0e66f4af06a290655b25cbc9dcb0a7305a412f4bdd3ffcc99804b",
+  "band_bp": 190,
+  "sandboxed": true,
+  "holdout": "kmnist",
+  "device": "NVIDIA A100 80GB PCIe",
+  "torch": "2.12.0+cu130",
+  "calls": [
+   {
+    "dataset": "mnist",
+    "ms": 2505.281494140625,
+    "parent_ms": 2513.9851899999994,
+    "correct": 9827,
+    "total": 10000,
+    "overhead_ms": 2.616343500162671
+   },
+   {
+    "dataset": "kmnist",
+    "ms": 2514.22216796875,
+    "parent_ms": 2521.688864000012,
+    "correct": 9762,
+    "total": 10000,
+    "overhead_ms": 2.294192499467613
+   },
+   {
+    "dataset": "mnist",
+    "ms": 2497.363037109375,
+    "parent_ms": 2504.521341000014,
+    "correct": 9827,
+    "total": 10000,
+    "overhead_ms": 2.58565999999405
+   },
+   {
+    "dataset": "mnist",
+    "ms": 2516.720703125,
+    "parent_ms": 2523.9149069999767,
+    "correct": 9820,
+    "total": 10000,
+    "overhead_ms": 2.9274489984353522
+   },
+   {
+    "dataset": "mnist",
+    "ms": 2523.397216796875,
+    "parent_ms": 2531.3005950000047,
+    "correct": 9811,
+    "total": 10000,
+    "overhead_ms": 2.8663954994392498
+   },
+   {
+    "dataset": "kmnist",
+    "ms": 2532.316162109375,
+    "parent_ms": 2539.7560140000337,
+    "correct": 9730,
+    "total": 10000,
+    "overhead_ms": 2.853517499751206
+   },
+   {
+    "dataset": "mnist",
+    "ms": 2510.150634765625,
+    "parent_ms": 2517.5301990000207,
+    "correct": 9821,
+    "total": 10000,
+    "overhead_ms": 2.6665424999150673
+   },
+   {
+    "dataset": "mnist",
+    "ms": 2515.828857421875,
+    "parent_ms": 2523.116010000024,
+    "correct": 9806,
+    "total": 10000,
+    "overhead_ms": 2.5571564986987596
+   },
+   {
+    "dataset": "mnist",
+    "ms": 2515.591064453125,
+    "parent_ms": 2523.6740610000084,
+    "correct": 9816,
+    "total": 10000,
+    "overhead_ms": 2.845059500604293
+   },
+   {
+    "dataset": "mnist",
+    "ms": 2531.894287109375,
+    "parent_ms": 2539.529193000021,
+    "correct": 9804,
+    "total": 10000,
+    "overhead_ms": 2.8138620003294363
+   },
+   {
+    "dataset": "kmnist",
+    "ms": 2526.729248046875,
+    "parent_ms": 2534.1796879999947,
+    "correct": 9757,
+    "total": 10000,
+    "overhead_ms": 2.251567502745729
+   },
+   {
+    "dataset": "mnist",
+    "ms": 2500.212646484375,
+    "parent_ms": 2507.837048000056,
+    "correct": 9812,
+    "total": 10000,
+    "overhead_ms": 2.770618002237825
+   },
+   {
+    "dataset": "mnist",
+    "ms": 2529.900634765625,
+    "parent_ms": 2537.0377320000443,
+    "correct": 9794,
+    "total": 10000,
+    "overhead_ms": 2.853875498952675
+   },
+   {
+    "dataset": "mnist",
+    "ms": 2511.878173828125,
+    "parent_ms": 2519.2261370000324,
+    "correct": 9794,
+    "total": 10000,
+    "overhead_ms": 2.5878750004585527
+   },
+   {
+    "dataset": "kmnist",
+    "ms": 2500.874267578125,
+    "parent_ms": 2508.1765630000064,
+    "correct": 9710,
+    "total": 10000,
+    "overhead_ms": 2.4703349976616664
+   }
+  ],
+  "problems": [],
+  "summary": "MNIST 98.12% (107,932/110,000), 2514.384 ms/call; hold-out (kmnist) 97.40%, 2518.535 ms/call",
+  "ranked_ms": 2518.5354614257812,
+  "energy": {
+   "mj_per_call": 440799.27907811117,
+   "problems": [],
+   "net_mj_before_control": 440818.1565946866,
+   "control_mj_per_call": 18.877516575422817,
+   "control_calls": 2556,
+   "gross_mj_per_call": 615268.25,
+   "idle_w": 68.97287160345579,
+   "active_w": 243.26050608832983,
+   "calls": 8,
+   "seconds": 20.23405311099998,
+   "ms_median": 2524.3560791015625,
+   "timed_mnist_ms_median": 2515.591064453125,
+   "correct": 78573,
+   "total": 80000,
+   "reference": {
+    "tflops_per_s": 18.191902040186775,
+    "j_per_tflop": 7.231225418683487,
+    "exact": true,
+    "band": [
+     [
+      6.0,
+      11.0
+     ],
+     [
+      15.0,
+      23.0
+     ]
+    ]
+   },
+   "device": {
+    "name": "NVIDIA A100 80GB PCIe",
+    "uuid": "GPU-04009e85-ca3c-4a72-0cb9-33d8db4df62f",
+    "vbios": "92.00.A0.00.03",
+    "driver": "580.95.05",
+    "power_limit_w": 300.0
+   },
+   "windows": [
+    {
+     "name": "idle 1",
+     "seconds": 5.007041973000014,
+     "joules": 343.426,
+     "utilization_max": 0,
+     "contexts": 1
+    },
+    {
+     "name": "reference",
+     "seconds": 5.258246850999967,
+     "joules": 1052.843,
+     "matmuls": 696,
+     "dim": 4096,
+     "exact": true
+    },
+    {
+     "name": "idle 2",
+     "seconds": 5.004557935999969,
+     "joules": 344.143,
+     "utilization_max": 0,
+     "contexts": 1
+    },
+    {
+     "name": "control",
+     "seconds": 5.002675505999946,
+     "joules": 390.731,
+     "calls": 2556
+    },
+    {
+     "name": "idle 3",
+     "seconds": 5.004178271000001,
+     "joules": 341.049,
+     "utilization_max": 0,
+     "contexts": 1
+    },
+    {
+     "name": "method",
+     "seconds": 20.23405311099998,
+     "joules": 4922.146,
+     "calls": 8,
+     "ms": [
+      2524.51025390625,
+      2524.201904296875,
+      2524.87158203125,
+      2524.65771484375,
+      2524.59716796875,
+      2523.32861328125,
+      2522.767333984375,
+      2523.084716796875
+     ],
+     "correct": [
+      9836,
+      9817,
+      9824,
+      9806,
+      9805,
+      9825,
+      9818,
+      9842
+     ]
+    },
+    {
+     "name": "idle 4",
+     "seconds": 5.005939327999954,
+     "joules": 349.379,
+     "utilization_max": 0,
+     "contexts": 1
+    }
+   ]
+  }
+ }
+}
