@@ -1,4 +1,6 @@
-# D4 cold-compilation repair
+# Research archive: D4 cold-compilation repair
+
+**Research inclusion; D4 qualification remains unresolved.** The original author group below passed 3/3 (median **985.074 ms**). The separate initial reviewer group passed **1/3**: two complete runs missed D4 by **64 and 4 labels**, with all 45 timed calls retained. There is no qualifying reviewer-group median and no leaderboard promotion. The runtime source and original author records/report are preserved. [Reviewer evidence](reviewer-evidence.json) also separates the earlier source’s warm-up failures from this repaired source. Submitted by @sjbaebae; the complete upstream lineage is not settled by this documentation-only integration.
 
 The earlier source failed two independent review runs at the second-call90-second KMNIST warmup limit. Historical local passes remain preserved in the parent directory. [Independent review](https://spacesheep.dev/@yaroslavvb/sutro-pr-review-20261008).
 

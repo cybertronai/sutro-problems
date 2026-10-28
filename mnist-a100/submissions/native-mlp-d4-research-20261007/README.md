@@ -1,3 +1,5 @@
+**Research inclusion status.** This historical material is included from [PR #114](https://github.com/cybertronai/sutro-problems/pull/114), with its original code and author records retained. It is not a verified difficulty-table entry. The [reviewed cold-compilation variant and its reviewer status](../native-mlp-d4-20261007/leancompile-repair/README.md) document one passing run and two accuracy failures; the original author descriptions below are historical.
+
 > Historical research snapshot. The revised standalone candidate and three passing sandbox evaluations are in [native-mlp-d4-20261007](../native-mlp-d4-20261007/README.md). Results below describe this earlier snapshot.
 
 # Difficulty 4 research candidate — not qualified

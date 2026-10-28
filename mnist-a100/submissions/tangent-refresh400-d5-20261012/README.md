@@ -1,4 +1,6 @@
-# D5: tangent-jitter ensemble with less frequent cross-teaching
+# Research archive: D5 tangent-jitter ensemble with periodic cross-teaching
+
+**Research inclusion; D5 reproduction remains unresolved.** The original author group below passed 3/3 (median **2,580.846 ms**). The separate initial reviewer group passed **1/3**: two runs stopped at later foreign-data warm-ups after seven timed calls each. Their partial accuracies do not qualify incomplete runs; the underlying stall cause remains undetermined. All outcomes are retained, with no qualifying reviewer-group median or leaderboard promotion. The source, original author evidence and credits below are preserved. See [reviewer evidence](reviewer-evidence.json).
 
 This submission is a credited derivative of [@likelytobelaura's PR #118](https://github.com/cybertronai/sutro-problems/pull/118), pinned at `436b80bb40e4c346792ddad71670c7a5dbc8c5e9`. It reduces training to 2,000 updates, refreshes cross-teaching pseudo-labels every 400 updates, and lets both groups sample all query rows rather than disjoint query halves. The original joint train/query graph-propagation readout is @sjbaebae's. Muon and its Newton–Schulz coefficients are credited to Keller Jordan et al.
 

@@ -1,4 +1,6 @@
-# D5: cross-taught Muon ensemble of width-128 ReLU MLPs with local tangent jitter
+# Research archive: D5 width-128 cross-taught Muon ensemble
+
+**Research inclusion; D5 qualification remains unresolved.** Both existing author sets (2/3, then 3/3; later-set median **1,490.895 ms**) remain separately preserved. The initial independent reviewer group passed **1/3**: two complete runs missed D5 by **28 and 74 labels**, with all 45 timed calls retained. There is no qualifying reviewer-group median and no leaderboard promotion. This inclusion preserves the source, original author evidence and attribution. See [reviewer evidence](reviewer-evidence.json).
 
 Entrant: [@likelytobelaura](https://github.com/likelytobelaura). The joint train+query graph-propagation readout is
 [@sjbaebae](https://github.com/sjbaebae)'s, from the D3 record (see [Credits](#credits)).

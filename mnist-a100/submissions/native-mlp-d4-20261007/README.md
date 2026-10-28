@@ -1,3 +1,5 @@
+**Research inclusion status.** This historical material is included from [PR #114](https://github.com/cybertronai/sutro-problems/pull/114), with its original code and author records retained. It is not a verified difficulty-table entry. The [reviewed cold-compilation variant and its reviewer status](leancompile-repair/README.md) document one passing run and two accuracy failures; the original author descriptions below are historical.
+
 > Superseded by [leancompile-repair](leancompile-repair/README.md): three energy-enabled Modal passes. Earlier source failed independent cold-warmup review. Historical records preserved below.
 
 # Native BF16 self-training candidate for difficulty 4

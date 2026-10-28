@@ -1,16 +1,10 @@
-# RFF-ridge on MNIST-medium — non-record branch, with a request for one A100 measurement
+# RFF-ridge on MNIST-medium — non-record research
 
-**This submission is not a record.** It is offered on a separate branch, as the
-main README asks: *"Open a pull request against `main` only for a result that
-qualifies for a table above… Keep experiments, prototypes, measurement-harness
-proposals, and non-record results on a separate branch."* No table in
-`mnist/README.md` is modified by this branch, and no row should be added from it.
+This archive contains @mikech76's exploratory RFF-ridge study from [PR #110](https://github.com/cybertronai/sutro-problems/pull/110), frozen at `95368c5469238ff5d6c3c0633bf8831947454c84`. It is included as research, without a record-table entry. The learner, protocol, energy harness and original evidence JSON are unchanged.
 
-**The one thing we ask for:** a single run of [energy/nvml_energy.py](energy/nvml_energy.py)
-on your A100. The accuracy work is finished, reproduced, and hashed below. The
-A100 energy, time and memory columns are the only missing pieces, we have no A100,
-and the harness plus exact commands are already in this directory. Everything
-else needed to check the accuracy claims is here.
+The author's eleven accuracy draws were already seen during development. The requested A100 diagnostic was completed on **8 October 2026**: one existing draw, three measurement rounds, on an **A100-SXM4-40GB**. It is not a fresh eleven-draw qualification or an A100-80GB record result. Corrected reviewer measurements, source hashes and limitations are in [reviewer-evidence.json](reviewer-evidence.json).
+
+The main caveats are precision labeling, incorrect historical measurement-scope/sham descriptions, and cross-platform image-array hashes. The corrections below describe the retained code; no old measurement is silently relabeled as a new run.
 
 ---
 
@@ -18,7 +12,7 @@ else needed to check the accuracy claims is here.
 
 Method: random Fourier features with ridge regression on one-hot targets,
 with the three hyperparameters `(p, gamma, lam)` selected **per draw** on an
-inner-validation split of that draw's own training subset. Eleven predeclared
+inner-validation split of that draw's own training subset. Eleven previously seen exploratory
 dataset seeds `20261001…20261011`, profile `medium-error-targets-v1`, 10,000
 train / 10,000 test, 9×9 images. Official generator and official evaluator.
 
@@ -30,18 +24,19 @@ train / 10,000 test, 9×9 images. Official generator and official evaluator.
 | **12000** | **107,240** | **97.4909 %** | **0.2012 pp** | **PASS (+540)** | **FAIL (−560)** |
 | PCA-QDA reference, same 11 draws | 105,224 | 95.6582 % | 0.2365 pp | FAIL (−1,476) | FAIL |
 
-All four rows were produced by running the code in this directory, not carried
-over from earlier work. The D=2448 and D=4000 prediction files are
-byte-identical to the corresponding earlier runs; the D=8000 and D=12000 runs
-reproduce the recorded per-draw counts.
+These are the author’s archived results, not a fresh reviewer sweep. Independent
+review reconstructed all four aggregate counts, exact band comparisons and sample
+SDs, and the D=12000 selection table. The author reports that D=2448 and D=4000
+prediction hashes match earlier runs. That is reproducibility evidence on seen
+draws, rather than independent confirmation.
 
 ### Efficiency metrics: what is measured and what is not
 
 | metric | D=2448, f32 products + f64 accumulation | D=12000, float64 |
 |---|---:|---:|
-| A100 energy above idle (mJ) | — | — |
-| A100 time (ms) | — | — |
-| A100 peak device memory (bytes) | — | — |
+| A100 diagnostic energy above idle (mJ) | 19,854.014 counter / 19,900.217 sampled power | — |
+| A100 diagnostic CUDA-event time (ms) | 193.524 | — |
+| A100 diagnostic peak allocated bytes | 220,134,912 | — |
 | grid-model energy (mJ) | — | — |
 | grid-model time (ms) | — | — |
 | time to score (s) | — | — |
@@ -49,57 +44,46 @@ reproduce the recorded per-draw counts.
 | RTX 2060 time per draw (ms, **not an A100**) | 877 | — |
 | RTX 2060 peak device memory (bytes, **not an A100**) | 220,134,912 | — |
 
-Every A100 column is an em dash because we have no A100. The grid-model columns
-are em dashes for a concrete reason, described under *Why the grid columns are
-em dashes*.
+The A100 column is the completed one-draw diagnostic, not an eleven-draw or
+three-independent-run median. RTX values below are historical author
+measurements on different hardware. Grid-model cost and the D=12000 A100 cost
+were not measured. No figure here is a record-table result.
 
----
+## Completed reviewer A100 diagnostic
 
-## Request to the organizers: one measurement, please
+Configuration: D=2448, float32 products, float64 Gram accumulation, chunk 2048;
+learner seed 42. Three rounds each repeated the full per-draw eighteen-point
+selection, refit and prediction 31 times after warmup. The median over rounds was
+**193.524099 ms** by CUDA events, **193.519069 ms** by wall time, and
+**19,854.014292 mJ above idle** by the NVML counter. The sampled-power readout
+gave 19,900.217387 mJ; it shares the board’s sensors and is not an independent
+calibration. Peak allocated CUDA memory was 220,134,912 bytes.
 
-We need **one** run of `energy/nvml_energy.py` on an A100. The harness, the
-commands, and the interpretation rules are in
-[energy/README.md](energy/README.md). In short:
+| Round | Counter above-idle mJ/task | Sampled-power above-idle mJ/task | CUDA-event ms/task | Corrected counter sham residual mJ/nominal task |
+|---:|---:|---:|---:|---:|
+|1|19,395.951952|19,329.415790|192.387947|-1,216.870552|
+|2|20,122.273577|20,270.212848|193.524099|-481.274963|
+|3|19,854.014292|19,900.217387|193.635285|-249.915157|
 
-```bash
-python -m pip install "torch==2.5.1+cu121" --index-url https://download.pytorch.org/whl/cu121
-python -m pip install pynvml numpy
+This is warm repeated execution of the full learner invocation. **CPU projection
+generation, host/device transfers and CUDA allocations occur inside each fit.**
+Dataset file loading is outside. Energy is GPU board energy, including GPU idle
+while host work occurs; it does not measure host CPU/RAM or wall-socket energy.
+The original harness scope string says otherwise and remains unchanged as a
+historical implementation defect.
 
-# idle baseline, 40 one-second windows, no CUDA context in the sampling process
-python energy/nvml_energy.py --data-root <draws-dir> --idle-baseline \
-    --out energy/results/idle_baseline.json
+On existing draw 20261001 the independent score was**9684/10000**, with the same
+prediction hash and selected parameters as the author. This one-draw result is
+below 9700; it does not determine an eleven-draw aggregate by itself. Recreated
+label/index hashes matched, but image-array/NPZ hashes did not match the author’s
+files. The original image arrays are absent, so exact pixel differences cannot
+be quantified. The matching prediction is a limited observation, not proof of
+bitwise input reproduction.
 
-# the method: 3 rounds, 10 s idle windows, 1 sham per round
-python energy/nvml_energy.py --data-root <draws-dir> \
-    --D 2448 --device cuda --dtype float32 --chunk 2048 \
-    --gram-dtype float64 --f32-products \
-    --rounds 3 --shams 1 --idle-seconds 10 \
-    --out energy/results/energy-rff-cuda-f32p-chunk2048-D2448.json
-```
-
-It reports idle-adjusted energy per draw from two independent readouts (the
-cumulative NVML counter and the integral of sampled power), device time, peak
-allocated memory, the sham subtraction noise, and the SHA-256 of both scripts as
-executed. One draw is one independent task, so the eleven-draw protocol costs
-11× the per-draw figure; no state crosses draws.
-
-Why this is the only thing left: the RTX 2060 numbers below were produced by
-exactly this code path, and the fp64/fp32 ratio on our card (1/64 on Turing) is
-not the ratio on Ampere, so the *size* of the win we measured cannot be carried
-over. The accuracy side needs nothing from you: it is reproducible from the
-files here.
-
-If you prefer to run the accuracy path first, that is CPU-only and takes about
-two minutes per draw at D=2448:
-
-```bash
-python -m mnist.code.data --profile medium-error-targets-v1 \
-    --output <draws-dir>/data-20261001 --seed 20261001
-python run_protocol.py --D 2448 --data-root <draws-dir> --outdir out \
-    --records out/records.json --repo-root <repo-root>
-```
-
----
+See [reviewer-evidence.json](reviewer-evidence.json) for full-precision interval
+summaries and hash provenance, and [energy/README.md](energy/README.md) for
+commands and the corrected interpretation of the unchanged harness. The original
+measurement request is complete; this archive does not request another run.
 
 ## Files
 
@@ -108,7 +92,8 @@ python run_protocol.py --D 2448 --data-root <draws-dir> --outdir out \
 | [rff_ridge.py](rff_ridge.py) | the frozen learner: fit and predict, NumPy and PyTorch backends |
 | [run_protocol.py](run_protocol.py) | eleven-draw protocol driver; writes predictions, selection records, and hashes, then calls the official evaluator |
 | [energy/nvml_energy.py](energy/nvml_energy.py) | NVML idle-adjusted energy harness |
-| [energy/README.md](energy/README.md) | measurement method, commands, output fields, how to read the result |
+| [energy/README.md](energy/README.md) | corrected measurement boundaries, commands and legacy-field interpretation |
+| [reviewer-evidence.json](reviewer-evidence.json) | sanitized exact-source A100 diagnostic, independent arithmetic checks, hashes and limitations |
 | [evidence/audit_evidence.json](evidence/audit_evidence.json) | per-draw correct/total for every D, the PCA-QDA reference on the same draws, SHA-256 of every prediction file, dataset seeds and dataset hashes, validation-isolation counts |
 | [evidence/draw_manifest.json](evidence/draw_manifest.json) | SHA-256 of each generated `medium.npz` and of each array inside it |
 | [evidence/accuracy_D*.json](evidence/) | full per-draw records: selected hyperparameters, inner-validation counts, evaluator output per error band, prediction hash, overlap counts |
@@ -126,7 +111,7 @@ A    = solve(Z^T Z + lam I, Z^T Y)                 ridge, Y one-hot
 pred = argmax(Zq A)                                first maximum wins
 ```
 
-`W` has shape `(81, D)`, so basis sizes are **independent**, not nested: D=12000
+`W` has shape `(81, D)`, so basis sizes are **separately generated**, not nested: D=12000
 is not a prefix of D=8000. This is a fact about the code, and it is why the
 D-curve near the band boundary is not monotonic — see *Findings that constrain
 the frontier*.
@@ -165,7 +150,7 @@ the table above the counts are:
 |---|---|
 | inner-validation ∩ test indices | **0 rows, 44/44 runs** |
 | all train ∩ test indices | **0 rows, 44/44 runs** |
-| `test_labels` read by the learner | never |
+| test-label values used by fitting or selection | no; loader reads only the array length |
 
 ## Evidence
 
@@ -183,8 +168,9 @@ Every prediction file is hashed. Dataset hashes are in
 [evidence/draw_manifest.json](evidence/draw_manifest.json); prediction hashes and
 per-draw correct counts are in
 [evidence/audit_evidence.json](evidence/audit_evidence.json). The four accuracy
-tables were regenerated by running the code in this directory, and the D=2448 and
-D=4000 runs are byte-identical to the earlier recorded predictions.
+tables are author evidence from this directory; no new eleven-draw reviewer
+execution is implied. The D=2448 and D=4000 hash matches are the author’s
+reported comparison to earlier predictions.
 
 Accuracy is reported as `sum(correct) / 110,000` with the exact integer
 comparison against the band threshold, not a rounded percentage. `SD` is
@@ -207,10 +193,10 @@ sampling process: counter median **46.3 W**, min/max 45.8 / 51.0 W, SD 1.27 W;
 that bracket the runs themselves read 38.0–41.7 W, and NVML reports 31
 compute processes on the device, so other processes share this GPU. That is why
 the harness subtracts each active window from its own bracketing idle windows
-rather than from one global baseline. Idle noise of 1.3 W against active power
-of 60–150 W puts the idle-adjusted error at roughly ±1.5 % per task, and the
-counter and the sampled power share the same sensors, so they are not an
-independent check.
+rather than from one global baseline. The observed idle variation is not an uncertainty interval for active energy.
+The counter and sampled power share the same sensors, so they are not independent
+checks. The legacy `mean_util_percent` field averages accumulated history rather
+than just the named interval; no interval-specific utilization claim is made.
 
 Median of 3 rounds, mJ per draw, one draw = `20261001`:
 
@@ -225,16 +211,23 @@ Median of 3 rounds, mJ per draw, one draw = `20261001`:
 | RFF D=2448, NumPy float32, CPU-resident | ≈ 0 (−2,182) | −534 | 6,912 | — | 106,746 | PASS (+46) |
 | RFF D=2448, NumPy float64, CPU-resident | ≈ 0 (5,472) | −826 | 11,866 | — | 106,735 | PASS (+35) |
 
-Two readings of the CPU rows. The GPU sits idle during them by construction, so
-their idle-adjusted energy is indistinguishable from zero against the subtraction
-noise: the sham controls for those variants are 372,000–394,000 mJ per nominal
-task, against a spread of ±6,000 mJ across rounds. "CPU variant ≈ 0 mJ" therefore
-means *below this method's resolution on this machine*, not *measured zero*, and
-not a statement about host CPU, RAM, or PCIe. As a GPU table row they are
-unusable. GPU variants have shams 4–7× smaller than the result, so their
-idle-adjusted numbers are resolved.
+The CPU rows describe GPU telemetry while host computation runs; they do not
+measure CPU energy. Their small signed above-idle values are not measured zero
+and do not provide a calibrated uncertainty bound. The original field names
+`*_noise_mj_per_nominal_task` hold **gross idle energy divided by nominal
+repeats**, not baseline-subtracted noise. The first GPU variant’s gross counter
+shams are 56,263.571,53,775.000 and55,792.857 mJ, exceeding its 47,541.078 mJ net
+active result; the original claim that shams were 4–7 times smaller was incorrect.
+Corrected A100 sham residuals are separately labelled above and in the reviewer
+summary; neither gross shams nor corrected residuals are confidence intervals.
 
-What this establishes, on this card:
+**Precision caveat:** `run_protocol.py` ignores `--dtype` on its NumPy branch and
+uses the float64 default. Calling `fit_predict_np(..., dtype=float32)` directly
+still promotes its design/Gram through float64 projection/offset arrays. The
+legacy NumPy-float32 table label must not be read as a validated float32
+arithmetic path. These code defects are documented rather than changed here.
+
+Historical author comparisons on this card (descriptive, not fresh qualification):
 
 - **The mixed-precision Gram is the cheapest GPU configuration that passes the
   3 % band.** 47,541 mJ against 187,644 mJ for the float64 device path is 3.95×
@@ -250,11 +243,9 @@ What this establishes, on this card:
 - **Training on a train subset does not reach the 3 % band**, even at 6,000 of
   10,000 rows: 106,054, which is FAIL (−646).
 
-What it does not establish: any of the above transfers numerically to an A100.
-On Ampere the fp64 rate is 1/2 of fp32 rather than 1/64, and idle draw is
-higher, so the *sign* of the "move to GPU" comparison could flip while the
-time comparison would not. That is exactly why we are asking for the A100 run
-rather than asserting a number.
+These RTX comparisons do not establish the same ratios on A100. The completed
+A100 diagnostic measures one configuration only, so it cannot validate a
+cross-hardware ranking of all variants.
 
 ### Why the grid columns are em dashes
 
@@ -295,28 +286,28 @@ support the submission.
 **The band boundary is narrow and non-monotonic.** Near the 3 % threshold,
 changing D by single digits moves the total by ±35 correct, which is comparable
 to the margin itself. D=2448 PASSes at +35; D=2464 FAILs at −51; D=2466 FAILs at
-−3; D=2468 PASSes at +20. Because `W` is drawn fresh per basis size, these are
-independent bases and not nested prefixes. Any claim of the form "D=2448 clears
+−3; D=2468 PASSes at +20. Because the projection shape changes with basis size, these are
+separate bases and not nested prefixes. Any claim of the form "D=2448 clears
 the 3 % band" is true for these 11 draws and this grid, and does not mean the
 margin is robust.
 
 **No D ≤ 2048 reaches the 3 % band.** D=256 → 102,762; D=512 → 104,680;
 D=1024 → 105,756; D=2048 → 106,558, which is FAIL (−142). Every one of the 11
-draws is worse than at D=2448, so the degradation is systematic rather than
-noise.
+archived draws is worse than at D=2448. This describes this seen-draw comparison,
+not a generalization test.
 
 **Accuracy saturates with D.** The gain per doubling falls: +1.74 pp (512→1024),
 +0.98 pp (1024→2048), +0.31 pp (2048→4000), +0.24 pp (4000→8000), +0.06 pp
-(8000→12000). The paired totals improve in all 11 draws at each step up to
-D=12000, so the ordering is not noise, but the increments are not enough to close
-the 2 % gap: D=16000 was screened on three draws and not run on all eleven
+(8000→12000). The paired totals improve in all 11 archived draws at each step up to
+D=12000, but this was not an independent test of the ordering. The increments
+do not close the observed2% gap: D=16000 was screened on three draws and not run on all eleven
 within our budget, so no claim is made about it.
 
 **An ensemble of RFF-ridge members adds less than a larger basis.** Three members
 at D=4000 with different `gamma` gave 107,032 (+132 over the single D=4000),
 while a single D=8000 gave 107,169 (+269). It also won in only 8 of 11 draws.
-Averaging ridge fits on strongly correlated projections of the same 81-d vector
-buys a 1/d-style gain rather than an independent-error gain.
+That archived comparison does not identify an asymptotic ensemble-gain law or
+establish independent member errors.
 
 **Multi-scale RFF plus a raw-pixel block is worse than the control**, 106,829
 versus 106,900, winning in 3 of 11 draws.
@@ -328,8 +319,8 @@ against 1939 for the control, and the best `lam` sat at the edge of the grid
 
 **A softmax head on the same basis was rejected on screening**, 1831/2000 on one
 screen draw. That single run predates a bug fix described below, so its absolute
-value is not strictly comparable, but the gap of 108 correct is far too large for
-that to matter.
+value is not strictly comparable, so it is retained only as a historical screen, not independent rejection
+evidence after the fix.
 
 **A train subset of 6,000 rows does not reach the 3 % band** (106,054, FAIL
 −646), though it is the cheapest GPU variant measured at 39,822 mJ. It qualifies
@@ -339,7 +330,7 @@ one.
 **A trainable CNN was not measured.** It was out of budget; this report makes no
 claim about it.
 
-### One bug in our own harness, found and fixed
+### Author-reported historical screen-cache bug
 
 The cache key for the design matrix `Z` was `(p,)`, missing `gamma` and `D`, so
 every grid point after the first silently reused the first point's basis. It was
@@ -347,8 +338,9 @@ caught because `smD4000` produced identical inner-validation counts (1831, 1801,
 1649 …) at three different `gamma` values, which is impossible with correct code.
 The key now carries every parameter the basis depends on,
 `(kind, p, D, D1, D2, gamma, gamma1, gamma2)`, and every candidate whose number
-was affected was re-run. All numbers in this report come from the fixed code,
-except the single `smD4000` screen run, which is flagged where it appears.
+was affected was re-run. The author reports rerunning affected candidates. The separate `smD4000`
+screen remains flagged. This historical screen-cache fix does not resolve the
+precision and measurement-reporting defects documented in the reviewer note.
 
 ---
 
@@ -374,12 +366,12 @@ accuracy, not test accuracy; the screen's spread of 1–3 correct out of 6,000 i
 within its own standard error of about 7.6, so the screen served only to discard
 clearly weaker branches and its ordering should not be relied on.
 
-**The energy numbers are from an RTX 2060, not an A100.** Stated at every
-occurrence above. They are not comparable to the A100 rows in the main README and
-must not be placed in them.
+**The author’s original energy sweep is RTX 2060 evidence.** The added reviewer
+summary is one A100 40GB diagnostic. These different-hardware results are clearly
+separated and none is promoted to the record table.
 
 **No claim of optimality or leadership is made.** We report the frontier we
-measured on the seeds we declared, with the negative results attached. Where the
+measured on the disclosed, previously seen seeds, with the negative results attached. Where the
 margin is inside the noise (D=2448 at +35), we say so.
 
 **The D=12000 run is expensive.** About 210 s per draw on 16 CPU threads, roughly
@@ -413,7 +405,7 @@ python energy/nvml_energy.py --data-root <draws-dir> --idle-baseline \
 python energy/nvml_energy.py --data-root <draws-dir> --D 2448 \
     --dtype float32 --chunk 2048 --gram-dtype float64 --f32-products \
     --rounds 3 --shams 1 --idle-seconds 10 \
-    --out energy/results/energy-rff-cuda-f32p-chunk2048-D2448.json
+    --out energy/results/energy-rff-cuda-f32p-chunk 2048-D2448.json
 ```
 
 `run_protocol.py` writes the per-draw prediction file, its SHA-256, the selected

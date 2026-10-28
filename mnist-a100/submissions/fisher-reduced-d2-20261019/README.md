@@ -1,4 +1,6 @@
-# D2 Fisher-PCG with reduced fitting work
+# Research archive: D2 Fisher-PCG with reduced fitting work
+
+**Research inclusion; D2 qualification remains unresolved.** The existing author group below passed 3/3 (median **3.029522 ms**). The initial independent reviewer group passed **2/3**: its third complete run scored **106,259/110,000**, one label below the **106,260** required for D2. All 45 timed calls are retained; missing energy on that failed score is not the reason for nonqualification. There is no qualifying reviewer-group median or leaderboard promotion. Original source, author evidence and upstream attribution are preserved. See [reviewer evidence](reviewer-evidence.json).
 
 This derives directly from [the published Fisher-PCG D2](../fisher-pcg-d2-20261019/README.md) by @spartanhaden, itself a PyTorch implementation of @sigkillme0’s Fisher/compression method. All original source attribution is retained. This is a parameter-budget change, not a new kernel or learning algorithm.
 
