@@ -1,5 +1,26 @@
 # Fisher-PCG hybrid with a without-replacement row walk (220 updates): difficulty 4
 
+## Independent reviewer reproduction — November 1, 2026
+
+The exact submitted source passed its first fixed group of **3/3 fresh canonical sandboxed Modal A100-80GB runs**, with valid energy in **3/3**. Median ranked time: **22.069657 ms/call**; median GPU-board energy above idle: **2,259.293532 mJ/call**. All three complete runs separately passed the MNIST accuracy, foreign-data and timing gates; pooled MNIST error was **2.176061%** (descriptive). Optional energy acceptance is assessed separately from score qualification.
+
+| Reviewer run | MNIST error | Margin, labels | Ranked ms | Above-idle mJ |
+| - | -: | -: | -: | -: |
+| 1 | 2.260000% | +44 | 22.069657 | 2287.351889 |
+| 2 | 2.074545% | +248 | 22.018177 | 2259.293532 |
+| 3 | 2.193636% | +117 | 22.280011 | 2228.175903 |
+
+Source SHA-256: `02755ca6031242b0ef29ded5ba2f4f78ee7e592e120694edb3a4d2ed65f9d010`. The scorer and Modal runner are unchanged from main `09979ba2ce5bba4ef80432ec5004b27686541bdf`; CPU, memory, sandbox, environment and draw-generation defaults are unchanged. Source bytes and harness hashes were frozen before launch. Random fresh draws are generated inside the scorer; the records do not contain replayable draw seeds. All initial outcomes, logs and energy windows are retained; no failed-run replacement or recipe tuning was performed. An external 1,200-second group deadline and owned-app cleanup guarded resource use without changing scoring.
+
+Energy excludes compilation and host/system energy. Host type and draw variation limit comparisons with earlier groups. The author chose the update count using the supplied 24 split diagnostics; those results describe paired development tests, not an untouched confirmation set. The reported ±0.005 percentage points is a standard error, rather than a 95% confidence interval. Their JSONL files do not pin the executed source hash, so their attribution and ablation claims remain author evidence. [Source review](evidence/reviewer-20261101/source-review.json), [author-record reconstruction](evidence/reviewer-20261101/author-audit.json), [fresh independent audit](evidence/reviewer-20261101/fresh-independent-audit.json), and [raw records plus exact reconstruction](evidence/reviewer-20261101/) document the scope.
+
+Saved-record check from this directory: `python evidence/reviewer-20261101/verify_records.py evidence/reviewer-20261101 submission.py --difficulty 4 --function hybrid_d4 --output /tmp/pr142-verification.json`.
+
+## Original author report (as submitted)
+
+The dated reviewer section above records independently reproduced results; the original figures below remain author evidence.
+
+
 Entrant: [@spartanhaden](https://github.com/spartanhaden).
 
 This is @sjbaebae's merged [codesign D4](../codesign-d4-d5-20261024/README.md) (#140) with work taken out of it. The Fisher-PCG teacher, the three width-128 tangent students, 220 updates and the HKNN readout are unchanged in structure. Nearly every change below removes something.

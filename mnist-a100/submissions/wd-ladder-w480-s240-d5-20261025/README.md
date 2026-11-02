@@ -1,5 +1,26 @@
 # Weight-decayed width-480 Ladder, 240 updates: difficulty 5
 
+## Independent reviewer reproduction — November 1, 2026
+
+The exact submitted source passed its first fixed group of **3/3 fresh canonical sandboxed Modal A100-80GB runs**, with valid energy in **3/3**. Median ranked time: **226.861787 ms/call**; median GPU-board energy above idle: **30,156.691232 mJ/call**. All three complete runs separately passed the MNIST accuracy, foreign-data and timing gates; pooled MNIST error was **1.746061%** (descriptive). Optional energy acceptance is assessed separately from score qualification.
+
+| Reviewer run | MNIST error | Margin, labels | Ranked ms | Above-idle mJ |
+| - | -: | -: | -: | -: |
+| 1 | 1.812727% | +96 | 225.918905 | 31910.480485 |
+| 2 | 1.696364% | +224 | 229.533912 | 30156.691232 |
+| 3 | 1.729091% | +188 | 226.861787 | 28917.710711 |
+
+Source SHA-256: `132a5e02097ae2d8a776d0e5dd9706bb935a3d5a39ae27ffe025e299511f7b44`. The scorer and Modal runner are unchanged from main `09979ba2ce5bba4ef80432ec5004b27686541bdf`; CPU, memory, sandbox, environment and draw-generation defaults are unchanged. Source bytes and harness hashes were frozen before launch. Random fresh draws are generated inside the scorer; the records do not contain replayable draw seeds. All initial outcomes, logs and energy windows are retained; no failed-run replacement or recipe tuning was performed. An external 1,200-second group deadline and owned-app cleanup guarded resource use without changing scoring.
+
+Energy excludes compilation and host/system energy. Host type and draw variation limit comparisons with earlier groups. The supplied paired split experiments are author diagnostics with no executed-source hash in their JSONL records; their source identity and single-change attribution are not independently established by those logs. The reported ±0.007 percentage points is a standard error across 24 pool splits, rather than a 95% confidence interval. The byte-level source comparison confirms the optimizer/step-count change and equivalent byte-saving expressions. [Source review](evidence/reviewer-20261101/source-review.json), [author-record reconstruction](evidence/reviewer-20261101/author-audit.json), [fresh independent audit](evidence/reviewer-20261101/fresh-independent-audit.json), and [raw records plus exact reconstruction](evidence/reviewer-20261101/) document the scope.
+
+Saved-record check from this directory: `python evidence/reviewer-20261101/verify_records.py evidence/reviewer-20261101 submission.py --difficulty 5 --function ladder_kernel --output /tmp/pr143-verification.json`.
+
+## Original author report (as submitted)
+
+The dated reviewer section above records independently reproduced results; the original figures below remain author evidence.
+
+
 Entrant: [@spartanhaden](https://github.com/spartanhaden).
 
 This is @sjbaebae's merged [codesign D5](../codesign-d4-d5-20261024/README.md) (#140, `d5_244`) with decoupled weight decay on its eight encoder/decoder matrices. With the decay it reaches the same error in 240 Adam updates instead of 315. Nothing else in the learner changes.
