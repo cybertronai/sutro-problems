@@ -1,0 +1,138 @@
+{
+  "format": "sutro-pr142-independent-source-review-v1",
+  "status": "PASS",
+  "checked_utc": "2026-11-02T04:19:16.399387+00:00",
+  "reviewed_head": "5cd8a6502eb01263fe8b1333c49d2ac4eaaf8fa2",
+  "base_head": "09979ba2ce5bba4ef80432ec5004b27686541bdf",
+  "source_path": "mnist-a100/submissions/hybrid-walk-220-d4-20261101/submission.py",
+  "source_url": "https://github.com/cybertronai/sutro-problems/blob/5cd8a6502eb01263fe8b1333c49d2ac4eaaf8fa2/mnist-a100/submissions/hybrid-walk-220-d4-20261101/submission.py",
+  "source_sha256": "02755ca6031242b0ef29ded5ba2f4f78ee7e592e120694edb3a4d2ed65f9d010",
+  "source_bytes": 20429,
+  "source_limit_bytes": 20480,
+  "source_headroom_bytes": 51,
+  "function": "hybrid_d4",
+  "difficulty": 4,
+  "canonical_source_gate": "PASS",
+  "scorer_sha256": "1bc6d8d96a776565bc70f3ccdb91be7de57187d4495b2b0437fac98f5e120064",
+  "runner_sha256": "1180b843cf6c32414774da90c835a8b7298d2db8719989237a793ca1c62a10ab",
+  "advisory_flags": [
+    "embedded weights? 417 numeric literals",
+    "20,429 bytes, close to the 20,480-byte limit"
+  ],
+  "flag_resolution": "The 417 numeric literals are scalar algorithm/configuration, tensor-shape, loop and indexing constants in readable code; no fitted tensor payload, decoder, high-entropy data literal or data-loader code was found. The byte cap is satisfied with 51 bytes remaining.",
+  "ancestry": {
+    "parent_pr": 140,
+    "parent_source_path": "mnist-a100/submissions/codesign-d4-d5-20261024/d4/fisher-triton-width128-teacher1-split4-rolled-d4-20261022.py",
+    "parent_source_sha256": "a2c32468ecb4e02957ef218b3d39419a711b55baaca6be98fb1645a6909bdc6a",
+    "identical_top_level_definitions": [
+      "_bf",
+      "_stream",
+      "aug",
+      "blkget",
+      "blkmin",
+      "capture",
+      "cc",
+      "chol",
+      "compress",
+      "eye",
+      "features",
+      "finish",
+      "fit",
+      "fitc",
+      "flash_scores",
+      "hk_fix",
+      "hknn",
+      "lda",
+      "metric",
+      "natstep",
+      "partial_tile",
+      "partials",
+      "pcg_t",
+      "qda_fisher",
+      "rbf",
+      "sqrtm",
+      "subspace",
+      "teacher"
+    ],
+    "changed_top_level_definitions": [
+      "Students",
+      "hybrid_d4",
+      "k_rows",
+      "neighbours",
+      "tangents"
+    ],
+    "added": [],
+    "removed": [],
+    "scope": "This is an algorithm/configuration change as well as a row-walk kernel change. It changes classwise neighbour selection, tangent power iterations (4 to 2), BF16 feature/tangent storage, labelled/unlabelled batch sizes (1024/1024 to 1280/256), learning rate (.015 to .024), Adam beta2 (.95 to .88), sampling and corruption, and removes isotropic noise and cross-teaching. Architecture, 220 updates, teacher and HKNN remain structurally inherited.",
+    "credits": "The README links @sjbaebae PR140 and @spartanhaden PR138; source credits sigkillme0 PR125 Fisher/compression/PCG, Haden RFM/HKNN/PR121/130/138, islamborghini kernel-PCG, Vincent and Bengio HKNN, likelytobelaura tangent jitter, modded-nanogpt zero head and sjbaebae width128/one teacher/split-four gradients. No missing newly introduced upstream implementation was identified."
+  },
+  "contract_and_reset": [
+    "Literal public API has exactly three positional arguments, no defaults or variadics; result is an integer argmax vector on the query device, cloned before return.",
+    "The full teacher, classwise neighbours/tangent directions and current true-label/current-query pseudo-label targets are recomputed inside every graph replay.",
+    "Each replay calls Students.reset(): random hidden weights, zero output/bias weights, copied BF16 weights, zero Adam first/second moments and bias accumulator, and step index zero. Every chunk overwrites U and N random buffers; all 220 training updates execute.",
+    "STATE is keyed by tensor shapes/device and retains static inputs, graph, output and Students; current tensors are copied into static buffers before replay. This explicitly roots pre-capture buffers. Stream/compiled-function caches contain infrastructure, not fitted results. gc.freeze runs after that owning STATE tuple is assigned.",
+    "No query truth, scorer state, files, network, environment, subprocess, process memory or timing oracle is accessed. Query features and self-generated pseudo-labels are used transductively as permitted.",
+    "No call-dependent shortcut, cached prediction return, suppressed exception, fitted parameter payload or work skipped based on class identity was found."
+  ],
+  "kernel_bounds": {
+    "scope": "Static integer address proof for the published canonical n=nq=10000, 60-dimensional input, padded DIN64, three students, width128, R1536 and four split gradients. Not an empirical sanitizer run or proof for arbitrary shapes.",
+    "k_rows": "Grid (96,3) and 16-row tiles cover exactly three 1536-row workspaces. Modulo walk addresses only 0..9999 labelled or 10000..19999 query feature/target rows; Z stride64, TT four-by64 and N per-row four coefficients are bounded. Channel dimensions 64/128/16 divide all unmasked tiles. TG masks padded output columns >=10.",
+    "row_walk": {
+      "all_generated_multipliers_coprime_to_10000": true,
+      "int32_product_bound": 127987200,
+      "per_batch_unique_rows": true,
+      "limit": "The labelled chunk visits 12800 positions on a 10000-row cycle, so no claim of uniqueness across an entire ten-update chunk is made. Query and label walks refresh each chunk; algorithm constants assume the fixed canonical count."
+    },
+    "classwise_neighbours": "Rank-to-class slot indices are unique for retained rows and lie in the 24000-entry table. Padding has an explicit 20000th feature row. Overflow duplicates write only the unused sentinel output row; over-cap real rows retain self neighbours. Canonical class populations provide well over ten labelled examples per class. The fixed NBG20 divides NCAP2400.",
+    "partial_gradients": {
+      "parameter_elements": 79920,
+      "nonbias_elements": 79872,
+      "bias_elements": 48,
+      "rows_per_split": 384,
+      "64_row_tiles_per_split": 6,
+      "planes": [
+        {
+          "split": 0,
+          "nonbias_indices_written_once": 79872,
+          "minimum": 0,
+          "maximum": 79871
+        },
+        {
+          "split": 1,
+          "nonbias_indices_written_once": 79872,
+          "minimum": 0,
+          "maximum": 79871
+        },
+        {
+          "split": 2,
+          "nonbias_indices_written_once": 79872,
+          "minimum": 0,
+          "maximum": 79871
+        },
+        {
+          "split": 3,
+          "nonbias_indices_written_once": 79872,
+          "minimum": 0,
+          "maximum": 79871
+        }
+      ],
+      "proof": "Each of four planes writes each non-bias weight index exactly once. The 384-row ranges partition all 1536 rows and fit unmasked 64-row loads. finish loads partials only below BSTART, reads GB only for the 48 biases, masks all final-tile stores by o<F, and clears those bias accumulators. Unwritten partial bias slots are not read."
+    },
+    "numerics": "Changed rows preserve dense forward/backward normalized-ReLU gradients and use valid split-four FP32 dot/reduction, BF16 gradient rounding and a single Adam update. Existing parent kernels/functions are AST-identical. Finite-precision quality and compilation remain empirical matters addressed by official complete author records and a separate fresh reviewer group."
+  },
+  "cold_warmup_scope": "All three source-pinned author records complete all 15 scored calls including foreign-data evaluation, providing saved execution evidence for warm-up/compilation success on their hosts. The submitted records do not contain detailed cold warm-up clocks; this static audit does not guarantee a universal compilation bound.",
+  "author_evidence_scope": "author-audit.json separately reconstructs all author counts, clocks and energies. The 24 JSONL split diagnostics lack source hashes and were reused to select 220 updates; treat them as author development diagnostics rather than independent confirmation.",
+  "remote_review_activity": {
+    "discussion_comments": 0,
+    "inline_comments": 0,
+    "reviews": 0,
+    "snapshot_manifest_sha256": "4a8af1bb9a8958755118ee920afa45fd3c3a71b96d2afe05d8fe75f246ebb7e1"
+  },
+  "blockers": [],
+  "disposition": "Approve static source gate; no confirmed source-compliance or safety blocker. Qualification/record promotion must use the separately retained exact-source canonical reviewer outcomes.",
+  "auditor_sha256": "02397c9e6eefa35598e9b0feecf265c233efb07445f762a2935035e7e58b7485",
+  "paid_runs_launched": 0,
+  "limitations": [
+    "No learner/Torch/Modal import, GPU execution, source edit or public mutation by this auditor. Static bounds cover the published fixed data shapes, not arbitrary inputs. Author execution provenance cannot be independently authenticated from JSON alone."
+  ]
+}
