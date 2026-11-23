@@ -1,0 +1,325 @@
+{
+  "dataset": "MNIST",
+  "format_version": 2,
+  "profile": "medium-error-targets-v1",
+  "resize": {
+    "boundary": "Pixel i covers [i,i+1); output j covers [j*28/size,(j+1)*28/size)",
+    "implementation": "Integer-scaled overlap endpoints, float32 weights and matrix multiplication",
+    "layout": "N,1,H,W",
+    "method": "Exact separable box-area overlap averaging",
+    "normalization": "Convert uint8 to float32 and divide by 255 before resizing",
+    "pixel_dtype": "float32",
+    "range": [
+      0.0,
+      1.0
+    ]
+  },
+  "sampling": {
+    "algorithm": "numpy.random.PCG64",
+    "indices": "Zero-based rows of the original official split, before resizing",
+    "offsets": "Per-tier offsets into the seeded permutation of each source split",
+    "seed_derivation": "SeedSequence(seed).spawn(2): child 0 official train, child 1 official test",
+    "selection": "Without replacement; small/medium train use official-training permutation prefixes and test use the declared per-tier offsets; large uses both complete official splits",
+    "source_splits": {
+      "test": "Official MNIST 10,000-example test split",
+      "train": "Official MNIST 60,000-example training split"
+    }
+  },
+  "seed": 2026112310,
+  "sources": {
+    "test_images": {
+      "bytes": 1648877,
+      "md5": "9fb629c4189551a2d022fa330f9573f3",
+      "path": "raw/t10k-images-idx3-ubyte.gz",
+      "sha256": "8d422c7b0a1c1c79245a5bcf07fe86e33eeafee792b84584aec276f5a2dbc4e6",
+      "url": "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-images-idx3-ubyte.gz"
+    },
+    "test_labels": {
+      "bytes": 4542,
+      "md5": "ec29112dd5afa0611ce80d1b7f02629c",
+      "path": "raw/t10k-labels-idx1-ubyte.gz",
+      "sha256": "f7ae60f92e00ec6debd23a6088c31dbd2371eca3ffa0defaefb259924204aec6",
+      "url": "https://ossci-datasets.s3.amazonaws.com/mnist/t10k-labels-idx1-ubyte.gz"
+    },
+    "train_images": {
+      "bytes": 9912422,
+      "md5": "f68b3c2dcbeaaa9fbdd348bbdeb94873",
+      "path": "raw/train-images-idx3-ubyte.gz",
+      "sha256": "440fcabf73cc546fa21475e81ea370265605f56be210a4024d2ca8f203523609",
+      "url": "https://ossci-datasets.s3.amazonaws.com/mnist/train-images-idx3-ubyte.gz"
+    },
+    "train_labels": {
+      "bytes": 28881,
+      "md5": "d53e105ee54ea40749a09fcbcd1e9432",
+      "path": "raw/train-labels-idx1-ubyte.gz",
+      "sha256": "3552534a0a558bbed6aed32b30c495cca23d567ec52cac8be1a0730e8010255c",
+      "url": "https://ossci-datasets.s3.amazonaws.com/mnist/train-labels-idx1-ubyte.gz"
+    }
+  },
+  "tiers": {
+    "large": {
+      "arrays": {
+        "test_images": {
+          "dtype": "float32",
+          "sha256_c_order_little_endian": "21263292d1b7b18b76cb8e7a2c402ff6938903d968aead2dd3395b924212a007",
+          "shape": [
+            10000,
+            1,
+            28,
+            28
+          ]
+        },
+        "test_indices": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "bc9bd9b945dce580d8d7e59cb6c1b72665d557ff83adee70e9be4922ab36f926",
+          "shape": [
+            10000
+          ]
+        },
+        "test_labels": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "119e7e74d2ce0fdc5b2c2059c6db644980cb303d2469e03b7b928cf63dfece7d",
+          "shape": [
+            10000
+          ]
+        },
+        "train_images": {
+          "dtype": "float32",
+          "sha256_c_order_little_endian": "f5134233c29c61ad82f8f545037b0301e322421634a985320b294f5a534a2828",
+          "shape": [
+            60000,
+            1,
+            28,
+            28
+          ]
+        },
+        "train_indices": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "1f21c71a312ad00bef599eb96a9e698d5b4a8b63a5d6b38fdaf58055e519201a",
+          "shape": [
+            60000
+          ]
+        },
+        "train_labels": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "9dc28694e6aaebbcd8040761f37d85ebe2b9dae08a89bc592f4f89eab31b3981",
+          "shape": [
+            60000
+          ]
+        }
+      },
+      "bytes": 18633053,
+      "class_histograms": {
+        "test": [
+          980,
+          1135,
+          1032,
+          1010,
+          982,
+          892,
+          958,
+          1028,
+          974,
+          1009
+        ],
+        "train": [
+          5923,
+          6742,
+          5958,
+          6131,
+          5842,
+          5421,
+          5918,
+          6265,
+          5851,
+          5949
+        ]
+      },
+      "path": "large.npz",
+      "sha256": "86a12b8bbad9a70537cbd3fd497388d83a3f38410f2be3bf6b98a48a3df6eb40",
+      "size": 28,
+      "test_count": 10000,
+      "test_offset": 0,
+      "test_source": "test",
+      "train_count": 60000,
+      "train_offset": 0,
+      "train_source": "train"
+    },
+    "medium": {
+      "arrays": {
+        "test_images": {
+          "dtype": "float32",
+          "sha256_c_order_little_endian": "2a54fa3b1b4f286ae059a8178994920bc54e9efa6d03546ce86edcfbfd4744c2",
+          "shape": [
+            10000,
+            1,
+            9,
+            9
+          ]
+        },
+        "test_indices": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "922e84a991d1ca47600bdabccb6e880b2321219b1d247a1e17bd61cbdd6d8947",
+          "shape": [
+            10000
+          ]
+        },
+        "test_labels": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "ed639fd668779f746bd0d2ed80e0a1a7434a061ea554fadc1ac603beb498e2ef",
+          "shape": [
+            10000
+          ]
+        },
+        "train_images": {
+          "dtype": "float32",
+          "sha256_c_order_little_endian": "2444cd4a0e414c58852bc55f01e6b63d2358bbcf42ef5048e4b632840c13b0fd",
+          "shape": [
+            10000,
+            1,
+            9,
+            9
+          ]
+        },
+        "train_indices": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "9ad48f92bce06ebe174461d073fa8c67cbeb8e42361aea82bc52d9ce148709b4",
+          "shape": [
+            10000
+          ]
+        },
+        "train_labels": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "b3928877ff609b3d8428a40f4de7b2bb3c8832a80fd6f7e1efad3a759a0b5f06",
+          "shape": [
+            10000
+          ]
+        }
+      },
+      "bytes": 2774194,
+      "class_histograms": {
+        "test": [
+          1009,
+          1111,
+          965,
+          1029,
+          959,
+          929,
+          1012,
+          994,
+          1006,
+          986
+        ],
+        "train": [
+          983,
+          1137,
+          982,
+          992,
+          989,
+          916,
+          992,
+          1039,
+          942,
+          1028
+        ]
+      },
+      "path": "medium.npz",
+      "sha256": "8b91a5af296ebbe4603d64d09559e3a6a39aaf4e40851f54e10d6525ced8c5c7",
+      "size": 9,
+      "test_count": 10000,
+      "test_offset": 10000,
+      "test_source": "train",
+      "train_count": 10000,
+      "train_offset": 0,
+      "train_source": "train"
+    },
+    "small": {
+      "arrays": {
+        "test_images": {
+          "dtype": "float32",
+          "sha256_c_order_little_endian": "ef0f7162b0a4372b574a6e69da1d7b360556ff78deaa2dd5b64b2a3ec9edecf1",
+          "shape": [
+            600,
+            1,
+            3,
+            3
+          ]
+        },
+        "test_indices": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "4d631d8f27dc1ab7479e95adc99e2fc429fb66498c2a9df72859db6e9eb580a0",
+          "shape": [
+            600
+          ]
+        },
+        "test_labels": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "25000a4f8c2ef3e85eec862bc3883dc408c2fd023ecd3eb5a52e2a108a527379",
+          "shape": [
+            600
+          ]
+        },
+        "train_images": {
+          "dtype": "float32",
+          "sha256_c_order_little_endian": "1106a1005676bd9a3b7c5aacc643a878ef2f4e8cf53d344c3019cc72792dda24",
+          "shape": [
+            600,
+            1,
+            3,
+            3
+          ]
+        },
+        "train_indices": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "4d15399436ea24d489e5a4454bfb2e7a7c86f75f2caef2033c4e68263f1ef01c",
+          "shape": [
+            600
+          ]
+        },
+        "train_labels": {
+          "dtype": "int64",
+          "sha256_c_order_little_endian": "9b903276aad4e0d53b6f3824f625edcda31831333d304bfc1c7ae606401d428a",
+          "shape": [
+            600
+          ]
+        }
+      },
+      "bytes": 40481,
+      "class_histograms": {
+        "test": [
+          61,
+          79,
+          53,
+          49,
+          47,
+          64,
+          65,
+          51,
+          68,
+          63
+        ],
+        "train": [
+          51,
+          70,
+          55,
+          63,
+          70,
+          56,
+          44,
+          59,
+          59,
+          73
+        ]
+      },
+      "path": "small.npz",
+      "sha256": "9ba8f1b1d52392f5c82b6dc51f73a05061c36309afb97e496dc6312ea0bc912d",
+      "size": 3,
+      "test_count": 600,
+      "test_offset": 6000,
+      "test_source": "train",
+      "train_count": 600,
+      "train_offset": 0,
+      "train_source": "train"
+    }
+  }
+}
