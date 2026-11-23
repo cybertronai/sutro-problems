@@ -1,0 +1,53 @@
+{
+  "frozen_at_utc": "2026-09-14T03:25:57.020795+00:00",
+  "source_sha256": {
+    "ordered_models.py": "0757c9774c945702fced2a35c2a3fbc19ada0b840c157d50d82acb880ef449d2",
+    "ordered_learner.py": "9b6310f2b30610a7e5228e768e1e37f556bb1ca35efc27dd7752dcf4ce17a79f",
+    "ordered_validate.py": "c319b19defded7fa7acefaf3b4467eca481796a349334f7919e56c01af88dc68",
+    "ordered_profile.py": "7f4cba3677d0a9f4fa90bf1906f18a45558c4b23cb9834a7d305b963088cdfc9",
+    "modal_ordered.py": "1b4ffe2739849810d4a473e15fe88e1566cfdf263be9e568416a22397b3d6884",
+    "../reversible-refinement/models.py": "ad434456ef580062fcc9220a9de31f0115ff496fde3515521506f8deeabc7fb2",
+    "../reversible-refinement/learner.py": "7dba0508ac04b5e3295ee19cfde85cf6f44ef8ebc7c5e910b5ab0cad66cde3a6",
+    "../reversible-refinement/extra_ops.py": "c615c7bc574f857883be85f98bc51bcfe69f4db5023989f1cbf1f54ad505c8ce",
+    "../reversible-refinement/experiment.py": "d93bb47dc3f5ec4d538786a73566ed39237421e89af7a42b57c14974dfc46ae7",
+    "../reversible-refinement/protocol.json": "434628db480076eac31f8e5dbecb500c316886a4942095c62b7e890beb81d2f0",
+    "../procedure-transfer/learner.py": "1718fe571efbfba2f7e1e8e72f118ceb580c0867371b43baf8a498d15bdcca9a"
+  },
+  "architecture": "rev32_b4_lift_relu",
+  "alpha": 0.25,
+  "member_seeds": [
+    11,
+    22,
+    33
+  ],
+  "dataset_seeds": [
+    20261112,
+    20261113,
+    20261114,
+    20261115,
+    20261116,
+    20261117,
+    20261118,
+    20261119,
+    20261120,
+    20261121,
+    20261122
+  ],
+  "draws": 11,
+  "train_count": 10000,
+  "test_count": 10000,
+  "confirmation_protocol_sha256": "db29721e6aac0878f06e16d5b3e858d0a2928163133595f9f71f16de1cf673ff",
+  "confirmation_draw_manifest_sha256": "f7db3aeed03b9a24f92443329450aa840a144590a77694cbc347a4ca32175a8b",
+  "confirmation_summary_sha256": "90123073d80cd60d75abdbe17a92a89a3d1e84a6f920a3fc7cb3982d27b69896",
+  "selection_sha256": "e81a8829ff546b5ed2715d8844db43c96123dfde1b0bb9fa897cf9b693d602c4",
+  "procedure": "Same original ordered FP32 kernels, initialization, eight epochs, B128, SGD .03 momentum .9 decay .0001, augmentation schedules, three fresh members. Only backward activation handling changes.",
+  "comparison": "Paired with frozen original CNN and stored-activation selected model on the eleven confirmation draws. No architecture or training tuning in this stage.",
+  "rounding": "Forward is validated bit-identical. Subtractive FP32 reconstruction can alter backward rounding; report fresh accuracy rather than inheriting previous scores.",
+  "evaluation": "GPU learner receives no evaluation labels. Freeze all eleven prediction archives before opening labels for this stage.",
+  "resources": {
+    "max_gpu_workers": 10,
+    "ephemeral": true,
+    "min_containers": 0,
+    "scaledown_window_seconds": 5
+  }
+}

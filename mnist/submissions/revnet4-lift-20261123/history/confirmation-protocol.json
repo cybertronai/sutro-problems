@@ -1,0 +1,47 @@
+{
+  "frozen_at_utc": "2026-09-14T03:09:45.207815+00:00",
+  "selected_architecture": "rev32_b4_lift_relu",
+  "source_study": "reversible-refinement",
+  "selection_sha256": "e81a8829ff546b5ed2715d8844db43c96123dfde1b0bb9fa897cf9b693d602c4",
+  "architectures": [
+    "cnn32_d3",
+    "rev32_b4_lift_relu"
+  ],
+  "dataset_seeds": [
+    20261112,
+    20261113,
+    20261114,
+    20261115,
+    20261116,
+    20261117,
+    20261118,
+    20261119,
+    20261120,
+    20261121,
+    20261122
+  ],
+  "train_count": 10000,
+  "test_count": 10000,
+  "member_seeds": [
+    11,
+    22,
+    33
+  ],
+  "source_sha256": {
+    "run.py": "d58363f5b64c58243054ca9695ad68f2b0d061100202b1bcfd7e019174cb765a",
+    "selection.json": "e81a8829ff546b5ed2715d8844db43c96123dfde1b0bb9fa897cf9b693d602c4",
+    "../reversible-refinement/experiment.py": "d93bb47dc3f5ec4d538786a73566ed39237421e89af7a42b57c14974dfc46ae7",
+    "../reversible-refinement/learner.py": "7dba0508ac04b5e3295ee19cfde85cf6f44ef8ebc7c5e910b5ab0cad66cde3a6",
+    "../reversible-refinement/models.py": "ad434456ef580062fcc9220a9de31f0115ff496fde3515521506f8deeabc7fb2",
+    "../reversible-refinement/extra_ops.py": "c615c7bc574f857883be85f98bc51bcfe69f4db5023989f1cbf1f54ad505c8ce",
+    "../reversible-refinement/protocol.json": "434628db480076eac31f8e5dbecb500c316886a4942095c62b7e890beb81d2f0",
+    "../reversible-refinement/validation.json": "ef367415b6d3bc59de19dcc8cb7f94ef42631b8efbcecc42146481dd3710f449",
+    "../procedure-transfer/protocol.json": "38f078c822910093bfe2e850bdbcfb8b35fdbb80dc9582addfb83e9778106465"
+  },
+  "clean_pool_sha256": "f5ea8b67ae66fcbad662a131a757b10dcf97a72ebd63d7f09bd2984c49a44972",
+  "selection": "Best mean accuracy among fully successful input-preserving reversible architectures across all considered stages on the original eleven draws",
+  "selection_summary_sha256": "19a42dc999b1c8dca55be125ac503b0c0088c3e695ad4202d7c667b76ada509e",
+  "qualification": "Fresh random splits of the same 60,000-image MNIST source population, not an untouched external test set. No further tuning on this confirmation stage.",
+  "training": "Unchanged eight-epoch recipe and three fresh members. The baseline uses the original ordered trainer; the chosen architecture uses the frozen refinement learner.",
+  "sampling": "PCG64(SeedSequence(seed).spawn(2)[0]); a random permutation supplies the first 10,000 training and next 10,000 evaluation rows, using the same indices for both architectures."
+}
