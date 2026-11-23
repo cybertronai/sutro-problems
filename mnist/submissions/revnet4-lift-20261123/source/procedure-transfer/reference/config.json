@@ -1,0 +1,45 @@
+{
+  "id": "softmax-c32-d3-lr0.03",
+  "width": 32,
+  "depth": 3,
+  "learning_rate": 0.03,
+  "head_width": 128,
+  "epochs": 8,
+  "batch_size": 128,
+  "momentum": 0.9,
+  "weight_decay": 0.0001,
+  "loss": "approx_softmax_gradient",
+  "normalization": "4*x-0.5",
+  "augmentation": "mild_affine",
+  "dropout": 0.0,
+  "batchnorm": false,
+  "pooling": "none",
+  "conv_bias": false,
+  "head_bias": true,
+  "initialization": "He uniform fan_in for all weights; zero biases",
+  "target_percent": 96,
+  "target_error_percent": 4,
+  "error_targets": [
+    10,
+    8,
+    6,
+    4,
+    2
+  ],
+  "member_seeds": [
+    11,
+    22,
+    33
+  ],
+  "seeds": [
+    11,
+    22,
+    33
+  ],
+  "n_train": 10000,
+  "n_test": 10000,
+  "image_size": 9,
+  "optimizer": "sgd",
+  "activation": "relu",
+  "ensemble_arithmetic": "ordered_fp32_sum"
+}

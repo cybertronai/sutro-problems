@@ -71,6 +71,7 @@ publicly committed beacon evaluation.
 | Date | Accuracy | Energy on A100 (mJ) | Time on A100 (ms) | Energy in grid model (mJ) | Time in grid model (ms) | submission |
 | --- | ---: | ---: | ---: | ---: | ---: | --- |
 | 2026-09-16 | 98.12% ± 0.15 pp (A100); 98.11% ± 0.14 pp (grid) | 65,000 | 260 | 1,500 | 1.2 × 10⁷ | [512-filter CG pair](submissions/medium-cg-pair-20260916/README.md) |
+| 2026-11-23 | 97.35% ± 0.16 pp | 1.5 × 10⁶ | 35,000 | — | — | [RevNet-4 with lossless lift (reversible)](submissions/revnet4-lift-20261123/README.md) |
 
 ## MNIST-medium — 5% error target
 

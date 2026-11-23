@@ -1,0 +1,70 @@
+{
+  "submission": "revnet4-lift-20261123",
+  "frozen_at_utc": "2026-11-23T23:15:15.509339+00:00",
+  "tier": "MNIST-medium",
+  "error_target_percent": 3,
+  "required_correct_of_110000": 106700,
+  "dataset_generator": {
+    "module": "mnist.code.data",
+    "profile": "medium-error-targets-v1",
+    "generator_sha256": "982bedbc56d928760f47f78017102652fe5492c57e3160e410514ded445744fa"
+  },
+  "dataset_seeds": [
+    2026112300,
+    2026112301,
+    2026112302,
+    2026112303,
+    2026112304,
+    2026112305,
+    2026112306,
+    2026112307,
+    2026112308,
+    2026112309,
+    2026112310
+  ],
+  "draws": 11,
+  "train_count": 10000,
+  "test_count": 10000,
+  "learner": {
+    "architecture": "rev32_b4_lift_relu",
+    "description": "Lossless ReLU lift (input kept as channel 0 + 31 learned channels), 4 additive coupling blocks on 16+16 channels (alpha 0.25), dense 2592-128-10 head; backward reconstructs block inputs",
+    "entry_point": "source/reversible-memory/ordered_learner.py:train_predict",
+    "member_seeds": [
+      11,
+      22,
+      33
+    ],
+    "training_randomness": "Held fixed across draws: member seeds 11, 22, 33 set initialization and augmentation/shuffle schedules",
+    "recipe": "8 epochs, batch 128, SGD lr 0.03 momentum 0.9 weight decay 1e-4, mild affine augmentation, ordered FP32 Triton kernels (no FMA, FTZ or tensor cores)",
+    "ensemble": "Ordered FP32 sum of the three members' logits, then first-index argmax",
+    "selection_history": "Architecture and recipe chosen on 13 Sep 2026 from exploratory sweeps on other draws of the same 60,000-image pool; see history/"
+  },
+  "source_sha256": {
+    "reversible-memory/ordered_learner.py": "9b6310f2b30610a7e5228e768e1e37f556bb1ca35efc27dd7752dcf4ce17a79f",
+    "reversible-memory/ordered_models.py": "0757c9774c945702fced2a35c2a3fbc19ada0b840c157d50d82acb880ef449d2",
+    "reversible-refinement/models.py": "ad434456ef580062fcc9220a9de31f0115ff496fde3515521506f8deeabc7fb2",
+    "reversible-refinement/extra_ops.py": "c615c7bc574f857883be85f98bc51bcfe69f4db5023989f1cbf1f54ad505c8ce",
+    "reversible-refinement/protocol.json": "434628db480076eac31f8e5dbecb500c316886a4942095c62b7e890beb81d2f0",
+    "procedure-transfer/learner.py": "1718fe571efbfba2f7e1e8e72f118ceb580c0867371b43baf8a498d15bdcca9a",
+    "procedure-transfer/reference/config.json": "8be66ac6d67a59b87941a91c3232e65265e4f2d0c767d32cde29d2cc88938040",
+    "procedure-transfer/reference/ensemble.py": "469ea2f57bb6a094be482f7dc9be9a6df9851bf33584361f1ad9d9f5281afa3b",
+    "procedure-transfer/reference/provenance.json": "28a92f7ec54ed87a8f6e0889e1baa55842445529f6e1eb03bbd213f11f82a5d9",
+    "procedure-transfer/reference/ordered_backend/network.py": "90b68b2d43ee3a2033d51579757280bc40210909dc1347f454f91678977ddf16",
+    "procedure-transfer/reference/ordered_backend/ops.py": "8fa76136767540a86d9d6cb9f30b3f8985dcf4e6724d93c4d2ba5951b502138e",
+    "procedure-transfer/reference/ordered_backend/schedule.py": "e11ec4da5157f611547070551f1e8a5f4c4130e3b0a92eb354fe2a2c5d7dd7da",
+    "procedure-transfer/reference/ordered_backend/cpu_ref.py": "627035f412d9ad9897640a6c1fe2d485385e412027a29bf0451ba54b2b82ca9b",
+    "procedure-transfer/reference/ordered_backend/bn_ops.py": "ca7eee9ec46bec9a24c0d13f3bf731fc97d46232620b5379d39d8c9b4b35fd6d",
+    "procedure-transfer/reference/ordered_backend/bn_ref.py": "e5fb448a4f326eedc867134157fa7e66cb82bee78aef7099f19853d5c1d8552c"
+  },
+  "runner_sha256": {
+    "nvml_energy.py": "39816c3ba6bfc726f77f45094a8eba61e3fa48e50b93300129ef16878b9beb7a"
+  },
+  "evaluation": "All eleven prediction files are saved and hashed in prediction-freeze.json before any test label is read; then mnist.code.evaluate --tier medium --error-target 3 scores each draw and the pass uses sum(correct)/110000.",
+  "divergence_policy": "A non-finite member ends that draw as a recorded failure; no rerun with other seeds. Eleven completed draws are required.",
+  "a100": {
+    "modal_gpu": "A100-40GB",
+    "image": "ghcr.io/ab-10/wikitext-bench@sha256:95de89319ba89c53a91d5440a5db4ff46f68b05031062c0a760ec3caa48dc42f",
+    "energy": "Paired-idle NVML (nvml_energy.py, copied unchanged from rev88-20260914/energy.py) on draw 00, three trials",
+    "control": "Matched non-reversible CNN ensemble measured the same way"
+  }
+}
